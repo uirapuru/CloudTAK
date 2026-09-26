@@ -27,6 +27,8 @@
                 :can-send='true'
                 :can-delete='true'
                 :multiselect='multiselect'
+                :can-attach-map='true'
+                :attach-error='attachError'
                 placeholder='Send Message...'
                 @send='sendMessage'
                 @delete='deleteChats'
@@ -52,6 +54,8 @@ import MenuTemplate from '../util/MenuTemplate.vue';
 import GenericChat from '../util/GenericChat.vue';
 import { useMapStore } from '../../../stores/map.ts';
 import ProfileConfig from '../../../base/profile.ts';
+import { collectMapSnapshot } from '../../../base/taklab-map-collect.ts';
+import OverlayManager from '../../../base/overlay.ts';
 
 const mapStore = useMapStore();
 const atBottom = ref(true);
@@ -80,6 +84,7 @@ const id = ref('');
 const callsign = ref('');
 const loading = ref(true);
 const multiselect = ref(false);
+const attachError = ref('');
 
 const initialName = route.params.chatroom === 'new'
     ? normalizeRouteQuery(route.query.callsign)
@@ -147,9 +152,11 @@ watch(() => route.params.chatroom, async (newChatroom) => {
     await fetchChats();
 });
 
-async function sendMessage(message: string): Promise<void> {
+async function sendMessage(message: string, attachMap = false): Promise<void> {
     if (!message.trim().length) return;
     if (!room.value) return;
+
+    attachError.value = '';
 
     let recipient: { uid: string; callsign: string } | undefined;
     if (route.query.uid && route.query.callsign) {
@@ -159,9 +166,33 @@ async function sendMessage(message: string): Promise<void> {
         };
     }
 
+    const sender = { uid: id.value, callsign: callsign.value };
+
+    // The map snapshot goes first so the recipient has it when the question arrives;
+    // a failed snapshot never blocks the message itself
+    if (attachMap) {
+        try {
+            recipient = await room.value.chats.recipient(sender, recipient);
+
+            const snapshot = await collectMapSnapshot({
+                map: mapStore.map,
+                overlays: OverlayManager.loaded,
+                worker: mapStore.worker,
+                selfUid: id.value,
+                callsign: callsign.value,
+                gpsCoordinates: mapStore.gpsCoordinates,
+            });
+
+            await room.value.chats.sendMap(snapshot, mapStore.worker, recipient);
+        } catch (err) {
+            console.error('Failed to attach map', err);
+            attachError.value = 'Nie udało się dołączyć mapy';
+        }
+    }
+
     await room.value.chats.send(
         message,
-        { uid: id.value, callsign: callsign.value },
+        sender,
         mapStore.worker,
         recipient
     );

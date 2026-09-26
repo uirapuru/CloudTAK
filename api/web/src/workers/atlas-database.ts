@@ -19,6 +19,8 @@ import type { GeoJSONSourceDiff, LngLatLike } from 'maplibre-gl';
 import { booleanWithin } from '@turf/boolean-within';
 import { isEqual } from '@ver0/deep-equal';
 import type { Polygon } from 'geojson';
+import { mapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
+import type { MapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import type { InputFeature, Feature, APIList, Contact } from '../types.ts';
 import type {
     Feature as GeoJSONFeature,
@@ -508,6 +510,39 @@ export default class AtlasDatabase {
         }
 
         return within;
+    }
+
+    /**
+     * Return the CoTs for a map snapshot ("Attach map" in a direct chat):
+     * every CoT in the store except the user's own marker, plus the features
+     * of the given missions, reduced to what the snapshot needs
+     *
+     * @param missions - GUIDs of the missions visible on the map
+     */
+    async snapshotFeatures(missions: string[] = []): Promise<Array<MapSnapshotFeature>> {
+        const feats: Map<string, MapSnapshotFeature> = new Map();
+
+        for (const cot of this.cots.values()) {
+            if (cot.is_self) continue;
+
+            const feat = mapSnapshotFeature(cot);
+            if (feat) feats.set(feat.id, feat);
+        }
+
+        for (const guid of missions) {
+            const store = await Subscription.from(guid, {
+                subscribed: true
+            });
+
+            if (!store) continue;
+
+            for (const mfeat of await store.feature.list()) {
+                const feat = mapSnapshotFeature(mfeat);
+                if (feat && !feats.has(feat.id)) feats.set(feat.id, feat);
+            }
+        }
+
+        return Array.from(feats.values());
     }
 
     /**

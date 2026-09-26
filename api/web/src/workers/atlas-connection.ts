@@ -565,9 +565,13 @@ export default class AtlasConnection {
     }
 
 
-    sendCOT(data: object, type = 'cot') {
-        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    /**
+     * @returns false when the WebSocket is not open and nothing was sent
+     */
+    sendCOT(data: object, type = 'cot'): boolean {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return false;
         this.ws.send(JSON.stringify({ type, data }));
+        return true;
     }
 
 }

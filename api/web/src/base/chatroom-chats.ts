@@ -9,6 +9,7 @@ import { ChatStatus } from '../database.ts';
 import type Atlas from '../workers/atlas.ts';
 import type { Remote } from 'comlink';
 import ContactManager from './contact.ts';
+import type { MapSnapshot } from './taklab-map-snapshot.ts';
 
 export default class ChatroomChats {
     chatroom: string;
@@ -88,6 +89,61 @@ export default class ChatroomChats {
         await db.chatroom.update(this.chatroom, { unread: 0 });
     }
 
+    /**
+     * Resolve who a message in this chatroom is addressed to
+     *
+     * @param sender - The local user
+     * @param recipient - Known recipient, returned as is
+     */
+    async recipient(
+        sender: { uid: string, callsign: string },
+        recipient?: { uid: string, callsign: string }
+    ): Promise<{ uid: string, callsign: string }> {
+        if (recipient) return recipient;
+
+        const chats = await this.list();
+        const single = chats.find((chat) => {
+            return chat.sender_uid !== sender.uid
+        });
+
+        if (single) {
+            return {
+                uid: single.sender_uid,
+                callsign: single.sender
+            }
+        }
+
+        const contact = await ContactManager.getByCallsign(this.chatroom);
+        if (contact) {
+            return {
+                uid: contact.uid,
+                callsign: contact.callsign
+            }
+        }
+
+        return {
+            uid: this.chatroom,
+            callsign: this.chatroom
+        }
+    }
+
+    /**
+     * Send a map snapshot to the recipient ahead of a chat message
+     * The server relays it as a y-taklab-map CoT and does not store it
+     */
+    async sendMap(
+        snapshot: MapSnapshot,
+        worker: Remote<Atlas>,
+        recipient: { uid: string, callsign: string }
+    ): Promise<void> {
+        const sent = await worker.conn.sendCOT({
+            to_uid: recipient.uid,
+            snapshot
+        }, 'taklab_map');
+
+        if (!sent) throw new Error('Error sending Map - Not connected');
+    }
+
     async send(
         message: string,
         sender: { uid: string, callsign: string },
@@ -111,34 +167,7 @@ export default class ChatroomChats {
             status: ChatStatus.Sending
         });
 
-        if (!recipient) {
-            const chats = await this.list();
-            const single = chats.find((chat) => {
-                return chat.sender_uid !== sender.uid
-            });
-
-            if (single) {
-                recipient = {
-                    uid: single.sender_uid,
-                    callsign: single.sender
-                }
-            } else {
-                const contact = await ContactManager.getByCallsign(this.chatroom);
-                if (contact) {
-                    recipient = {
-                        uid: contact.uid,
-                        callsign: contact.callsign
-                    }
-                } else {
-                    recipient = {
-                        uid: this.chatroom,
-                        callsign: this.chatroom
-                    }
-                }
-            }
-        }
-
-        if (!recipient) throw new Error('Error sending Chat - Contact is not defined');
+        recipient = await this.recipient(sender, recipient);
 
         const location = (await worker.profile?.location)?.coordinates || [0, 0];
 
