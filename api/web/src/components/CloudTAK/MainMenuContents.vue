@@ -335,6 +335,15 @@
                     v-text='version'
                 />
             </div>
+            <div class='d-flex justify-content-center mb-1'>
+                <!-- AGPL-3.0: users of this modified version must be offered its source -->
+                <a
+                    href='https://github.com/uirapuru/CloudTAK/tree/taklab/v13.3.0'
+                    target='_blank'
+                    rel='noopener'
+                    class='small text-white text-decoration-underline'
+                >Kod źródłowy (AGPL-3.0)</a>
+            </div>
         </div>
     </div>
 </template>
