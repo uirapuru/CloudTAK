@@ -294,6 +294,10 @@ export default class ConnectionPool extends Map<number | string, ConnectionClien
                                         chatroom: feat.properties.chat.chatroom,
                                         messageId: feat.properties.chat.messageId,
                                         from: {
+                                            // Without the UID the browser stores the incoming message with
+                                            // sender_uid undefined and replies go out with an empty <dest>.
+                                            // Upstream fixed this later (dfpc-coe/CloudTAK#1290, Bug 2).
+                                            uid: feat.properties.chat.chatgrp?._attributes?.uid0,
                                             callsign: feat.properties.chat.senderCallsign,
                                         },
                                         message: feat.properties.remarks,
