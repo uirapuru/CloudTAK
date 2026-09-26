@@ -4,6 +4,7 @@ import { DirectChat, MissionChat, CoTParser } from '@tak-ps/node-cot';
 import type { Feature } from '@tak-ps/node-cot';
 import { WebSocket } from 'ws';
 import { ConnectionClient } from './connection-pool.js';
+import { buildTaklabMapCoT } from './taklab-map.js';
 
 export class ConnectionWebSocket {
     ws: WebSocket;
@@ -68,6 +69,13 @@ export class ConnectionWebSocket {
                             message_id: feat.properties.chat ? (feat.properties.chat.messageId || randomUUID()) : randomUUID(),
                             message: msg.data.message,
                         });
+                    }
+                    else if (msg.type === 'taklab_map') {
+                        // Map snapshot for a chat bot: sender UID from the connection,
+                        // never from the payload, and nothing is stored in the database
+                        const cot = buildTaklabMapCoT(client.config.uid(), msg.data);
+
+                        client.tak.write([cot], { stripFlow: true });
                     }
                     else {
                         const feat = msg.data as Static<typeof Feature.Feature>;
