@@ -27,7 +27,7 @@
                 :can-send='true'
                 :can-delete='true'
                 :multiselect='multiselect'
-                :can-attach-map='true'
+                :can-attach-map='canAttachMap'
                 :attach-error='attachError'
                 placeholder='Send Message...'
                 @send='sendMessage'
@@ -83,6 +83,8 @@ const callsign = ref('');
 const loading = ref(true);
 const multiselect = ref(false);
 const attachError = ref('');
+// The map snapshot is only for one-to-one chats with a known recipient UID
+const canAttachMap = ref(false);
 
 const initialName = route.params.chatroom === 'new'
     ? normalizeRouteQuery(route.query.callsign)
@@ -150,28 +152,54 @@ watch(() => route.params.chatroom, async (newChatroom) => {
     await fetchChats();
 });
 
+function queryRecipient(): { uid: string; callsign: string } | undefined {
+    if (route.query.uid && route.query.callsign) {
+        return {
+            uid: normalizeRouteQuery(route.query.uid),
+            callsign: normalizeRouteQuery(route.query.callsign)
+        };
+    }
+
+    return undefined;
+}
+
+async function updateCanAttachMap(): Promise<void> {
+    const current = room.value;
+    if (!current || !id.value) {
+        canAttachMap.value = false;
+        return;
+    }
+
+    try {
+        const direct = await current.chats.directRecipient(
+            { uid: id.value, callsign: callsign.value },
+            queryRecipient()
+        );
+
+        if (room.value === current) canAttachMap.value = !!direct;
+    } catch (err) {
+        console.error(err);
+        canAttachMap.value = false;
+    }
+}
+
+watch([room, chats, id, () => route.query.uid], () => {
+    void updateCanAttachMap();
+});
+
 async function sendMessage(message: string, attachMap = false): Promise<void> {
     if (!message.trim().length) return;
     if (!room.value) return;
 
     attachError.value = '';
 
-    let recipient: { uid: string; callsign: string } | undefined;
-    if (route.query.uid && route.query.callsign) {
-        recipient = {
-            uid: normalizeRouteQuery(route.query.uid),
-            callsign: normalizeRouteQuery(route.query.callsign)
-        };
-    }
-
+    const recipient = queryRecipient();
     const sender = { uid: id.value, callsign: callsign.value };
 
     // The map snapshot goes first so the recipient has it when the question arrives;
     // a failed snapshot never blocks the message itself
     if (attachMap) {
         try {
-            recipient = await room.value.chats.recipient(sender, recipient);
-
             const snapshot = await collectMapSnapshot({
                 map: mapStore.map,
                 overlays: mapStore.overlays,
@@ -181,7 +209,8 @@ async function sendMessage(message: string, attachMap = false): Promise<void> {
                 gpsCoordinates: mapStore.gpsCoordinates,
             });
 
-            await room.value.chats.sendMap(snapshot, mapStore.worker, recipient);
+            // Refuses (throws) unless the room has exactly one known recipient
+            await room.value.chats.sendMap(snapshot, mapStore.worker, sender, recipient);
         } catch (err) {
             console.error('Failed to attach map', err);
             attachError.value = 'Nie udało się dołączyć mapy';

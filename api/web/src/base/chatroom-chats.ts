@@ -9,6 +9,7 @@ import type Atlas from '../workers/atlas.ts';
 import type { Remote } from 'comlink';
 import ContactManager from './contact.ts';
 import type { MapSnapshot } from './taklab-map-snapshot.ts';
+import { resolveDirectRecipient } from './direct-recipient.ts';
 
 export default class ChatroomChats {
     chatroom: string;
@@ -116,16 +117,47 @@ export default class ChatroomChats {
     }
 
     /**
-     * Send a map snapshot to the recipient ahead of a chat message
+     * The single recipient of a one-to-one chatroom, or undefined for group
+     * rooms and rooms whose recipient UID is unknown or ambiguous
+     *
+     * @param sender - The local user
+     * @param recipient - Recipient chosen explicitly (e.g. from a contact)
+     */
+    async directRecipient(
+        sender: { uid: string, callsign: string },
+        recipient?: { uid: string, callsign: string }
+    ): Promise<{ uid: string, callsign: string } | undefined> {
+        if (recipient) {
+            return resolveDirectRecipient({ chatroom: this.chatroom, selfUid: sender.uid, recipient, chats: [] });
+        }
+
+        return resolveDirectRecipient({
+            chatroom: this.chatroom,
+            selfUid: sender.uid,
+            chats: await this.list(),
+            contact: await ContactManager.getByCallsign(this.chatroom),
+        });
+    }
+
+    /**
+     * Send a map snapshot ahead of a chat message - only in a one-to-one chatroom
      * The server relays it as a y-taklab-map CoT and does not store it
+     *
+     * @param sender - The local user
+     * @param recipient - Recipient chosen explicitly (e.g. from a contact)
      */
     async sendMap(
         snapshot: MapSnapshot,
         worker: Remote<Atlas>,
-        recipient: { uid: string, callsign: string }
+        sender: { uid: string, callsign: string },
+        recipient?: { uid: string, callsign: string }
     ): Promise<void> {
+        const direct = await this.directRecipient(sender, recipient);
+
+        if (!direct) throw new Error('Error sending Map - No single recipient in this chat');
+
         const sent = await worker.conn.sendCOT({
-            to_uid: recipient.uid,
+            to_uid: direct.uid,
             snapshot
         }, 'taklab_map');
 
