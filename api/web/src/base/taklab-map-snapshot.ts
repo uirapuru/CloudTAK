@@ -8,9 +8,11 @@
 import { distance } from '@turf/distance';
 import pointOnFeature from '@turf/point-on-feature';
 import type { Geometry } from 'geojson';
+import { xmlSafeJSON } from './taklab-map-escape.ts';
 
 export const MAP_SNAPSHOT_VERSION = 1;
 export const MAP_SNAPSHOT_MAX_ITEMS = 40;
+// Limit for the JSON as sent in the CoT event, i.e. after xmlSafeJSON escaping
 export const MAP_SNAPSHOT_MAX_BYTES = 30 * 1024;
 
 export type MapSnapshotKind = 'marker' | 'route' | 'shape' | 'drawing' | 'other';
@@ -146,8 +148,14 @@ function inBbox(lon: number, lat: number, bbox: [number, number, number, number]
     return ((lon - west) % 360 + 360) % 360 <= east - west;
 }
 
+// Size of the JSON as the server writes it into the CoT event
 function byteLength(value: unknown): number {
-    return new TextEncoder().encode(JSON.stringify(value)).length;
+    return new TextEncoder().encode(xmlSafeJSON(value)).length;
+}
+
+// Degrees in [0, 360): rounded first, so 359.999 becomes 0 and never 360
+function normaliseBearing(bearing: number): number {
+    return round((round(bearing, 2) % 360 + 360) % 360, 2) || 0;
 }
 
 export function buildMapSnapshot(source: MapSnapshotSource): MapSnapshot {
@@ -195,7 +203,7 @@ export function buildMapSnapshot(source: MapSnapshotSource): MapSnapshot {
             lon: round(wrapLon(view.lon), 6),
             // Width of the view along the parallel through its center
             scale_m: Math.round(Math.min(east - west, 360) / 360 * 2 * Math.PI * EARTH_RADIUS_M * Math.cos(view.lat * Math.PI / 180)),
-            bearing: round((view.bearing % 360 + 360) % 360, 2),
+            bearing: normaliseBearing(view.bearing),
             tilt: round(view.tilt, 2),
             bbox: east - west >= 360
                 ? [-180, south, 180, north]
