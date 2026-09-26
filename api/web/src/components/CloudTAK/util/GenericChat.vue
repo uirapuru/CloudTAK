@@ -102,6 +102,17 @@
                     stroke='2.5'
                 />
             </button>
+            <div
+                v-if='attachMap'
+                class='mx-2 mt-1 small text-primary'
+            >
+                Mapa zostanie dołączona do wiadomości
+            </div>
+            <div
+                v-if='attachError'
+                class='mx-2 mt-1 small text-danger'
+                v-text='attachError'
+            />
             <div class='d-flex align-items-center mx-2 mb-2 mt-1'>
                 <div class='flex-grow-1 me-2'>
                     <TablerInput
@@ -110,6 +121,19 @@
                         @keyup.enter='sendMessage'
                     />
                 </div>
+                <TablerIconButton
+                    v-if='canAttachMap'
+                    title='Załącz mapę'
+                    class='me-1'
+                    :class='{ "text-primary bg-primary-lt": attachMap }'
+                    :aria-pressed='attachMap'
+                    @click='attachMap = !attachMap'
+                >
+                    <IconPaperclip
+                        :size='32'
+                        stroke='1'
+                    />
+                </TablerIconButton>
                 <TablerIconButton
                     title='Send Message'
                     @click='sendMessage'
@@ -129,6 +153,7 @@ import { ref, watch, onMounted, nextTick } from 'vue';
 import {
     IconSend,
     IconArrowDown,
+    IconPaperclip,
 } from '@tabler/icons-vue';
 import {
     TablerAlert,
@@ -157,6 +182,10 @@ const props = withDefaults(defineProps<{
     canDelete?: boolean;
     multiselect?: boolean;
     placeholder?: string;
+    // Show the "Attach map" toggle (direct chats only)
+    canAttachMap?: boolean;
+    // Shown when attaching the map to the last message failed
+    attachError?: string;
 }>(), {
     loading: false,
     error: undefined,
@@ -164,10 +193,12 @@ const props = withDefaults(defineProps<{
     canDelete: false,
     multiselect: false,
     placeholder: 'Send Message...',
+    canAttachMap: false,
+    attachError: '',
 });
 
 const emit = defineEmits<{
-    send: [message: string];
+    send: [message: string, attachMap: boolean];
     delete: [ids: Array<string | number>];
     'at-bottom': [atBottom: boolean];
 }>();
@@ -175,6 +206,7 @@ const emit = defineEmits<{
 const scrollContainer = ref<HTMLElement | null>(null);
 const atBottom = ref(true);
 const message = ref('');
+const attachMap = ref(false);
 const selected = ref<Set<string | number>>(new Set());
 
 watch(atBottom, (value) => {
@@ -216,8 +248,9 @@ function toggleSelect(id: string | number) {
 
 function sendMessage() {
     if (!message.value.trim().length) return;
-    emit('send', message.value);
+    emit('send', message.value, props.canAttachMap && attachMap.value);
     message.value = '';
+    attachMap.value = false;
 }
 
 function emitDelete() {
