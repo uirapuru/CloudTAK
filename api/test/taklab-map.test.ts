@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import CoT, { CoTParser } from '@tak-ps/node-cot';
-import { buildTaklabMapCoT, TAKLAB_MAP_MAX_BYTES } from '../stateful/lib/taklab-map.js';
+import { buildTaklabMapCoT, xmlSafeJSON, TAKLAB_MAP_MAX_BYTES } from '../stateful/lib/taklab-map.js';
 
 const SENDER = 'ANDROID-CloudTAK-kaszub';
 const NOW = new Date('2026-09-26T16:40:00.000Z');
@@ -114,21 +114,111 @@ test('taklab_map: rejects data that is not an object', () => {
     assert.throws(() => buildTaklabMapCoT(SENDER, 'x'), /to_uid/);
 });
 
-test('taklab_map: rejects JSON longer than 32 KB', () => {
-    const base = JSON.stringify(snapshot({ pad: '' })).length;
-    const fits = snapshot({ pad: 'x'.repeat(TAKLAB_MAP_MAX_BYTES - base) });
-    assert.equal(JSON.stringify(fits).length, TAKLAB_MAP_MAX_BYTES);
+function escapedBytes(value: unknown): number {
+    return Buffer.byteLength(xmlSafeJSON(value), 'utf8');
+}
+
+// Snapshot whose escaped JSON is exactly `bytes` long, padded with `char`
+function padded(bytes: number, char: string): Record<string, unknown> {
+    const base = escapedBytes(snapshot({ pad: '' }));
+    const per = escapedBytes(char) - 2; // without the quotes
+    return snapshot({ pad: char.repeat(Math.floor((bytes - base) / per)) + 'x'.repeat((bytes - base) % per) });
+}
+
+test('taklab_map: the escaped JSON limit leaves 1 KB for the XML wrapper', () => {
+    assert.equal(TAKLAB_MAP_MAX_BYTES, 32 * 1024 - 1024);
+});
+
+test('taklab_map: rejects escaped JSON over the limit', () => {
+    const fits = padded(TAKLAB_MAP_MAX_BYTES, 'x');
+    assert.equal(escapedBytes(fits), TAKLAB_MAP_MAX_BYTES);
     assert.doesNotThrow(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: fits }));
 
-    const tooBig = snapshot({ pad: 'x'.repeat(TAKLAB_MAP_MAX_BYTES - base + 1) });
-    assert.throws(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: tooBig }), /32 KB/);
+    const tooBig = padded(TAKLAB_MAP_MAX_BYTES + 1, 'x');
+    assert.throws(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: tooBig }), /too large/);
+});
+
+test('taklab_map: measures the size after escaping', () => {
+    // "&" is 1 byte raw but 6 bytes escaped: raw JSON fits easily, escaped does not
+    const ampersands = snapshot({ items: [{ name: 'A', remarks: '&'.repeat(6000) }] });
+    assert.ok(Buffer.byteLength(JSON.stringify(ampersands)) < TAKLAB_MAP_MAX_BYTES);
+    assert.ok(escapedBytes(ampersands) > TAKLAB_MAP_MAX_BYTES);
+    assert.throws(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: ampersands }), /too large/);
+
+    const fits = padded(TAKLAB_MAP_MAX_BYTES, '&');
+    assert.equal(escapedBytes(fits), TAKLAB_MAP_MAX_BYTES);
+    assert.doesNotThrow(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: fits }));
 });
 
 test('taklab_map: counts the size in UTF-8 bytes', () => {
-    const base = JSON.stringify(snapshot({ pad: '' })).length;
-    // "ą" is two bytes in UTF-8.
-    const tooBig = snapshot({ pad: 'ą'.repeat(Math.ceil((TAKLAB_MAP_MAX_BYTES - base) / 2) + 1) });
-    assert.throws(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: tooBig }), /32 KB/);
+    // "ą" is two bytes in UTF-8
+    const tooBig = padded(TAKLAB_MAP_MAX_BYTES + 2, 'ą');
+    assert.ok(JSON.stringify(tooBig).length < TAKLAB_MAP_MAX_BYTES);
+    assert.throws(() => buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: tooBig }), /too large/);
+});
+
+test('taklab_map: the whole event stays under 32 KB', () => {
+    const cot = buildTaklabMapCoT(SENDER, { to_uid: 'a'.repeat(128), snapshot: padded(TAKLAB_MAP_MAX_BYTES, '&') });
+    assert.ok(Buffer.byteLength(CoTParser.to_xml(cot), 'utf8') <= 32 * 1024);
+});
+
+// XML 1.0 Char production without markup: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+function isXmlText(text: string): boolean {
+    for (const char of text) {
+        const code = char.codePointAt(0) as number;
+        if ('<>&'.includes(char)) return false;
+        if (code === 0x9 || code === 0xA || code === 0xD) continue;
+        if (code >= 0x20 && code <= 0xD7FF) continue;
+        if (code >= 0xE000 && code <= 0xFFFD) continue;
+        if (code >= 0x10000 && code <= 0x10FFFF) continue;
+        return false;
+    }
+    return true;
+}
+
+test('taklab_map: escapes characters that are not valid in XML 1.0', () => {
+    const tricky = '\uFFFE|\uFFFF|\uD800|\uDFFF|\uD83D\uDE00|\u0001|&<>';
+    const text = xmlSafeJSON({ s: tricky });
+
+    // Only XML 1.0 characters remain, and none of < > &
+    assert.ok(isXmlText(text), text);
+    assert.match(text, /\\ufffe/);
+    assert.match(text, /\\uffff/);
+    // A valid surrogate pair (emoji) passes through unchanged
+    assert.ok(text.includes('\uD83D\uDE00'));
+    assert.equal(JSON.parse(text).s, tricky);
+
+    const xml = CoTParser.to_xml(buildTaklabMapCoT(SENDER, { to_uid: 'X', snapshot: snapshot({ s: tricky }) }));
+    const inner = xml.match(/<taklab_map v="1">(.*)<\/taklab_map>/);
+    assert.ok(inner && isXmlText(inner[1]));
+});
+
+test('taklab_map: rejects a to_uid with characters not valid in XML 1.0', () => {
+    for (const bad of ['a\uFFFEb', 'a\uFFFFb', 'a\uD800b', 'a\uDC00b']) {
+        assert.throws(() => buildTaklabMapCoT(SENDER, { to_uid: bad, snapshot: snapshot() }), /to_uid/);
+    }
+    assert.doesNotThrow(() => buildTaklabMapCoT(SENDER, { to_uid: 'ANDROID-\uD83D\uDE00', snapshot: snapshot() }));
+});
+
+test('taklab_map: rejects an unsafe sender UID from the connection', () => {
+    for (const bad of ['a"b', 'a<b', 'a&b', 'a\nb', 'a\uFFFFb', '']) {
+        assert.throws(() => buildTaklabMapCoT(bad, { to_uid: 'X', snapshot: snapshot() }), /sender/);
+    }
+});
+
+test('taklab_map: browser and server escape the JSON identically', async () => {
+    // Imported by path so the API type-check does not pull in the web sources
+    const webModule = '../web/src/base/taklab-map-escape.ts';
+    const web = await import(webModule) as { xmlSafeJSON: (value: unknown) => string };
+
+    for (const value of [
+        snapshot(),
+        { s: '&<>"\'\\/' },
+        { s: '\uFFFE\uFFFF\uD800\uDFFF\uD83D\uDE00\u0001\u2028' },
+        { s: 'zażółć gęślą jaźń', n: [1.5, -0, 1e21], b: null },
+    ]) {
+        assert.equal(web.xmlSafeJSON(value), xmlSafeJSON(value));
+    }
 });
 
 test('taklab_map: rejects a version other than 1', () => {
