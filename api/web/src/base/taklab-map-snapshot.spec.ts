@@ -7,6 +7,7 @@ import {
     MAP_SNAPSHOT_MAX_ITEMS,
 } from './taklab-map-snapshot.ts';
 import type { MapSnapshotFeature, MapSnapshotSource } from './taklab-map-snapshot.ts';
+import { xmlSafeJSON } from './taklab-map-escape.ts';
 
 function feature(id: string, lon: number, lat: number, extra: Partial<MapSnapshotFeature> = {}): MapSnapshotFeature {
     return {
@@ -180,6 +181,34 @@ describe('buildMapSnapshot', () => {
         // ~2 KB per item: 20 items do not fit, 14 do
         expect(snap.items.length).toBe(14);
         expect(snap.items.at(-1)?.name).toBe('m13');
+    });
+
+    it('measures the 30 KB limit on the escaped JSON', () => {
+        const features = [];
+        // Each "&" becomes a 6-byte escape: 20 items are ~21 KB raw but ~120 KB escaped
+        for (let i = 0; i < 20; i++) features.push(feature(`m${i}`, 17.03 + i * 0.001, 51.1, { remarks: '&'.repeat(1000) }));
+
+        const snap = buildMapSnapshot(source({ features }));
+
+        expect(new TextEncoder().encode(JSON.stringify(snap)).length).toBeLessThan(MAP_SNAPSHOT_MAX_BYTES);
+        expect(new TextEncoder().encode(xmlSafeJSON(snap)).length).toBeLessThanOrEqual(MAP_SNAPSHOT_MAX_BYTES);
+        expect(snap.items.length).toBe(5);
+        expect(snap.items.at(-1)?.name).toBe('m4');
+    });
+
+    it.each([
+        [359.999, 0],
+        [-0.001, 0],
+        [360, 0],
+        [-360, 0],
+        [359.994, 359.99],
+    ])('normalises bearing %s to %s, never 360', (bearing, expected) => {
+        const snap = buildMapSnapshot(source({
+            view: { lat: 51.1, lon: 17.03, bearing, tilt: 0, bbox: [16.98, 51.08, 17.08, 51.12] },
+        }));
+
+        expect(snap.view.bearing).toBe(expected);
+        expect(Object.is(snap.view.bearing, -0)).toBe(false);
     });
 
     it('handles a view across the antimeridian', () => {
