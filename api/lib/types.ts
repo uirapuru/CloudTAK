@@ -499,6 +499,7 @@ export const FullConfig = Type.Object({
     'map::zoom': Type.Number({ description: 'Default Map Zoom Level', minimum: 0, maximum: 20 }),
     'map::basemap': Type.Union([Type.Null(), Type.Integer()], { description: 'Default Basemap for New Users' }),
     'map::terrain': Type.Union([Type.Null(), Type.Integer()], { description: 'Default Terrain (raster-dem) Basemap for New Users' }),
+    'ion::token': Type.String({ description: 'Cesium ion access token used by the server to issue 3D Tiles access (admin only)' }),
     'display::stale': Type.Enum(Profile_Stale),
     'display::distance': Type.Enum(Profile_Distance),
     'display::elevation': Type.Enum(Profile_Elevation),
