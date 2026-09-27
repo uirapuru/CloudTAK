@@ -193,6 +193,43 @@ describe('Tiles3DManager', () => {
         consoleErr.mockRestore();
     });
 
+    it('keeps exactly one timer per id when an old scheduled refresh fails after the id was removed and re-added', async () => {
+        const t = setup();
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        let reject: (err: Error) => void = () => {};
+        t.fetchAccess.mockImplementationOnce(() => new Promise((_resolve, rej) => { reject = rej; }));
+
+        // The scheduled 50-minute refresh fires and starts fetching...
+        await vi.advanceTimersByTimeAsync(REFRESH_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+
+        // ...the id is removed and re-added while that old fetch is still in
+        // flight, giving it a fresh state with its own legitimate timer...
+        t.manager.remove('7');
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        expect(t.fetchAccess).toHaveBeenCalledTimes(3);
+
+        // ...then the old, orphaned refresh finally rejects, arming a retry
+        // timer on the *new* state.
+        reject(new Error('network blip'));
+        await vi.advanceTimersByTimeAsync(0);
+
+        // The retry timer fires and refreshes exactly once.
+        await vi.advanceTimersByTimeAsync(SCHEDULE_RETRY_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(4);
+
+        // If the new state's original (legitimate) timer had been leaked
+        // instead of cleared before the retry timer overwrote it, it would
+        // still be pending and would fire here too, at REFRESH_MS since the
+        // re-add - producing a second, redundant refresh for the same id.
+        await vi.advanceTimersByTimeAsync(REFRESH_MS - SCHEDULE_RETRY_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(4);
+
+        consoleErr.mockRestore();
+    });
+
     it('does not re-arm the refresh timer once the manager is destroyed', async () => {
         const t = setup();
         await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
