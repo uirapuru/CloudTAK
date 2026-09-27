@@ -40,6 +40,22 @@ import type { CallbackID } from '@capacitor/geolocation';
 
 export type TAKNotification = { type: string; name: string; body: string; url: string; created: string; }
 
+// addTerrain() is not reentrant-safe (it awaits twice before addSource('-2', ...)),
+// and profile overlays initialize concurrently via Promise.allSettled. Serialize
+// calls through a single in-flight promise so a second caller awaits the
+// first run instead of racing it into a duplicate addSource() throw.
+//
+// Exported standalone (no store/map dependencies) so its concurrency
+// guarantee is testable without instantiating the full Pinia store.
+export function exclusive(box: { pending: Promise<void> | null }, fn: () => Promise<void>): Promise<void> {
+    if (!box.pending) {
+        box.pending = fn().finally(() => { box.pending = null; });
+    }
+    return box.pending;
+}
+
+const terrainPending: { pending: Promise<void> | null } = { pending: null };
+
 export const useMapStore = defineStore('cloudtak', {
     state: (): {
         _map?: mapgl.Map;
@@ -339,38 +355,43 @@ export const useMapStore = defineStore('cloudtak', {
         },
         // TODO: Convert to overlay
         addTerrain: async function(): Promise<void> {
-            const cfg = await Config.list(['map::terrain'], { defaults: { 'map::terrain': null } });
-            const terrainId = cfg['map::terrain'] ? Number(cfg['map::terrain']) : null;
-            if (!terrainId) return;
-            if (this.map.getSource('-2')) return;
+            // Concurrent callers (e.g. several 3dtiles overlays initializing in
+            // parallel) must await the same run instead of each racing the two
+            // awaits below into a duplicate addSource('-2', ...) throw.
+            await exclusive(terrainPending, async () => {
+                const cfg = await Config.list(['map::terrain'], { defaults: { 'map::terrain': null } });
+                const terrainId = cfg['map::terrain'] ? Number(cfg['map::terrain']) : null;
+                if (!terrainId) return;
+                if (this.map.getSource('-2')) return;
 
-            const burl = stdurl(`/api/basemap/${terrainId}`);
-            const terrain = await std(burl) as Basemap;
+                const burl = stdurl(`/api/basemap/${terrainId}`);
+                const terrain = await std(burl) as Basemap;
 
-            if (terrain.type !== 'raster-dem') {
-                throw new Error(`Terrain basemap ${terrainId} is not a raster-dem type`);
-            }
+                if (terrain.type !== 'raster-dem') {
+                    throw new Error(`Terrain basemap ${terrainId} is not a raster-dem type`);
+                }
 
-            const source: { type: 'raster-dem'; url: string; tileSize?: number; encoding?: 'mapbox' | 'terrarium' } = {
-                type: 'raster-dem',
-                url: String(stdurl(`/api/basemap/${terrain.id}/tiles?token=${localStorage.token}`))
-            };
+                const source: { type: 'raster-dem'; url: string; tileSize?: number; encoding?: 'mapbox' | 'terrarium' } = {
+                    type: 'raster-dem',
+                    url: String(stdurl(`/api/basemap/${terrain.id}/tiles?token=${localStorage.token}`))
+                };
 
-            if (terrain.tilesize) source.tileSize = terrain.tilesize;
-            if (terrain.encoding) source.encoding = terrain.encoding;
+                if (terrain.tilesize) source.tileSize = terrain.tilesize;
+                if (terrain.encoding) source.encoding = terrain.encoding;
 
-            this.map.addSource('-2', source);
+                this.map.addSource('-2', source);
 
-            this.map.setTerrain({
-                source: '-2',
-                exaggeration: peekTiles3D()?.hasVisible() ? 1 : 1.5
+                this.map.setTerrain({
+                    source: '-2',
+                    exaggeration: peekTiles3D()?.hasVisible() ? 1 : 1.5
+                });
+
+                this.terrainEnabled = true;
+
+                if (this.map.getPitch() === 0) {
+                    this.map.easeTo({ pitch: 45 });
+                }
             });
-
-            this.terrainEnabled = true;
-
-            if (this.map.getPitch() === 0) {
-                this.map.easeTo({ pitch: 45 });
-            }
         },
 
         /**

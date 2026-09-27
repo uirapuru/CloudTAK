@@ -334,10 +334,18 @@ export default class Overlay {
                     visible: this.visible,
                     opacity: Number(this.opacity),
                 });
-                await useMapStore().sync3DTerrain();
             } catch (err) {
                 this._error = err instanceof Error ? err : new Error(String(err));
                 console.error(`Failed to load 3D Tiles for overlay ${this.id} (${this.name}):`, err);
+            }
+
+            // Terrain sync is best-effort and independent of whether the
+            // tileset itself loaded: a terrain failure must never mark a
+            // tileset that loaded fine as broken (this._error).
+            try {
+                await mapStore.sync3DTerrain();
+            } catch (err) {
+                console.error(`Failed to sync terrain for overlay ${this.id} (${this.name}):`, err);
             }
         } else if (this.type === 'raster' && this.url) {
             const url = stdurl(this.url);
