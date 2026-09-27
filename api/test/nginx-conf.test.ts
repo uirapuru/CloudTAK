@@ -71,13 +71,14 @@ test('nginx.conf: https subdomain produces full CSP with wildcard parent domain'
         csp[0],
         `add_header 'Content-Security-Policy' "`
         + `default-src 'self' map.example.com:* *.example.com:*; `
-        + `img-src 'self' data: blob: map.example.com:* *.example.com:*; `
+        + `script-src 'self' 'wasm-unsafe-eval' map.example.com:* *.example.com:*; `
+        + `img-src 'self' data: blob: https://assets.ion.cesium.com map.example.com:* *.example.com:*; `
         + `media-src 'self' blob: map.example.com:* *.example.com:*; `
         + `font-src 'self' data:; `
         + `worker-src 'self' blob:; `
         + `style-src-elem 'self' 'unsafe-inline'; `
         + `style-src-attr 'unsafe-inline'; `
-        + `connect-src 'self' map.example.com:* *.example.com:*;`
+        + `connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com map.example.com:* *.example.com:*;`
         + `upgrade-insecure-requests;" always;`,
     );
 });
@@ -91,7 +92,7 @@ test('nginx.conf: bare domain gets its own host without a wildcard subdomain sou
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
     assert.ok(csp[0].includes(`default-src 'self' example.com:*;`));
-    assert.ok(csp[0].includes(`connect-src 'self' example.com:*;`));
+    assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com example.com:*;`));
     assert.ok(!csp[0].includes('*.com'));
     assert.ok(!csp[0].includes('*.example.com'));
 });
@@ -104,7 +105,7 @@ test('nginx.conf: multi-level subdomain wildcards only the first label', async (
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`connect-src 'self' map.stage.example.com:* *.stage.example.com:*;`));
+    assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com map.stage.example.com:* *.stage.example.com:*;`));
 });
 
 test('nginx.conf: IPv4 host is used verbatim without a wildcard source', async () => {
@@ -116,9 +117,9 @@ test('nginx.conf: IPv4 host is used verbatim without a wildcard source', async (
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
     assert.ok(csp[0].includes(`default-src 'self' 192.168.1.10:*;`));
-    assert.ok(csp[0].includes(`img-src 'self' data: blob: 192.168.1.10:*;`));
+    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com 192.168.1.10:*;`));
     assert.ok(csp[0].includes(`media-src 'self' blob: 192.168.1.10:*;`));
-    assert.ok(csp[0].includes(`connect-src 'self' 192.168.1.10:*;`));
+    assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com 192.168.1.10:*;`));
     assert.ok(!csp[0].includes('*.168.1.10'));
 });
 
@@ -144,7 +145,7 @@ test('nginx.conf: port in API_URL does not leak into CSP host sources', async ()
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`connect-src 'self' map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com map.example.com:* *.example.com:*;`));
     assert.ok(!csp[0].includes('8443'));
 });
 
@@ -211,11 +212,11 @@ test('nginx.conf: NGINX_CSP_* appends sources to a single directive', async () =
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://tiles.example.com map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://tiles.example.com map.example.com:* *.example.com:*;`));
 
     // Other directives are untouched
     assert.ok(csp[0].includes(`media-src 'self' blob: map.example.com:* *.example.com:*;`));
-    assert.ok(csp[0].includes(`connect-src 'self' map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com map.example.com:* *.example.com:*;`));
 });
 
 test('nginx.conf: NGINX_CSP_* CSV values are split, trimmed and empties dropped', async () => {
@@ -230,7 +231,7 @@ test('nginx.conf: NGINX_CSP_* CSV values are split, trimmed and empties dropped'
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`connect-src 'self' https://a.example.com wss://b.example.com:8443 map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com https://a.example.com wss://b.example.com:8443 map.example.com:* *.example.com:*;`));
 });
 
 test('nginx.conf: NGINX_CSP_* augments multiple directives at once', async () => {
@@ -262,7 +263,7 @@ test('nginx.conf: NGINX_CSP_* with an empty value is a no-op', async () => {
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`img-src 'self' data: blob: map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com map.example.com:* *.example.com:*;`));
 });
 
 test('nginx.conf: unknown NGINX_CSP_* variable is a startup error', async () => {
