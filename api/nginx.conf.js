@@ -15,15 +15,20 @@ if (url.hostname === 'localhost') {
     // FQDN: Check if API_URL is something.example.com vs example.com
     const isSub = process.env.API_URL.match(/.*\.*\..*?\..*?$/)
 
+    // Cesium ion 3D Tiles overlays: tiles come from ion and Google, credit
+    // logos from ion, and loaders.gl compiles its meshopt decoder as WebAssembly
+    const ION_TILES = ['https://assets.ion.cesium.com', 'https://tile.googleapis.com'];
+
     const csp = {
         'default-src': [`'self'`],
-        'img-src': [`'self'`, 'data:', 'blob:'],
+        'script-src': [`'self'`, `'wasm-unsafe-eval'`],
+        'img-src': [`'self'`, 'data:', 'blob:', 'https://assets.ion.cesium.com'],
         'media-src': [`'self'`, 'blob:'],
         'font-src': [`'self'`, 'data:'],
         'worker-src': [`'self'`, 'blob:'],
         'style-src-elem': [`'self'`, `'unsafe-inline'`],
         'style-src-attr': [`'unsafe-inline'`],
-        'connect-src': [`'self'`]
+        'connect-src': [`'self'`, ...ION_TILES]
     }
 
     cspstr = `add_header 'Content-Security-Policy' "`
@@ -33,7 +38,7 @@ if (url.hostname === 'localhost') {
         if (cspstr.endsWith(';')) cspstr += ' ';
         cspstr += `${key} ${value.join(' ')}`
 
-        if (['img-src', 'media-src', 'connect-src', 'default-src'].includes(key)) {
+        if (['img-src', 'media-src', 'connect-src', 'default-src', 'script-src'].includes(key)) {
             if (isIP) {
                 cspstr += ` ${url.hostname}:*`;
             } else if (isSub) {
