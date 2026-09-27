@@ -198,6 +198,93 @@ describe('Tiles3DManager', () => {
         expect(t.layers()).toHaveLength(0);
     });
 
+    it('drops the result of add() when removed before the fetch resolves', async () => {
+        let release: () => void = () => {};
+        const t = setup();
+        t.fetchAccess.mockImplementationOnce(() => new Promise((resolve) => {
+            release = () => resolve({ url: 'https://tiles/late', attributions: [] });
+        }));
+
+        const pendingAdd = t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        t.manager.remove('7');
+        release();
+        await pendingAdd;
+
+        expect(t.layers()).toHaveLength(0);
+        expect(t.map.addControl).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(REFRESH_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(1);
+    });
+
+    it('lets the most recently started add() win when two overlapping calls resolve out of order', async () => {
+        const t = setup();
+        let releaseFirst: () => void = () => {};
+        let releaseSecond: () => void = () => {};
+
+        t.fetchAccess.mockImplementationOnce(() => new Promise((resolve) => {
+            releaseFirst = () => resolve({ url: 'https://tiles/first', attributions: [] });
+        }));
+        const first = t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+
+        t.fetchAccess.mockImplementationOnce(() => new Promise((resolve) => {
+            releaseSecond = () => resolve({ url: 'https://tiles/second', attributions: [] });
+        }));
+        const second = t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 0.5 });
+
+        // The second call's fetch resolves first...
+        releaseSecond();
+        await second;
+        expect(t.layers()[0].props.data).toBe('https://tiles/second');
+        expect(t.layers()[0].props.opacity).toBe(0.5);
+
+        // ...and the first call's late resolution must not overwrite it.
+        releaseFirst();
+        await first;
+        expect(t.layers()).toHaveLength(1);
+        expect(t.layers()[0].props.data).toBe('https://tiles/second');
+        expect(t.layers()[0].props.opacity).toBe(0.5);
+    });
+
+    it('drops a pending add() when the manager is destroyed first', async () => {
+        let release: () => void = () => {};
+        const t = setup();
+        t.fetchAccess.mockImplementationOnce(() => new Promise((resolve) => {
+            release = () => resolve({ url: 'https://tiles/late', attributions: [] });
+        }));
+
+        const pendingAdd = t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        t.manager.destroy();
+        release();
+        await pendingAdd;
+
+        expect(t.map.addControl).not.toHaveBeenCalled();
+        expect(t.layers()).toHaveLength(0);
+    });
+
+    it('drops a pending refresh() when the manager is destroyed first', async () => {
+        const t = setup();
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        t.onChange.mockClear();
+
+        let release: () => void = () => {};
+        t.fetchAccess.mockImplementationOnce(() => new Promise((resolve) => {
+            release = () => resolve({ url: 'https://tiles/late', attributions: [] });
+        }));
+
+        const pendingRefresh = t.manager.refresh('7');
+        t.manager.destroy();
+        release();
+        await pendingRefresh;
+
+        expect(t.onChange).not.toHaveBeenCalled();
+        expect(t.map.removeControl).toHaveBeenCalledTimes(1);
+
+        // The dropped refresh must not have scheduled a new periodic timer
+        await vi.advanceTimersByTimeAsync(REFRESH_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+    });
+
     it('lists attributions of visible layers without duplicates', async () => {
         const t = setup({
             access: (name) => ({ url: `https://tiles/${name}`, attributions: [{ text: 'Shared' }, { text: name }] }),
