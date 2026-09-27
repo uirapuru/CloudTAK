@@ -330,6 +330,14 @@ export class Tiles3DManager {
         const state = this.states.get(id);
         if (!state) return;
 
+        // The failure being handled here belongs to a schedule() timer that
+        // already fired; but if the entry was removed and re-added while
+        // fetchAccess() was in flight, `state` is a fresh State with its own
+        // legitimate timer already running. Clear it before overwriting
+        // state.timer so that timer isn't leaked (which would otherwise
+        // leave two timers racing to refresh the same id).
+        clearTimeout(state.timer);
+
         state.timer = setTimeout(() => {
             this.refresh(id).catch((err) => {
                 console.error(`Failed to refresh 3D Tiles access for overlay ${id}`, err);

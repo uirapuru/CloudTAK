@@ -194,7 +194,7 @@ import {
 } from '@tabler/icons-vue'
 import type { LayerSpecification } from 'maplibre-gl'
 import { useRouter } from 'vue-router';
-import { useMapStore } from '../../../stores/map.ts';
+import { useMapStore, firstStyledLayerId } from '../../../stores/map.ts';
 
 const mapStore = useMapStore();
 
@@ -254,7 +254,9 @@ async function setBasemap(basemap: Basemap) {
             const overlay = mapStore.overlays[i];
 
             if (overlay.mode === 'basemap') {
-                if (mapStore.overlays[i + 1]) {
+                const before = firstStyledLayerId(mapStore.overlays, i + 1);
+
+                if (before) {
                     await overlay.replace({
                         name: basemap.name,
                         type: basemap.type,
@@ -265,7 +267,7 @@ async function setBasemap(basemap: Basemap) {
                         mode_id: String(basemap.id),
                         styles: basemap.styles as Array<LayerSpecification>
                     }, {
-                        before: mapStore.overlays[i + 1].styles[0].id
+                        before
                     });
                 } else {
                     await overlay.replace({
@@ -283,20 +285,35 @@ async function setBasemap(basemap: Basemap) {
             }
         }
     } else {
-        const before = String(mapStore.overlays[0].styles[0].id);
+        const before = firstStyledLayerId(mapStore.overlays, 0);
 
-        mapStore.overlays.unshift(await Overlay.create({
-            name: basemap.name,
-            pos: -1,
-            type: basemap.type,
-            opacity: 1,
-            visible: true,
-            frequency: basemap.frequency,
-            url: `/api/basemap/${basemap.id}/tiles`,
-            mode: 'basemap',
-            mode_id: String(basemap.id),
-            styles: basemap.styles
-        }, { before }));
+        if (before) {
+            mapStore.overlays.unshift(await Overlay.create({
+                name: basemap.name,
+                pos: -1,
+                type: basemap.type,
+                opacity: 1,
+                visible: true,
+                frequency: basemap.frequency,
+                url: `/api/basemap/${basemap.id}/tiles`,
+                mode: 'basemap',
+                mode_id: String(basemap.id),
+                styles: basemap.styles
+            }, { before }));
+        } else {
+            mapStore.overlays.unshift(await Overlay.create({
+                name: basemap.name,
+                pos: -1,
+                type: basemap.type,
+                opacity: 1,
+                visible: true,
+                frequency: basemap.frequency,
+                url: `/api/basemap/${basemap.id}/tiles`,
+                mode: 'basemap',
+                mode_id: String(basemap.id),
+                styles: basemap.styles
+            }));
+        }
     }
 }
 

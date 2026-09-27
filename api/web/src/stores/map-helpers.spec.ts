@@ -59,6 +59,19 @@ describe('firstStyledLayerId', () => {
         expect(firstStyledLayerId(overlays, 0)).toBe('a');
     });
 
+    it('skips a style-less first overlay when `from = 0` (e.g. a 3dtiles overlay added before any basemap exists)', () => {
+        const overlays = [
+            { styles: [] }, // 3dtiles overlay sitting at index 0, no basemap yet
+            { styles: [{ id: 'a' }] },
+        ];
+
+        expect(firstStyledLayerId(overlays, 0)).toBe('a');
+    });
+
+    it('returns undefined when `from = 0` and every overlay is style-less', () => {
+        expect(firstStyledLayerId([{ styles: [] }], 0)).toBeUndefined();
+    });
+
     it('coerces numeric ids to strings, like MapLibre layer ids', () => {
         const overlays = [
             { styles: [] },
