@@ -87,6 +87,15 @@
                             :disabled='!edit'
                         />
                     </div>
+                    <div class='col-lg-12 mt-3'>
+                        <TablerInput
+                            v-model='config[`ion::token`]'
+                            type='password'
+                            label='Cesium ion token'
+                            description='Enables the 3D Buildings overlays. Leave empty to use the CESIUM_ION_TOKEN environment variable.'
+                            :disabled='!edit'
+                        />
+                    </div>
                 </div>
             </template>
         </div>
@@ -123,13 +132,15 @@ const config = ref<{
     'map::pitch': number;
     'map::basemap': number | null;
     'map::terrain': number | null;
+    'ion::token': string;
 }>({
     'map::center': '40,-100', // Default Lat,Lng
     'map::zoom': 4,
     'map::bearing': 0,
     'map::pitch': 0,
     'map::basemap': null,
-    'map::terrain': null
+    'map::terrain': null,
+    'ion::token': ''
 });
 
 onMounted(() => {
@@ -163,6 +174,7 @@ async function fetch() {
             'map::pitch': res.data['map::pitch'] ?? config.value['map::pitch'],
             'map::basemap': res.data['map::basemap'] ?? config.value['map::basemap'],
             'map::terrain': res.data['map::terrain'] ?? config.value['map::terrain'],
+            'ion::token': res.data['ion::token'] ?? config.value['ion::token'],
         };
     } catch (error) {
         err.value = error instanceof Error ? error : new Error(String(error));

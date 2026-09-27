@@ -61,6 +61,33 @@
                     </StandardItem>
 
                     <div
+                        v-if='ionItems.length && !paging.collection'
+                        class='d-flex flex-column gap-2'
+                    >
+                        <div class='small text-white-50 text-uppercase'>
+                            3D Buildings
+                        </div>
+                        <StandardItem
+                            v-for='item in ionItems'
+                            :key='item.name'
+                            class='p-3'
+                            :class='[
+                                ionOverlayNames.has(item.name) || loading ? "opacity-50 pe-none" : "",
+                            ]'
+                            :aria-disabled='loading || ionOverlayNames.has(item.name)'
+                            @click='createIonOverlay(item)'
+                        >
+                            <div class='d-flex align-items-center gap-2'>
+                                <IconBuildingSkyscraper
+                                    :size='24'
+                                    stroke='1'
+                                />
+                                <span class='fw-semibold'>{{ item.label }}</span>
+                            </div>
+                        </StandardItem>
+                    </div>
+
+                    <div
                         v-if='list.items.length || list.collections.length'
                         class='d-flex flex-column gap-2'
                     >
@@ -99,7 +126,7 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Basemap, BasemapList } from '../../../types.ts';
-import { server, stdurl } from '../../../std.ts';
+import { server, stdurl, std } from '../../../std.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import {
     TablerNone,
@@ -110,7 +137,8 @@ import {
 } from '@tak-ps/vue-tabler';
 import {
     IconUser,
-    IconFolder
+    IconFolder,
+    IconBuildingSkyscraper
 } from '@tabler/icons-vue';
 import StandardItem from '../util/StandardItem.vue';
 import StandardItemBasemap from '../util/StandardItemBasemap.vue';
@@ -149,6 +177,16 @@ const overlayBasemapIds = computed<Set<string>>(() => {
     return ids;
 });
 
+const ionItems = ref<Array<{ name: string; label: string }>>([]);
+
+const ionOverlayNames = computed<Set<string>>(() => {
+    const names = new Set<string>();
+    for (const overlay of mapStore.overlays as Array<{ mode?: string; mode_id?: string | number | null }>) {
+        if (overlay.mode === 'ion' && overlay.mode_id) names.add(String(overlay.mode_id));
+    }
+    return names;
+});
+
 watch(
     () => [paging.value.filter, paging.value.collection, paging.value.limit, paging.value.page],
     async () => {
@@ -157,7 +195,7 @@ watch(
 );
 
 onMounted(async () => {
-    await fetchList();
+    await Promise.all([fetchList(), fetchIon()]);
 });
 
 function basemapExists(basemap: Basemap): boolean {
@@ -198,6 +236,38 @@ async function createOverlay(overlay: Basemap) {
 
         mapStore.addOverlay(createdOverlay);
 
+        router.push('/menu/overlays');
+    } finally {
+        loading.value = false;
+    }
+}
+
+async function fetchIon(): Promise<void> {
+    try {
+        const res = await std('/api/ion') as { items: Array<{ name: string; label: string }> };
+        ionItems.value = res.items;
+    } catch (err) {
+        // 3D buildings are optional; the rest of the explorer must still work
+        console.error('Failed to list Cesium ion assets', err);
+        ionItems.value = [];
+    }
+}
+
+async function createIonOverlay(item: { name: string; label: string }) {
+    if (loading.value || ionOverlayNames.value.has(item.name)) return;
+    loading.value = true;
+
+    try {
+        const createdOverlay = await Overlay.create({
+            url: `ion:${item.name}`,
+            name: item.label,
+            mode: 'ion',
+            mode_id: item.name,
+            type: '3dtiles',
+            styles: []
+        });
+
+        mapStore.addOverlay(createdOverlay);
         router.push('/menu/overlays');
     } finally {
         loading.value = false;
