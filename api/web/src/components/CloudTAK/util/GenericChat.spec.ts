@@ -33,30 +33,38 @@ describe('GenericChat attach map', () => {
         expect(attachButton(chat({ canAttachMap: true })).exists()).toBe(true);
     });
 
-    it('toggles the attached state with a notice', async () => {
+    it('defaults to attached with a notice, and can be toggled off', async () => {
         const wrapper = chat({ canAttachMap: true });
-        expect(wrapper.text()).not.toContain(NOTICE);
-
-        await attachButton(wrapper).trigger('click');
         expect(wrapper.text()).toContain(NOTICE);
         expect(attachButton(wrapper).attributes('aria-pressed')).toBe('true');
 
         await attachButton(wrapper).trigger('click');
         expect(wrapper.text()).not.toContain(NOTICE);
-    });
-
-    it('sends with the map attached once, then resets', async () => {
-        const wrapper = chat({ canAttachMap: true });
+        expect(attachButton(wrapper).attributes('aria-pressed')).toBe('false');
 
         await attachButton(wrapper).trigger('click');
-        await send(wrapper, 'co widzę na mapie?');
-        expect(wrapper.text()).not.toContain(NOTICE);
+        expect(wrapper.text()).toContain(NOTICE);
+    });
 
+    it('sends attached by default, and resets to attached after a one-off toggle-off', async () => {
+        const wrapper = chat({ canAttachMap: true });
+
+        // Default is ON: sending without touching the button attaches the map.
+        await send(wrapper, 'co widzę na mapie?');
+
+        // Turn it off for a single message.
+        await attachButton(wrapper).trigger('click');
+        expect(wrapper.text()).not.toContain(NOTICE);
+        await send(wrapper, 'bez mapy tym razem');
+
+        // It comes back ON for the next message automatically.
+        expect(wrapper.text()).toContain(NOTICE);
         await send(wrapper, 'a teraz?');
 
         expect(wrapper.emitted('send')).toEqual([
             ['co widzę na mapie?', true],
-            ['a teraz?', false],
+            ['bez mapy tym razem', false],
+            ['a teraz?', true],
         ]);
     });
 
