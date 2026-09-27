@@ -126,6 +126,8 @@ export class Tiles3DManager {
     private onChange: () => void;
     private overlay: DeckOverlayLike | null = null;
     private states = new Map<string, State>();
+    private pendingAdds = new Map<string, symbol>();
+    private destroyed = false;
 
     constructor(deps: {
         map: MapLike;
@@ -146,7 +148,15 @@ export class Tiles3DManager {
     }
 
     async add(entry: Tiles3DEntry): Promise<void> {
+        // Only the most recently started add() for this id may commit: an older
+        // in-flight call must not resurrect a removed layer or clobber a newer one.
+        const token = Symbol();
+        this.pendingAdds.set(entry.id, token);
+
         const access = await this.fetchAccess(entry.name);
+
+        if (this.destroyed || this.pendingAdds.get(entry.id) !== token) return;
+        this.pendingAdds.delete(entry.id);
 
         this.remove(entry.id);
         this.states.set(entry.id, {
@@ -161,6 +171,9 @@ export class Tiles3DManager {
     }
 
     remove(id: string): void {
+        // Cancel any in-flight add() for this id so its late continuation cannot commit
+        this.pendingAdds.delete(id);
+
         const state = this.states.get(id);
         if (!state) return;
 
@@ -189,7 +202,8 @@ export class Tiles3DManager {
 
         const access = await this.fetchAccess(before.entry.name);
 
-        // The overlay may have been removed or re-added while we waited
+        // The manager may have been destroyed, or the overlay removed or re-added, while we waited
+        if (this.destroyed) return;
         const state = this.states.get(id);
         if (state !== before) return;
 
@@ -225,6 +239,8 @@ export class Tiles3DManager {
     }
 
     render(): void {
+        if (this.destroyed) return;
+
         if (!this.overlay) {
             if (!this.states.size) return;
             this.overlay = new this.deck.MapboxOverlay({ interleaved: true, layers: [] });
@@ -242,6 +258,9 @@ export class Tiles3DManager {
     }
 
     destroy(): void {
+        this.destroyed = true;
+        this.pendingAdds.clear();
+
         for (const state of this.states.values()) clearTimeout(state.timer);
         this.states.clear();
 
