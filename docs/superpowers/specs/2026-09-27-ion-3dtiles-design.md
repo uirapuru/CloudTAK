@@ -64,6 +64,8 @@ Notatka kończy się jedną z trzech decyzji:
 - Nowy klucz `ion::token` (string) w `FullConfig`. Klucz nie trafia do `UserConfigKeys`
   ani `PublicConfigKeys`, więc czyta go i zmienia tylko administrator.
 - Admin → Config → Map dostaje pole „Cesium ion token” typu hasło.
+- Jeśli `ion::token` jest pusty, serwer bierze token ze zmiennej środowiskowej
+  `CESIUM_ION_TOKEN`. Tak wdrażamy token na klastrze (sekcja „Wdrożenie”).
 
 ### Lista dozwolonych zasobów
 
@@ -104,7 +106,8 @@ z konta ion.
 - Wpis traci ważność 5 minut przed wygaśnięciem `accessToken`. Jeśli czas wygaśnięcia jest
   nieznany, wpis traci ważność po 50 minutach.
 - Błędne odpowiedzi nie trafiają do pamięci podręcznej.
-- Zmiana `ion::token` przez `PUT /api/config` czyści pamięć podręczną.
+- Wpis pamięta token, którym go pobrano. Po zmianie tokenu wpis jest nieważny i serwer
+  pyta ion od nowa.
 
 ## Klient
 
@@ -129,6 +132,9 @@ z konta ion.
   `setOpacity(overlay, opacity)`.
 - Warstwy 3D dostają `beforeId` pierwszej warstwy CoT. Markery i rysunki leżą nad budynkami
   w kolejności rysowania, a bufor głębi zasłania je za budynkami.
+- Przy starcie mapy nakładki użytkownika powstają przed warstwą CoT. Moduł ustala `beforeId`
+  w chwili rysowania i sprawdza, czy taka warstwa istnieje. Po założeniu warstwy CoT
+  `stores/map.ts` każe modułowi przerysować warstwy 3D.
 
 ### Zmiany w `overlay.ts`
 
@@ -146,6 +152,9 @@ z konta ion.
 
 - Gdy nakładka 3D jest widoczna, stopka mapy pokazuje atrybucje z odpowiedzi endpointu.
 - Dla Google stopka pokazuje dodatkowo logo Google, zgodnie z warunkami Google Map Tiles API.
+- ion podaje atrybucje jako HTML. Serwer nie przekazuje tego HTML dalej: zamienia każdą
+  atrybucję na `{ text, image? }`, gdzie `image` to adres obrazka tylko z domeny `cesium.com`
+  po HTTPS. Klient składa stopkę z tekstu uciekniętego przed wstawieniem i z obrazka.
 
 ## Testy
 
@@ -153,7 +162,7 @@ z konta ion.
 
 Wywołania ion zastępuje atrapa `fetch`. Przypadki:
 
-1. `GET /api/ion` bez logowania zwraca 401.
+1. `GET /api/ion` bez logowania zwraca 403 (tak odpowiada `Auth.as_user` w CloudTAK).
 2. `GET /api/ion` bez tokenu zwraca pustą listę.
 3. `GET /api/ion/{name}/endpoint` dla nazwy spoza listy zwraca 404.
 4. Endpoint bez tokenu zwraca 404.
@@ -161,7 +170,8 @@ Wywołania ion zastępuje atrapa `fetch`. Przypadki:
 6. Zapytanie po wygaśnięciu wpisu daje drugie wywołanie ion.
 7. Odpowiedź 401 z ion zamienia się w 502 i nie trafia do pamięci podręcznej.
 8. Nie-administrator nie odczyta `ion::token` przez `GET /api/config`.
-9. `PUT /api/config` z nowym `ion::token` czyści pamięć podręczną.
+9. Zmiana tokenu daje nowe wywołanie ion.
+10. Pusty `ion::token` i ustawiona zmienna `CESIUM_ION_TOKEN`: serwer używa zmiennej.
 
 ### Klient: vitest dla `tiles3d.ts`
 
@@ -177,9 +187,12 @@ odnowienie dostępu po 401 i po 50 minutach.
 
 ## Wdrożenie
 
-- Token ion leży w sekrecie Kubernetesa `{env}-secrets` w chartcie `taklab/charts/ots-env`.
-- `job-cloudtak-konfiguracja` wpisuje go przez `PUT /api/config` razem z resztą konfiguracji.
+- Token ion leży w sekrecie Kubernetesa `{env}-secrets` pod kluczem `cesium-ion-token`.
+- Chart `taklab/charts/ots-env` podaje go kontenerowi CloudTAK jako zmienną
+  `CESIUM_ION_TOKEN` (`secretKeyRef` z `optional: true`, więc środowisko bez tokenu wstaje).
   Token przetrwa odtworzenie środowiska.
+- `job-cloudtak-konfiguracja` nie nadaje się do tego: działa tylko przy pierwszej konfiguracji
+  CloudTAK i kończy się od razu na już skonfigurowanym środowisku.
 - Nowy tag obrazu `taklab/cloudtak-api`, wdrożenie przez Jenkinsa.
 
 ## Poza zakresem
