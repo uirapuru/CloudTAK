@@ -7,6 +7,7 @@ import { createPinia } from 'pinia'
 import { useMapStore } from './stores/map.ts';
 import { supportsServiceWorker } from './base/capacitor.ts';
 import { initServiceWorker } from './base/service-worker.ts';
+import { isRecoverableResource } from './base/resource-recovery.ts';
 
 initServiceWorker(version);
 
@@ -33,7 +34,7 @@ window.addEventListener('error', async (e) => {
 
     if (import.meta.env.DEV || !supportsServiceWorker()) return;
     if (sessionStorage.getItem(SW_RECOVERY_ATTEMPTED_KEY)) return;
-    if (!url) return;
+    if (!isRecoverableResource(url, window.location.origin)) return;
 
     sessionStorage.setItem(SW_RECOVERY_ATTEMPTED_KEY, '1');
     console.warn('Attempting targeted SW cache recovery for:', url);
