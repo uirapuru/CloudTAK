@@ -206,7 +206,7 @@ const emit = defineEmits<{
 const scrollContainer = ref<HTMLElement | null>(null);
 const atBottom = ref(true);
 const message = ref('');
-const attachMap = ref(false);
+const attachMap = ref(true);
 const selected = ref<Set<string | number>>(new Set());
 
 watch(atBottom, (value) => {
@@ -250,7 +250,7 @@ function sendMessage() {
     if (!message.value.trim().length) return;
     emit('send', message.value, props.canAttachMap && attachMap.value);
     message.value = '';
-    attachMap.value = false;
+    attachMap.value = true;
 }
 
 function emitDelete() {
