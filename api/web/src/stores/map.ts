@@ -24,6 +24,7 @@ import { WorkerMessageType, LocationState } from '../base/events.ts';
 import type { WorkerMessage } from '../base/events.ts';
 import Overlay from '../base/overlay.ts';
 import Subscription from '../base/subscription.ts';
+import { peekTiles3D, formatAttribution } from '../base/tiles3d.ts';
 import { std, stdurl } from '../std.js';
 import * as mapgl from 'maplibre-gl'
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-csp-worker.js?url'
@@ -362,13 +363,29 @@ export const useMapStore = defineStore('cloudtak', {
 
             this.map.setTerrain({
                 source: '-2',
-                exaggeration: 1.5
+                exaggeration: peekTiles3D()?.hasVisible() ? 1 : 1.5
             });
 
             this.terrainEnabled = true;
 
             if (this.map.getPitch() === 0) {
                 this.map.easeTo({ pitch: 45 });
+            }
+        },
+
+        /**
+         * 3D Tiles buildings line up with the ground only on unexaggerated
+         * terrain, so keep terrain on at 1x while any 3D overlay is visible.
+         */
+        sync3DTerrain: async function(): Promise<void> {
+            const has3D = !!peekTiles3D()?.hasVisible();
+
+            if (has3D && !this.terrainEnabled) {
+                await this.addTerrain();
+            }
+
+            if (this.terrainEnabled && this.map.getSource('-2')) {
+                this.map.setTerrain({ source: '-2', exaggeration: has3D ? 1 : 1.5 });
             }
         },
 
@@ -1199,6 +1216,10 @@ export const useMapStore = defineStore('cloudtak', {
                 type: 'geojson',
             }));
 
+            // 3D overlays were created before the CoT layer existed; redraw
+            // them below it so markers stay on top
+            peekTiles3D()?.render();
+
             // Data Syncs are specially loaded as they are dynamic
             // Mission loading is fire-and-forget so logs/changes/features
             // do not block the rest of map initialization. Each overlay is
@@ -1303,10 +1324,15 @@ export const useMapStore = defineStore('cloudtak', {
             const results = await Promise.all(attributionPromises);
             const attributions = results.filter((a): a is string => !!a);
 
+            // Cesium ion attributions arrive pre-sanitized as text + optional image
+            const tiles3d = peekTiles3D();
+            const ionAttributions = tiles3d ? tiles3d.attributions().map(formatAttribution) : [];
+            const all = [...attributions, ...ionAttributions];
+
             // Update attribution by manipulating the DOM directly
             const attributionContainer = document.querySelector('.maplibregl-ctrl-attrib-inner');
-            if (attributionContainer && attributions.length > 0) {
-                attributionContainer.innerHTML = attributions.join(' | ');
+            if (attributionContainer && (all.length > 0 || tiles3d)) {
+                attributionContainer.innerHTML = all.join(' | ');
             }
         },
 

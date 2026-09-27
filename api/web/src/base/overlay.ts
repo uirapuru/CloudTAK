@@ -11,6 +11,7 @@ import cotStyles from './utils/styles.ts'
 import { std, stdurl } from '../std.js';
 import { useMapStore } from '../stores/map.js';
 import ProfileConfig from './profile.ts';
+import { getTiles3D, peekTiles3D } from './tiles3d.ts';
 
 /**
  * @class
@@ -322,7 +323,23 @@ export default class Overlay {
     } = {}) {
         const mapStore = useMapStore();
 
-        if (this.type === 'raster' && this.url) {
+        if (this.type === '3dtiles') {
+            // Rendered by deck.gl, not by a MapLibre source. A failure must not
+            // abort map initialization, same as the raster branch below.
+            try {
+                const tiles = await getTiles3D();
+                await tiles.add({
+                    id: String(this.id),
+                    name: String(this.mode_id),
+                    visible: this.visible,
+                    opacity: Number(this.opacity),
+                });
+                await useMapStore().sync3DTerrain();
+            } catch (err) {
+                this._error = err instanceof Error ? err : new Error(String(err));
+                console.error(`Failed to load 3D Tiles for overlay ${this.id} (${this.name}):`, err);
+            }
+        } else if (this.type === 'raster' && this.url) {
             const url = stdurl(this.url);
             url.searchParams.set('token', localStorage.token);
 
@@ -440,6 +457,11 @@ export default class Overlay {
 
     remove() {
         const mapStore = useMapStore();
+
+        if (this.type === '3dtiles') {
+            peekTiles3D()?.remove(String(this.id));
+            mapStore.sync3DTerrain().catch((err: unknown) => console.error('Failed to sync terrain', err));
+        }
 
         for (const l of this.styles) {
             mapStore.map.removeLayer(String(l.id));
@@ -569,6 +591,7 @@ export default class Overlay {
                     mapStore.map.setPaintProperty(l.id, 'raster-opacity', Number(this.opacity))
                 }
             }
+            if (this.type === '3dtiles') peekTiles3D()?.setOpacity(String(this.id), Number(this.opacity));
             changed = true;
         }
 
@@ -576,6 +599,10 @@ export default class Overlay {
             this.visible = body.visible;
             for (const l of this.styles) {
                 mapStore.map.setLayoutProperty(l.id, 'visibility', this.visible ? 'visible' : 'none');
+            }
+            if (this.type === '3dtiles') {
+                peekTiles3D()?.setVisible(String(this.id), this.visible);
+                mapStore.sync3DTerrain().catch((err: unknown) => console.error('Failed to sync terrain', err));
             }
             changed = true;
         }
