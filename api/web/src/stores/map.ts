@@ -56,6 +56,26 @@ export function exclusive(box: { pending: Promise<void> | null }, fn: () => Prom
 
 const terrainPending: { pending: Promise<void> | null } = { pending: null };
 
+/**
+ * Return the id of the first style/layer of the first overlay at index >= `from`
+ * that actually has renderable styles. A `3dtiles` overlay has `styles: []`
+ * (it is drawn by deck.gl, not MapLibre layers), so it must be skipped when
+ * looking for a MapLibre `beforeId`/anchor layer, or layer ordering breaks
+ * around it. Returns undefined if no overlay from `from` onward has styles.
+ *
+ * Exported standalone (no store/map dependencies) so it is testable without
+ * instantiating the full Pinia store.
+ */
+export function firstStyledLayerId(overlays: Array<{ styles: Array<{ id: string | number }> }>, from = 1): string | undefined {
+    for (let i = from; i < overlays.length; i++) {
+        const overlay = overlays[i];
+        if (overlay && overlay.styles && overlay.styles.length > 0) {
+            return String(overlay.styles[0].id);
+        }
+    }
+    return undefined;
+}
+
 export const useMapStore = defineStore('cloudtak', {
     state: (): {
         _map?: mapgl.Map;
@@ -251,6 +271,11 @@ export const useMapStore = defineStore('cloudtak', {
 
             await this.stopGPSWatch();
 
+            // Stop 3D Tiles refresh timers and drop the deck.gl overlay before the
+            // map itself is torn down, so stale ion credits/timers do not survive
+            // a logout/login in the same tab.
+            peekTiles3D()?.destroy();
+
             if (this._map) {
                 try {
                     this._map.remove();
@@ -262,10 +287,7 @@ export const useMapStore = defineStore('cloudtak', {
             this.$reset();
         },
         getOverlayBeforeId: function(): string | undefined {
-            if (this.overlays.length > 1 && this.overlays[1].styles.length > 0) {
-                return String(this.overlays[1].styles[0].id);
-            }
-            return undefined;
+            return firstStyledLayerId(this.overlays as unknown as Array<{ styles: Array<{ id: string | number }> }>);
         },
         addOverlay: function(overlay: Overlay): void {
             if (this.overlays.length > 0) {
@@ -354,44 +376,50 @@ export const useMapStore = defineStore('cloudtak', {
             return null;
         },
         // TODO: Convert to overlay
-        addTerrain: async function(): Promise<void> {
+        addTerrain: function(): Promise<void> {
             // Concurrent callers (e.g. several 3dtiles overlays initializing in
             // parallel) must await the same run instead of each racing the two
-            // awaits below into a duplicate addSource('-2', ...) throw.
-            await exclusive(terrainPending, async () => {
-                const cfg = await Config.list(['map::terrain'], { defaults: { 'map::terrain': null } });
-                const terrainId = cfg['map::terrain'] ? Number(cfg['map::terrain']) : null;
-                if (!terrainId) return;
-                if (this.map.getSource('-2')) return;
+            // awaits inside _addTerrain into a duplicate addSource('-2', ...) throw.
+            return exclusive(terrainPending, () => this._addTerrain());
+        },
 
-                const burl = stdurl(`/api/basemap/${terrainId}`);
-                const terrain = await std(burl) as Basemap;
+        // Kept as close as possible to the original (pre-exclusive()) upstream
+        // addTerrain body, un-reindented, so future upstream edits to this logic
+        // merge here with minimal conflict. Only addTerrain's exclusive() wrapper
+        // above is CloudTAK-fork-specific.
+        _addTerrain: async function(): Promise<void> {
+            const cfg = await Config.list(['map::terrain'], { defaults: { 'map::terrain': null } });
+            const terrainId = cfg['map::terrain'] ? Number(cfg['map::terrain']) : null;
+            if (!terrainId) return;
+            if (this.map.getSource('-2')) return;
 
-                if (terrain.type !== 'raster-dem') {
-                    throw new Error(`Terrain basemap ${terrainId} is not a raster-dem type`);
-                }
+            const burl = stdurl(`/api/basemap/${terrainId}`);
+            const terrain = await std(burl) as Basemap;
 
-                const source: { type: 'raster-dem'; url: string; tileSize?: number; encoding?: 'mapbox' | 'terrarium' } = {
-                    type: 'raster-dem',
-                    url: String(stdurl(`/api/basemap/${terrain.id}/tiles?token=${localStorage.token}`))
-                };
+            if (terrain.type !== 'raster-dem') {
+                throw new Error(`Terrain basemap ${terrainId} is not a raster-dem type`);
+            }
 
-                if (terrain.tilesize) source.tileSize = terrain.tilesize;
-                if (terrain.encoding) source.encoding = terrain.encoding;
+            const source: { type: 'raster-dem'; url: string; tileSize?: number; encoding?: 'mapbox' | 'terrarium' } = {
+                type: 'raster-dem',
+                url: String(stdurl(`/api/basemap/${terrain.id}/tiles?token=${localStorage.token}`))
+            };
 
-                this.map.addSource('-2', source);
+            if (terrain.tilesize) source.tileSize = terrain.tilesize;
+            if (terrain.encoding) source.encoding = terrain.encoding;
 
-                this.map.setTerrain({
-                    source: '-2',
-                    exaggeration: peekTiles3D()?.hasVisible() ? 1 : 1.5
-                });
+            this.map.addSource('-2', source);
 
-                this.terrainEnabled = true;
-
-                if (this.map.getPitch() === 0) {
-                    this.map.easeTo({ pitch: 45 });
-                }
+            this.map.setTerrain({
+                source: '-2',
+                exaggeration: peekTiles3D()?.hasVisible() ? 1 : 1.5
             });
+
+            this.terrainEnabled = true;
+
+            if (this.map.getPitch() === 0) {
+                this.map.easeTo({ pitch: 45 });
+            }
         },
 
         /**

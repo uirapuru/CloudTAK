@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Tiles3DManager, formatAttribution, fixGlobalRegions, tilesFetch, GEOID_OFFSET_M, REFRESH_MS, AUTH_RETRY_GUARD_MS, type IonAccess } from './tiles3d.ts';
+import { Tiles3DManager, formatAttribution, fixGlobalRegions, tilesFetch, GEOID_OFFSET_M, REFRESH_MS, AUTH_RETRY_GUARD_MS, SCHEDULE_RETRY_MS, type IonAccess } from './tiles3d.ts';
 
 type Props = Record<string, unknown>;
 
@@ -73,8 +73,8 @@ describe('Tiles3DManager', () => {
         expect(props.visible).toBe(true);
         expect(props.opacity).toBe(0.8);
         expect(props.beforeId).toBe('cot-layer');
-        const loadOptions = props.loadOptions as { fetch: unknown; tileset: { modelMatrix: { translation: number[] } } };
-        expect(typeof loadOptions.fetch).toBe('function');
+        const loadOptions = props.loadOptions as { core: { fetch: unknown }; tileset: { modelMatrix: { translation: number[] } } };
+        expect(typeof loadOptions.core.fetch).toBe('function');
         // lng 0, lat 0: local up is +X in ECEF
         expect(loadOptions.tileset.modelMatrix.translation[0]).toBeCloseTo(-GEOID_OFFSET_M);
         expect(loadOptions.tileset.modelMatrix.translation[1]).toBeCloseTo(0);
@@ -87,7 +87,7 @@ describe('Tiles3DManager', () => {
         const t = setup();
         await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
 
-        const { fetch } = t.layers()[0].props.loadOptions as { fetch: (url: string, init?: RequestInit) => Promise<Response> };
+        const { fetch } = (t.layers()[0].props.loadOptions as { core: { fetch: (url: string, init?: RequestInit) => Promise<Response> } }).core;
         await fetch('https://tiles/a.b3dm');
 
         expect(new Headers(fetchSpy.mock.calls[0][1]?.headers).get('Authorization')).toBe('Bearer token-1');
@@ -99,7 +99,7 @@ describe('Tiles3DManager', () => {
         const t = setup({ access: () => ({ url: 'https://google/root.json?key=k', attributions: [] }) });
         await t.manager.add({ id: '8', name: 'google-photorealistic', visible: true, opacity: 1 });
 
-        const { fetch } = t.layers()[0].props.loadOptions as { fetch: (url: string, init?: RequestInit) => Promise<Response> };
+        const { fetch } = (t.layers()[0].props.loadOptions as { core: { fetch: (url: string, init?: RequestInit) => Promise<Response> } }).core;
         await fetch('https://google/child.glb');
 
         expect(new Headers(fetchSpy.mock.calls[0][1]?.headers).has('Authorization')).toBe(false);
@@ -147,6 +147,69 @@ describe('Tiles3DManager', () => {
         expect(t.fetchAccess).toHaveBeenCalledTimes(2);
         expect(t.layers()[0].props.id).toBe('tiles3d-7-1');
         expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+    });
+
+    it('re-arms the refresh timer after a scheduled refresh fails, so later refreshes still happen', async () => {
+        const t = setup();
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        t.fetchAccess.mockImplementationOnce(() => Promise.reject(new Error('network blip')));
+
+        // The scheduled 50-minute refresh fires and fails
+        await vi.advanceTimersByTimeAsync(REFRESH_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+        expect(t.layers()[0].props.id).toBe('tiles3d-7-0'); // failed refresh must not bump the generation
+
+        // A failure must not leave the entry with no timer at all: it retries sooner
+        await vi.advanceTimersByTimeAsync(SCHEDULE_RETRY_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(3);
+        expect(t.layers()[0].props.id).toBe('tiles3d-7-1');
+
+        consoleErr.mockRestore();
+    });
+
+    it('does not re-arm the refresh timer for an entry removed while a scheduled refresh is failing', async () => {
+        const t = setup();
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        let reject: (err: Error) => void = () => {};
+        t.fetchAccess.mockImplementationOnce(() => new Promise((_resolve, rej) => { reject = rej; }));
+
+        // The scheduled 50-minute refresh fires and starts fetching...
+        await vi.advanceTimersByTimeAsync(REFRESH_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+
+        // ...the overlay is removed before the fetch settles...
+        t.manager.remove('7');
+        reject(new Error('network blip'));
+        await vi.advanceTimersByTimeAsync(0);
+
+        // ...so no retry timer must have been armed for the (now gone) id
+        await vi.advanceTimersByTimeAsync(SCHEDULE_RETRY_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+
+        consoleErr.mockRestore();
+    });
+
+    it('does not re-arm the refresh timer once the manager is destroyed', async () => {
+        const t = setup();
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        let reject: (err: Error) => void = () => {};
+        t.fetchAccess.mockImplementationOnce(() => new Promise((_resolve, rej) => { reject = rej; }));
+
+        await vi.advanceTimersByTimeAsync(REFRESH_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+
+        t.manager.destroy();
+        reject(new Error('network blip'));
+        await vi.advanceTimersByTimeAsync(SCHEDULE_RETRY_MS);
+        expect(t.fetchAccess).toHaveBeenCalledTimes(2);
+
+        consoleErr.mockRestore();
     });
 
     it('refreshes once on a 401 tile error', async () => {
@@ -314,6 +377,14 @@ describe('Tiles3DManager', () => {
         expect(t.map.removeControl).toHaveBeenCalledTimes(1);
         await vi.advanceTimersByTimeAsync(REFRESH_MS);
         expect(t.fetchAccess).toHaveBeenCalledTimes(1);
+    });
+
+    it('exposes isDestroyed so callers (e.g. getTiles3D()) can tell a manager was torn down', async () => {
+        const t = setup();
+        expect(t.manager.isDestroyed).toBe(false);
+
+        t.manager.destroy();
+        expect(t.manager.isDestroyed).toBe(true);
     });
 });
 

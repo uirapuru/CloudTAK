@@ -107,6 +107,13 @@
                                         stroke='1'
                                         class='flex-shrink-0 text-white-50'
                                     />
+                                    <IconBuildingSkyscraper
+                                        v-else-if='card.overlay.type === "3dtiles"'
+                                        v-tooltip='"3D Buildings"'
+                                        :size='20'
+                                        stroke='1'
+                                        class='flex-shrink-0 text-white-50'
+                                    />
                                     <IconVector
                                         v-else
                                         v-tooltip='"Vector"'
@@ -218,7 +225,7 @@
                                     @click.stop
                                 >
                                     <div
-                                        v-if='card.overlay.type === "raster"'
+                                        v-if='card.overlay.type === "raster" || card.overlay.type === "3dtiles"'
                                         class='mb-3'
                                     >
                                         <TablerRange
@@ -297,6 +304,7 @@ import TreeMission from './Overlays/TreeMission.vue';
 import {
     IconGripVertical,
     IconAmbulance,
+    IconBuildingSkyscraper,
     IconMaximize,
     IconVector,
     IconEyeOff,
@@ -309,7 +317,7 @@ import {
 import StandardItem from '../util/StandardItem.vue';
 import Sortable from 'sortablejs';
 import type { SortableEvent } from 'sortablejs';
-import { useMapStore } from '../../../../src/stores/map.ts';
+import { useMapStore, firstStyledLayerId } from '../../../../src/stores/map.ts';
 import type Overlay from '../../../../src/base/overlay.ts';
 
 type OverlayBadgeTone = 'primary' | 'neutral' | 'mission' | 'warning' | 'muted';
@@ -510,6 +518,8 @@ function getOverlayBadges(overlay: Overlay): OverlayBadge[] {
         addBadge({ label: 'Vector', tone: 'neutral' });
     } else if (overlay.type === 'geojson') {
         addBadge({ label: 'GeoJSON', tone: 'neutral' });
+    } else if (overlay.type === '3dtiles') {
+        addBadge({ label: '3D', tone: 'neutral' });
     }
 
     if (!overlay.visible) {
@@ -531,11 +541,18 @@ async function saveOrder(sortableEv: SortableEvent) {
     const overlay = mapStore.getOverlayById(parseInt(id));
     if (!overlay) throw new Error('Could not find Overlay');
 
-    const post = mapStore.getOverlayById(overlay_ids[sortableEv.newIndex + 1]);
+    // A style-less overlay (e.g. a 3D Tiles overlay, drawn by deck.gl rather than
+    // MapLibre layers) cannot anchor a moveLayer() call. Skip past it to the next
+    // overlay in the new order that does have styles; if none remain, move without
+    // an anchor, same as when there was no neighbour at all.
+    const orderedOverlays = overlay_ids
+        .map((oid) => mapStore.getOverlayById(oid))
+        .filter((o): o is Overlay => !!o);
+    const beforeId = firstStyledLayerId(orderedOverlays, sortableEv.newIndex + 1);
 
     for (const l of overlay.styles) {
-        if (post) {
-            mapStore.map.moveLayer(l.id, post.styles[0].id);
+        if (beforeId) {
+            mapStore.map.moveLayer(l.id, beforeId);
         } else {
             mapStore.map.moveLayer(l.id);
         }

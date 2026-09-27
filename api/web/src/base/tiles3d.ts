@@ -57,6 +57,12 @@ interface State {
 
 export const REFRESH_MS = 50 * 60 * 1000;
 export const AUTH_RETRY_GUARD_MS = 60 * 1000;
+// A scheduled refresh (schedule()) can fail (network blip, upstream outage --
+// Google's ion tokens have no 401-driven recovery path like onTileError()
+// provides). Failing must not silently stop the 50-minute cycle forever, so
+// retry sooner than the normal cadence instead of leaving the entry with no
+// timer at all.
+export const SCHEDULE_RETRY_MS = 60 * 1000;
 
 // Geoid height above the WGS84 ellipsoid over Poland (28-42 m). ion tiles sit at
 // ellipsoidal heights, MapLibre terrain at orthometric ones.
@@ -257,6 +263,10 @@ export class Tiles3DManager {
         this.onChange();
     }
 
+    get isDestroyed(): boolean {
+        return this.destroyed;
+    }
+
     destroy(): void {
         this.destroyed = true;
         this.pendingAdds.clear();
@@ -282,7 +292,11 @@ export class Tiles3DManager {
             opacity: state.entry.opacity,
             beforeId,
             loadOptions: {
-                fetch: tilesFetch(state.access.accessToken ? { Authorization: `Bearer ${state.access.accessToken}` } : {}),
+                // Top-level loadOptions.fetch is deprecated by loaders.gl; the
+                // fetch override belongs under the `core` sub-options.
+                core: {
+                    fetch: tilesFetch(state.access.accessToken ? { Authorization: `Bearer ${state.access.accessToken}` } : {}),
+                },
                 tileset: { modelMatrix: this.verticalShift() },
             },
             onTileError: (...args: unknown[]) => this.onTileError(id, args),
@@ -300,8 +314,28 @@ export class Tiles3DManager {
 
     private schedule(id: string): ReturnType<typeof setTimeout> {
         return setTimeout(() => {
-            this.refresh(id).catch((err) => console.error(`Failed to refresh 3D Tiles access for overlay ${id}`, err));
+            this.refresh(id).catch((err) => {
+                console.error(`Failed to refresh 3D Tiles access for overlay ${id}`, err);
+                this.rearmAfterFailedRefresh(id);
+            });
         }, REFRESH_MS);
+    }
+
+    // refresh() re-arms the periodic timer itself once fetchAccess succeeds; a
+    // failure must still re-arm (sooner, via SCHEDULE_RETRY_MS) instead of
+    // leaving the entry with no timer, as long as it has not been removed or
+    // the manager destroyed in the meantime.
+    private rearmAfterFailedRefresh(id: string): void {
+        if (this.destroyed) return;
+        const state = this.states.get(id);
+        if (!state) return;
+
+        state.timer = setTimeout(() => {
+            this.refresh(id).catch((err) => {
+                console.error(`Failed to refresh 3D Tiles access for overlay ${id}`, err);
+                this.rearmAfterFailedRefresh(id);
+            });
+        }, SCHEDULE_RETRY_MS);
     }
 
     private onTileError(id: string, args: unknown[]): void {
@@ -343,9 +377,11 @@ export async function getTiles3D(): Promise<Tiles3DManager> {
 
         const mapStore = useMapStore();
 
-        // The map store can replace its MapLibre instance; never draw into a stale one
-        if (manager && manager.map === (mapStore.map as unknown)) return manager;
-        if (manager) manager.destroy();
+        // The map store can replace its MapLibre instance; never draw into a stale
+        // one, and never hand back a manager destroy() already tore down (e.g. a
+        // logout/login in the same tab that happened to reuse the same map instance)
+        if (manager && manager.map === (mapStore.map as unknown) && !manager.isDestroyed) return manager;
+        if (manager && !manager.isDestroyed) manager.destroy();
 
         manager = new Tiles3DManager({
             map: mapStore.map as unknown as MapLike,
