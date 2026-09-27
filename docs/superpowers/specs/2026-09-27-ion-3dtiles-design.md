@@ -131,7 +131,14 @@ z konta ion.
 - Funkcje: `add(overlay)`, `remove(overlay)`, `setVisible(overlay, visible)`,
   `setOpacity(overlay, opacity)`.
 - Warstwy 3D dostają `beforeId` pierwszej warstwy CoT. Markery i rysunki leżą nad budynkami
-  w kolejności rysowania, a bufor głębi zasłania je za budynkami.
+  w kolejności rysowania. Warstwy `circle` i `symbol` MapLibre nie używają bufora głębi, więc
+  marker za budynkiem pozostaje widoczny (zmierzone w próbie).
+- Moduł podaje loaders.gl własną funkcję `fetch`. Dokleja ona nagłówek ion i w JSON-ie tilesetu
+  zamienia `region` szerszy niż π/2 na kulę obejmującą Ziemię. Bez tego loaders.gl nie wybiera
+  żadnego kafla OSM Buildings (zmierzone w próbie).
+- Tileset jest przesunięty w dół o 34 m (wysokość geoidy nad Polską) przez
+  `loadOptions.tileset.modelMatrix`. Dopóki jakakolwiek nakładka 3D jest widoczna, teren MapLibre
+  jest włączony z przewyższeniem 1. Tylko wtedy budynki stoją na swoich obrysach.
 - Przy starcie mapy nakładki użytkownika powstają przed warstwą CoT. Moduł ustala `beforeId`
   w chwili rysowania i sprawdza, czy taka warstwa istnieje. Po założeniu warstwy CoT
   `stores/map.ts` każe modułowi przerysować warstwy 3D.
@@ -162,7 +169,7 @@ z konta ion.
 
 Wywołania ion zastępuje atrapa `fetch`. Przypadki:
 
-1. `GET /api/ion` bez logowania zwraca 403 (tak odpowiada `Auth.as_user` w CloudTAK).
+1. `GET /api/ion` bez logowania zwraca 401 (tak odpowiada `Auth.as_user` w CloudTAK, „No Auth Present”).
 2. `GET /api/ion` bez tokenu zwraca pustą listę.
 3. `GET /api/ion/{name}/endpoint` dla nazwy spoza listy zwraca 404.
 4. Endpoint bez tokenu zwraca 404.
