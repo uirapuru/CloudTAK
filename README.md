@@ -1,4 +1,4 @@
-> **taklab fork.** This is a modified version of CloudTAK v13.3.0 used by taklab (branch `taklab/v13.3.0`), published under the AGPL-3.0 as required. Changes: the sender UID is sent with live chat messages (backport of dfpc-coe/CloudTAK#1290, Bug 2), and a paperclip button in one-to-one chats attaches a map snapshot (`y-taklab-map` CoT event) for the ai-buddy chat bot.
+> **taklab fork.** This is a modified version of CloudTAK v13.3.0 used by taklab (branch `taklab/v13.3.0`), published under the AGPL-3.0 as required. Changes: the sender UID is sent with live chat messages (backport of dfpc-coe/CloudTAK#1290, Bug 2), a paperclip button in one-to-one chats attaches a map snapshot (`y-taklab-map` CoT event) for the ai-buddy chat bot, and 3D buildings from Cesium ion as map overlays (routes `/api/ion` and `/api/ion/:name/endpoint`, admin config key `ion::token` with env var fallback `CESIUM_ION_TOKEN`, overlay type `3dtiles` rendered via deck.gl; terrain must be configured for correct footprint placement).
 
 <p align=center><img src='./api/web/public/CloudTAKLogo.svg' alt='CloudTAK Logo' width='128'/></p>
 
