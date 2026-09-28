@@ -9,6 +9,7 @@ import { bbox } from '@turf/bbox'
 import type { LngLatBoundsLike, LayerSpecification, SourceSpecification, VectorTileSource, RasterTileSource, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl'
 import cotStyles from '../utils/styles.ts'
 import { std, server } from '../std.js';
+import { liveStyles, planeIcon, LIVE_PLANE_IMAGE, LivePoller, type LiveCollection } from './live.ts';
 import { db, type DBOverlay } from '../database.ts';
 import {
     registerTileJSONProtocol,
@@ -28,6 +29,7 @@ export default class Overlay {
     _internal: boolean;
 
     _timer: ReturnType<typeof setInterval> | null;
+    private _live: LivePoller | null = null;
 
     _clickable: Array<{ id: string; type: string }>;
 
@@ -203,7 +205,7 @@ export default class Overlay {
         this.token = overlay.token;
         this.tilejson = overlay.tilejson ?? null;
 
-        if (this.frequency) {
+        if (this.frequency && this.mode !== 'live') {
             this._timer = setInterval(async () => {
                 const mapStore = useMapStore();
                 try {
@@ -215,6 +217,28 @@ export default class Overlay {
         } else {
             this._timer = null;
         }
+    }
+
+    private startLive(): void {
+        this._live?.stop();
+        this._live = new LivePoller({
+            url: this.url as string,
+            intervalMs: (this.frequency || 10) * 1000,
+            fetch: async (url) => await std(url) as LiveCollection,
+            onData: (fc) => {
+                const mapStore = useMapStore();
+                const source = mapStore.map.getSource(String(this.id)) as GeoJSONSource | undefined;
+                if (!source) return;
+                source.setData(fc);
+                const attribution = fc.attribution || '';
+                if (attribution !== this.attribution) {
+                    this.attribution = attribution;
+                    mapStore.updateAttribution().catch((err: unknown) => console.error('Failed to update attribution', err));
+                }
+            },
+            onError: (err) => console.error(`Live layer ${this.mode_id} refresh failed`, err),
+        });
+        if (this.visible) this._live.start();
     }
 
     healthy(): boolean {
@@ -476,6 +500,13 @@ export default class Overlay {
                     data
                 })
             }
+
+            if (this.mode === 'live') {
+                if (!mapStore.map.hasImage(LIVE_PLANE_IMAGE)) {
+                    mapStore.map.addImage(LIVE_PLANE_IMAGE, planeIcon(32), { sdf: true });
+                }
+                this.startLive();
+            }
         }
 
         const display_text = (await ProfileConfig.get('display_text'))?.value;
@@ -498,6 +529,8 @@ export default class Overlay {
                 icons: !!this.iconset,
                 labels: { size }
             });
+        } else if (!this.styles.length && this.mode === 'live') {
+            this.styles = liveStyles(String(this.id));
         } else if (!this.styles.length && this.type === 'geojson') {
             this.styles = cotStyles(String(this.id), {
                 group: this.mode !== "mission",
@@ -540,6 +573,8 @@ export default class Overlay {
         const mapStore = useMapStore();
 
         this.removeHoverListeners();
+        this._live?.stop();
+        this._live = null;
 
         if (this.type === '3dtiles') {
             peekTiles3D()?.remove(String(this.id));
@@ -756,7 +791,7 @@ export default class Overlay {
         this.token = record.token;
         this.tilejson = record.tilejson ?? this.tilejson;
 
-        if (record.frequency !== current.frequency) {
+        if (record.frequency !== current.frequency && this.mode !== 'live') {
             if (this._timer) clearInterval(this._timer);
             this._timer = record.frequency ? setInterval(() => {
                 try {
@@ -793,6 +828,12 @@ export default class Overlay {
                 mapStore.map.setLayoutProperty(l.id, 'visibility', this.visible ? 'visible' : 'none');
             }
 
+            if (this.mode === 'live') {
+                if (this.visible) this._live?.start();
+                else this._live?.stop();
+                mapStore.updateAttribution().catch((err: unknown) => console.error('Failed to update attribution', err));
+            }
+
             if (this.type === 'raster-dem') this.applyTerrain();
             if (this.type === '3dtiles') {
                 peekTiles3D()?.setVisible(String(this.id), this.visible);
@@ -826,6 +867,12 @@ export default class Overlay {
             for (const l of this.styles) {
                 if (l.type === 'background') continue;
                 mapStore.map.setLayoutProperty(l.id, 'visibility', this.visible ? 'visible' : 'none');
+            }
+
+            if (this.mode === 'live') {
+                if (this.visible) this._live?.start();
+                else this._live?.stop();
+                mapStore.updateAttribution().catch((err: unknown) => console.error('Failed to update attribution', err));
             }
 
             if (this.type === 'raster-dem') this.applyTerrain({ ease: true });

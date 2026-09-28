@@ -88,6 +88,37 @@
                     </div>
 
                     <div
+                        v-if='liveItems.length && !paging.collection'
+                        class='d-flex flex-column gap-2'
+                    >
+                        <div class='small text-white-50 text-uppercase'>
+                            Na żywo
+                        </div>
+                        <StandardItem
+                            v-for='item in liveItems'
+                            :key='item.name'
+                            class='p-3'
+                            :class='[
+                                liveOverlayNames.has(item.name) || loading ? "opacity-50 pe-none" : "",
+                            ]'
+                            :aria-disabled='loading || liveOverlayNames.has(item.name)'
+                            @click='createLiveOverlay(item)'
+                        >
+                            <div class='d-flex align-items-center gap-2'>
+                                <IconBroadcast
+                                    :size='24'
+                                    stroke='1'
+                                />
+                                <span class='fw-semibold'>{{ item.label }}</span>
+                                <span
+                                    v-if='item.stale'
+                                    class='small text-white-50'
+                                >(nieaktualna)</span>
+                            </div>
+                        </StandardItem>
+                    </div>
+
+                    <div
                         v-if='list.items.length || list.collections.length'
                         class='d-flex flex-column gap-2'
                     >
@@ -138,7 +169,8 @@ import {
 import {
     IconUser,
     IconFolder,
-    IconBuildingSkyscraper
+    IconBuildingSkyscraper,
+    IconBroadcast
 } from '@tabler/icons-vue';
 import StandardItem from '../util/StandardItem.vue';
 import StandardItemBasemap from '../util/StandardItemBasemap.vue';
@@ -165,6 +197,7 @@ const list = ref<BasemapList>({
 
 const overlayBasemapIds = ref<Set<string>>(new Set());
 const ionOverlayNames = ref<Set<string>>(new Set());
+const liveOverlayNames = ref<Set<string>>(new Set());
 let overlaySubscription: Subscription | undefined;
 
 onMounted(() => {
@@ -180,6 +213,11 @@ onMounted(() => {
                     .filter((overlay) => overlay.mode === 'ion' && overlay.mode_id)
                     .map((overlay) => String(overlay.mode_id))
             );
+            liveOverlayNames.value = new Set(
+                items
+                    .filter((overlay) => overlay.mode === 'live' && overlay.mode_id)
+                    .map((overlay) => String(overlay.mode_id))
+            );
         }
     });
 });
@@ -189,6 +227,8 @@ onUnmounted(() => {
 });
 
 const ionItems = ref<Array<{ name: string; label: string }>>([]);
+type LiveItem = { name: string; label: string; refresh: number; attribution: string; updated: string | null; stale: boolean };
+const liveItems = ref<Array<LiveItem>>([]);
 
 watch(
     () => [paging.value.filter, paging.value.collection, paging.value.limit, paging.value.page],
@@ -198,7 +238,7 @@ watch(
 );
 
 onMounted(async () => {
-    await Promise.all([fetchList(), fetchIon()]);
+    await Promise.all([fetchList(), fetchIon(), fetchLive()]);
 });
 
 function basemapExists(basemap: Basemap): boolean {
@@ -249,6 +289,38 @@ async function fetchIon(): Promise<void> {
         // 3D buildings are optional; the rest of the explorer must still work
         console.error('Failed to list Cesium ion assets', err);
         ionItems.value = [];
+    }
+}
+
+async function fetchLive(): Promise<void> {
+    try {
+        const res = await std('/api/live') as { items: Array<LiveItem> };
+        liveItems.value = res.items;
+    } catch (err) {
+        // Live layers are optional; the rest of the explorer must still work
+        console.error('Failed to list live layers', err);
+        liveItems.value = [];
+    }
+}
+
+async function createLiveOverlay(item: LiveItem) {
+    if (loading.value || liveOverlayNames.value.has(item.name)) return;
+    loading.value = true;
+
+    try {
+        await OverlayManager.createLoaded({
+            url: `/api/live/${item.name}`,
+            name: item.label,
+            mode: 'live',
+            mode_id: item.name,
+            type: 'geojson',
+            frequency: item.refresh,
+            styles: []
+        });
+
+        router.push('/menu/overlays');
+    } finally {
+        loading.value = false;
     }
 }
 

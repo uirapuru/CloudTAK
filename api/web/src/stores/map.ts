@@ -1804,7 +1804,10 @@ export const useMapStore = defineStore('cloudtak', {
             this.map.setPaintProperty('background', 'background-color', color);
         },
         updateAttribution: async function(): Promise<void> {
-            const attributions = OverlayManager.visibleBasemaps()
+            const attributions = [
+                ...OverlayManager.visibleBasemaps(),
+                ...OverlayManager.loaded.filter((overlay) => overlay.mode === 'live' && overlay.visible),
+            ]
                 .map((overlay) => overlay.attribution)
                 .filter((a): a is string => !!a);
 

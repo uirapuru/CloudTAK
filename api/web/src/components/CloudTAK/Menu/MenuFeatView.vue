@@ -88,22 +88,22 @@
                                 </tr>
                             </thead>
                             <tbody class='cloudtak-accent'>
-                                <template v-if='feature.properties'>
+                                <template v-if='Object.keys(tableProperties).length'>
                                     <tr
-                                        v-for='prop of Object.keys(feature.properties)'
+                                        v-for='prop of Object.keys(tableProperties)'
                                         :key='prop'
                                     >
                                         <td v-text='prop' />
                                         <td>
                                             <a
-                                                v-if='typeof feature.properties[prop] === "string" && feature.properties[prop].startsWith("http")'
-                                                :href='feature.properties[prop]'
+                                                v-if='typeof tableProperties[prop] === "string" && (tableProperties[prop] as string).startsWith("http")'
+                                                :href='tableProperties[prop] as string'
                                                 target='_blank'
-                                                v-text='feature.properties[prop]'
+                                                v-text='tableProperties[prop]'
                                             />
                                             <span
                                                 v-else
-                                                v-text='feature.properties[prop]'
+                                                v-text='tableProperties[prop]'
                                             />
                                         </td>
                                     </tr>
@@ -128,6 +128,7 @@ import type { Feature } from 'geojson';
 import pointOnFeature from '@turf/point-on-feature';
 import Handlebars from 'handlebars';
 import { server, getRuntimeToken } from '../../../std.ts';
+import { visibleProperties } from '../../../base/live.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import Coordinate from '../util/Coordinate.vue';
 import CopyField from '../util/CopyField.vue';
@@ -178,6 +179,8 @@ watch(overlay, async (ov) => {
         titleTemplate.value = data.title;
     }
 }, { immediate: true });
+
+const tableProperties = computed(() => visibleProperties(feature.value?.properties as Record<string, unknown> | undefined));
 
 const featureTitle = computed(() => {
     if (!feature.value) return 'No Name';
