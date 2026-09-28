@@ -233,14 +233,18 @@ test('taklab_map: websocket branch writes the event and persists nothing', async
 
     const ws = Object.assign(new EventEmitter(), {
         sent: [] as string[],
-        send(msg: string) { this.sent.push(msg); },
+        send(msg: string) {
+            this.sent.push(msg);
+        },
         close() {},
     });
     const written: CoT[][] = [];
     const client = {
         // No models: touching the database would throw
         config: { uid: () => SENDER, config: {} },
-        tak: { write: async (cots: never[]) => { written.push(cots); } },
+        tak: { write: async (cots: never[]) => {
+            written.push(cots);
+        } },
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

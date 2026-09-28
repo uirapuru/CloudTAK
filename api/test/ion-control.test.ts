@@ -152,7 +152,9 @@ test('ion 401 becomes 502 and is not cached', async () => {
 
 test('network failure becomes 502', async () => {
     const ion = new IonControl({
-        fetch: (async () => { throw new TypeError('fetch failed'); }) as typeof fetch,
+        fetch: (async () => {
+            throw new TypeError('fetch failed');
+        }) as typeof fetch,
         now: () => 0,
     });
 

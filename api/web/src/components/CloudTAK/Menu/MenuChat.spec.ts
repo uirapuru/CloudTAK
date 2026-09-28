@@ -19,8 +19,15 @@ vi.mock('vue-router', () => ({
     useRoute: () => route,
     useRouter: () => ({ push: vi.fn() }),
 }));
-vi.mock('dexie', () => ({
+vi.mock('../../../database.ts', () => ({
+    ChatStatus: { Sending: 'sending', Sent: 'sent', Pending: 'pending', Failed: 'failed', Delivered: 'delivered', Read: 'read' },
     liveQuery: () => ({ subscribe: ({ next }: { next: (v: unknown[]) => void }) => { next([]); return { unsubscribe() {} }; } }),
+}));
+vi.mock('../../../stores/app.ts', () => ({
+    useAppStore: () => ({}),
+}));
+vi.mock('../../../base/overlay.ts', () => ({
+    default: { loaded: [] },
 }));
 vi.mock('../../../base/chatroom.ts', () => ({
     default: class {
@@ -31,7 +38,7 @@ vi.mock('../../../base/chatroom.ts', () => ({
     },
 }));
 vi.mock('../../../stores/map.ts', () => ({
-    useMapStore: () => ({ worker: {}, map: {}, overlays: [], gpsCoordinates: null }),
+    useMapStore: () => ({ worker: {}, map: {}, gpsCoordinates: null }),
 }));
 vi.mock('../../../base/profile.ts', () => ({
     default: { get: async (key: string) => ({ value: key === 'username' ? 'kaszub' : 'kaszub' }) },

@@ -33,8 +33,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             res.json({
                 items: Object.entries(IonAssets).map(([name, asset]) => ({ name, label: asset.label })),
             });
-        }
-        catch (err) {
+        } catch (err) {
             Err.respond(err, res);
         }
     });
@@ -64,8 +63,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             if (!token) throw new Err(404, null, 'Cesium ion is not configured');
 
             res.json(await ionControl.endpoint(req.params.name, token));
-        }
-        catch (err) {
+        } catch (err) {
             Err.respond(err, res);
         }
     });

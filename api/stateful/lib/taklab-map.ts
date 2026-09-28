@@ -63,11 +63,9 @@ export function buildTaklabMapCoT(
 
     if (typeof to_uid !== 'string' || !to_uid.length) {
         throw new Error('taklab_map: to_uid is required');
-    }
-    else if (to_uid.length > TAKLAB_MAP_MAX_UID) {
+    } else if (to_uid.length > TAKLAB_MAP_MAX_UID) {
         throw new Error(`taklab_map: to_uid is longer than ${TAKLAB_MAP_MAX_UID} characters`);
-    }
-    else if (UNSAFE_UID.test(to_uid)) {
+    } else if (UNSAFE_UID.test(to_uid)) {
         throw new Error('taklab_map: to_uid contains invalid characters');
     }
 

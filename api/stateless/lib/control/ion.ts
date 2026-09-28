@@ -50,8 +50,7 @@ export function tokenExpiry(token: string): number | null {
     try {
         const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
         return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
-    }
-    catch {
+    } catch {
         return null;
     }
 }
@@ -60,8 +59,7 @@ function isCesiumImage(src: string): boolean {
     try {
         const url = new URL(src);
         return url.protocol === 'https:' && (url.hostname === 'cesium.com' || url.hostname.endsWith('.cesium.com'));
-    }
-    catch {
+    } catch {
         return false;
     }
 }
@@ -104,23 +102,20 @@ export default class IonControl {
             res = await this.fetch(`https://api.cesium.com/v1/assets/${IonAssets[name].id}/endpoint`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-        }
-        catch (err) {
+        } catch (err) {
             throw new Err(502, err instanceof Error ? err : new Error(String(err)), 'Cesium ion is unreachable');
         }
 
         if (res.status === 401 || res.status === 403) {
             throw new Err(502, null, 'Cesium ion rejected the token');
-        }
-        else if (!res.ok) {
+        } else if (!res.ok) {
             throw new Err(502, null, `Cesium ion returned ${res.status}`);
         }
 
         let raw: IonEndpointRaw;
         try {
             raw = await res.json() as IonEndpointRaw;
-        }
-        catch (err) {
+        } catch (err) {
             throw new Err(502, err instanceof Error ? err : new Error(String(err)), 'Cesium ion returned invalid JSON');
         }
 
