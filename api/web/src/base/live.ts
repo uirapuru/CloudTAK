@@ -73,6 +73,16 @@ export function visibleProperties(props: Record<string, unknown> | null | undefi
     return out;
 }
 
+/** Title for live features, which carry no name/callsign: _label, else the first visible text value (e.g. an address) */
+export function liveFeatureTitle(props: Record<string, unknown> | null | undefined): string {
+    const label = props?._label;
+    if (typeof label === 'string' && label.trim()) return label;
+    for (const value of Object.values(visibleProperties(props))) {
+        if (typeof value === 'string' && value.trim()) return value;
+    }
+    return '';
+}
+
 /** Arrow pointing north: tip at the top, notch at the bottom centre */
 export function planeIcon(size: number): { width: number; height: number; data: Uint8Array } {
     const data = new Uint8Array(size * size * 4);

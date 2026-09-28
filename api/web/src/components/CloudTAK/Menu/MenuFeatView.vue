@@ -128,7 +128,7 @@ import type { Feature } from 'geojson';
 import pointOnFeature from '@turf/point-on-feature';
 import Handlebars from 'handlebars';
 import { server, getRuntimeToken } from '../../../std.ts';
-import { visibleProperties } from '../../../base/live.ts';
+import { liveFeatureTitle, visibleProperties } from '../../../base/live.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import Coordinate from '../util/Coordinate.vue';
 import CopyField from '../util/CopyField.vue';
@@ -200,7 +200,7 @@ const featureTitle = computed(() => {
         }
     }
 
-    return props.name || props.callsign || 'No Name';
+    return props.name || props.callsign || liveFeatureTitle(props) || 'No Name';
 });
 
 const center = computed(() => {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { LIVE_PLANE_IMAGE, LivePoller, liveStyles, planeIcon, visibleProperties, type LiveCollection } from './live.ts';
+import { LIVE_PLANE_IMAGE, LivePoller, liveStyles, liveFeatureTitle, planeIcon, visibleProperties, type LiveCollection } from './live.ts';
 
 const FC: LiveCollection = { type: 'FeatureCollection', features: [], attribution: 'MPK Wrocław' };
 
@@ -108,5 +108,19 @@ describe('LivePoller', () => {
         resolve(FC);
         await vi.advanceTimersByTimeAsync(0);
         expect(onData).not.toHaveBeenCalled();
+    });
+});
+
+describe('liveFeatureTitle', () => {
+    it('prefers _label', () => {
+        expect(liveFeatureTitle({ _label: '145', Adres: 'x' })).toBe('145');
+    });
+    it('falls back to the first visible string value', () => {
+        expect(liveFeatureTitle({ _color: '#fff', n: 5, Adres: 'Kwiatowa 1', Typ: 'BTS' })).toBe('Kwiatowa 1');
+    });
+    it('skips empty strings and returns empty when nothing fits', () => {
+        expect(liveFeatureTitle({ _label: '', a: '', b: 'ok' })).toBe('ok');
+        expect(liveFeatureTitle({ n: 1 })).toBe('');
+        expect(liveFeatureTitle(undefined)).toBe('');
     });
 });

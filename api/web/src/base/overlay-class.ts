@@ -223,7 +223,8 @@ export default class Overlay {
         this._live?.stop();
         this._live = new LivePoller({
             url: this.url as string,
-            intervalMs: (this.frequency || 10) * 1000,
+            // Cap at 10 min: the pod serves from memory (cheap), and a daily layer must recover if the first fetch preceded its data
+            intervalMs: Math.min(this.frequency || 10, 600) * 1000,
             fetch: async (url) => await std(url) as LiveCollection,
             onData: (fc) => {
                 const mapStore = useMapStore();
@@ -382,11 +383,7 @@ export default class Overlay {
                 for (const id of hoverIds) {
                     if (newIds.has(id)) continue;
 
-                    mapStore.map.setFeatureState({
-                        id: id,
-                        source: String(this.id),
-                        sourceLayer: 'out'
-                    }, { hover: false });
+                    mapStore.map.setFeatureState(this.hoverTarget(id), { hover: false });
 
                     hoverIds.delete(id);
                 }
@@ -394,11 +391,7 @@ export default class Overlay {
                 for (const id of newIds) {
                     if (hoverIds.has(id)) continue;
 
-                    mapStore.map.setFeatureState({
-                        id: id,
-                        source: String(this.id),
-                        sourceLayer: 'out'
-                    }, { hover: true });
+                    mapStore.map.setFeatureState(this.hoverTarget(id), { hover: true });
 
                     hoverIds.add(id);
                 }
@@ -409,11 +402,7 @@ export default class Overlay {
                 mapStore.map.getCanvas().style.cursor = '';
 
                 for (const id of hoverIds) {
-                    mapStore.map.setFeatureState({
-                        id: id,
-                        source: String(this.id),
-                        sourceLayer: 'out'
-                    }, { hover: false });
+                    mapStore.map.setFeatureState(this.hoverTarget(id), { hover: false });
                 }
 
                 hoverIds.clear();
@@ -432,6 +421,13 @@ export default class Overlay {
                 this._hoverListeners.push({ type: 'mousemove', layerIds: hoverLayerIds, handler: onMouseMove });
             }
         }
+    }
+
+    // GeoJSON sources reject a sourceLayer parameter; only vector sources have one
+    private hoverTarget(id: string): { id: string; source: string; sourceLayer?: string } {
+        const target: { id: string; source: string; sourceLayer?: string } = { id, source: String(this.id) };
+        if (this.type === 'vector') target.sourceLayer = 'out';
+        return target;
     }
 
     removeHoverListeners(): void {
@@ -786,7 +782,8 @@ export default class Overlay {
         this.mode = record.mode;
         this.mode_id = record.mode_id || null;
         this.encoding = record.encoding || null;
-        this.attribution = record.attribution || '';
+        // A live overlay learns its attribution from the GeoJSON, not from the record
+        if (this.mode !== 'live') this.attribution = record.attribution || '';
         this.url = record.url;
         this.token = record.token;
         this.tilejson = record.tilejson ?? this.tilejson;

@@ -103,6 +103,40 @@ describe('live overlay', () => {
         overlay.remove();
     });
 
+    it('applyRecord keeps the attribution learned from live data', async () => {
+        const overlay = makeOverlay();
+        await overlay.init();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(overlay.attribution).toBe('adsb.lol (ODbL)');
+
+        await (overlay as never as { applyRecord(r: unknown, o: unknown): Promise<void> }).applyRecord({
+            id: 7, name: 'ADS-B', active: true, username: 'u', frequency: 10, iconset: null,
+            created: '', updated: '', pos: 1, type: 'geojson', opacity: 1, visible: true,
+            mode: 'live', mode_id: 'adsb', encoding: null, attribution: '', actions: { feature: [] },
+            url: '/api/live/adsb', styles: [], token: null, tilejson: null,
+        }, {});
+        expect(overlay.attribution).toBe('adsb.lol (ODbL)');
+        overlay.remove();
+    });
+
+    it('caps the poll interval at 600 s for slow layers', async () => {
+        const overlay = makeOverlay();
+        overlay.frequency = 86400;
+        await overlay.init();
+        await vi.advanceTimersByTimeAsync(0);
+        stdMock.mockClear();
+        await vi.advanceTimersByTimeAsync(600_000);
+        expect(stdMock).toHaveBeenCalledTimes(1);
+        overlay.remove();
+    });
+
+    it('hover feature-state omits sourceLayer for geojson and keeps it for vector', () => {
+        const overlay = makeOverlay() as never as { hoverTarget(id: string): Record<string, unknown>; type: string };
+        expect(overlay.hoverTarget('a')).toEqual({ id: 'a', source: '7' });
+        overlay.type = 'vector';
+        expect(overlay.hoverTarget('a')).toEqual({ id: 'a', source: '7', sourceLayer: 'out' });
+    });
+
     it('remove() stops polling', async () => {
         const overlay = makeOverlay();
         await overlay.init();
