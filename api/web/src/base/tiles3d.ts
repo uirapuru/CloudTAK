@@ -2,20 +2,18 @@
  * Cesium ion 3D Tiles overlays rendered by deck.gl inside MapLibre.
  *
  * deck.gl and loaders.gl are loaded only by getTiles3D(), so users without
- * a 3D overlay never download them. Everything above getTiles3D() takes its
- * dependencies as arguments to stay testable without WebGL.
+ * a 3D overlay never download them.
+ * Everything above getTiles3D() takes its dependencies as arguments to stay
+ * testable without WebGL.
  */
 
-export interface IonAttribution {
-    text: string;
-    image?: string;
-}
+import type { IonAccess } from '../types.ts';
+import { useMapStore } from '../stores/map.ts';
+import { server } from '../std.ts';
+import OverlayManager from './overlay.ts';
 
-export interface IonAccess {
-    url: string;
-    accessToken?: string;
-    attributions: IonAttribution[];
-}
+export type { IonAccess };
+export type IonAttribution = IonAccess['attributions'][number];
 
 export interface Tiles3DEntry {
     id: string;
@@ -28,6 +26,8 @@ interface MapLike {
     addControl(control: unknown): unknown;
     removeControl(control: unknown): unknown;
     getLayer(id: string): unknown;
+    on(type: 'moveend', listener: () => void): unknown;
+    off(type: 'moveend', listener: () => void): unknown;
 }
 
 interface DeckOverlayLike {
@@ -57,18 +57,22 @@ interface State {
 
 export const REFRESH_MS = 50 * 60 * 1000;
 export const AUTH_RETRY_GUARD_MS = 60 * 1000;
-// A scheduled refresh (schedule()) can fail (network blip, upstream outage --
-// Google's ion tokens have no 401-driven recovery path like onTileError()
-// provides). Failing must not silently stop the 50-minute cycle forever, so
-// retry sooner than the normal cadence instead of leaving the entry with no
-// timer at all.
+// A failed scheduled refresh must not end the refresh cycle, so retry sooner
 export const SCHEDULE_RETRY_MS = 60 * 1000;
-
-// Geoid height above the WGS84 ellipsoid over Poland (28-42 m). ion tiles sit at
-// ellipsoidal heights, MapLibre terrain at orthometric ones.
-export const GEOID_OFFSET_M = 34;
+// Tilesets are reloaded to apply a new vertical shift, so ignore small changes
+export const SHIFT_TOLERANCE_M = 1;
+// The geoid varies slowly, so only look it up again after a long move
+export const GEOID_RESAMPLE_M = 50 * 1000;
 
 const EARTH_RADIUS_M = 6378137;
+
+function distance(a: { lng: number; lat: number }, b: { lng: number; lat: number }): number {
+    const rad = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * rad;
+    const dLng = (b.lng - a.lng) * rad;
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+    return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
+}
 
 /**
  * loaders.gl turns a globe-wide `region` into a degenerate oriented box, so
@@ -146,6 +150,10 @@ export class Tiles3DManager {
     private fetchAccess: (name: string) => Promise<IonAccess>;
     private beforeId: () => string | undefined;
     private center: () => { lng: number; lat: number };
+    private geoid: (lat: number, lng: number) => Promise<number>;
+    private undulation: { lng: number; lat: number; value: number } | null = null;
+    private undulationRequest = 0;
+    private shift: number[] | null = null;
     private now: () => number;
     private onChange: () => void;
     private overlay: DeckOverlayLike | null = null;
@@ -159,6 +167,7 @@ export class Tiles3DManager {
         fetchAccess: (name: string) => Promise<IonAccess>;
         beforeId: () => string | undefined;
         center: () => { lng: number; lat: number };
+        geoid: (lat: number, lng: number) => Promise<number>;
         now?: () => number;
         onChange?: () => void;
     }) {
@@ -167,6 +176,7 @@ export class Tiles3DManager {
         this.fetchAccess = deps.fetchAccess;
         this.beforeId = deps.beforeId;
         this.center = deps.center;
+        this.geoid = deps.geoid;
         this.now = deps.now ?? Date.now;
         this.onChange = deps.onChange ?? (() => {});
     }
@@ -177,7 +187,10 @@ export class Tiles3DManager {
         const token = Symbol();
         this.pendingAdds.set(entry.id, token);
 
-        const access = await this.fetchAccess(entry.name);
+        const [access] = await Promise.all([
+            this.fetchAccess(entry.name),
+            this.sampleUndulation(),
+        ]);
 
         if (this.destroyed || this.pendingAdds.get(entry.id) !== token) return;
         this.pendingAdds.delete(entry.id);
@@ -270,7 +283,12 @@ export class Tiles3DManager {
             exposeCameraTransform(this.map);
             this.overlay = new this.deck.MapboxOverlay({ interleaved: true, layers: [] });
             this.map.addControl(this.overlay);
+            this.map.on('moveend', this.onMoveEnd);
         }
+
+        // Measured at the map center when the first tileset is drawn
+        if (!this.states.size) this.shift = null;
+        else if (!this.shift) this.shift = this.verticalShift();
 
         const candidate = this.beforeId();
         const beforeId = candidate && this.map.getLayer(candidate) ? candidate : undefined;
@@ -294,6 +312,7 @@ export class Tiles3DManager {
         this.states.clear();
 
         if (this.overlay) {
+            this.map.off('moveend', this.onMoveEnd);
             this.map.removeControl(this.overlay);
             this.overlay.finalize();
             this.overlay = null;
@@ -311,25 +330,67 @@ export class Tiles3DManager {
             opacity: state.entry.opacity,
             beforeId,
             loadOptions: {
-                // Top-level loadOptions.fetch is deprecated by loaders.gl; the
-                // fetch override belongs under the `core` sub-options.
+                // Top-level loadOptions.fetch is deprecated by loaders.gl
                 core: {
                     fetch: tilesFetch(state.access.accessToken ? { Authorization: `Bearer ${state.access.accessToken}` } : {}),
                 },
-                tileset: { modelMatrix: this.verticalShift() },
+                tileset: { modelMatrix: new this.deck.Matrix4().translate(this.shift ?? [0, 0, 0]) },
             },
             onTileError: (...args: unknown[]) => this.onTileError(id, args),
         });
     }
 
-    // Lower the tileset by the geoid height along the local up vector at the map center
-    private verticalShift(): unknown {
+    /**
+     * ion tiles use ellipsoidal heights while MapLibre terrain is relative to
+     * mean sea level, so lower the tilesets by the EGM96 geoid undulation
+     * along the local up vector at the map center
+     */
+    private verticalShift(): number[] {
         const { lng, lat } = this.center();
+        const undulation = this.undulation ? this.undulation.value : 0;
         const lon = lng * Math.PI / 180;
         const phi = lat * Math.PI / 180;
         const up = [Math.cos(phi) * Math.cos(lon), Math.cos(phi) * Math.sin(lon), Math.sin(phi)];
-        return new this.deck.Matrix4().translate(up.map((u) => -u * GEOID_OFFSET_M));
+        return up.map((u) => -u * undulation);
     }
+
+    /**
+     * Look up the geoid undulation at the map center unless the last lookup
+     * was close by. A failed lookup leaves the tilesets unshifted.
+     */
+    private async sampleUndulation(): Promise<void> {
+        const center = this.center();
+        if (this.undulation && distance(this.undulation, center) <= GEOID_RESAMPLE_M) return;
+
+        const request = ++this.undulationRequest;
+
+        let value = 0;
+        try {
+            value = await this.geoid(center.lat, center.lng);
+        } catch (err) {
+            console.warn('Failed to get the geoid undulation, 3D Tiles are drawn without a vertical shift', err);
+        }
+
+        // Only the most recent lookup may win when the map moves again meanwhile
+        if (request !== this.undulationRequest) return;
+        this.undulation = { lng: center.lng, lat: center.lat, value };
+    }
+
+    private onMoveEnd = async (): Promise<void> => {
+        if (this.destroyed || !this.shift || !this.states.size) return;
+
+        await this.sampleUndulation();
+
+        const current = this.shift;
+        if (this.destroyed || !current || !this.states.size) return;
+
+        const next = this.verticalShift();
+        if (Math.hypot(...next.map((v, i) => v - current[i])) <= SHIFT_TOLERANCE_M) return;
+
+        this.shift = next;
+        for (const state of this.states.values()) state.generation++;
+        this.render();
+    };
 
     private schedule(id: string): ReturnType<typeof setTimeout> {
         return setTimeout(() => {
@@ -340,21 +401,13 @@ export class Tiles3DManager {
         }, REFRESH_MS);
     }
 
-    // refresh() re-arms the periodic timer itself once fetchAccess succeeds; a
-    // failure must still re-arm (sooner, via SCHEDULE_RETRY_MS) instead of
-    // leaving the entry with no timer, as long as it has not been removed or
-    // the manager destroyed in the meantime.
+    // refresh() only re-arms the timer on success, so a failure re-arms it here
     private rearmAfterFailedRefresh(id: string): void {
         if (this.destroyed) return;
         const state = this.states.get(id);
         if (!state) return;
 
-        // The failure being handled here belongs to a schedule() timer that
-        // already fired; but if the entry was removed and re-added while
-        // fetchAccess() was in flight, `state` is a fresh State with its own
-        // legitimate timer already running. Clear it before overwriting
-        // state.timer so that timer isn't leaked (which would otherwise
-        // leave two timers racing to refresh the same id).
+        // A re-added entry already has its own timer, which must not leak
         clearTimeout(state.timer);
 
         state.timer = setTimeout(() => {
@@ -393,21 +446,17 @@ export async function getTiles3D(): Promise<Tiles3DManager> {
     if (pending) return await pending;
 
     pending = (async () => {
-        const [{ MapboxOverlay }, { Tile3DLayer }, { Tiles3DLoader }, { Matrix4 }, { useMapStore }, { std }, { default: OverlayManager }] = await Promise.all([
+        const [{ MapboxOverlay }, { Tile3DLayer }, { Tiles3DLoader }, { Matrix4 }] = await Promise.all([
             import('@deck.gl/mapbox'),
             import('@deck.gl/geo-layers'),
             import('@loaders.gl/3d-tiles'),
             import('@math.gl/core'),
-            import('../stores/map.ts'),
-            import('../std.ts'),
-            import('./overlay.ts'),
         ]);
 
         const mapStore = useMapStore();
 
-        // The map store can replace its MapLibre instance; never draw into a stale
-        // one, and never hand back a manager destroy() already tore down (e.g. a
-        // logout/login in the same tab that happened to reuse the same map instance)
+        // The map store can replace its MapLibre instance or destroy the manager
+        // on logout, so never hand back a manager bound to a stale map
         if (manager && manager.map === (mapStore.map as unknown) && !manager.isDestroyed) return manager;
         if (manager && !manager.isDestroyed) manager.destroy();
 
@@ -419,12 +468,31 @@ export async function getTiles3D(): Promise<Tiles3DManager> {
                 Tiles3DLoader,
                 Matrix4,
             },
-            fetchAccess: async (name) => await std(`/api/ion/${encodeURIComponent(name)}/endpoint`) as IonAccess,
+            fetchAccess: async (name) => {
+                const { data, error } = await server.GET('/api/ion/{:name}/endpoint', {
+                    params: { path: { ':name': name } }
+                });
+
+                if (error) throw new Error(error.message);
+                if (!data) throw new Error('No data returned');
+
+                return data;
+            },
             beforeId: () => {
                 const cot = OverlayManager.loadedFrom(-1);
                 return cot && cot.styles.length ? String(cot.styles[0].id) : undefined;
             },
             center: () => mapStore.map.getCenter(),
+            geoid: async (lat, lon) => {
+                const { data, error } = await server.GET('/api/ion/geoid', {
+                    params: { query: { lat, lon } }
+                });
+
+                if (error) throw new Error(error.message);
+                if (!data) throw new Error('No data returned');
+
+                return data.undulation;
+            },
             onChange: () => {
                 mapStore.updateAttribution().catch((err: unknown) => console.error('Failed to update attribution', err));
             },

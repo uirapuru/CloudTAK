@@ -1929,6 +1929,11 @@
         "query": false,
         "res": true
     },
+    "GET /ion/geoid": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
     "GET /ion/:name/endpoint": {
         "body": false,
         "query": false,

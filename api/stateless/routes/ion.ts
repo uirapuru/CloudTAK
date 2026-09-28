@@ -38,6 +38,30 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }
     });
 
+    await schema.get('/ion/geoid', {
+        name: 'Get Geoid Undulation',
+        group: 'Ion',
+        description: 'Get the EGM96 geoid height above the WGS84 ellipsoid, used to place 3D Tiles on the terrain',
+        query: Type.Object({
+            lat: Type.Number({ minimum: -90, maximum: 90 }),
+            lon: Type.Number({ minimum: -180, maximum: 180 }),
+        }),
+        res: Type.Object({
+            undulation: Type.Number({ description: 'Geoid undulation in meters' }),
+        }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_user(config, req);
+
+            // The EGM96 grid is several MB, so only load it once 3D Tiles are in use
+            const { meanSeaLevel } = await import('egm96-universal');
+
+            res.json({ undulation: meanSeaLevel(req.query.lat, req.query.lon) });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
     await schema.get('/ion/:name/endpoint', {
         name: 'Get Ion Endpoint',
         group: 'Ion',

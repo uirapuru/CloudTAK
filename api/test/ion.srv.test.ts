@@ -104,4 +104,31 @@ test('empty ion::token falls back to CESIUM_ION_TOKEN', async () => {
     delete process.env.CESIUM_ION_TOKEN;
 });
 
+test('GET api/ion/geoid without auth', async () => {
+    const res = await flight.fetch('/api/ion/geoid?lat=52.2318&lon=21.0067', { method: 'GET' }, false);
+    assert.equal(res.status, 401);
+});
+
+// Reference undulations from PROJ 9 with the NGA us_nga_egm96_15 grid
+for (const ref of [
+    { place: 'Warsaw', lat: 52.2318, lon: 21.0067, undulation: 31.29 },
+    { place: 'New York', lat: 40.7128, lon: -74.0060, undulation: -32.76 },
+    { place: 'Sri Lanka', lat: 7, lon: 80, undulation: -96.75 },
+]) {
+    test(`GET api/ion/geoid: ${ref.place}`, async () => {
+        const res = await flight.fetch(`/api/ion/geoid?lat=${ref.lat}&lon=${ref.lon}`, { method: 'GET', auth: { bearer: flight.token.user } }, true);
+        assert.ok(Math.abs(res.body.undulation - ref.undulation) < 0.1, `${res.body.undulation} != ${ref.undulation}`);
+    });
+}
+
+test('GET api/ion/geoid rejects a latitude out of range', async () => {
+    const res = await flight.fetch('/api/ion/geoid?lat=91&lon=0', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.equal(res.status, 400);
+});
+
+test('GET api/ion/geoid rejects a longitude out of range', async () => {
+    const res = await flight.fetch('/api/ion/geoid?lat=0&lon=-181', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.equal(res.status, 400);
+});
+
 flight.landing();
