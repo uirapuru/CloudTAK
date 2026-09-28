@@ -106,6 +106,24 @@ export function tilesFetch(headers: Record<string, string>): (url: string, init?
     };
 }
 
+/**
+ * MapLibre 6 moved the camera out of Map: `map.transform` is gone and lives on
+ * `map._camera.transform`. @deck.gl/mapbox 9.4 still reads `map.transform`
+ * (height, elevation) on every interleaved draw and throws without it, so no
+ * tile is ever drawn. Restore the MapLibre 5 accessor as a live getter.
+ */
+export function exposeCameraTransform(map: object): void {
+    if ('transform' in map) return;
+
+    const camera = (map as { _camera?: { transform?: unknown } })._camera;
+    if (!camera || !camera.transform) return;
+
+    Object.defineProperty(map, 'transform', {
+        configurable: true,
+        get: () => camera.transform,
+    });
+}
+
 function escapeHtml(value: string): string {
     return value
         .replace(/&/g, '&amp;')
@@ -249,6 +267,7 @@ export class Tiles3DManager {
 
         if (!this.overlay) {
             if (!this.states.size) return;
+            exposeCameraTransform(this.map);
             this.overlay = new this.deck.MapboxOverlay({ interleaved: true, layers: [] });
             this.map.addControl(this.overlay);
         }

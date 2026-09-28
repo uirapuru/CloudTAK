@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Tiles3DManager, formatAttribution, fixGlobalRegions, tilesFetch, GEOID_OFFSET_M, REFRESH_MS, AUTH_RETRY_GUARD_MS, SCHEDULE_RETRY_MS, type IonAccess } from './tiles3d.ts';
+import { Tiles3DManager, exposeCameraTransform, formatAttribution, fixGlobalRegions, tilesFetch, GEOID_OFFSET_M, REFRESH_MS, AUTH_RETRY_GUARD_MS, SCHEDULE_RETRY_MS, type IonAccess } from './tiles3d.ts';
 
 type Props = Record<string, unknown>;
 
-function setup(opts: { layers?: string[]; access?: (name: string, call: number) => IonAccess } = {}) {
+function setup(opts: { layers?: string[]; access?: (name: string, call: number) => IonAccess; camera?: { transform: unknown } } = {}) {
     const existing = new Set(opts.layers ?? []);
     const map = {
+        ...(opts.camera ? { _camera: opts.camera } : {}),
         addControl: vi.fn(),
         removeControl: vi.fn(),
         getLayer: (id: string) => existing.has(id) ? { id } : undefined,
@@ -416,12 +417,52 @@ describe('Tiles3DManager', () => {
         expect(t.fetchAccess).toHaveBeenCalledTimes(1);
     });
 
+    it('exposes the MapLibre 6 camera transform to deck.gl before adding the overlay', async () => {
+        const transform = { height: 720, elevation: 124 };
+        const t = setup({ camera: { transform } });
+        let seen: unknown;
+        t.map.addControl.mockImplementation(() => { seen = (t.map as { transform?: unknown }).transform; });
+
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+
+        expect(seen).toBe(transform);
+    });
+
     it('exposes isDestroyed so callers (e.g. getTiles3D()) can tell a manager was torn down', async () => {
         const t = setup();
         expect(t.manager.isDestroyed).toBe(false);
 
         t.manager.destroy();
         expect(t.manager.isDestroyed).toBe(true);
+    });
+});
+
+describe('exposeCameraTransform', () => {
+    it('adds a live transform getter backed by the MapLibre 6 camera', () => {
+        const camera = { transform: { height: 720, elevation: 124 } };
+        const map: Record<string, unknown> = { _camera: camera };
+
+        exposeCameraTransform(map);
+        expect((map.transform as { elevation: number }).elevation).toBe(124);
+
+        // The camera swaps its transform object; the getter must follow it
+        camera.transform = { height: 800, elevation: 90 };
+        expect((map.transform as { elevation: number }).elevation).toBe(90);
+    });
+
+    it('leaves a MapLibre 5 map with its own transform untouched', () => {
+        const own = { height: 720, elevation: 5 };
+        const map: Record<string, unknown> = { transform: own, _camera: { transform: { height: 1, elevation: 1 } } };
+
+        exposeCameraTransform(map);
+        expect(map.transform).toBe(own);
+    });
+
+    it('does nothing when the map has no camera', () => {
+        const map: Record<string, unknown> = {};
+
+        exposeCameraTransform(map);
+        expect('transform' in map).toBe(false);
     });
 });
 
