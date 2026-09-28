@@ -924,6 +924,16 @@
         "query": false,
         "res": true
     },
+    "GET /live": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /live/:name": {
+        "body": false,
+        "query": false,
+        "res": false
+    },
     "GET /login/passkey": {
         "body": false,
         "query": false,
