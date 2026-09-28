@@ -44,3 +44,27 @@ test('ZXYBasemap.isValidURL - accepts a WMS template with {bbox-epsg-3857}', () 
 test('ZXYBasemap.isValidURL - still rejects a URL without tile variables', () => {
     assert.throws(() => new ZXYBasemap().isValidURL('https://wms.example.com/wms?SERVICE=WMS'));
 });
+
+const WMS4326 = 'https://wms.example.com/wms?SERVICE=WMS&VERSION=1.3.0&CRS=EPSG:4326&BBOX={bbox-epsg-4326-latlon}&WIDTH=256&HEIGHT=256';
+
+test('ZXYBasemap.tileURL - {bbox-epsg-4326-latlon} puts latitude first', () => {
+    const url = new URL(ZXYBasemap.tileURL(WMS4326, 0, 0, 0));
+    const [minLat, minLon, maxLat, maxLon] = url.searchParams.get('BBOX')!.split(',').map(Number);
+    assert.ok(Math.abs(minLat + 85.0511287798066) < 1e-9, String(minLat));
+    assert.ok(Math.abs(maxLat - 85.0511287798066) < 1e-9, String(maxLat));
+    assert.equal(minLon, -180);
+    assert.equal(maxLon, 180);
+});
+
+test('ZXYBasemap.tileURL - {bbox-epsg-4326-latlon} for a z15 tile in Wrocław', () => {
+    // Tile 15/17934/10954 covers Wrocław's market square
+    const url = new URL(ZXYBasemap.tileURL(WMS4326, 15, 17934, 10954));
+    const [minLat, minLon, maxLat, maxLon] = url.searchParams.get('BBOX')!.split(',').map(Number);
+    assert.ok(minLat < 51.1079 && 51.1079 < maxLat, `${minLat}..${maxLat}`);
+    assert.ok(minLon < 17.0385 && 17.0385 < maxLon, `${minLon}..${maxLon}`);
+    assert.ok(maxLat - minLat < 0.01 && maxLon - minLon < 0.02);
+});
+
+test('ZXYBasemap.isValidURL - accepts a WMS template with {bbox-epsg-4326-latlon}', () => {
+    assert.doesNotThrow(() => new ZXYBasemap().isValidURL(WMS4326));
+});

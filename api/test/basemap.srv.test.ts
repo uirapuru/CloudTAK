@@ -83,7 +83,7 @@ test('POST: api/basemap - Invalid URL - No Variables', async () => {
 
         assert.fail();
     } catch (err) {
-        assert.equal(String(err), 'AssertionError [ERR_ASSERTION]: {"status":400,"message":"ZXY protocol requires {z}/{x}/{y} tile variables, a {q} quadkey variable or a {bbox-epsg-3857} variable","messages":[]}');
+        assert.equal(String(err), 'AssertionError [ERR_ASSERTION]: {"status":400,"message":"ZXY protocol requires {z}/{x}/{y} tile variables, a {q} quadkey variable or a {bbox-epsg-3857} / {bbox-epsg-4326-latlon} variable","messages":[]}');
     }
 });
 

@@ -13,6 +13,7 @@ import { BasemapProtocol, TileOpts } from '../interface-basemap.js';
  *
  * WMS GetMap endpoints are supported through the MapLibre {bbox-epsg-3857}
  * variable, replaced with the Web Mercator extent of the requested tile.
+ * WMS services without EPSG:3857 can use {bbox-epsg-4326-latlon}; the image is then stretched into the Mercator tile, which is accurate from about zoom 11.
  */
 export default class ZXYBasemap extends BasemapProtocol {
     isValidURL(str: string): void {
@@ -25,8 +26,9 @@ export default class ZXYBasemap extends BasemapProtocol {
             !(pathname.includes('{z}') && pathname.includes('{x}') && pathname.includes('{y}'))
             && !pathname.includes('{q}')
             && !pathname.includes('{bbox-epsg-3857}')
+            && !pathname.includes('{bbox-epsg-4326-latlon}')
         ) {
-            throw new Err(400, null, 'ZXY protocol requires {z}/{x}/{y} tile variables, a {q} quadkey variable or a {bbox-epsg-3857} variable');
+            throw new Err(400, null, 'ZXY protocol requires {z}/{x}/{y} tile variables, a {q} quadkey variable or a {bbox-epsg-3857} / {bbox-epsg-4326-latlon} variable');
         }
     }
 
@@ -46,6 +48,15 @@ export default class ZXYBasemap extends BasemapProtocol {
     }
 
     /**
+     * WGS84 extent of a ZXY tile as minLat,minLon,maxLat,maxLon - the axis
+     * order WMS 1.3.0 uses for EPSG:4326
+     */
+    static latLonExtent(z: number, x: number, y: number): string {
+        const [west, south, east, north] = BasemapProtocol.extent(z, x, y);
+        return [south, west, north, east].join(',');
+    }
+
+    /**
      * Fill a tile URL template with the coordinates of a single tile
      */
     static tileURL(template: string, z: number, x: number, y: number): string {
@@ -54,7 +65,8 @@ export default class ZXYBasemap extends BasemapProtocol {
             .replace(/\{\$?x\}/, String(x))
             .replace(/\{\$?y\}/, String(y))
             .replace(/\{\$?q\}/, String(BasemapProtocol.quadkey(z, x, y)))
-            .replace(/\{bbox-epsg-3857\}/, ZXYBasemap.mercatorExtent(z, x, y));
+            .replace(/\{bbox-epsg-3857\}/, ZXYBasemap.mercatorExtent(z, x, y))
+            .replace(/\{bbox-epsg-4326-latlon\}/, ZXYBasemap.latLonExtent(z, x, y));
     }
 
     protected async _tile(
