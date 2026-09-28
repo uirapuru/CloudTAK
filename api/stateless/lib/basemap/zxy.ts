@@ -10,6 +10,9 @@ import { BasemapProtocol, TileOpts } from '../interface-basemap.js';
  * ZXY / Quadkey basemap protocol.
  * Proxies standard slippy-map tile requests ({z}/{x}/{y} or {q} quadkey URLs)
  * by streaming the upstream response directly to the client.
+ *
+ * WMS GetMap endpoints are supported through the MapLibre {bbox-epsg-3857}
+ * variable, replaced with the Web Mercator extent of the requested tile.
  */
 export default class ZXYBasemap extends BasemapProtocol {
     isValidURL(str: string): void {
@@ -21,9 +24,37 @@ export default class ZXYBasemap extends BasemapProtocol {
         if (
             !(pathname.includes('{z}') && pathname.includes('{x}') && pathname.includes('{y}'))
             && !pathname.includes('{q}')
+            && !pathname.includes('{bbox-epsg-3857}')
         ) {
-            throw new Err(400, null, 'ZXY protocol requires {z}/{x}/{y} tile variables or a {q} quadkey variable');
+            throw new Err(400, null, 'ZXY protocol requires {z}/{x}/{y} tile variables, a {q} quadkey variable or a {bbox-epsg-3857} variable');
         }
+    }
+
+    /**
+     * Web Mercator (EPSG:3857) extent of a ZXY tile as minx,miny,maxx,maxy
+     */
+    static mercatorExtent(z: number, x: number, y: number): string {
+        const half = Math.PI * 6378137;
+        const size = (2 * half) / Math.pow(2, z);
+
+        return [
+            -half + x * size,
+            half - (y + 1) * size,
+            -half + (x + 1) * size,
+            half - y * size,
+        ].join(',');
+    }
+
+    /**
+     * Fill a tile URL template with the coordinates of a single tile
+     */
+    static tileURL(template: string, z: number, x: number, y: number): string {
+        return template
+            .replace(/\{\$?z\}/, String(z))
+            .replace(/\{\$?x\}/, String(x))
+            .replace(/\{\$?y\}/, String(y))
+            .replace(/\{\$?q\}/, String(BasemapProtocol.quadkey(z, x, y)))
+            .replace(/\{bbox-epsg-3857\}/, ZXYBasemap.mercatorExtent(z, x, y));
     }
 
     protected async _tile(
@@ -31,12 +62,7 @@ export default class ZXYBasemap extends BasemapProtocol {
         res: Response,
         opts: Required<TileOpts>,
     ): Promise<void> {
-        const url = new URL(this.basemap!.url
-            .replace(/\{\$?z\}/, String(z))
-            .replace(/\{\$?x\}/, String(x))
-            .replace(/\{\$?y\}/, String(y))
-            .replace(/\{\$?q\}/, String(BasemapProtocol.quadkey(z, x, y))),
-        );
+        const url = new URL(ZXYBasemap.tileURL(this.basemap!.url, z, x, y));
 
         try {
             const { safe, reason } = await isSafeUrl(url.href);
