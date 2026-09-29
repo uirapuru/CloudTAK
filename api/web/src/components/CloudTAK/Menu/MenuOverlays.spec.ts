@@ -222,6 +222,26 @@ describe('MenuOverlays drag and drop', () => {
         wrapper.unmount();
     });
 
+    it('hides a collapsed group list despite Bootstrap display utilities', async () => {
+        (state.loaded[1] as Stub).group_id = 1;
+        const wrapper = await mountMenu();
+
+        const groupList = document.querySelector<HTMLElement>('[data-group-id="1"] .overlay-list');
+        expect(groupList).not.toBeNull();
+        expect(groupList!.closest('[style*="display: none"]')).toBeNull();
+
+        await wrapper.find('[data-group-id="1"] [title="Zwiń grupę"]').trigger('click');
+        await flushPromises();
+
+        // Bootstrap's d-flex is display:flex !important and would beat v-show's inline display:none
+        const hidden = groupList!.closest<HTMLElement>('[style*="display: none"]');
+        expect(hidden).not.toBeNull();
+        expect(hidden!.className).not.toMatch(/\bd-(flex|block|grid|inline)/);
+        expect(groupManager.update).toHaveBeenCalledWith(1, { collapsed: true });
+
+        wrapper.unmount();
+    });
+
     it('offers delete on every overlay but the basemap and Map Features, without a confirmation', async () => {
         const wrapper = await mountMenu();
 

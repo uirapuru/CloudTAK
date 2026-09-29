@@ -268,23 +268,25 @@
                                     </button>
                                 </div>
 
-                                <div
-                                    v-show='!section.group.collapsed'
-                                    v-sortable-list='dragEnabled'
-                                    class='overlay-list d-flex flex-column gap-3 mt-2'
-                                    :data-list-key='listKeyAttr(section.key)'
-                                    data-empty='Przeciągnij tutaj nakładki'
-                                >
-                                    <OverlayRow
-                                        v-for='card in section.cards'
-                                        :key='card.overlay.id'
-                                        :card='card'
-                                        :draggable='dragEnabled'
-                                        :opened='opened.has(card.overlay.id)'
-                                        @toggle='handleCardClick(card.overlay)'
-                                        @update='void updateOverlay(card.overlay, $event)'
-                                        @remove='void removeOverlay(card.overlay.id)'
-                                    />
+                                <!-- v-show on a wrapper: d-flex is display:flex !important and would beat display:none -->
+                                <div v-show='!section.group.collapsed'>
+                                    <div
+                                        v-sortable-list='dragEnabled'
+                                        class='overlay-list d-flex flex-column gap-3 mt-2'
+                                        :data-list-key='listKeyAttr(section.key)'
+                                        data-empty='Przeciągnij tutaj nakładki'
+                                    >
+                                        <OverlayRow
+                                            v-for='card in section.cards'
+                                            :key='card.overlay.id'
+                                            :card='card'
+                                            :draggable='dragEnabled'
+                                            :opened='opened.has(card.overlay.id)'
+                                            @toggle='handleCardClick(card.overlay)'
+                                            @update='void updateOverlay(card.overlay, $event)'
+                                            @remove='void removeOverlay(card.overlay.id)'
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
