@@ -22,6 +22,7 @@ function stub(id: number, pos: number, mode = 'profile', type = 'vector'): StubO
         _internal: mode === 'internal',
         save: vi.fn(async () => {}),
         moveBefore: vi.fn(),
+        anchorLayerId: () => type === '3dtiles' ? undefined : `layer-${id}`,
     } as unknown as StubOverlay;
 }
 

@@ -239,12 +239,15 @@ export default class OverlayManager extends BaseInterface {
 
     /**
      * First loaded overlay at or above the given index that MapLibre layers
-     * can be moved before - 3D Tiles overlays are drawn by deck.gl, have no
-     * MapLibre layers and would otherwise send the moved layers to the top
+     * can be moved before. An overlay without a layer on the map is skipped:
+     * 3D Tiles overlays are drawn by deck.gl, and an overlay still loading
+     * or failed has no layers yet - either would send the moved layers to
+     * the top of the map.
      */
     static loadedLayerAnchor(idx: number): Overlay | undefined {
         for (let i = idx; i < this.loaded.length; i++) {
-            if (this.loaded[i].type !== '3dtiles') return this.loaded[i];
+            const overlay = this.loaded[i];
+            if (overlay.type !== '3dtiles' && overlay.anchorLayerId() !== undefined) return overlay;
         }
 
         return undefined;

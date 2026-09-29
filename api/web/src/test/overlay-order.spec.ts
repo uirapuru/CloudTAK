@@ -128,6 +128,17 @@ describe('OverlayManager stack order', () => {
         expect(features.save).not.toHaveBeenCalled();
     });
 
+    it('loadedLayerAnchor skips overlays with no layer on the map yet', () => {
+        // Overlay 3 is still loading (or failed): nothing to move layers before
+        (ordinary[2] as unknown as { anchorLayerId: () => string | undefined }).anchorLayerId = () => undefined;
+
+        expect(OverlayManager.loadedLayerAnchor(3)).toBe(ordinary[3]);
+
+        OverlayManager.applyLoadedOrder();
+        // Overlay 2 goes below overlay 4, not to the top of the map
+        expect(ordinary[1].moveBefore).toHaveBeenCalledWith(ordinary[3]);
+    });
+
     it('compareStack pins by overlay kind even when pos is corrupted', () => {
         basemap.pos = 4;
         features.pos = 0;
