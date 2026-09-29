@@ -47,7 +47,13 @@ describe('liveStyles geometry and icons', () => {
         expect(JSON.stringify(circle.filter)).toContain('shelter');
         const icon = byId('7-icon');
         expect(icon.layout['icon-image']).toEqual(['concat', 'live-', ['get', '_icon']]);
-        expect(byId('7-circle').filter).toEqual(['==', ['get', '_icon'], 'circle']);
+        expect(byId('7-circle').filter).toEqual(['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', '_icon'], 'circle']]);
+    });
+
+    it('draws dots and icons on Point geometries only', () => {
+        for (const id of ['7-circle', '7-icon-circle', '7-icon']) {
+            expect(JSON.stringify(byId(id).filter)).toContain('[["==",["geometry-type"],"Point"]'.slice(1, -1));
+        }
     });
 });
 

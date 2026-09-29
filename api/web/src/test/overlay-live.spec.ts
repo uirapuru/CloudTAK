@@ -78,6 +78,14 @@ describe('live overlay', () => {
         overlay.remove();
     });
 
+    it('ignores stale stored styles for live overlays', async () => {
+        const overlay = makeOverlay();
+        overlay.styles = [{ id: 'old', type: 'circle', source: '7' }] as never;
+        await overlay.init();
+        expect(overlay.styles).toEqual(liveStyles('7'));
+        overlay.remove();
+    });
+
     it('does not run the tile refresh timer', async () => {
         const overlay = makeOverlay();
         await overlay.init();

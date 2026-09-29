@@ -76,6 +76,12 @@ test('GET api/live/:name/:id returns feature details', async () => {
 test('GET api/live/:name/:id unknown feature is 404', async () => {
     const res = await flight.fetch('/api/live/mpk-wroclaw/veh-2', { method: 'GET', auth: { bearer: flight.token.user } }, false);
     assert.equal(res.status, 404);
+    assert.match(JSON.stringify(res.body), /Obiekt już niedostępny/);
+});
+
+test('GET api/live/:name unknown layer keeps its own message', async () => {
+    const res = await flight.fetch('/api/live/nope', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.match(JSON.stringify(res.body), /Unknown live layer/);
 });
 
 test('GET api/live/:name/:id rejects a bad id without calling the pod', async () => {

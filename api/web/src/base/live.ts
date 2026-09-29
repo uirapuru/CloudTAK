@@ -93,7 +93,7 @@ export function liveStyles(id: string): LayerSpecification[] {
         id: `${id}-circle`,
         type: 'circle',
         source: id,
-        filter: ['==', ['get', '_icon'], 'circle'],
+        filter: ['all', ['==', ['geometry-type'], 'Point'], ['==', ['get', '_icon'], 'circle']],
         paint: {
             'circle-radius': 6,
             'circle-color': ['get', '_color'],
@@ -104,7 +104,7 @@ export function liveStyles(id: string): LayerSpecification[] {
         id: `${id}-icon-circle`,
         type: 'circle',
         source: id,
-        filter: ['in', ['get', '_icon'], ['literal', ICON_KINDS]],
+        filter: ['all', ['==', ['geometry-type'], 'Point'], ['in', ['get', '_icon'], ['literal', ICON_KINDS]]],
         paint: {
             'circle-radius': 11,
             'circle-color': ['get', '_color'],
@@ -115,7 +115,7 @@ export function liveStyles(id: string): LayerSpecification[] {
         id: `${id}-icon`,
         type: 'symbol',
         source: id,
-        filter: ['in', ['get', '_icon'], ['literal', ICON_KINDS]],
+        filter: ['all', ['==', ['geometry-type'], 'Point'], ['in', ['get', '_icon'], ['literal', ICON_KINDS]]],
         layout: {
             'icon-image': ['concat', 'live-', ['get', '_icon']],
             'icon-size': 0.6,

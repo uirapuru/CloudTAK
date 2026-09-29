@@ -513,7 +513,10 @@ export default class Overlay {
         if (display_text === 'Small') size = 4;
         if (display_text === 'Large') size = 16;
 
-        if (!this.styles.length && this.type === 'raster') {
+        if (this.mode === 'live') {
+            // Live styles are derived from code only, so stale stored ones are ignored
+            this.styles = liveStyles(String(this.id));
+        } else if (!this.styles.length && this.type === 'raster') {
             this.styles = [{
                 'id': String(this.id),
                 'type': 'raster',
@@ -526,8 +529,6 @@ export default class Overlay {
                 icons: !!this.iconset,
                 labels: { size }
             });
-        } else if (!this.styles.length && this.mode === 'live') {
-            this.styles = liveStyles(String(this.id));
         } else if (!this.styles.length && this.type === 'geojson') {
             this.styles = cotStyles(String(this.id), {
                 group: this.mode !== "mission",
@@ -902,7 +903,7 @@ export default class Overlay {
 
         // We want to just use the default style every time for things like missions
         // We only want to save the style on custom datasources
-        const dropStyles = ['mission', 'internal'].includes(this.mode);
+        const dropStyles = ['mission', 'internal', 'live'].includes(this.mode);
 
         await db.overlay.put(this.toDBOverlay());
 
@@ -928,7 +929,7 @@ export default class Overlay {
     }
 
     toDBOverlay(): DBOverlay {
-        const dropStyles = ['mission', 'internal'].includes(this.mode);
+        const dropStyles = ['mission', 'internal', 'live'].includes(this.mode);
 
         // IndexedDB uses the structured clone algorithm which cannot clone Vue
         // reactive Proxy objects. JSON round-trip strips any Proxy wrappers so
