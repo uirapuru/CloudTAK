@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
+import { PassThrough, Readable } from 'node:stream';
 import ZXYBasemap from '../stateless/lib/basemap/zxy.js';
 
 const WMS = 'https://wms.example.com/wms?SERVICE=WMS&REQUEST=GetMap&CRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256';
@@ -67,4 +68,70 @@ test('ZXYBasemap.tileURL - {bbox-epsg-4326-latlon} for a z15 tile in Wrocław', 
 
 test('ZXYBasemap.isValidURL - accepts a WMS template with {bbox-epsg-4326-latlon}', () => {
     assert.doesNotThrow(() => new ZXYBasemap().isValidURL(WMS4326));
+});
+
+class FakeZXY extends ZXYBasemap {
+    calls = 0;
+
+    constructor(script: Array<'throw' | 'ok'>) {
+        super();
+        this.basemap = { url: 'https://t.example.com/{z}/{x}/{y}.png' } as never;
+        this.pipeline = ((_url: unknown, opts: { signal?: AbortSignal }, handler: (d: unknown) => Readable) => {
+            const step = script[this.calls++];
+            assert.ok(opts.signal instanceof AbortSignal);
+            if (step === 'throw') return Promise.reject(new TypeError('fetch failed'));
+            const body = new PassThrough();
+            body.push(Buffer.from('tile'));
+            body.push(null);
+            handler({ statusCode: 200, headers: { 'content-type': 'image/png', 'x-evil': '1' }, body });
+            return Promise.resolve(body);
+        }) as never;
+    }
+
+    protected async checkUrl(): Promise<void> {}
+
+    run(res: unknown) {
+        return this._tile(1, 2, 3, res as never, { headers: {} });
+    }
+}
+
+function fakeRes() {
+    const res = {
+        headersSent: false,
+        status: 0,
+        chunks: [] as string[],
+        ended: false,
+        writeHead(code: number) {
+            res.status = code;
+            res.headersSent = true;
+        },
+        write(b: Buffer) {
+            res.chunks.push(String(b));
+        },
+        end() {
+            res.ended = true;
+        },
+    };
+    return res;
+}
+
+test('ZXYBasemap tile - retries once after a network error', async () => {
+    const zxy = new FakeZXY(['throw', 'ok']);
+    const res = fakeRes();
+    await zxy.run(res);
+    assert.equal(zxy.calls, 2);
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.chunks, ['tile']);
+});
+
+test('ZXYBasemap tile - two network errors give 400', async () => {
+    const zxy = new FakeZXY(['throw', 'throw']);
+    await assert.rejects(zxy.run(fakeRes()), (err: { status: number }) => err.status === 400);
+    assert.equal(zxy.calls, 2);
+});
+
+test('ZXYBasemap tile - an HTTP status is not retried', async () => {
+    const zxy = new FakeZXY(['ok']);
+    await zxy.run(fakeRes());
+    assert.equal(zxy.calls, 1);
 });

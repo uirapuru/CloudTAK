@@ -931,6 +931,11 @@
     },
     "GET /live/:name": {
         "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /live/:name/:id": {
+        "body": false,
         "query": false,
         "res": false
     },

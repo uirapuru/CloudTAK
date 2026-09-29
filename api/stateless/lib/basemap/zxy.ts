@@ -69,6 +69,64 @@ export default class ZXYBasemap extends BasemapProtocol {
             .replace(/\{bbox-epsg-4326-latlon\}/, ZXYBasemap.latLonExtent(z, x, y));
     }
 
+    /** Time limit for one upstream tile request */
+    static readonly TIMEOUT_MS = 15_000;
+
+    /** Overridable in tests: resolves whether the tile URL may be fetched */
+    protected async checkUrl(href: string): Promise<void> {
+        const { safe, reason } = await isSafeUrl(href);
+        if (!safe) throw new Err(400, null, `Blocked tile URL: ${reason}`);
+    }
+
+    /** Overridable in tests: the single upstream request */
+    protected pipeline: typeof undici.pipeline = (url, opts, handler) => undici.pipeline(url, opts, handler);
+
+    private async attempt(url: URL, res: Response, opts: Required<TileOpts>): Promise<void> {
+        const stream = await this.pipeline(url, {
+            method: 'GET',
+            headers: opts.headers as Record<string, string>,
+            signal: AbortSignal.timeout(ZXYBasemap.TIMEOUT_MS),
+        }, ({ statusCode, headers, body }) => {
+            if (headers) {
+                for (const key in headers) {
+                    if (
+                        ![
+                            'content-type',
+                            'content-length',
+                            'cache-control',
+                            'content-encoding',
+                            'last-modified',
+                        ].includes(key.toLowerCase())
+                    ) {
+                        delete headers[key];
+                    }
+                }
+            }
+
+            res.writeHead(statusCode, headers);
+            return body;
+        });
+
+        await new Promise((resolve, reject) => {
+            stream
+                .on('data', (buf) => {
+                    res.write(buf);
+                })
+                .on('error', (err) => {
+                    return reject(err);
+                })
+                .on('end', () => {
+                    res.end();
+                    return resolve(undefined);
+                })
+                .on('close', () => {
+                    res.end();
+                    return resolve(undefined);
+                })
+                .end();
+        });
+    }
+
     protected async _tile(
         z: number, x: number, y: number,
         res: Response,
@@ -77,51 +135,16 @@ export default class ZXYBasemap extends BasemapProtocol {
         const url = new URL(ZXYBasemap.tileURL(this.basemap!.url, z, x, y));
 
         try {
-            const { safe, reason } = await isSafeUrl(url.href);
-            if (!safe) throw new Err(400, null, `Blocked tile URL: ${reason}`);
+            await this.checkUrl(url.href);
 
-            const stream = await undici.pipeline(url, {
-                method: 'GET',
-                headers: opts.headers as Record<string, string>,
-            }, ({ statusCode, headers, body }) => {
-                if (headers) {
-                    for (const key in headers) {
-                        if (
-                            ![
-                                'content-type',
-                                'content-length',
-                                'cache-control',
-                                'content-encoding',
-                                'last-modified',
-                            ].includes(key.toLowerCase())
-                        ) {
-                            delete headers[key];
-                        }
-                    }
-                }
-
-                res.writeHead(statusCode, headers);
-                return body;
-            });
-
-            await new Promise((resolve, reject) => {
-                stream
-                    .on('data', (buf) => {
-                        res.write(buf);
-                    })
-                    .on('error', (err) => {
-                        return reject(err);
-                    })
-                    .on('end', () => {
-                        res.end();
-                        return resolve(undefined);
-                    })
-                    .on('close', () => {
-                        res.end();
-                        return resolve(undefined);
-                    })
-                    .end();
-            });
+            try {
+                await this.attempt(url, res, opts);
+            } catch (err) {
+                // One retry on timeout / network error, only while nothing was sent to the client.
+                // An HTTP status from the source is a response, not an error, and never retried.
+                if (res.headersSent) throw err;
+                await this.attempt(url, res, opts);
+            }
         } catch (err) {
             throw new Err(400, err instanceof Error ? err : new Error(String(err)), 'Failed to fetch tile');
         }

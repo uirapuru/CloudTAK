@@ -36,10 +36,31 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         params: Type.Object({
             name: Type.String(),
         }),
+        query: Type.Object({
+            since: Type.Optional(Type.String({ description: 'ISO time of the caller\'s copy; unchanged layers answer {"unchanged": true}' })),
+        }),
     }, async (req, res) => {
         try {
             await Auth.as_user(config, req);
-            const body = await liveControl.layer(req.params.name);
+            const body = await liveControl.layer(req.params.name, req.query.since);
+            res.type('application/json').send(body);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.get('/live/:name/:id', {
+        name: 'Get Live Feature',
+        group: 'Live',
+        description: 'Get the details of one object of a live layer',
+        params: Type.Object({
+            name: Type.String(),
+            id: Type.String(),
+        }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_user(config, req);
+            const body = await liveControl.feature(req.params.name, req.params.id);
             res.type('application/json').send(body);
         } catch (err) {
             Err.respond(err, res);

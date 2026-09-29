@@ -1,6 +1,9 @@
 import Err from '@openaddresses/batch-error';
 
 /** Layer names accepted in /api/live/:name - nothing else reaches the pod URL */
+/** Feature ids accepted in /api/live/:name/:id */
+export const LIVE_ID = /^[A-Za-z0-9_.:-]{1,128}$/;
+
 export const LIVE_NAME = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 const TIMEOUT_MS = 10_000;
@@ -47,9 +50,16 @@ export class LiveControl {
         return await (await this.get('/layers')).json() as { items: LiveLayer[] };
     }
 
-    async layer(name: string): Promise<string> {
+    async layer(name: string, since?: string): Promise<string> {
         if (!LIVE_NAME.test(name)) throw new Err(400, null, 'Invalid live layer name');
-        return await (await this.get(`/layers/${name}`)).text();
+        const query = since ? `?since=${encodeURIComponent(since)}` : '';
+        return await (await this.get(`/layers/${name}${query}`)).text();
+    }
+
+    async feature(name: string, id: string): Promise<string> {
+        if (!LIVE_NAME.test(name)) throw new Err(400, null, 'Invalid live layer name');
+        if (!LIVE_ID.test(id)) throw new Err(400, null, 'Invalid live feature id');
+        return await (await this.get(`/layers/${name}/${encodeURIComponent(id)}`)).text();
     }
 }
 

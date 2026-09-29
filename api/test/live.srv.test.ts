@@ -19,6 +19,8 @@ test('mock live-feeds pod', () => {
         const url = String(input);
         calls.push(url);
         if (url.endsWith('/layers')) return new Response(JSON.stringify(INDEX), { status: 200 });
+        if (url.includes('/layers/mpk-wroclaw?since=')) return new Response(JSON.stringify({ unchanged: true, updated: 'x' }), { status: 200 });
+        if (url.endsWith('/layers/mpk-wroclaw/veh-1')) return new Response(JSON.stringify({ properties: { a: 1 } }), { status: 200 });
         if (url.endsWith('/layers/mpk-wroclaw')) return new Response(JSON.stringify(LAYER), { status: 200 });
         return new Response(JSON.stringify({ error: 'unknown layer' }), { status: 404 });
     }) as typeof fetch;
@@ -58,6 +60,34 @@ test('GET api/live/:name rejects names outside the pattern', async () => {
     const res = await flight.fetch('/api/live/..%2Fhealth', { method: 'GET', auth: { bearer: flight.token.user } }, false);
     assert.equal(res.status, 400);
     assert.equal(calls.length, before);
+});
+
+test('GET api/live/:name passes since URL-encoded to the pod', async () => {
+    const res = await flight.fetch('/api/live/mpk-wroclaw?since=2026-09-29T10:00:00%2B00:00', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.deepEqual(res.body, { unchanged: true, updated: 'x' });
+    assert.equal(calls.at(-1), 'http://pod.test:8080/layers/mpk-wroclaw?since=2026-09-29T10%3A00%3A00%2B00%3A00');
+});
+
+test('GET api/live/:name/:id returns feature details', async () => {
+    const res = await flight.fetch('/api/live/mpk-wroclaw/veh-1', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.deepEqual(res.body, { properties: { a: 1 } });
+});
+
+test('GET api/live/:name/:id unknown feature is 404', async () => {
+    const res = await flight.fetch('/api/live/mpk-wroclaw/veh-2', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.equal(res.status, 404);
+});
+
+test('GET api/live/:name/:id rejects a bad id without calling the pod', async () => {
+    const before = calls.length;
+    const res = await flight.fetch('/api/live/mpk-wroclaw/a%20b%3Fx', { method: 'GET', auth: { bearer: flight.token.user } }, false);
+    assert.equal(res.status, 400);
+    assert.equal(calls.length, before);
+});
+
+test('GET api/live/:name/:id without auth', async () => {
+    const res = await flight.fetch('/api/live/mpk-wroclaw/veh-1', { method: 'GET' }, false);
+    assert.equal(res.status, 401);
 });
 
 test('GET api/live/:name without auth', async () => {
