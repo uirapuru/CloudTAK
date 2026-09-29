@@ -88,9 +88,15 @@ export default class OverlayManager extends BaseInterface {
         return overlay;
     }
 
+    /**
+     * Apply a drag order to the loaded overlays. `orderedIds` is the order of
+     * the ordinary (not pinned) overlays, bottom of the stack first. With
+     * `opts.groupId` the moved overlay also joins that group (null: ungrouped).
+     */
     static async reorderLoaded(
         orderedIds: number[],
-        movedId: string | number
+        movedId: string | number,
+        opts: { groupId?: number | null } = {}
     ): Promise<void> {
         const overlayId = this.overlayId(movedId);
         const overlay = this.loadedFrom(overlayId);
@@ -98,6 +104,9 @@ export default class OverlayManager extends BaseInterface {
 
         if (this.isPinned(overlay)) throw new Error('Overlay position is fixed');
         if (!orderedIds.includes(overlayId)) throw new Error('Could not find Overlay in order');
+
+        const regrouped = opts.groupId !== undefined && opts.groupId !== overlay.group_id;
+        if (regrouped) overlay.group_id = opts.groupId ?? null;
 
         // Pinned overlays keep their sentinel `pos` - only ordinary overlays
         // take part in drag order bookkeeping
@@ -116,7 +125,9 @@ export default class OverlayManager extends BaseInterface {
         // drop beyond a pinned overlay cannot leave the map out of step
         overlay.moveBefore(this.loadedLayerAnchor(this.loaded.indexOf(overlay) + 1));
 
-        const results = await Promise.allSettled(changed.map((current) => current.save()));
+        if (regrouped && !changed.includes(overlay)) changed.push(overlay);
+
+        const results = await Promise.allSettled(changed.map((current) => current.save({ group: regrouped && current === overlay })));
         const failed = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
         if (failed) throw failed.reason;
     }

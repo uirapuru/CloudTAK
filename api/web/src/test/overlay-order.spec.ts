@@ -70,6 +70,25 @@ describe('OverlayManager stack order', () => {
         expect(ordinary[0].moveBefore).toHaveBeenCalledWith(OverlayManager.loaded[2]);
     });
 
+    it('reorderLoaded moves an overlay into a group even when its position is unchanged', async () => {
+        for (const overlay of ordinary) overlay.group_id = null;
+
+        await OverlayManager.reorderLoaded([1, 2, 3, 4, 5], 5, { groupId: 7 });
+
+        expect(ordinary[4].group_id).toBe(7);
+        expect(ordinary[4].save).toHaveBeenCalledWith({ group: true });
+        expect(ids()).toEqual([10, 1, 2, 3, 4, 5, -1]);
+    });
+
+    it('reorderLoaded does not send group_id when the group is unchanged', async () => {
+        for (const overlay of ordinary) overlay.group_id = 7;
+
+        await OverlayManager.reorderLoaded([2, 1, 3, 4, 5], 2, { groupId: 7 });
+
+        expect(ordinary[1].save).toHaveBeenCalledWith({ group: false });
+        expect(ordinary[1].group_id).toBe(7);
+    });
+
     it('compareStack pins by overlay kind even when pos is corrupted', () => {
         basemap.pos = 4;
         features.pos = 0;
