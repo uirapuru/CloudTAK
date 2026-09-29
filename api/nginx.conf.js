@@ -10,10 +10,14 @@ const url = new URL(process.env.API_URL);
 // logos from ion, and loaders.gl compiles its meshopt decoder as WebAssembly
 const ION_TILES = ['https://assets.ion.cesium.com', 'https://tile.googleapis.com'];
 
+// Aircraft photos in live overlay details: Planespotters requires the browser
+// to load its thumbnails directly (no proxy), so their image hosts are allowed
+const PLANESPOTTERS_IMAGES = ['https://t.plnspttrs.net', 'https://cdn.planespotters.net'];
+
 const csp = {
     'default-src': [`'self'`],
     'script-src': [`'self'`, `'wasm-unsafe-eval'`],
-    'img-src': [`'self'`, 'data:', 'blob:', 'https://assets.ion.cesium.com'],
+    'img-src': [`'self'`, 'data:', 'blob:', 'https://assets.ion.cesium.com', ...PLANESPOTTERS_IMAGES],
     'media-src': [`'self'`, 'blob:'],
     'font-src': [`'self'`, 'data:'],
     'worker-src': [`'self'`, 'blob:'],

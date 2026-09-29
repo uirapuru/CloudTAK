@@ -88,22 +88,22 @@
                                 </tr>
                             </thead>
                             <tbody class='cloudtak-accent'>
-                                <template v-if='Object.keys(tableProperties).length'>
+                                <template v-if='Object.keys(rows).length'>
                                     <tr
-                                        v-for='prop of Object.keys(tableProperties)'
+                                        v-for='prop of Object.keys(rows)'
                                         :key='prop'
                                     >
                                         <td v-text='prop' />
                                         <td>
                                             <a
-                                                v-if='typeof tableProperties[prop] === "string" && (tableProperties[prop] as string).startsWith("http")'
-                                                :href='tableProperties[prop] as string'
+                                                v-if='typeof rows[prop] === "string" && (rows[prop] as string).startsWith("http")'
+                                                :href='rows[prop] as string'
                                                 target='_blank'
-                                                v-text='tableProperties[prop]'
+                                                v-text='rows[prop]'
                                             />
                                             <span
                                                 v-else
-                                                v-text='tableProperties[prop]'
+                                                v-text='rows[prop]'
                                             />
                                         </td>
                                     </tr>
@@ -111,6 +111,53 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div
+                    v-if='liveRef'
+                    class='col-12 px-3 pb-3'
+                >
+                    <TablerLoading
+                        v-if='detailLoading'
+                        desc='Pobieranie szczegółów'
+                    />
+                    <div
+                        v-if='detailError'
+                        class='text-danger small mb-2'
+                        v-text='detailError'
+                    />
+                    <template v-if='detail?.photo'>
+                        <a
+                            class='live-photo d-block'
+                            :href='detail.photo.link'
+                            target='_blank'
+                            rel='noopener'
+                        >
+                            <img
+                                :src='detail.photo.src'
+                                loading='lazy'
+                                style='max-width: 100%'
+                                alt=''
+                            >
+                        </a>
+                        <div
+                            class='small mb-2'
+                            v-text='detail.photo.credit'
+                        />
+                    </template>
+                    <template v-if='detail?.route'>
+                        <button
+                            type='button'
+                            class='live-route btn btn-outline-secondary btn-sm'
+                            @click='toggleRoute'
+                            v-text='routeVisible ? "Ukryj trasę" : "Pokaż trasę"'
+                        />
+                        <div
+                            v-if='detail.route.properties?.label'
+                            class='small text-secondary mt-1'
+                            v-text='detail.route.properties.label'
+                        />
+                    </template>
                 </div>
             </template>
             <template v-else-if='mode === "raw"'>
@@ -121,7 +168,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useMapStore } from '../../../stores/map.ts';
 import type { LngLatLike, MapGeoJSONFeature } from 'maplibre-gl';
 import type { Feature } from 'geojson';
@@ -129,13 +176,15 @@ import pointOnFeature from '@turf/point-on-feature';
 import Handlebars from 'handlebars';
 import { server, getRuntimeToken } from '../../../std.ts';
 import { liveFeatureTitle, visibleProperties } from '../../../base/live.ts';
+import { fetchDetail, liveFeatureRef, RouteToggle, type LiveDetail } from '../../../base/live-detail.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import Coordinate from '../util/Coordinate.vue';
 import CopyField from '../util/CopyField.vue';
 import { cutOverlayFeature, getFeatureOverlay } from '../util/featureCut.ts';
 import { featureHtmlDescription, proxyHtmlImages } from '../util/proxyImages.ts';
 import {
-    TablerIconButton
+    TablerIconButton,
+    TablerLoading
 } from '@tak-ps/vue-tabler';
 import {
     IconX,
@@ -181,6 +230,67 @@ watch(overlay, async (ov) => {
 }, { immediate: true });
 
 const tableProperties = computed(() => visibleProperties(feature.value?.properties as Record<string, unknown> | undefined));
+
+// Live overlay features with _detail: extra rows, photo and route fetched on demand
+const liveRef = computed(() => liveFeatureRef(feature.value));
+const detail = ref<LiveDetail | null>(null);
+const detailLoading = ref(false);
+const detailError = ref('');
+const routeToggle = new RouteToggle();
+const routeVisible = ref(false);
+let detailRequest = 0;
+
+function hideRoute() {
+    if (mapStore.map) routeToggle.hide(mapStore.map);
+    routeVisible.value = false;
+}
+
+function toggleRoute() {
+    if (!mapStore.map) return;
+    if (routeToggle.visible) {
+        hideRoute();
+    } else if (detail.value?.route) {
+        routeToggle.show(mapStore.map, detail.value.route);
+        routeVisible.value = true;
+    }
+}
+
+watch(feature, async (feat) => {
+    // A route always belongs to the feature it was shown for
+    hideRoute();
+    detail.value = null;
+    detailError.value = '';
+    const request = ++detailRequest;
+
+    const target = liveFeatureRef(feat);
+    if (!target) {
+        detailLoading.value = false;
+        return;
+    }
+
+    detailLoading.value = true;
+    try {
+        const body = await fetchDetail(target.layer, target.id);
+        if (request !== detailRequest) return;
+        detail.value = body;
+        if (body.error) detailError.value = body.error;
+    } catch (err) {
+        if (request !== detailRequest) return;
+        detailError.value = err instanceof Error ? err.message : String(err);
+    } finally {
+        if (request === detailRequest) detailLoading.value = false;
+    }
+}, { immediate: true });
+
+onBeforeUnmount(() => {
+    detailRequest++;
+    hideRoute();
+});
+
+const rows = computed(() => ({
+    ...tableProperties.value,
+    ...visibleProperties(detail.value?.properties),
+}));
 
 const featureTitle = computed(() => {
     if (!feature.value) return 'No Name';
