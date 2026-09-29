@@ -124,6 +124,10 @@ export default defineConfig(({ mode }) => {
         },
         server: {
             port: 8080,
+            fs: {
+                // node_modules may be a symlink to another checkout; its real path must be servable for ?raw imports
+                allow: ['.', fs.realpathSync(path.resolve(import.meta.dirname, 'node_modules'))]
+            },
             proxy: {
                 '/api': {
                     ws: true,

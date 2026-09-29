@@ -1,19 +1,77 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { LIVE_PLANE_IMAGE, LivePoller, liveStyles, liveFeatureTitle, planeIcon, visibleProperties, type LiveCollection } from './live.ts';
+import { LIVE_PLANE_IMAGE, LivePoller, ensureLiveIcons, liveStyles, liveFeatureTitle, planeIcon, visibleProperties, type LiveCollection } from './live.ts';
 
 const FC: LiveCollection = { type: 'FeatureCollection', features: [], attribution: 'MPK Wrocław' };
 
 describe('liveStyles', () => {
     it('draws circles, planes and labels from underscore fields', () => {
         const styles = liveStyles('7');
-        expect(styles.map((s) => s.id)).toEqual(['7-circle', '7-plane', '7-label']);
+        expect(styles.map((s) => s.id)).toEqual([
+            '7-polygon-fill', '7-line', '7-polygon-line', '7-circle', '7-icon-circle', '7-icon', '7-plane', '7-label',
+        ]);
         for (const s of styles) expect((s as { source: string }).source).toBe('7');
-        const plane = styles[1] as { layout: Record<string, unknown> };
+        const plane = styles[6] as { layout: Record<string, unknown> };
         expect(plane.layout['icon-image']).toBe(LIVE_PLANE_IMAGE);
         expect(plane.layout['icon-rotate']).toEqual(['get', '_rotation']);
-        const label = styles[2] as { layout: Record<string, unknown> };
+        const label = styles[7] as { layout: Record<string, unknown> };
         expect(label.layout['text-field']).toEqual(['get', '_label']);
         expect(label.layout['text-font']).toEqual(['Open Sans Bold']);
+    });
+});
+
+describe('liveStyles geometry and icons', () => {
+    const byId = (id: string) => liveStyles('7').find((s) => s.id === id) as unknown as Record<string, unknown> & { paint: Record<string, unknown>; layout: Record<string, unknown> };
+
+    it('filters lines on both LineString and MultiLineString', () => {
+        const line = byId('7-line');
+        expect(line.type).toBe('line');
+        expect(JSON.stringify(line.filter)).toContain('LineString');
+        expect(JSON.stringify(line.filter)).toContain('MultiLineString');
+        expect(line.paint['line-width']).toEqual(['coalesce', ['get', '_width'], 2]);
+        expect(line.paint['line-color']).toEqual(['get', '_color']);
+    });
+
+    it('fills polygons with a default opacity and outlines them', () => {
+        const fill = byId('7-polygon-fill');
+        expect(fill.type).toBe('fill');
+        expect(fill.paint['fill-opacity']).toEqual(['coalesce', ['get', '_fill_opacity'], 0.1]);
+        expect(JSON.stringify(fill.filter)).toContain('MultiPolygon');
+        expect(byId('7-polygon-line').type).toBe('line');
+    });
+
+    it('puts a coloured circle under a white icon for bus/tram/tower/shelter', () => {
+        const circle = byId('7-icon-circle');
+        expect(circle.type).toBe('circle');
+        expect(circle.paint['circle-radius']).toBe(11);
+        expect(circle.paint['circle-stroke-width']).toBe(1.5);
+        expect(JSON.stringify(circle.filter)).toContain('shelter');
+        const icon = byId('7-icon');
+        expect(icon.layout['icon-image']).toEqual(['concat', 'live-', ['get', '_icon']]);
+        expect(byId('7-circle').filter).toEqual(['==', ['get', '_icon'], 'circle']);
+    });
+});
+
+describe('ensureLiveIcons', () => {
+    it('adds each icon once, non-SDF', async () => {
+        class FakeImage {
+            onload: (() => void) | null = null;
+            onerror: (() => void) | null = null;
+            width = 24; height = 24;
+            set src(_v: string) { queueMicrotask(() => this.onload?.()); }
+        }
+        vi.stubGlobal('Image', FakeImage);
+        const ctx = { drawImage: vi.fn(), getImageData: vi.fn(() => ({ width: 32, height: 32, data: new Uint8ClampedArray(32 * 32 * 4) })) };
+        const realCreate = document.createElement.bind(document);
+        vi.spyOn(document, 'createElement').mockImplementation(((tag: string) =>
+            tag === 'canvas' ? { width: 0, height: 0, getContext: () => ctx } : realCreate(tag)) as never);
+        const have = new Set<string>();
+        const map = { hasImage: vi.fn((n: string) => have.has(n)), addImage: vi.fn((n: string) => { have.add(n); }) };
+        await ensureLiveIcons(map as never);
+        await ensureLiveIcons(map as never);
+        expect(map.addImage.mock.calls.map((c) => c[0]).sort()).toEqual(['live-bus', 'live-shelter', 'live-tower', 'live-tram']);
+        expect(map.addImage.mock.calls[0]).toHaveLength(2);
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
     });
 });
 
@@ -108,6 +166,35 @@ describe('LivePoller', () => {
         resolve(FC);
         await vi.advanceTimersByTimeAsync(0);
         expect(onData).not.toHaveBeenCalled();
+    });
+});
+
+describe('LivePoller since', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('sends since (percent-encoded) after a full response and skips unchanged', async () => {
+        const updated = '2026-09-29T10:00:00+00:00';
+        const fetch = vi.fn()
+            .mockResolvedValueOnce({ ...FC, updated })
+            .mockResolvedValueOnce({ unchanged: true, updated });
+        const onData = vi.fn();
+        const poller = new LivePoller({ url: '/api/live/x', intervalMs: 1000, fetch, onData });
+        poller.start();
+        await vi.advanceTimersByTimeAsync(0);
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(onData).toHaveBeenCalledTimes(1);
+        expect(fetch.mock.calls[1][0]).toBe('/api/live/x?since=2026-09-29T10%3A00%3A00%2B00%3A00');
+        poller.stop();
+    });
+
+    it('appends with & when the URL has a query', async () => {
+        const fetch = vi.fn<(url: string) => Promise<LiveCollection>>(async () => ({ ...FC, updated: 'a+b' }));
+        const poller = new LivePoller({ url: '/api/live/x?a=1', intervalMs: 1000, fetch, onData: vi.fn() });
+        poller.start();
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(fetch.mock.calls[1][0]).toBe('/api/live/x?a=1&since=a%2Bb');
+        poller.stop();
     });
 });
 

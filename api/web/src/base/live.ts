@@ -1,5 +1,9 @@
 import type { FeatureCollection } from 'geojson';
-import type { LayerSpecification } from 'maplibre-gl';
+import type { LayerSpecification, Map as MapLibreMap } from 'maplibre-gl';
+import busSvg from '@tabler/icons/outline/bus.svg?raw';
+import trainSvg from '@tabler/icons/outline/train.svg?raw';
+import towerSvg from '@tabler/icons/outline/building-broadcast-tower.svg?raw';
+import shelterSvg from '@tabler/icons/outline/home-shield.svg?raw';
 
 /**
  * Live overlays (mode 'live'): GeoJSON served by the taklab live-feeds pod
@@ -14,10 +18,78 @@ export type LiveCollection = FeatureCollection & {
     attribution?: string;
     updated?: string | null;
     stale?: boolean;
+    unchanged?: boolean;
 };
+
+const ICON_NAMES = ['bus', 'tram', 'tower', 'shelter'];
+const ICON_SIZE = 32;
+const ICON_SVGS: Record<string, string> = { bus: busSvg, tram: trainSvg, tower: towerSvg, shelter: shelterSvg };
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+        const img = new Image(ICON_SIZE, ICON_SIZE);
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Live icon failed to load'));
+        img.src = src;
+    });
+}
+
+/** White Tabler icons rasterized once per map; MapLibre does not tint them (no SDF) */
+export async function ensureLiveIcons(map: Pick<MapLibreMap, 'hasImage' | 'addImage'>): Promise<void> {
+    for (const name of ICON_NAMES) {
+        const id = `live-${name}`;
+        if (map.hasImage(id)) continue;
+        const svg = ICON_SVGS[name]
+            .replace(/currentColor/g, '#ffffff')
+            .replace(/(width|height)="24"/g, `$1="${ICON_SIZE}"`);
+        const img = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+        const canvas = document.createElement('canvas');
+        canvas.width = ICON_SIZE;
+        canvas.height = ICON_SIZE;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) continue;
+        ctx.drawImage(img, 0, 0, ICON_SIZE, ICON_SIZE);
+        // The map may have been re-initialised while the image loaded
+        if (map.hasImage(id)) continue;
+        map.addImage(id, ctx.getImageData(0, 0, ICON_SIZE, ICON_SIZE));
+    }
+}
+
+const ICON_KINDS = ['bus', 'tram', 'tower', 'shelter'];
+// MapLibre reports Multi* as their single type in expressions; both spellings are matched to be safe
+const LINE_TYPES = ['LineString', 'MultiLineString'];
+const POLYGON_TYPES = ['Polygon', 'MultiPolygon'];
 
 export function liveStyles(id: string): LayerSpecification[] {
     return [{
+        id: `${id}-polygon-fill`,
+        type: 'fill',
+        source: id,
+        filter: ['match', ['geometry-type'], POLYGON_TYPES, true, false],
+        paint: {
+            'fill-color': ['get', '_color'],
+            'fill-opacity': ['coalesce', ['get', '_fill_opacity'], 0.1],
+        },
+    }, {
+        id: `${id}-line`,
+        type: 'line',
+        source: id,
+        filter: ['match', ['geometry-type'], LINE_TYPES, true, false],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: {
+            'line-color': ['get', '_color'],
+            'line-width': ['coalesce', ['get', '_width'], 2],
+        },
+    }, {
+        id: `${id}-polygon-line`,
+        type: 'line',
+        source: id,
+        filter: ['match', ['geometry-type'], POLYGON_TYPES, true, false],
+        paint: {
+            'line-color': ['get', '_color'],
+            'line-width': ['coalesce', ['get', '_width'], 2],
+        },
+    }, {
         id: `${id}-circle`,
         type: 'circle',
         source: id,
@@ -27,6 +99,27 @@ export function liveStyles(id: string): LayerSpecification[] {
             'circle-color': ['get', '_color'],
             'circle-stroke-color': '#ffffff',
             'circle-stroke-width': 1.5,
+        },
+    }, {
+        id: `${id}-icon-circle`,
+        type: 'circle',
+        source: id,
+        filter: ['in', ['get', '_icon'], ['literal', ICON_KINDS]],
+        paint: {
+            'circle-radius': 11,
+            'circle-color': ['get', '_color'],
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 1.5,
+        },
+    }, {
+        id: `${id}-icon`,
+        type: 'symbol',
+        source: id,
+        filter: ['in', ['get', '_icon'], ['literal', ICON_KINDS]],
+        layout: {
+            'icon-image': ['concat', 'live-', ['get', '_icon']],
+            'icon-size': 0.6,
+            'icon-allow-overlap': true,
         },
     }, {
         id: `${id}-plane`,
@@ -116,6 +209,14 @@ export class LivePoller {
     running = false;
     private timer: ReturnType<typeof setInterval> | null = null;
     private generation = 0;
+    private updated: string | null = null;
+
+    /** Adds ?since=<updated of the last full response>; the ISO '+00:00' must go out as %2B */
+    private requestUrl(): string {
+        if (!this.updated) return this.opts.url;
+        const sep = this.opts.url.includes('?') ? '&' : '?';
+        return `${this.opts.url}${sep}${new URLSearchParams({ since: this.updated }).toString()}`;
+    }
 
     constructor(private opts: {
         url: string;
@@ -143,8 +244,10 @@ export class LivePoller {
     async tick(): Promise<void> {
         const generation = this.generation;
         try {
-            const fc = await this.opts.fetch(this.opts.url);
+            const fc = await this.opts.fetch(this.requestUrl());
             if (generation !== this.generation || !this.running) return;
+            if (fc.unchanged) return;
+            this.updated = fc.updated || null;
             this.opts.onData(fc);
         } catch (err) {
             if (generation !== this.generation) return;
