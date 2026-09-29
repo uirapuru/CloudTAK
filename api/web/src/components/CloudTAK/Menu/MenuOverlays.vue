@@ -35,7 +35,7 @@
 
                 <div class='d-flex align-items-center gap-2 flex-wrap'>
                     <label
-                        v-if='overlayCards.length'
+                        v-if='toggleableCards.length'
                         class='form-check d-flex align-items-center gap-2 mb-0'
                     >
                         <input
@@ -43,7 +43,7 @@
                             class='form-check-input mt-0'
                             :checked='allState === "all"'
                             :indeterminate.prop='allState === "some"'
-                            @change='void toggleAll()'
+                            @change='void toggleAll($event)'
                         >
                         <span
                             class='form-check-label'
@@ -149,7 +149,7 @@
                                         :checked='section.state === "all"'
                                         :indeterminate.prop='section.state === "some"'
                                         :disabled='!section.members.length'
-                                        @change='void toggleGroup(section.members, section.state)'
+                                        @change='void toggleGroup($event, section.members, section.state)'
                                     >
 
                                     <template v-if='renamingGroupId === section.group.id'>
@@ -263,7 +263,7 @@
                                             :aria-disabled='card.overlay.id === 0'
                                         >
                                             <span
-                                                v-if='section.sortable && !hasSearchTerm'
+                                                v-if='section.sortable && dragEnabled'
                                                 class='drag-handle flex-shrink-0 align-self-stretch d-flex align-items-center cursor-move text-white-50'
                                                 title='Przeciągnij, aby zmienić kolejność lub grupę'
                                                 @click.stop
@@ -500,7 +500,8 @@ import {
     moveInLayout,
     normalizeGroupName,
     partitionLayout,
-    partitionOverlays
+    partitionOverlays,
+    restoreNode
 } from '../../../base/overlay-groups.ts';
 import type { OverlayListKey } from '../../../base/overlay-groups.ts';
 import OverlayGroupManager from '../../../base/overlay-group-manager.ts';
@@ -566,6 +567,13 @@ const newGroupInput = useTemplateRef<HTMLInputElement>('newGroupInput');
 const renameInput = useTemplateRef<HTMLInputElement[] | HTMLInputElement>('renameInput');
 
 const hasSearchTerm = computed(() => overlayFilter.value.trim().length > 0);
+
+/** Groups must be known before a drop, or the drop would ungroup the overlay */
+const groupsLoaded = ref(false);
+const dragEnabled = computed(() => groupsLoaded.value && !hasSearchTerm.value);
+
+/** nextSibling of the row being dragged, recorded on drag start */
+let dragNext: Node | null = null;
 
 function overlayMatchesTerm(overlay: Overlay, term: string): boolean {
     return (
@@ -714,6 +722,7 @@ async function loadGroups(): Promise<void> {
     // Show the local copy first so the grouping survives an offline start
     groups.value = await OverlayGroupManager.cached();
     groups.value = await OverlayGroupManager.list();
+    groupsLoaded.value = true;
 }
 
 onMounted(() => {
@@ -726,7 +735,7 @@ onUpdated(() => {
     syncSortables();
 });
 
-watch(hasSearchTerm, async () => {
+watch(dragEnabled, async () => {
     await nextTick();
     syncSortables();
 });
@@ -752,12 +761,13 @@ function syncSortables(): void {
                 handle: '.drag-handle',
                 draggable: '.overlay-row',
                 dataIdAttr: 'id',
+                onStart: (ev) => { dragNext = ev.item.nextSibling; },
                 onEnd: (ev) => void handleDrop(ev)
             });
             sortables.set(el, sortable);
         }
 
-        sortable.option('disabled', hasSearchTerm.value);
+        sortable.option('disabled', !dragEnabled.value);
     }
 }
 
@@ -870,28 +880,41 @@ function getOverlayBadges(overlay: Overlay): OverlayBadge[] {
  */
 async function handleDrop(ev: SortableEvent): Promise<void> {
     const { item, from, to, oldIndex, newIndex } = ev;
-    if (oldIndex === undefined || newIndex === undefined) return;
 
-    item.remove();
-    from.insertBefore(item, from.children[oldIndex] ?? null);
+    restoreNode(item, from, dragNext);
+    dragNext = null;
+
+    if (oldIndex === undefined || newIndex === undefined) return;
 
     const id = Number(item.getAttribute('id'));
     const target = parseListKey(to.dataset.listKey);
     if (!Number.isFinite(id) || target === undefined) return;
     if (from === to && oldIndex === newIndex) return;
 
+    // An overlay in a group this client does not know (yet) is listed as
+    // ungrouped - reordering it there must not drop its membership
+    const current = allCards.value.find((card) => card.overlay.id === id)?.groupId ?? null;
+    const unknownGroup = current !== null && !groups.value.some((group) => group.id === current);
+    const groupId = target === null && unknownGroup ? undefined : target;
+
     try {
         const layout = moveInLayout(partitionLayout(partition.value, (card) => card.overlay.id), id, target, newIndex);
 
-        const reorder = OverlayManager.reorderLoaded(flattenLayout(layout), id, { groupId: target });
+        const reorder = OverlayManager.reorderLoaded(flattenLayout(layout), id, { groupId });
 
         // Show the new membership right away - the local record follows
-        dbOverlays.value = dbOverlays.value.map((record) => record.id === id ? { ...record, group_id: target } : record);
+        if (groupId !== undefined) {
+            dbOverlays.value = dbOverlays.value.map((record) => record.id === id ? { ...record, group_id: groupId } : record);
+        }
         overlayRenderTick.value += 1;
 
         await reorder;
     } catch (err) {
         console.error('Failed to sync overlay order:', err);
+        groupError.value = errorText('Nie udało się przenieść nakładki', err);
+        // The group may be gone on another device - reload groups and overlays from the server
+        void loadGroups();
+        OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
     } finally {
         overlayRenderTick.value += 1;
     }
@@ -910,15 +933,29 @@ async function updateOverlay(overlay: Overlay, body: OverlayUpdate): Promise<voi
     }
 }
 
-const allState = computed(() => visibilityState(overlayCards.value));
+/** Show/hide all leaves the basemap and "Map Features" alone */
+const toggleableCards = computed(() => overlayCards.value.filter((card) => !OverlayManager.isPinned(card.overlay)));
 
-async function toggleAll(): Promise<void> {
-    const cards = overlayCards.value;
-    await setAllVisible(cards, allState.value !== 'all', (card, body) => updateOverlay(card.overlay, body));
+const allState = computed(() => visibilityState(toggleableCards.value));
+
+/** Keep a checkbox in line with the overlays even when every update failed and Vue sees no change */
+function syncCheckbox(ev: Event, cards: OverlayCard[]): void {
+    const el = ev.target as HTMLInputElement | null;
+    if (!el) return;
+    const state = visibilityState(cards.map((card) => ({ visible: card.overlay.visible })));
+    el.checked = state === 'all';
+    el.indeterminate = state === 'some';
 }
 
-async function toggleGroup(members: OverlayCard[], state: VisibilityState): Promise<void> {
+async function toggleAll(ev: Event): Promise<void> {
+    const cards = toggleableCards.value;
+    await setAllVisible(cards, allState.value !== 'all', (card, body) => updateOverlay(card.overlay, body));
+    syncCheckbox(ev, cards);
+}
+
+async function toggleGroup(ev: Event, members: OverlayCard[], state: VisibilityState): Promise<void> {
     await setAllVisible(members, state !== 'all', (card, body) => updateOverlay(card.overlay, body));
+    syncCheckbox(ev, members);
 }
 
 async function removeOverlay(id: number) {

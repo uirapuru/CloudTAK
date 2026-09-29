@@ -110,3 +110,12 @@ export function normalizeGroupName(name: string): string | null {
     if (!trimmed.length || trimmed.length > GROUP_NAME_MAX) return null;
     return trimmed;
 }
+
+/**
+ * Put a node Sortable moved back where it was. `next` is the node's
+ * nextSibling recorded when the drag started - a node, not an element index,
+ * so Vue's (empty text) fragment anchors keep their place around the rows.
+ */
+export function restoreNode(node: Node, parent: Node, next: Node | null): void {
+    parent.insertBefore(node, next && next.parentNode === parent ? next : null);
+}

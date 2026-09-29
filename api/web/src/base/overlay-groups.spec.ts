@@ -6,6 +6,7 @@ import {
     normalizeGroupName,
     partitionLayout,
     partitionOverlays,
+    restoreNode,
     sortGroups
 } from './overlay-groups.ts';
 
@@ -103,5 +104,58 @@ describe('normalizeGroupName', () => {
         expect(normalizeGroupName('   ')).toBeNull();
         expect(normalizeGroupName('x'.repeat(64))).toBe('x'.repeat(64));
         expect(normalizeGroupName('x'.repeat(65))).toBeNull();
+    });
+});
+
+describe('restoreNode', () => {
+    /** Mimic a Vue v-for fragment: empty text anchors around the rows */
+    function list(ids: string[]): HTMLElement {
+        const el = document.createElement('div');
+        el.append(document.createTextNode(''));
+        for (const id of ids) {
+            const row = document.createElement('div');
+            row.id = id;
+            el.append(row);
+        }
+        el.append(document.createTextNode(''));
+        return el;
+    }
+
+    function shape(el: HTMLElement): string[] {
+        return Array.from(el.childNodes).map((node) => node.nodeType === 3 ? '|' : (node as HTMLElement).id);
+    }
+
+    it('puts the last row back before the end anchor after a drop in place or at the end', () => {
+        const el = list(['a', 'b', 'c']);
+        const item = el.querySelector('#c') as HTMLElement;
+        const next = item.nextSibling;
+
+        // Sortable appended the row at the very end, after the anchor
+        el.appendChild(item);
+        expect(shape(el)).toEqual(['|', 'a', 'b', '|', 'c']);
+
+        restoreNode(item, el, next);
+        expect(shape(el)).toEqual(['|', 'a', 'b', 'c', '|']);
+    });
+
+    it('puts a row moved to another list back into its own list', () => {
+        const from = list(['a', 'b']);
+        const to = list(['x']);
+        const item = from.querySelector('#a') as HTMLElement;
+        const next = item.nextSibling;
+
+        to.insertBefore(item, to.querySelector('#x'));
+        restoreNode(item, from, next);
+
+        expect(shape(from)).toEqual(['|', 'a', 'b', '|']);
+        expect(shape(to)).toEqual(['|', 'x', '|']);
+    });
+
+    it('appends when the recorded sibling left the list', () => {
+        const el = list(['a']);
+        const item = document.createElement('div');
+        item.id = 'z';
+        restoreNode(item, el, document.createTextNode(''));
+        expect(shape(el)).toEqual(['|', 'a', '|', 'z']);
     });
 });

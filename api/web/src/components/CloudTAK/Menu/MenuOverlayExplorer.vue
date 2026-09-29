@@ -23,14 +23,41 @@
                         class='btn btn-outline-secondary btn-sm'
                         :disabled='loading || bulkBusy'
                         @click='void addAll()'
-                        v-text='bulkBusy ? "Pracuję…" : "Dodaj wszystkie do nakładek"'
+                        v-text='bulkBusy ? "Pracuję…" : "Dodaj widoczne do nakładek"'
                     />
                     <button
                         type='button'
-                        class='btn btn-outline-secondary btn-sm'
-                        :disabled='loading || bulkBusy'
+                        class='btn btn-outline-danger btn-sm'
+                        :disabled='loading || bulkBusy || confirmRemove !== null'
+                        @click='askRemoveAll'
+                        v-text='bulkBusy ? "Pracuję…" : "Usuń widoczne z nakładek"'
+                    />
+                </div>
+
+                <div
+                    v-if='confirmRemove !== null'
+                    class='d-flex align-items-center gap-2 p-2 rounded-2 bg-danger bg-opacity-25'
+                >
+                    <span
+                        class='small flex-grow-1'
+                        v-text='confirmRemove
+                            ? `Usunąć z nakładek ${overlayCountText(confirmRemove)}? Ich ustawienia i grupy przepadną.`
+                            : "Żadna widoczna pozycja nie jest w nakładkach."'
+                    />
+                    <button
+                        v-if='confirmRemove'
+                        type='button'
+                        class='btn btn-sm btn-danger'
+                        :disabled='bulkBusy'
                         @click='void removeAll()'
-                        v-text='bulkBusy ? "Pracuję…" : "Usuń wszystkie z nakładek"'
+                    >
+                        Usuń
+                    </button>
+                    <button
+                        type='button'
+                        class='btn btn-sm btn-secondary'
+                        @click='confirmRemove = null'
+                        v-text='confirmRemove ? "Anuluj" : "Zamknij"'
                     />
                 </div>
 
@@ -78,14 +105,14 @@
                     </StandardItem>
 
                     <div
-                        v-if='ionItems.length && !paging.collection'
+                        v-if='visibleIonItems.length && !paging.collection'
                         class='d-flex flex-column gap-2'
                     >
                         <div class='small text-white-50 text-uppercase'>
                             3D Buildings
                         </div>
                         <StandardItem
-                            v-for='item in ionItems'
+                            v-for='item in visibleIonItems'
                             :key='item.name'
                             class='p-3'
                             :class='[
@@ -105,14 +132,14 @@
                     </div>
 
                     <div
-                        v-if='liveItems.length && !paging.collection'
+                        v-if='visibleLiveItems.length && !paging.collection'
                         class='d-flex flex-column gap-2'
                     >
                         <div class='small text-white-50 text-uppercase'>
                             Na żywo
                         </div>
                         <StandardItem
-                            v-for='item in liveItems'
+                            v-for='item in visibleLiveItems'
                             :key='item.name'
                             class='p-3'
                             :class='[
@@ -171,7 +198,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Basemap, BasemapList } from '../../../types.ts';
 import { server, stdurl, std } from '../../../std.ts';
@@ -194,7 +221,7 @@ import StandardItemBasemap from '../util/StandardItemBasemap.vue';
 import StandardItemFolder from '../util/StandardItemFolder.vue';
 import PathBreadcrumb from '../util/PathBreadcrumb.vue';
 import OverlayManager from '../../../base/overlay.ts';
-import { selectToAdd, selectToRemove, type ExplorerRef } from '../../../base/overlay-explorer-bulk.ts';
+import { matchesFilter, overlayCountText, selectToAdd, selectToRemove, type ExplorerRef } from '../../../base/overlay-explorer-bulk.ts';
 import type { Subscription } from 'dexie';
 const router = useRouter();
 
@@ -247,6 +274,10 @@ onUnmounted(() => {
 const ionItems = ref<Array<{ name: string; label: string }>>([]);
 type LiveItem = { name: string; label: string; refresh: number; attribution: string; updated: string | null; stale: boolean };
 const liveItems = ref<Array<LiveItem>>([]);
+
+// 3D buildings and live layers obey the same search filter as the basemaps
+const visibleIonItems = computed(() => ionItems.value.filter((i) => matchesFilter(i, paging.value.filter)));
+const visibleLiveItems = computed(() => liveItems.value.filter((i) => matchesFilter(i, paging.value.filter)));
 
 watch(
     () => [paging.value.filter, paging.value.collection, paging.value.limit, paging.value.page],
@@ -303,16 +334,29 @@ async function createOverlay(overlay: Basemap) {
 }
 
 const bulkBusy = ref(false);
+/** Number of overlays the pending "remove visible" would delete, null when no confirmation is open */
+const confirmRemove = ref<number | null>(null);
 
-// Everything the Explorer currently lists (3D buildings and live layers only on the top level)
+// Everything the Explorer visibly lists: the current page of basemaps, plus
+// 3D buildings and live layers (filtered, only on the top level)
 function explorerRefs(): ExplorerRef[] {
     const refs: ExplorerRef[] = list.value.items.map((b) => ({ mode: 'overlay' as const, modeId: String(b.id) }));
     if (!paging.value.collection) {
-        refs.push(...ionItems.value.map((i) => ({ mode: 'ion' as const, modeId: i.name })));
-        refs.push(...liveItems.value.map((i) => ({ mode: 'live' as const, modeId: i.name })));
+        refs.push(...visibleIonItems.value.map((i) => ({ mode: 'ion' as const, modeId: i.name })));
+        refs.push(...visibleLiveItems.value.map((i) => ({ mode: 'live' as const, modeId: i.name })));
     }
     return refs;
 }
+
+function askRemoveAll(): void {
+    if (loading.value || bulkBusy.value) return;
+    confirmRemove.value = selectToRemove(explorerRefs(), [...OverlayManager.loaded]).length;
+}
+
+// A changed list means the counted overlays are no longer what is shown
+watch(() => [paging.value.filter, paging.value.collection, paging.value.page], () => {
+    confirmRemove.value = null;
+});
 
 async function addAll(): Promise<void> {
     if (loading.value || bulkBusy.value) return;
@@ -344,6 +388,7 @@ async function addAll(): Promise<void> {
 async function removeAll(): Promise<void> {
     if (loading.value || bulkBusy.value) return;
     bulkBusy.value = true;
+    confirmRemove.value = null;
 
     try {
         for (const overlay of selectToRemove(explorerRefs(), [...OverlayManager.loaded])) {
