@@ -44,6 +44,23 @@
                     />
                 </div>
 
+                <label
+                    v-if='overlayCards.length && !isDraggable'
+                    class='form-check d-flex align-items-center gap-2 mb-0'
+                >
+                    <input
+                        type='checkbox'
+                        class='form-check-input mt-0'
+                        :checked='allState === "all"'
+                        :indeterminate.prop='allState === "some"'
+                        @change='void toggleAll()'
+                    >
+                    <span
+                        class='form-check-label'
+                        v-text='allState === "all" ? "Ukryj wszystkie" : "Pokaż wszystkie"'
+                    />
+                </label>
+
                 <p
                     v-if='showDragHint'
                     class='small mb-0 text-white-50'
@@ -305,6 +322,7 @@ import {
     IconEye,
     IconMap
 } from '@tabler/icons-vue';
+import { setAllVisible, visibilityState } from '../../../base/overlay-visibility.ts';
 import StandardItem from '../util/StandardItem.vue';
 import Sortable from 'sortablejs';
 import type { SortableEvent } from 'sortablejs';
@@ -597,6 +615,13 @@ async function updateOverlay(overlay: Overlay, body: OverlayUpdate): Promise<voi
     } finally {
         overlayRenderTick.value += 1;
     }
+}
+
+const allState = computed(() => visibilityState(overlayCards.value));
+
+async function toggleAll(): Promise<void> {
+    const cards = overlayCards.value;
+    await setAllVisible(cards, allState.value !== 'all', (card, body) => updateOverlay(card.overlay, body));
 }
 
 async function removeOverlay(id: number) {
