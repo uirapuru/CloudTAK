@@ -11,7 +11,7 @@ vi.mock('./overlay.ts', () => ({
     },
 }));
 
-import { RouteToggle, fetchDetail, liveFeatureRef, safeHttpUrl, LIVE_ROUTE_LAYER, LIVE_ROUTE_SOURCE } from './live-detail.ts';
+import { RouteToggle, fetchDetail, liveFeatureRef, safeHttpUrl, LIVE_ROUTE_LAYER, LIVE_ROUTE_SOURCE, LIVE_ROUTE_FILL_LAYER, routeToggleLabel } from './live-detail.ts';
 
 function fakeMap() {
     const sources = new Map<string, unknown>();
@@ -89,6 +89,64 @@ describe('RouteToggle', () => {
         expect(map.sources.size).toBe(1);
         const layer = map.layers.get(LIVE_ROUTE_LAYER) as { paint: Record<string, unknown> };
         expect(layer.paint['line-color']).toBe('#00ff00');
+    });
+});
+
+describe('RouteToggle polygons', () => {
+    const POLY = {
+        type: 'Feature',
+        geometry: { type: 'Polygon', coordinates: [[[17, 51], [18, 51], [18, 52], [17, 51]]] },
+        properties: { _color: '#00aa00' },
+    } as never;
+
+    it('adds a fill under a solid outline and hide removes both', () => {
+        const map = fakeMap();
+        const toggle = new RouteToggle();
+        toggle.show(map as never, POLY);
+        const ids = [...map.layers.keys()];
+        expect(ids).toEqual([LIVE_ROUTE_FILL_LAYER, LIVE_ROUTE_LAYER]);
+        const fill = map.layers.get(LIVE_ROUTE_FILL_LAYER) as { type: string; paint: Record<string, unknown> };
+        expect(fill.type).toBe('fill');
+        expect(fill.paint['fill-color']).toBe('#00aa00');
+        expect(fill.paint['fill-opacity']).toBe(0.25);
+        const line = map.layers.get(LIVE_ROUTE_LAYER) as { paint: Record<string, unknown> };
+        expect(line.paint['line-width']).toBe(2);
+        expect(line.paint['line-dasharray']).toBeUndefined();
+        toggle.hide(map as never);
+        expect(map.layers.size).toBe(0);
+        expect(map.sources.size).toBe(0);
+        expect(() => toggle.hide(map as never)).not.toThrow();
+    });
+
+    it('uses numeric _fill_opacity in [0,1] only', () => {
+        const opacity = (v: unknown) => {
+            const map = fakeMap();
+            new RouteToggle().show(map as never, { ...(POLY as object), properties: { _fill_opacity: v } } as never);
+            return (map.layers.get(LIVE_ROUTE_FILL_LAYER) as { paint: Record<string, unknown> }).paint['fill-opacity'];
+        };
+        expect(opacity(0.6)).toBe(0.6);
+        expect(opacity(0)).toBe(0);
+        expect(opacity(2)).toBe(0.25);
+        expect(opacity('0.5')).toBe(0.25);
+    });
+
+    it('LineString routes get no fill layer', () => {
+        const map = fakeMap();
+        new RouteToggle().show(map as never, ROUTE);
+        expect(map.layers.has(LIVE_ROUTE_FILL_LAYER)).toBe(false);
+    });
+});
+
+describe('routeToggleLabel', () => {
+    it('defaults to "trasę"', () => {
+        expect(routeToggleLabel({}, false)).toBe('Pokaż trasę');
+        expect(routeToggleLabel({ route_label: '  ' }, true)).toBe('Ukryj trasę');
+        expect(routeToggleLabel(undefined, false)).toBe('Pokaż trasę');
+    });
+    it('uses a trimmed route_label capped at 40 chars', () => {
+        expect(routeToggleLabel({ route_label: ' zasięg ' }, false)).toBe('Pokaż zasięg');
+        expect(routeToggleLabel({ route_label: 'zasięg' }, true)).toBe('Ukryj zasięg');
+        expect(routeToggleLabel({ route_label: 'x'.repeat(60) }, false)).toBe(`Pokaż ${'x'.repeat(40)}`);
     });
 });
 

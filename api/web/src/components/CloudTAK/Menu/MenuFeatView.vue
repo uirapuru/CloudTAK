@@ -159,7 +159,7 @@
                             type='button'
                             class='live-route btn btn-outline-secondary btn-sm'
                             @click='toggleRoute'
-                            v-text='routeVisible ? "Ukryj trasę" : "Pokaż trasę"'
+                            v-text='routeToggleLabel(detail, routeVisible)'
                         />
                         <div
                             v-if='detail.route.properties?.label'
@@ -185,7 +185,7 @@ import pointOnFeature from '@turf/point-on-feature';
 import Handlebars from 'handlebars';
 import { server, getRuntimeToken } from '../../../std.ts';
 import { liveFeatureTitle, visibleProperties } from '../../../base/live.ts';
-import { fetchDetail, liveFeatureRef, RouteToggle, safeHttpUrl, type LiveDetail } from '../../../base/live-detail.ts';
+import { fetchDetail, liveFeatureRef, RouteToggle, routeToggleLabel, safeHttpUrl, type LiveDetail } from '../../../base/live-detail.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import Coordinate from '../util/Coordinate.vue';
 import CopyField from '../util/CopyField.vue';

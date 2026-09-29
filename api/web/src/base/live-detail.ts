@@ -11,6 +11,7 @@ import OverlayManager from './overlay.ts';
 
 export const LIVE_ROUTE_SOURCE = 'live-route';
 export const LIVE_ROUTE_LAYER = 'live-route-line';
+export const LIVE_ROUTE_FILL_LAYER = 'live-route-fill';
 const DEFAULT_ROUTE_COLOR = '#111827';
 
 export type LivePhoto = { src: string; link: string; credit: string };
@@ -19,6 +20,7 @@ export type LiveDetail = {
     properties?: Record<string, unknown>;
     photo?: LivePhoto;
     route?: Feature;
+    route_label?: string;
     error?: string;
 };
 
@@ -56,33 +58,63 @@ export async function fetchDetail(layer: string, id: string): Promise<LiveDetail
     return await std(`/api/live/${encodeURIComponent(layer)}/${encodeURIComponent(id)}`) as LiveDetail;
 }
 
+/** Text of the route toggle button, e.g. "Pokaż zasięg" (default noun: "trasę") */
+export function routeToggleLabel(detail: Pick<LiveDetail, 'route_label'> | null | undefined, visible: boolean): string {
+    const raw = detail?.route_label;
+    const label = typeof raw === 'string' ? raw.trim().slice(0, 40).trim() : '';
+    return `${visible ? 'Ukryj' : 'Pokaż'} ${label || 'trasę'}`;
+}
+
 type RouteMap = Pick<MapLibreMap, 'addSource' | 'addLayer' | 'getSource' | 'getLayer' | 'removeLayer' | 'removeSource'>;
 
-/** Temporary dashed route of one live feature; show/hide are idempotent */
+/** Temporary route of one live feature (dashed line, or semi-transparent polygon); show/hide are idempotent */
 export class RouteToggle {
     visible = false;
 
     show(map: RouteMap, route: Feature): void {
         this.hide(map);
 
-        const color = route.properties?._color;
+        const rawColor = route.properties?._color;
+        const color = typeof rawColor === 'string' && rawColor ? rawColor : DEFAULT_ROUTE_COLOR;
         map.addSource(LIVE_ROUTE_SOURCE, { type: 'geojson', data: route });
-        map.addLayer({
-            id: LIVE_ROUTE_LAYER,
-            type: 'line',
-            source: LIVE_ROUTE_SOURCE,
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: {
-                'line-color': typeof color === 'string' && color ? color : DEFAULT_ROUTE_COLOR,
-                'line-width': 3,
-                'line-dasharray': [2, 2],
-            },
-        });
+
+        const type = route.geometry?.type;
+        if (type === 'Polygon' || type === 'MultiPolygon') {
+            const rawOpacity = route.properties?._fill_opacity;
+            const opacity = typeof rawOpacity === 'number' && rawOpacity >= 0 && rawOpacity <= 1 ? rawOpacity : 0.25;
+            map.addLayer({
+                id: LIVE_ROUTE_FILL_LAYER,
+                type: 'fill',
+                source: LIVE_ROUTE_SOURCE,
+                paint: { 'fill-color': color, 'fill-opacity': opacity },
+            });
+            map.addLayer({
+                id: LIVE_ROUTE_LAYER,
+                type: 'line',
+                source: LIVE_ROUTE_SOURCE,
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: { 'line-color': color, 'line-width': 2 },
+            });
+        } else {
+            map.addLayer({
+                id: LIVE_ROUTE_LAYER,
+                type: 'line',
+                source: LIVE_ROUTE_SOURCE,
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: {
+                    'line-color': color,
+                    'line-width': 3,
+                    'line-dasharray': [2, 2],
+                },
+            });
+        }
         this.visible = true;
     }
 
     hide(map: RouteMap): void {
-        if (map.getLayer(LIVE_ROUTE_LAYER)) map.removeLayer(LIVE_ROUTE_LAYER);
+        for (const id of [LIVE_ROUTE_LAYER, LIVE_ROUTE_FILL_LAYER]) {
+            if (map.getLayer(id)) map.removeLayer(id);
+        }
         if (map.getSource(LIVE_ROUTE_SOURCE)) map.removeSource(LIVE_ROUTE_SOURCE);
         this.visible = false;
     }
