@@ -146,6 +146,48 @@ describe('MenuFeatView live details', () => {
         expect(wrapper.find('button.live-route').exists()).toBe(false);
     });
 
+    it('does not render an unsafe photo link, but keeps a safe image', async () => {
+        fetchDetail.mockResolvedValue({ ...DETAIL, photo: { ...DETAIL.photo, link: 'javascript:alert(1)' } });
+        const wrapper = await mountView();
+        expect(wrapper.find('a.live-photo').exists()).toBe(false);
+        expect(wrapper.find('[href^="javascript"]').exists()).toBe(false);
+        expect(wrapper.find('img.live-photo').attributes('src')).toBe(DETAIL.photo.src);
+    });
+
+    it('does not render a photo with an unsafe src', async () => {
+        fetchDetail.mockResolvedValue({ ...DETAIL, photo: { ...DETAIL.photo, src: 'data:image/svg+xml,<svg/>' } });
+        const wrapper = await mountView();
+        expect(wrapper.find('.live-photo').exists()).toBe(false);
+        expect(wrapper.text()).not.toContain(DETAIL.photo.credit);
+    });
+
+    it('ignores a late response for a previously opened feature', async () => {
+        let resolveA: (v: unknown) => void = () => {};
+        fetchDetail.mockImplementation((_layer: string, id: string) => {
+            if (id === 'abc') return new Promise((resolve) => { resolveA = resolve; });
+            return Promise.resolve({ properties: { Typ: 'B737' } });
+        });
+        const wrapper = await mountView();
+        mapStore.viewedFeature = plane('def');
+        await flushPromises();
+        resolveA(DETAIL);
+        await flushPromises();
+        expect(wrapper.text()).toContain('B737');
+        expect(wrapper.text()).not.toContain('A320');
+        expect(wrapper.find('button.live-route').exists()).toBe(false);
+    });
+
+    it('unmounts without throwing before the map is initialised', async () => {
+        const wrapper = await mountView();
+        const saved = Object.getOwnPropertyDescriptor(mapStore, 'map');
+        Object.defineProperty(mapStore, 'map', { configurable: true, get() { throw new Error('Map has not yet initialized'); } });
+        try {
+            expect(() => wrapper.unmount()).not.toThrow();
+        } finally {
+            if (saved) Object.defineProperty(mapStore, 'map', saved);
+        }
+    });
+
     it('shows an error when details fail', async () => {
         fetchDetail.mockRejectedValue(new Error('Status Code: 404'));
         const wrapper = await mountView();

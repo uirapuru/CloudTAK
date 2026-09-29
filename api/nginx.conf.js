@@ -11,8 +11,8 @@ const url = new URL(process.env.API_URL);
 const ION_TILES = ['https://assets.ion.cesium.com', 'https://tile.googleapis.com'];
 
 // Aircraft photos in live overlay details: Planespotters requires the browser
-// to load its thumbnails directly (no proxy), so their image hosts are allowed
-const PLANESPOTTERS_IMAGES = ['https://t.plnspttrs.net', 'https://cdn.planespotters.net'];
+// to load its thumbnails directly (no proxy), so its thumbnail host is allowed
+const PLANESPOTTERS_IMAGES = ['https://t.plnspttrs.net'];
 
 const csp = {
     'default-src': [`'self'`],

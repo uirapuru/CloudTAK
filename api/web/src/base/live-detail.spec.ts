@@ -11,7 +11,7 @@ vi.mock('./overlay.ts', () => ({
     },
 }));
 
-import { RouteToggle, fetchDetail, liveFeatureRef, LIVE_ROUTE_LAYER, LIVE_ROUTE_SOURCE } from './live-detail.ts';
+import { RouteToggle, fetchDetail, liveFeatureRef, safeHttpUrl, LIVE_ROUTE_LAYER, LIVE_ROUTE_SOURCE } from './live-detail.ts';
 
 function fakeMap() {
     const sources = new Map<string, unknown>();
@@ -89,6 +89,24 @@ describe('RouteToggle', () => {
         expect(map.sources.size).toBe(1);
         const layer = map.layers.get(LIVE_ROUTE_LAYER) as { paint: Record<string, unknown> };
         expect(layer.paint['line-color']).toBe('#00ff00');
+    });
+});
+
+describe('safeHttpUrl', () => {
+    it('accepts absolute http and https URLs', () => {
+        expect(safeHttpUrl('https://t.plnspttrs.net/1.jpg')).toBe('https://t.plnspttrs.net/1.jpg');
+        expect(safeHttpUrl('http://example.com/a')).toBe('http://example.com/a');
+    });
+
+    it('rejects other schemes, relative paths and garbage', () => {
+        expect(safeHttpUrl('javascript:alert(1)')).toBeNull();
+        expect(safeHttpUrl('JaVaScRiPt:alert(1)')).toBeNull();
+        expect(safeHttpUrl('data:text/html,<script>alert(1)</script>')).toBeNull();
+        expect(safeHttpUrl('/api/photo.jpg')).toBeNull();
+        expect(safeHttpUrl('not a url')).toBeNull();
+        expect(safeHttpUrl('')).toBeNull();
+        expect(safeHttpUrl(undefined)).toBeNull();
+        expect(safeHttpUrl(42)).toBeNull();
     });
 });
 

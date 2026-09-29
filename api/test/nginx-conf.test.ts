@@ -72,7 +72,7 @@ test('nginx.conf: https subdomain produces full CSP with wildcard parent domain'
         `add_header 'Content-Security-Policy' "`
         + `default-src 'self' map.example.com:* *.example.com:*; `
         + `script-src 'self' 'wasm-unsafe-eval' map.example.com:* *.example.com:*; `
-        + `img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net https://cdn.planespotters.net map.example.com:* *.example.com:*; `
+        + `img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net map.example.com:* *.example.com:*; `
         + `media-src 'self' blob: map.example.com:* *.example.com:*; `
         + `font-src 'self' data:; `
         + `worker-src 'self' blob:; `
@@ -117,7 +117,7 @@ test('nginx.conf: IPv4 host is used verbatim without a wildcard source', async (
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
     assert.ok(csp[0].includes(`default-src 'self' 192.168.1.10:*;`));
-    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net https://cdn.planespotters.net 192.168.1.10:*;`));
+    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net 192.168.1.10:*;`));
     assert.ok(csp[0].includes(`media-src 'self' blob: 192.168.1.10:*;`));
     assert.ok(csp[0].includes(`connect-src 'self' https://assets.ion.cesium.com https://tile.googleapis.com 192.168.1.10:*;`));
     assert.ok(!csp[0].includes('*.168.1.10'));
@@ -212,7 +212,7 @@ test('nginx.conf: NGINX_CSP_* appends sources to a single directive', async () =
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net https://cdn.planespotters.net https://tiles.example.com map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net https://tiles.example.com map.example.com:* *.example.com:*;`));
 
     // Other directives are untouched
     assert.ok(csp[0].includes(`media-src 'self' blob: map.example.com:* *.example.com:*;`));
@@ -263,7 +263,7 @@ test('nginx.conf: NGINX_CSP_* with an empty value is a no-op', async () => {
     const csp = stdout.match(CSP_REGEX);
     assert.ok(csp, 'Config should contain a Content-Security-Policy header');
 
-    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net https://cdn.planespotters.net map.example.com:* *.example.com:*;`));
+    assert.ok(csp[0].includes(`img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net map.example.com:* *.example.com:*;`));
 });
 
 test('nginx.conf: unknown NGINX_CSP_* variable is a startup error', async () => {

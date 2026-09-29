@@ -126,23 +126,32 @@
                         class='text-danger small mb-2'
                         v-text='detailError'
                     />
-                    <template v-if='detail?.photo'>
+                    <template v-if='photo'>
                         <a
+                            v-if='photo.link'
                             class='live-photo d-block'
-                            :href='detail.photo.link'
+                            :href='photo.link'
                             target='_blank'
                             rel='noopener'
                         >
                             <img
-                                :src='detail.photo.src'
+                                :src='photo.src'
                                 loading='lazy'
                                 style='max-width: 100%'
                                 alt=''
                             >
                         </a>
+                        <img
+                            v-else
+                            class='live-photo d-block'
+                            :src='photo.src'
+                            loading='lazy'
+                            style='max-width: 100%'
+                            alt=''
+                        >
                         <div
                             class='small mb-2'
-                            v-text='detail.photo.credit'
+                            v-text='photo.credit'
                         />
                     </template>
                     <template v-if='detail?.route'>
@@ -176,7 +185,7 @@ import pointOnFeature from '@turf/point-on-feature';
 import Handlebars from 'handlebars';
 import { server, getRuntimeToken } from '../../../std.ts';
 import { liveFeatureTitle, visibleProperties } from '../../../base/live.ts';
-import { fetchDetail, liveFeatureRef, RouteToggle, type LiveDetail } from '../../../base/live-detail.ts';
+import { fetchDetail, liveFeatureRef, RouteToggle, safeHttpUrl, type LiveDetail } from '../../../base/live-detail.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import Coordinate from '../util/Coordinate.vue';
 import CopyField from '../util/CopyField.vue';
@@ -240,20 +249,49 @@ const routeToggle = new RouteToggle();
 const routeVisible = ref(false);
 let detailRequest = 0;
 
+// The store getter throws before the map is initialised; teardown must never throw
+function currentMap() {
+    try {
+        return mapStore.map;
+    } catch {
+        return null;
+    }
+}
+
 function hideRoute() {
-    if (mapStore.map) routeToggle.hide(mapStore.map);
     routeVisible.value = false;
+    const map = currentMap();
+    if (!map) return;
+    try {
+        routeToggle.hide(map);
+    } catch (err) {
+        console.error('Failed to remove live route', err);
+    }
 }
 
 function toggleRoute() {
-    if (!mapStore.map) return;
+    const map = currentMap();
+    if (!map) return;
     if (routeToggle.visible) {
         hideRoute();
     } else if (detail.value?.route) {
-        routeToggle.show(mapStore.map, detail.value.route);
+        routeToggle.show(map, detail.value.route);
         routeVisible.value = true;
     }
 }
+
+// Photo URLs come from third-party APIs: only http(s) may reach href/src
+const photo = computed(() => {
+    const raw = detail.value?.photo;
+    if (!raw) return null;
+    const src = safeHttpUrl(raw.src);
+    if (!src) return null;
+    return {
+        src,
+        link: safeHttpUrl(raw.link),
+        credit: typeof raw.credit === 'string' ? raw.credit : '',
+    };
+});
 
 watch(feature, async (feat) => {
     // A route always belongs to the feature it was shown for

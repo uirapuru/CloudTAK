@@ -41,6 +41,17 @@ export function liveFeatureRef(feature?: FeatureLike | null): LiveFeatureRef | n
     return { layer: overlay.mode_id, id: String(props._id) };
 }
 
+/** Absolute http(s) URL, else null — blocks javascript:, data: and relative values */
+export function safeHttpUrl(u: unknown): string | null {
+    if (typeof u !== 'string' || !u) return null;
+    try {
+        const url = new URL(u);
+        return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+    } catch {
+        return null;
+    }
+}
+
 export async function fetchDetail(layer: string, id: string): Promise<LiveDetail> {
     return await std(`/api/live/${encodeURIComponent(layer)}/${encodeURIComponent(id)}`) as LiveDetail;
 }
