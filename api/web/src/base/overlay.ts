@@ -67,25 +67,58 @@ export default class OverlayManager extends BaseInterface {
         this.loaded.push(...overlays);
     }
 
+    /**
+     * Create an overlay and load it. An ordinary overlay goes to the top of
+     * the ungrouped overlays - in the Overlays menu (top = top of the map
+     * stack) it is the first row below the groups. The positions of the
+     * ordinary overlays are then renumbered and saved so the place survives
+     * a reload. Basemaps and internal overlays keep their pinned place.
+     */
     static async createLoaded(
         body: Parameters<typeof Overlay.create>[0],
         opts: Overlay_CreateLoadedOptions = {}
     ): Promise<Overlay> {
         const { position = 'default', ...createOpts } = opts;
-        const overlay = await Overlay.create(body, {
-            ...createOpts,
-            before: createOpts.before ?? this.loadedBeforeId()
-        });
 
         if (position === 'prepend') {
+            const overlay = await Overlay.create(body, { ...createOpts, before: createOpts.before ?? this.loadedBeforeId() });
             this.loaded.unshift(overlay);
-        } else if (this.loaded.length > 0) {
-            this.loaded.splice(1, 0, overlay);
-        } else {
+            return overlay;
+        }
+
+        const ordinary = this.loaded.filter((current) => !this.isPinned(current));
+        const grouped = ordinary.filter((current) => current.group_id !== null && current.group_id !== undefined);
+        const ungrouped = ordinary.filter((current) => !grouped.includes(current));
+        // Layers go below the lowest grouped overlay, or below "Map Features"
+        const above = grouped[0] ?? this.loaded.find((current) => this.isPinnedTop(current));
+
+        const overlay = await Overlay.create(body, {
+            ...createOpts,
+            before: createOpts.before ?? (above ? this.loadedAnchorFrom(this.loaded.indexOf(above)) : undefined)
+        });
+
+        if (this.isPinned(overlay)) {
             this.loaded.push(overlay);
+            this.loaded.sort(OverlayManager.compareStack);
+            return overlay;
+        }
+
+        this.loaded.push(overlay);
+
+        try {
+            // Bottom first: the ungrouped overlays, the new one on top of
+            // them, then the grouped ones - the order the menu shows
+            await this.restackLoaded([...ungrouped, overlay, ...grouped].map((current) => current.id));
+        } catch (err) {
+            // The overlay exists - a failed position save must not undo that
+            console.error('Failed to save overlay positions', err);
         }
 
         return overlay;
+    }
+
+    private static isPinnedTop(overlay: { mode: string; _internal?: boolean }): boolean {
+        return this.stackRank(overlay) === 1;
     }
 
     /**

@@ -556,10 +556,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                     `);
             }
 
-            // Without an explicit position a new overlay goes to the bottom of
-            // the stack (just above the basemap), where the client inserts it.
-            // The column default would give every overlay the same position,
-            // so the order would be lost on the next load.
+            // Without an explicit position a new overlay gets one below all
+            // others, so no two overlays share the column default. The web
+            // client then moves it to the top of the ungrouped overlays and
+            // saves the renumbered positions.
             if (req.body.pos === undefined && req.body.mode !== 'basemap') {
                 const [min] = await config.pg.select({
                     pos: sql<number | null>`min(${ProfileOverlay.pos})`,

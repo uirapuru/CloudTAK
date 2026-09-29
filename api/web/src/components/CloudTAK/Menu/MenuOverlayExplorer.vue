@@ -337,7 +337,9 @@ async function addAll(): Promise<void> {
     bulkBusy.value = true;
 
     try {
-        const todo = selectToAdd(explorerRefs(), OverlayManager.loaded);
+        // Each new overlay lands on top of the ungrouped ones, so adding the
+        // listed items last to first leaves them in the listed order
+        const todo = selectToAdd(explorerRefs(), OverlayManager.loaded).reverse();
         for (const ref of todo) {
             try {
                 if (ref.mode === 'overlay') {
