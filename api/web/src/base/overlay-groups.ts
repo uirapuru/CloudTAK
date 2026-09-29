@@ -2,9 +2,11 @@
  * Pure helpers for user defined overlay groups - kept free of the map store
  * and the database so they can be unit tested in isolation.
  *
- * The overlay menu shows the ungrouped overlays followed by each group in
- * group order. The map stack (bottom first) follows the same flattened
- * order, so moving a row between lists is a plain move within that order.
+ * Invariant: the top of the overlay menu is the top of the map stack. The
+ * menu lists the groups first (lowest `pos` on top), then the ungrouped
+ * overlays; inside every list the upper row is drawn above the lower one.
+ * A layout (`OverlayLayoutList[]`) is kept in that menu order, top first,
+ * and `stackOrder()` turns it into the map stack order, bottom first.
  */
 
 export type OverlayGroupLike = {
@@ -58,14 +60,14 @@ export function partitionOverlays<T, G extends OverlayGroupLike>(
     };
 }
 
-/** Sortable layout (ids per list) of a partition - ungrouped first, then groups in order */
+/** Sortable layout (ids per list) of a partition in menu order - the groups in order, then the ungrouped list */
 export function partitionLayout<T, G extends OverlayGroupLike>(
     partition: OverlayPartition<T, G>,
     idOf: (item: T) => number
 ): OverlayLayoutList[] {
     return [
-        { key: null, ids: partition.ungrouped.map(idOf) },
-        ...partition.groups.map(({ group, items }) => ({ key: group.id, ids: items.map(idOf) }))
+        ...partition.groups.map(({ group, items }) => ({ key: group.id, ids: items.map(idOf) })),
+        { key: null, ids: partition.ungrouped.map(idOf) }
     ];
 }
 
@@ -91,9 +93,43 @@ export function moveInLayout(
     return next;
 }
 
-/** Flattened overlay order of a layout - the order the map stack follows */
+/** Flattened overlay order of a layout, in menu order (top of the map stack first) */
 export function flattenLayout(layout: OverlayLayoutList[]): number[] {
     return layout.flatMap((list) => list.ids);
+}
+
+/** Map stack order (bottom first) of a layout - the menu order upside down */
+export function stackOrder(layout: OverlayLayoutList[]): number[] {
+    return flattenLayout(layout).reverse();
+}
+
+/**
+ * Move the id at `from` to `to` (both indexes of `ids`, `to` clamped to the
+ * list). Returns a new array; the input is left untouched.
+ */
+export function moveIndex<T>(ids: T[], from: number, to: number): T[] {
+    if (from < 0 || from >= ids.length) throw new Error(`Index ${from} is not in the list`);
+    const next = [...ids];
+    const [moved] = next.splice(from, 1);
+    next.splice(Math.max(0, Math.min(to, next.length)), 0, moved);
+    return next;
+}
+
+/**
+ * Positions for groups shown in `orderedIds` order (top first): they are
+ * renumbered 0, 1, 2... Only the groups whose `pos` changes are returned, so
+ * a state where several groups share one `pos` is repaired by the next drop.
+ */
+export function renumberGroups<G extends OverlayGroupLike>(groups: G[], orderedIds: number[]): Array<{ id: number; pos: number }> {
+    const byId = new Map(groups.map((group) => [group.id, group]));
+    const changes: Array<{ id: number; pos: number }> = [];
+
+    orderedIds.forEach((id, pos) => {
+        const group = byId.get(id);
+        if (group && group.pos !== pos) changes.push({ id, pos });
+    });
+
+    return changes;
 }
 
 /** Group key an overlay has in a layout, undefined when it is not in it */

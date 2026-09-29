@@ -26,7 +26,7 @@ test('GET: api/profile/overlay/group - empty', async () => {
     }
 });
 
-test('POST: api/profile/overlay/group - trims name and appends position', async () => {
+test('POST: api/profile/overlay/group - trims name and puts a new group on top', async () => {
     try {
         const a = await flight.fetch('/api/profile/overlay/group', {
             method: 'POST',
@@ -46,8 +46,16 @@ test('POST: api/profile/overlay/group - trims name and appends position', async 
             body: { name: 'Rzeki' },
         }, true);
 
-        assert.equal(b.body.pos, 1);
+        // the newest group is listed first
+        assert.equal(b.body.pos, -1);
         groupB = b.body.id;
+
+        const list = await flight.fetch('/api/profile/overlay/group', {
+            method: 'GET',
+            auth: { bearer: flight.token.admin },
+        }, true);
+
+        assert.deepEqual(list.body.items.map((group: { id: number }) => group.id), [groupB, groupA]);
     } catch (err) {
         assert.ifError(err);
     }
@@ -208,6 +216,36 @@ test('DELETE: api/profile/overlay/group/:group - overlays stay, ungrouped', asyn
         }, false);
 
         assert.equal(again.status, 404);
+    } catch (err) {
+        assert.ifError(err);
+    }
+});
+
+test('POST: api/profile/overlay - a new overlay without pos goes below the others', async () => {
+    try {
+        const created: Array<{ id: number; pos: number }> = [];
+
+        for (const name of ['Pos A', 'Pos B']) {
+            const post = await flight.fetch('/api/profile/overlay', {
+                method: 'POST',
+                auth: { bearer: flight.token.user },
+                body: { name, mode: 'profile', url: `/profile/user@example.com/${name}.pmtiles` },
+            }, false);
+
+            assert.equal(post.status, 200, `POST overlay failed: ${JSON.stringify(post.body)}`);
+            created.push({ id: post.body.id, pos: post.body.pos });
+        }
+
+        // Not the column default for every overlay - each new one is one lower
+        assert.equal(created[0].pos, 0);
+        assert.equal(created[1].pos, -1);
+
+        for (const { id } of created) {
+            await flight.fetch(`/api/profile/overlay?id=${id}`, {
+                method: 'DELETE',
+                auth: { bearer: flight.token.user },
+            }, false);
+        }
     } catch (err) {
         assert.ifError(err);
     }

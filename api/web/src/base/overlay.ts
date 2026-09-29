@@ -92,6 +92,9 @@ export default class OverlayManager extends BaseInterface {
      * Apply a drag order to the loaded overlays. `orderedIds` is the order of
      * the ordinary (not pinned) overlays, bottom of the stack first. With
      * `opts.groupId` the moved overlay also joins that group (null: ungrouped).
+     *
+     * Every ordinary overlay takes its index in `orderedIds` as `pos`, so a
+     * stack where several overlays share one `pos` is repaired by any drop.
      */
     static async reorderLoaded(
         orderedIds: number[],
@@ -108,6 +111,38 @@ export default class OverlayManager extends BaseInterface {
         const regrouped = opts.groupId !== undefined && opts.groupId !== overlay.group_id;
         if (regrouped) overlay.group_id = opts.groupId ?? null;
 
+        const others = (): number[] => this.loaded.filter((current) => current !== overlay).map((current) => current.id);
+        const othersBefore = others();
+
+        const changed = this.assignPositions(orderedIds);
+
+        if (others().join() === othersBefore.join()) {
+            // Anchor against the resolved stack rather than the dragged list so a
+            // drop beyond a pinned overlay cannot leave the map out of step
+            overlay.moveBefore(this.loadedLayerAnchor(this.loaded.indexOf(overlay) + 1));
+        } else {
+            // Positions were stale (e.g. all equal) - more than the dragged
+            // overlay changed place, so restack the whole map
+            this.applyLoadedOrder();
+        }
+
+        if (regrouped && !changed.includes(overlay)) changed.push(overlay);
+
+        await this.saveAll(changed, (current) => ({ group: regrouped && current === overlay }));
+    }
+
+    /**
+     * Apply a new stack order to every ordinary loaded overlay at once, e.g.
+     * after a group was dragged to another place. `orderedIds` is bottom first.
+     */
+    static async restackLoaded(orderedIds: number[]): Promise<void> {
+        const changed = this.assignPositions(orderedIds);
+        this.applyLoadedOrder();
+        await this.saveAll(changed, () => ({ group: false }));
+    }
+
+    /** Give every ordinary overlay its index in `orderedIds` as `pos` and resort the stack; returns the overlays whose `pos` changed */
+    private static assignPositions(orderedIds: number[]): Overlay[] {
         // Pinned overlays keep their sentinel `pos` - only ordinary overlays
         // take part in drag order bookkeeping
         const changed = this.loaded.filter((current) => {
@@ -121,13 +156,11 @@ export default class OverlayManager extends BaseInterface {
 
         this.loaded.sort(OverlayManager.compareStack);
 
-        // Anchor against the resolved stack rather than the dragged list so a
-        // drop beyond a pinned overlay cannot leave the map out of step
-        overlay.moveBefore(this.loadedLayerAnchor(this.loaded.indexOf(overlay) + 1));
+        return changed;
+    }
 
-        if (regrouped && !changed.includes(overlay)) changed.push(overlay);
-
-        const results = await Promise.allSettled(changed.map((current) => current.save({ group: regrouped && current === overlay })));
+    private static async saveAll(overlays: Overlay[], opts: (overlay: Overlay) => { group: boolean }): Promise<void> {
+        const results = await Promise.allSettled(overlays.map((current) => current.save(opts(current))));
         const failed = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
         if (failed) throw failed.reason;
     }

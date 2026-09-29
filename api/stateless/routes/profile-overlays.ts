@@ -188,13 +188,15 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         try {
             const user = await Auth.as_user(config, req);
 
+            // A new group goes to the top of the Overlays menu (and of the map
+            // stack): one below the lowest position in use
             let pos = req.body.pos;
             if (pos === undefined) {
-                const [max] = await config.pg.select({
-                    pos: sql<number | null>`max(${ProfileOverlayGroup.pos})`,
+                const [min] = await config.pg.select({
+                    pos: sql<number | null>`min(${ProfileOverlayGroup.pos})`,
                 }).from(ProfileOverlayGroup).where(eq(ProfileOverlayGroup.username, user.email));
 
-                pos = max && max.pos !== null ? Number(max.pos) + 1 : 0;
+                pos = min && min.pos !== null ? Number(min.pos) - 1 : 0;
             }
 
             const group = await config.models.ProfileOverlayGroup.generate({
@@ -552,6 +554,21 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                         username = ${user.email}
                         AND active
                     `);
+            }
+
+            // Without an explicit position a new overlay goes to the bottom of
+            // the stack (just above the basemap), where the client inserts it.
+            // The column default would give every overlay the same position,
+            // so the order would be lost on the next load.
+            if (req.body.pos === undefined && req.body.mode !== 'basemap') {
+                const [min] = await config.pg.select({
+                    pos: sql<number | null>`min(${ProfileOverlay.pos})`,
+                }).from(ProfileOverlay).where(sql`
+                    username = ${user.email}
+                    AND mode != 'basemap'
+                `);
+
+                req.body.pos = min && min.pos !== null ? Number(min.pos) - 1 : 0;
             }
 
             let overlay;

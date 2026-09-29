@@ -3,11 +3,14 @@ import {
     flattenLayout,
     listOf,
     moveInLayout,
+    moveIndex,
     normalizeGroupName,
     partitionLayout,
     partitionOverlays,
+    renumberGroups,
     restoreNode,
-    sortGroups
+    sortGroups,
+    stackOrder
 } from './overlay-groups.ts';
 
 type Item = { id: number; group_id: number | null };
@@ -56,45 +59,89 @@ describe('partitionOverlays', () => {
 describe('layout moves', () => {
     const layout = partitionLayout(partitionOverlays(items, groups, (i) => i.group_id), (i) => i.id);
 
-    it('builds the layout ungrouped first, then groups in order', () => {
+    it('builds the layout in menu order: groups in order, then the ungrouped list', () => {
         expect(layout).toEqual([
-            { key: null, ids: [1, 4] },
             { key: 10, ids: [3] },
             { key: 20, ids: [2, 5] },
-            { key: 30, ids: [] }
+            { key: 30, ids: [] },
+            { key: null, ids: [1, 4] }
         ]);
-        expect(flattenLayout(layout)).toEqual([1, 4, 3, 2, 5]);
+        expect(flattenLayout(layout)).toEqual([3, 2, 5, 1, 4]);
+    });
+
+    it('stacks the menu upside down: the top row is the top of the map, groups above ungrouped', () => {
+        expect(stackOrder(layout)).toEqual([4, 1, 5, 2, 3]);
+        // the layout itself is left untouched
+        expect(flattenLayout(layout)).toEqual([3, 2, 5, 1, 4]);
     });
 
     it('moves within a list', () => {
         const next = moveInLayout(layout, 5, 20, 0);
-        expect(flattenLayout(next)).toEqual([1, 4, 3, 5, 2]);
+        expect(flattenLayout(next)).toEqual([3, 5, 2, 1, 4]);
         expect(listOf(next, 5)).toBe(20);
         // input untouched
-        expect(flattenLayout(layout)).toEqual([1, 4, 3, 2, 5]);
+        expect(flattenLayout(layout)).toEqual([3, 2, 5, 1, 4]);
     });
 
     it('moves into a group and into an empty group', () => {
         const intoGroup = moveInLayout(layout, 1, 20, 1);
-        expect(intoGroup[0].ids).toEqual([4]);
-        expect(intoGroup[2].ids).toEqual([2, 1, 5]);
+        expect(intoGroup[3].ids).toEqual([4]);
+        expect(intoGroup[1].ids).toEqual([2, 1, 5]);
 
         const intoEmpty = moveInLayout(layout, 3, 30, 5);
-        expect(intoEmpty[1].ids).toEqual([]);
-        expect(intoEmpty[3].ids).toEqual([3]);
-        expect(flattenLayout(intoEmpty)).toEqual([1, 4, 2, 5, 3]);
+        expect(intoEmpty[0].ids).toEqual([]);
+        expect(intoEmpty[2].ids).toEqual([3]);
+        expect(flattenLayout(intoEmpty)).toEqual([2, 5, 3, 1, 4]);
     });
 
     it('moves out of a group to the ungrouped list', () => {
         const next = moveInLayout(layout, 2, null, 0);
         expect(listOf(next, 2)).toBeNull();
-        expect(flattenLayout(next)).toEqual([2, 1, 4, 3, 5]);
+        expect(flattenLayout(next)).toEqual([3, 5, 2, 1, 4]);
     });
 
     it('rejects unknown overlays and lists', () => {
         expect(() => moveInLayout(layout, 42, null, 0)).toThrow();
         expect(() => moveInLayout(layout, 1, 42, 0)).toThrow();
         expect(listOf(layout, 42)).toBeUndefined();
+    });
+
+    it('puts overlays of a group moved to the top above every other overlay on the map', () => {
+        const order = moveIndex(sortGroups(groups).map((g) => g.id), 1, 0);
+        const reordered = order.map((id, pos) => ({ ...groups.find((g) => g.id === id)!, pos }));
+        const moved = partitionLayout(partitionOverlays(items, reordered, (i) => i.group_id), (i) => i.id);
+
+        expect(stackOrder(moved)).toEqual([4, 1, 3, 5, 2]);
+    });
+});
+
+describe('moveIndex', () => {
+    it('moves an element and clamps the target index', () => {
+        expect(moveIndex([1, 2, 3], 0, 2)).toEqual([2, 3, 1]);
+        expect(moveIndex([1, 2, 3], 2, 0)).toEqual([3, 1, 2]);
+        expect(moveIndex([1, 2, 3], 0, 99)).toEqual([2, 3, 1]);
+        expect(() => moveIndex([1], 3, 0)).toThrow();
+    });
+});
+
+describe('renumberGroups', () => {
+    it('renumbers groups 0..n in the given order and returns only the changes', () => {
+        // 10 keeps 0 and 30 already has 1 - only 20 moves
+        expect(renumberGroups(groups, [10, 30, 20])).toEqual([{ id: 20, pos: 2 }]);
+        expect(renumberGroups(groups, [20, 10, 30])).toEqual([
+            { id: 20, pos: 0 },
+            { id: 10, pos: 1 },
+            { id: 30, pos: 2 }
+        ]);
+    });
+
+    it('repairs groups that share one pos', () => {
+        const tied = [{ id: 1, pos: 5 }, { id: 2, pos: 5 }, { id: 3, pos: 5 }];
+        expect(renumberGroups(tied, [3, 1, 2])).toEqual([
+            { id: 3, pos: 0 },
+            { id: 1, pos: 1 },
+            { id: 2, pos: 2 }
+        ]);
     });
 });
 
