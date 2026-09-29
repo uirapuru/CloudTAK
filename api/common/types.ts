@@ -544,6 +544,12 @@ export const ProfileOverlayResponse = createSelectSchema(schemas.ProfileOverlay,
     opacity: Type.Number(),
     visible: Type.Boolean(),
     styles: Type.Array(Type.Unknown()),
+    group_id: Type.Union([Type.Null(), Type.Integer()]),
+});
+
+export const ProfileOverlayGroupResponse = createSelectSchema(schemas.ProfileOverlayGroup, {
+    id: Type.Integer(),
+    pos: Type.Integer(),
 });
 
 export const ProfileInterestResponse = createSelectSchema(schemas.ProfileInterest, {

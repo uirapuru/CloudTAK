@@ -6,15 +6,16 @@ import type ConfigStateless from '../config.js';
 import ProfileControl from '../lib/control/profile.js';
 import UserControl from '../lib/control/user.js';
 import Schema from '@openaddresses/batch-schema';
+import { GenericListOrder } from '@openaddresses/batch-generic';
 import S3 from '../../common/aws/s3.js';
 import Err from '@openaddresses/batch-error';
 import Auth, { AuthUser } from '../../common/auth.js';
 import { BasemapTerrain_Encoding } from '../../common/enums.js';
-import { ProfileOverlay } from '../../common/schema.js';
+import { ProfileOverlay, ProfileOverlayGroup } from '../../common/schema.js';
 import path from 'node:path';
-import { StandardResponse, ProfileOverlayResponse } from '../../common/types.js';
+import { StandardResponse, ProfileOverlayResponse, ProfileOverlayGroupResponse } from '../../common/types.js';
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
-import { sql } from 'drizzle-orm';
+import { sql, and, eq } from 'drizzle-orm';
 import { TAKAPI, APIAuthCertificate } from '@tak-ps/node-tak';
 import * as Default from '../lib/limits.js';
 import { authenticatedProfile } from '../../common/control/profile.js';
@@ -129,9 +130,145 @@ async function augmentOverlay(
     return serializeOverlay(overlay, { actions: fromProtocol().actions(), tilejson });
 }
 
+const GROUP_NAME_MAX = 64;
+
+/** Trimmed group name, or a 400 when it is empty or longer than GROUP_NAME_MAX */
+function groupName(name: string): string {
+    const trimmed = name.trim();
+    if (!trimmed.length || trimmed.length > GROUP_NAME_MAX) {
+        throw new Err(400, null, `Group name must be 1-${GROUP_NAME_MAX} characters`);
+    }
+    return trimmed;
+}
+
 export default async function router(schema: Schema, config: ConfigStateless) {
     const profileControl = new ProfileControl(config);
     const userControl = new UserControl(config);
+
+    // Registered before /profile/overlay/:overlay so "group" is never parsed as an overlay id
+    await schema.get('/profile/overlay/group', {
+        name: 'List Overlay Groups',
+        group: 'ProfileOverlayGroup',
+        description: 'Return the user defined groups of Profile Overlays, ordered by position',
+        res: Type.Object({
+            total: Type.Integer(),
+            items: Type.Array(ProfileOverlayGroupResponse),
+        }),
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            const list = await config.models.ProfileOverlayGroup.list({
+                limit: Infinity,
+                sort: 'pos',
+                order: GenericListOrder.ASC,
+                where: eq(ProfileOverlayGroup.username, user.email),
+            });
+
+            res.json({
+                total: list.total,
+                items: list.items.sort((a, b) => a.pos - b.pos || a.id - b.id),
+            });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.post('/profile/overlay/group', {
+        name: 'Create Overlay Group',
+        group: 'ProfileOverlayGroup',
+        description: 'Create a user defined group of Profile Overlays',
+        body: Type.Object({
+            name: Type.String(),
+            pos: Type.Optional(Type.Integer()),
+            collapsed: Type.Optional(Type.Boolean()),
+        }),
+        res: ProfileOverlayGroupResponse,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            let pos = req.body.pos;
+            if (pos === undefined) {
+                const [max] = await config.pg.select({
+                    pos: sql<number | null>`max(${ProfileOverlayGroup.pos})`,
+                }).from(ProfileOverlayGroup).where(eq(ProfileOverlayGroup.username, user.email));
+
+                pos = max && max.pos !== null ? Number(max.pos) + 1 : 0;
+            }
+
+            const group = await config.models.ProfileOverlayGroup.generate({
+                username: user.email,
+                name: groupName(req.body.name),
+                pos,
+                collapsed: req.body.collapsed ?? false,
+            });
+
+            res.json(group);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.patch('/profile/overlay/group/:group', {
+        name: 'Update Overlay Group',
+        group: 'ProfileOverlayGroup',
+        description: 'Rename, reorder or collapse a user defined group of Profile Overlays',
+        params: Type.Object({
+            group: Type.Integer(),
+        }),
+        body: Type.Object({
+            name: Type.Optional(Type.String()),
+            pos: Type.Optional(Type.Integer()),
+            collapsed: Type.Optional(Type.Boolean()),
+        }),
+        res: ProfileOverlayGroupResponse,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            const own = sql`id = ${req.params.group} AND username = ${user.email}`;
+            await config.models.ProfileOverlayGroup.from(own);
+
+            const group = await config.models.ProfileOverlayGroup.commit(own, {
+                name: req.body.name !== undefined ? groupName(req.body.name) : undefined,
+                pos: req.body.pos,
+                collapsed: req.body.collapsed,
+                updated: sql`Now()`,
+            });
+
+            res.json(group);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.delete('/profile/overlay/group/:group', {
+        name: 'Delete Overlay Group',
+        group: 'ProfileOverlayGroup',
+        description: 'Delete a user defined group - its overlays are kept and become ungrouped',
+        params: Type.Object({
+            group: Type.Integer(),
+        }),
+        res: StandardResponse,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            const own = sql`id = ${req.params.group} AND username = ${user.email}`;
+            await config.models.ProfileOverlayGroup.from(own);
+
+            // group_id is ON DELETE SET NULL - member overlays stay and become ungrouped
+            await config.models.ProfileOverlayGroup.delete(own);
+
+            res.json({
+                status: 200,
+                message: 'Overlay Group Removed',
+            });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
 
     await schema.get('/profile/overlay', {
         name: 'Get Overlays',
@@ -306,6 +443,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             url: Type.Optional(Type.String()),
             mode_id: Type.Optional(Type.String()),
             styles: Type.Optional(Type.Array(Type.Unknown())),
+            group_id: Type.Optional(Type.Union([Type.Null(), Type.Integer()], {
+                description: 'User defined Overlay Group the overlay belongs to, null to ungroup',
+            })),
         }),
         res: AugmentedProfileOverlayResponse,
     }, async (req, res) => {
@@ -314,6 +454,14 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
             let overlay = await config.models.ProfileOverlay.from(req.params.overlay);
             if (overlay.username !== user.email) throw new Err(401, null, 'Cannot edit another\'s overlay');
+
+            if (req.body.group_id !== undefined && req.body.group_id !== null) {
+                const owned = await config.models.ProfileOverlayGroup.count({
+                    where: and(eq(ProfileOverlayGroup.id, req.body.group_id), eq(ProfileOverlayGroup.username, user.email)),
+                });
+
+                if (!owned) throw new Err(400, null, 'Overlay Group does not exist');
+            }
 
             if (req.body.styles && req.body.styles.length) {
                 BasemapProtocol.isValidStyle(req.body.type || overlay.type, req.body.styles);
