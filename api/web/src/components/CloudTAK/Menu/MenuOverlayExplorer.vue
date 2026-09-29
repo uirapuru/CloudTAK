@@ -17,6 +17,23 @@
                     />
                 </div>
 
+                <div class='d-flex align-items-center gap-2 flex-wrap'>
+                    <button
+                        type='button'
+                        class='btn btn-outline-secondary btn-sm'
+                        :disabled='loading || bulkBusy'
+                        @click='void addAll()'
+                        v-text='bulkBusy ? "Pracuję…" : "Dodaj wszystkie do nakładek"'
+                    />
+                    <button
+                        type='button'
+                        class='btn btn-outline-secondary btn-sm'
+                        :disabled='loading || bulkBusy'
+                        @click='void removeAll()'
+                        v-text='bulkBusy ? "Pracuję…" : "Usuń wszystkie z nakładek"'
+                    />
+                </div>
+
                 <div
                     v-if='paging.collection'
                     class='d-flex align-items-center gap-2'
@@ -177,6 +194,7 @@ import StandardItemBasemap from '../util/StandardItemBasemap.vue';
 import StandardItemFolder from '../util/StandardItemFolder.vue';
 import PathBreadcrumb from '../util/PathBreadcrumb.vue';
 import OverlayManager from '../../../base/overlay.ts';
+import { selectToAdd, selectToRemove, type ExplorerRef } from '../../../base/overlay-explorer-bulk.ts';
 import type { Subscription } from 'dexie';
 const router = useRouter();
 
@@ -261,23 +279,82 @@ function setCollection(name: string): void {
     paging.value.page = 0;
 }
 
+async function addBasemap(overlay: Basemap): Promise<void> {
+    await OverlayManager.createLoaded({
+        url: String(stdurl(`/api/basemap/${overlay.id}/tiles`)),
+        name: overlay.name,
+        mode: 'overlay',
+        mode_id: String(overlay.id),
+        frequency: overlay.frequency,
+        type: overlay.type,
+        styles: overlay.styles
+    });
+}
+
 async function createOverlay(overlay: Basemap) {
     loading.value = true;
 
     try {
-        await OverlayManager.createLoaded({
-            url: String(stdurl(`/api/basemap/${overlay.id}/tiles`)),
-            name: overlay.name,
-            mode: 'overlay',
-            mode_id: String(overlay.id),
-            frequency: overlay.frequency,
-            type: overlay.type,
-            styles: overlay.styles
-        });
-
+        await addBasemap(overlay);
         router.push('/menu/overlays');
     } finally {
         loading.value = false;
+    }
+}
+
+const bulkBusy = ref(false);
+
+// Everything the Explorer currently lists (3D buildings and live layers only on the top level)
+function explorerRefs(): ExplorerRef[] {
+    const refs: ExplorerRef[] = list.value.items.map((b) => ({ mode: 'overlay' as const, modeId: String(b.id) }));
+    if (!paging.value.collection) {
+        refs.push(...ionItems.value.map((i) => ({ mode: 'ion' as const, modeId: i.name })));
+        refs.push(...liveItems.value.map((i) => ({ mode: 'live' as const, modeId: i.name })));
+    }
+    return refs;
+}
+
+async function addAll(): Promise<void> {
+    if (loading.value || bulkBusy.value) return;
+    bulkBusy.value = true;
+
+    try {
+        const todo = selectToAdd(explorerRefs(), OverlayManager.loaded);
+        for (const ref of todo) {
+            try {
+                if (ref.mode === 'overlay') {
+                    const basemap = list.value.items.find((b) => String(b.id) === ref.modeId);
+                    if (basemap) await addBasemap(basemap);
+                } else if (ref.mode === 'live') {
+                    const item = liveItems.value.find((i) => i.name === ref.modeId);
+                    if (item) await addLive(item);
+                } else {
+                    const item = ionItems.value.find((i) => i.name === ref.modeId);
+                    if (item) await addIon(item);
+                }
+            } catch (err) {
+                console.error('Failed to add overlay', ref, err);
+            }
+        }
+    } finally {
+        bulkBusy.value = false;
+    }
+}
+
+async function removeAll(): Promise<void> {
+    if (loading.value || bulkBusy.value) return;
+    bulkBusy.value = true;
+
+    try {
+        for (const overlay of selectToRemove(explorerRefs(), [...OverlayManager.loaded])) {
+            try {
+                await OverlayManager.deleteLoaded(overlay);
+            } catch (err) {
+                console.error('Failed to remove overlay', overlay.id, err);
+            }
+        }
+    } finally {
+        bulkBusy.value = false;
     }
 }
 
@@ -303,20 +380,35 @@ async function fetchLive(): Promise<void> {
     }
 }
 
+async function addLive(item: LiveItem): Promise<void> {
+    await OverlayManager.createLoaded({
+        url: `/api/live/${item.name}`,
+        name: item.label,
+        mode: 'live',
+        mode_id: item.name,
+        type: 'geojson',
+        frequency: item.refresh,
+        styles: []
+    });
+}
+
+async function addIon(item: { name: string; label: string }): Promise<void> {
+    await OverlayManager.createLoaded({
+        url: `ion:${item.name}`,
+        name: item.label,
+        mode: 'ion',
+        mode_id: item.name,
+        type: '3dtiles',
+        styles: []
+    });
+}
+
 async function createLiveOverlay(item: LiveItem) {
     if (loading.value || liveOverlayNames.value.has(item.name)) return;
     loading.value = true;
 
     try {
-        await OverlayManager.createLoaded({
-            url: `/api/live/${item.name}`,
-            name: item.label,
-            mode: 'live',
-            mode_id: item.name,
-            type: 'geojson',
-            frequency: item.refresh,
-            styles: []
-        });
+        await addLive(item);
 
         router.push('/menu/overlays');
     } finally {
@@ -329,14 +421,7 @@ async function createIonOverlay(item: { name: string; label: string }) {
     loading.value = true;
 
     try {
-        await OverlayManager.createLoaded({
-            url: `ion:${item.name}`,
-            name: item.label,
-            mode: 'ion',
-            mode_id: item.name,
-            type: '3dtiles',
-            styles: []
-        });
+        await addIon(item);
 
         router.push('/menu/overlays');
     } finally {
