@@ -28,38 +28,17 @@
                     <button
                         type='button'
                         class='btn btn-outline-danger btn-sm'
-                        :disabled='loading || bulkBusy || confirmRemove !== null'
-                        @click='askRemoveAll'
+                        :disabled='loading || bulkBusy'
+                        @click='void removeAll()'
                         v-text='bulkBusy ? "Pracuję…" : "Usuń widoczne z nakładek"'
                     />
                 </div>
 
-                <div
-                    v-if='confirmRemove !== null'
-                    class='d-flex align-items-center gap-2 p-2 rounded-2 bg-danger bg-opacity-25'
-                >
-                    <span
-                        class='small flex-grow-1'
-                        v-text='confirmRemove
-                            ? `Usunąć z nakładek ${overlayCountText(confirmRemove)}? Ich ustawienia i grupy przepadną.`
-                            : "Żadna widoczna pozycja nie jest w nakładkach."'
-                    />
-                    <button
-                        v-if='confirmRemove'
-                        type='button'
-                        class='btn btn-sm btn-danger'
-                        :disabled='bulkBusy'
-                        @click='void removeAll()'
-                    >
-                        Usuń
-                    </button>
-                    <button
-                        type='button'
-                        class='btn btn-sm btn-secondary'
-                        @click='confirmRemove = null'
-                        v-text='confirmRemove ? "Anuluj" : "Zamknij"'
-                    />
-                </div>
+                <p
+                    v-if='removeNotice'
+                    class='small mb-0 text-white-50'
+                    v-text='removeNotice'
+                />
 
                 <div
                     v-if='paging.collection'
@@ -334,8 +313,8 @@ async function createOverlay(overlay: Basemap) {
 }
 
 const bulkBusy = ref(false);
-/** Number of overlays the pending "remove visible" would delete, null when no confirmation is open */
-const confirmRemove = ref<number | null>(null);
+/** Outcome of the last "remove visible" - it deletes at once, without a confirmation step */
+const removeNotice = ref('');
 
 // Everything the Explorer visibly lists: the current page of basemaps, plus
 // 3D buildings and live layers (filtered, only on the top level)
@@ -348,14 +327,9 @@ function explorerRefs(): ExplorerRef[] {
     return refs;
 }
 
-function askRemoveAll(): void {
-    if (loading.value || bulkBusy.value) return;
-    confirmRemove.value = selectToRemove(explorerRefs(), [...OverlayManager.loaded]).length;
-}
-
-// A changed list means the counted overlays are no longer what is shown
+// A changed list means the last outcome no longer describes what is shown
 watch(() => [paging.value.filter, paging.value.collection, paging.value.page], () => {
-    confirmRemove.value = null;
+    removeNotice.value = '';
 });
 
 async function addAll(): Promise<void> {
@@ -388,16 +362,28 @@ async function addAll(): Promise<void> {
 async function removeAll(): Promise<void> {
     if (loading.value || bulkBusy.value) return;
     bulkBusy.value = true;
-    confirmRemove.value = null;
+    removeNotice.value = '';
 
     try {
-        for (const overlay of selectToRemove(explorerRefs(), [...OverlayManager.loaded])) {
+        const todo = selectToRemove(explorerRefs(), [...OverlayManager.loaded]);
+        if (!todo.length) {
+            removeNotice.value = 'Żadna widoczna pozycja nie jest w nakładkach.';
+            return;
+        }
+
+        let removed = 0;
+        for (const overlay of todo) {
             try {
                 await OverlayManager.deleteLoaded(overlay);
+                removed += 1;
             } catch (err) {
                 console.error('Failed to remove overlay', overlay.id, err);
             }
         }
+
+        removeNotice.value = removed === todo.length
+            ? `Usunięto z nakładek ${overlayCountText(removed)}.`
+            : `Usunięto z nakładek ${overlayCountText(removed)} z ${todo.length}, reszta się nie udała.`;
     } finally {
         bulkBusy.value = false;
     }
