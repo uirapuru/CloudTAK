@@ -59,6 +59,7 @@ export default class Models {
     ProfileInterest: Modeler<typeof pgtypes.ProfileInterest>;
     ProfileFeature: Modeler<typeof pgtypes.ProfileFeature>;
     ProfileOverlay: Modeler<typeof pgtypes.ProfileOverlay>;
+    ProfileOverlayGroup: Modeler<typeof pgtypes.ProfileOverlayGroup>;
     ProfileFile: ProfileFile;
     ProfilePaging: Modeler<typeof pgtypes.ProfilePaging>;
     ProfileSession: Modeler<typeof pgtypes.ProfileSession>;
@@ -114,6 +115,7 @@ export default class Models {
         this.ProfileInterest = new Modeler(pg, pgtypes.ProfileInterest);
         this.ProfileFeature = new Modeler(pg, pgtypes.ProfileFeature);
         this.ProfileOverlay = new Modeler(pg, pgtypes.ProfileOverlay);
+        this.ProfileOverlayGroup = new Modeler(pg, pgtypes.ProfileOverlayGroup);
         this.ProfileVideo = new Modeler(pg, pgtypes.ProfileVideo);
         this.ProfilePaging = new Modeler(pg, pgtypes.ProfilePaging);
         this.ProfileSession = new Modeler(pg, pgtypes.ProfileSession);

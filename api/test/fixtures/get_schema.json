@@ -1444,6 +1444,26 @@
         "query": false,
         "res": true
     },
+    "GET /profile/overlay/group": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /profile/overlay/group": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "PATCH /profile/overlay/group/:group": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "DELETE /profile/overlay/group/:group": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "GET /profile/overlay": {
         "body": false,
         "query": true,

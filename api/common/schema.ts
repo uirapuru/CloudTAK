@@ -822,6 +822,16 @@ export const ProfilePasskeyChallenge = pgTable('profile_passkey_challenges', {
     expires: timestamp({ withTimezone: true, mode: 'string' }).notNull(),
 });
 
+export const ProfileOverlayGroup = pgTable('profile_overlay_groups', {
+    id: serial().primaryKey(),
+    username: text().notNull().references(() => Profile.username),
+    name: text().notNull(),
+    pos: integer().notNull().default(0),
+    collapsed: boolean().notNull().default(false),
+    created: timestamp({ withTimezone: true, mode: 'string' }).notNull().default(sql`Now()`),
+    updated: timestamp({ withTimezone: true, mode: 'string' }).notNull().default(sql`Now()`),
+});
+
 export const ProfileOverlay = pgTable('profile_overlays', {
     id: serial().primaryKey(),
     name: text().notNull(),
@@ -840,6 +850,7 @@ export const ProfileOverlay = pgTable('profile_overlays', {
     mode: text().notNull(),
     mode_id: text(), // Used for Data not for Profile
     url: text().notNull(),
+    group_id: integer().references(() => ProfileOverlayGroup.id, { onDelete: 'set null' }),
 }, t => ({
     unq: unique().on(t.username, t.url),
 }));
