@@ -22,6 +22,16 @@
             </TablerIconButton>
 
             <TablerIconButton
+                title='Create Group'
+                @click='startCreateGroup'
+            >
+                <IconFolderPlus
+                    :size='32'
+                    stroke='1'
+                />
+            </TablerIconButton>
+
+            <TablerIconButton
                 v-if='!isDraggable'
                 title='Add Overlay'
                 @click='router.push("/menu/datas")'
@@ -44,6 +54,42 @@
                     />
                 </div>
 
+                <form
+                    v-if='creatingGroup'
+                    class='d-flex align-items-center gap-2'
+                    @submit.prevent='void createGroup()'
+                >
+                    <input
+                        ref='newGroupInput'
+                        v-model='newGroupName'
+                        type='text'
+                        class='form-control'
+                        placeholder='Group Name'
+                        :maxlength='GROUP_NAME_MAX'
+                        @keydown.esc.prevent='cancelCreateGroup'
+                    >
+                    <button
+                        type='submit'
+                        class='btn btn-primary'
+                        :disabled='!normalizeGroupName(newGroupName) || groupBusy'
+                    >
+                        Create
+                    </button>
+                    <button
+                        type='button'
+                        class='btn btn-secondary'
+                        @click='cancelCreateGroup'
+                    >
+                        Cancel
+                    </button>
+                </form>
+
+                <p
+                    v-if='groupError'
+                    class='small mb-0 text-danger'
+                    v-text='groupError'
+                />
+
                 <p
                     v-if='showDragHint'
                     class='small mb-0 text-white-50'
@@ -58,202 +104,191 @@
 
                 <template v-else>
                     <div
-                        v-if='overlayCards.length'
-                        ref='sortableRef'
+                        v-if='hasRows'
                         class='d-flex flex-column gap-3'
                     >
-                        <StandardItem
-                            v-for='card in overlayCards'
-                            :id='String(card.overlay.id)'
-                            :key='card.overlay.id'
-                            class='p-3'
-                            :class='{
-                                "border-primary": isDraggable,
-                                "overlay-pinned": OverlayManager.isPinned(card.overlay)
-                            }'
-                            :hover='!isDraggable && card.overlay.id !== 0 && hasOverlayDetails(card.overlay)'
-                            @click='handleCardClick(card.overlay)'
+                        <div
+                            v-if='basemapCards.length'
+                            class='overlay-list d-flex flex-column gap-3'
+                        >
+                            <OverlayRow
+                                v-for='card in basemapCards'
+                                :key='card.overlay.id'
+                                :card='card'
+                                :editing='isDraggable'
+                                :opened='opened.has(card.overlay.id)'
+                                @toggle='handleCardClick(card.overlay)'
+                                @update='void updateOverlay(card.overlay, $event)'
+                                @remove='void removeOverlay(card.overlay.id)'
+                            />
+                        </div>
+
+                        <div
+                            v-if='ungroupedSection'
+                            v-sortable-list='dragEnabled'
+                            class='overlay-list d-flex flex-column gap-3'
+                            :data-list-key='listKeyAttr(null)'
+                            data-empty='Drag an overlay here to remove it from its group'
+                        >
+                            <OverlayRow
+                                v-for='card in ungroupedSection.cards'
+                                :key='card.overlay.id'
+                                :card='card'
+                                :editing='isDraggable'
+                                :opened='opened.has(card.overlay.id)'
+                                @toggle='handleCardClick(card.overlay)'
+                                @update='void updateOverlay(card.overlay, $event)'
+                                @remove='void removeOverlay(card.overlay.id)'
+                            />
+                        </div>
+
+                        <!-- Groups are drawn above the ungrouped overlays and above the groups listed before them -->
+                        <div
+                            v-if='groupSections.length'
+                            v-sortable-groups='dragEnabled'
+                            class='overlay-groups d-flex flex-column gap-3'
                         >
                             <div
-                                class='d-flex justify-content-between gap-3'
+                                v-for='section in groupSections'
+                                :key='section.id'
+                                :data-group-id='section.group.id'
+                                class='overlay-group rounded-3 p-2'
+                                :class='{ "border-primary": isDraggable }'
                             >
-                                <div
-                                    class='d-flex align-items-center gap-2 flex-grow-1 w-100 overflow-hidden'
-                                    :aria-disabled='isDraggable || card.overlay.id === 0'
-                                >
+                                <div class='d-flex align-items-center gap-2'>
                                     <span
-                                        v-if='isDraggable && !OverlayManager.isPinned(card.overlay)'
-                                        title='Drag to reorder'
+                                        v-if='dragEnabled'
+                                        class='group-drag-handle flex-shrink-0 d-flex align-items-center cursor-move text-white-50'
+                                        title='Drag to reorder groups'
                                     >
                                         <IconGripVertical
-                                            class='drag-handle cursor-move text-white-50'
-                                            role='button'
-                                            tabindex='0'
-                                            :size='20'
-                                            stroke='1'
-                                        />
-                                    </span>
-                                    <span
-                                        v-if='card.overlay.type === "raster"'
-                                        class='flex-shrink-0 text-white-50'
-                                        title='Raster'
-                                    >
-                                        <IconMap
-                                            :size='20'
-                                            stroke='1'
-                                        />
-                                    </span>
-                                    <span
-                                        v-else-if='card.overlay.type === "raster-dem"'
-                                        class='flex-shrink-0 text-white-50'
-                                        title='Terrain'
-                                    >
-                                        <IconMap
-                                            :size='20'
-                                            stroke='1'
-                                        />
-                                    </span>
-                                    <span
-                                        v-else-if='card.overlay.type === "geojson" && card.overlay.mode === "mission"'
-                                        class='flex-shrink-0 text-white-50'
-                                        title='Data Sync'
-                                    >
-                                        <IconCloudPin
-                                            :size='20'
-                                            stroke='1'
-                                        />
-                                    </span>
-                                    <span
-                                        v-else
-                                        class='flex-shrink-0 text-white-50'
-                                        title='Vector'
-                                    >
-                                        <IconVector
                                             :size='20'
                                             stroke='1'
                                         />
                                     </span>
 
-                                    <div class='flex-grow-1 w-100 overflow-hidden'>
-                                        <div class='d-flex align-items-center gap-2 w-100'>
-                                            <div class='d-flex align-items-center flex-grow-1 w-100'>
-                                                <a
-                                                    v-if='card.overlay.mode === "mission"'
-                                                    class='fw-semibold text-decoration-underline d-inline-flex align-items-center text-break'
-                                                    @click.stop='router.push(`/menu/missions/${card.overlay.mode_id}`)'
-                                                    v-text='card.overlay.name'
-                                                />
-                                                <span
-                                                    v-else
-                                                    class='fw-semibold d-inline-flex align-items-center flex-grow-1 text-break'
-                                                    v-text='card.overlay.name'
-                                                />
-                                            </div>
-                                        </div>
-                                        <div
-                                            v-if='card.badges.length || card.offline'
-                                            class='d-flex flex-wrap align-items-center gap-2 mt-2'
-                                        >
-                                            <span
-                                                v-for='badge in card.badges'
-                                                :key='`${card.overlay.id}-${badge.label}`'
-                                                class='badge rounded-pill'
-                                                :class='`text-bg-${badge.variant}`'
-                                            >
-                                                {{ badge.label }}
-                                            </span>
-                                            <OfflineBadge
-                                                v-if='card.offline'
-                                                title='Tiles are available offline on this device'
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div
-                                    style='min-width: 100px;'
-                                    class='d-flex flex-column align-items-end gap-2'
-                                >
-                                    <span
-                                        class='badge rounded-pill'
-                                        :class='`text-bg-${card.status.variant}`'
-                                        :title='card.status.tooltip || ""'
+                                    <TablerIconButton
+                                        :title='section.group.collapsed ? "Expand Group" : "Collapse Group"'
+                                        @click='void toggleCollapsed(section.group)'
                                     >
-                                        {{ card.status.label }}
-                                    </span>
-
-                                    <div class='d-flex align-items-center gap-2 flex-wrap justify-content-end w-100'>
-                                        <TablerIconButton
-                                            v-if='card.overlay.hasBounds()'
-                                            title='Zoom To Overlay'
-                                            @click.stop.prevent='card.overlay.zoomTo()'
-                                        >
-                                            <IconMaximize
-                                                :size='20'
-                                                stroke='1'
-                                            />
-                                        </TablerIconButton>
-
-                                        <TablerIconButton
-                                            v-if='card.visible'
-                                            title='Hide Layer'
-                                            @click.stop.prevent='void updateOverlay(card.overlay, { visible: !card.visible })'
-                                        >
-                                            <IconEye
-                                                :size='20'
-                                                stroke='1'
-                                            />
-                                        </TablerIconButton>
-
-                                        <TablerIconButton
+                                        <IconChevronRight
+                                            v-if='section.group.collapsed'
+                                            :size='20'
+                                            stroke='1'
+                                        />
+                                        <IconChevronDown
                                             v-else
-                                            title='Show Layer'
-                                            @click.stop.prevent='void updateOverlay(card.overlay, { visible: !card.visible })'
+                                            :size='20'
+                                            stroke='1'
+                                        />
+                                    </TablerIconButton>
+
+                                    <input
+                                        type='checkbox'
+                                        class='form-check-input mt-0 flex-shrink-0'
+                                        :title='section.state === "all" ? "Hide Group Overlays" : "Show Group Overlays"'
+                                        :checked='section.state === "all"'
+                                        :indeterminate.prop='section.state === "some"'
+                                        :disabled='!section.members.length'
+                                        @change='void toggleGroup($event, section.members, section.state)'
+                                    >
+
+                                    <template v-if='renamingGroupId === section.group.id'>
+                                        <input
+                                            ref='renameInput'
+                                            v-model='renameValue'
+                                            type='text'
+                                            class='form-control form-control-sm'
+                                            :maxlength='GROUP_NAME_MAX'
+                                            @keydown.enter.prevent='void saveRename(section.group)'
+                                            @keydown.esc.prevent='cancelRename'
                                         >
-                                            <IconEyeOff
+                                        <TablerIconButton
+                                            title='Save Name'
+                                            @click='void saveRename(section.group)'
+                                        >
+                                            <IconCheck
                                                 :size='20'
                                                 stroke='1'
                                             />
                                         </TablerIconButton>
-
+                                        <TablerIconButton
+                                            title='Cancel'
+                                            @click='cancelRename'
+                                        >
+                                            <IconX
+                                                :size='20'
+                                                stroke='1'
+                                            />
+                                        </TablerIconButton>
+                                    </template>
+                                    <template v-else>
+                                        <span
+                                            class='group-name fw-semibold flex-grow-1 text-break'
+                                            v-text='section.group.name'
+                                        />
+                                        <span
+                                            class='badge rounded-pill text-bg-secondary'
+                                            :title='`${section.members.length} Overlays`'
+                                            v-text='section.members.length'
+                                        />
+                                        <TablerIconButton
+                                            title='Rename Group'
+                                            @click='void startRename(section.group)'
+                                        >
+                                            <IconCursorText
+                                                :size='20'
+                                                stroke='1'
+                                            />
+                                        </TablerIconButton>
                                         <TablerDelete
-                                            v-if='["mission", "data", "profile", "overlay"].includes(card.overlay.mode)'
-                                            :key='card.overlay.id'
-                                            title='Delete Overlay'
+                                            title='Delete Group'
+                                            label='Delete Group'
                                             :size='20'
-                                            role='button'
-                                            tabindex='0'
                                             displaytype='icon'
-                                            @delete='removeOverlay(card.overlay.id)'
+                                            @delete='void deleteGroup(section.group)'
+                                        />
+                                    </template>
+                                </div>
+
+                                <!-- v-show on a plain wrapper: Bootstrap's d-flex is display:flex !important and would beat v-show's display:none -->
+                                <div v-show='!section.group.collapsed'>
+                                    <div
+                                        v-sortable-list='dragEnabled'
+                                        class='overlay-list d-flex flex-column gap-3 mt-2'
+                                        :data-list-key='listKeyAttr(section.key)'
+                                        :data-empty='isDraggable ? "Drag overlays here" : "No overlays in this group"'
+                                    >
+                                        <OverlayRow
+                                            v-for='card in section.cards'
+                                            :key='card.overlay.id'
+                                            :card='card'
+                                            :editing='isDraggable'
+                                            :opened='opened.has(card.overlay.id)'
+                                            @toggle='handleCardClick(card.overlay)'
+                                            @update='void updateOverlay(card.overlay, $event)'
+                                            @remove='void removeOverlay(card.overlay.id)'
                                         />
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div
-                                v-if='!isDraggable && opened.has(card.overlay.id) && hasOverlayDetails(card.overlay)'
-                                class='mt-3 p-3 rounded-3 border border-white border-opacity-10 bg-black bg-opacity-25'
-                                @click.stop
-                            >
-                                <div
-                                    v-if='card.overlay.type === "raster"'
-                                    class='mb-3'
-                                >
-                                    <TablerRange
-                                        :model-value='card.overlay.opacity'
-                                        label='Opacity'
-                                        :min='0'
-                                        :max='1'
-                                        :step='0.1'
-                                        @update:model-value='void updateOverlay(card.overlay, { opacity: $event })'
-                                    />
-                                </div>
-                                <TreeVector
-                                    v-if='card.overlay.type === "vector"'
-                                    :overlay='card.overlay'
-                                />
-                            </div>
-                        </StandardItem>
+                        <div
+                            v-if='internalCards.length'
+                            class='overlay-list d-flex flex-column gap-3'
+                        >
+                            <OverlayRow
+                                v-for='card in internalCards'
+                                :key='card.overlay.id'
+                                :card='card'
+                                :editing='isDraggable'
+                                :opened='opened.has(card.overlay.id)'
+                                @toggle='handleCardClick(card.overlay)'
+                                @update='void updateOverlay(card.overlay, $event)'
+                                @remove='void removeOverlay(card.overlay.id)'
+                            />
+                        </div>
                     </div>
 
                     <TablerNone
@@ -268,50 +303,72 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, watch, useTemplateRef, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, computed, nextTick, useTemplateRef, onMounted, onBeforeUnmount } from 'vue';
+import type { Directive } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Subscription } from 'dexie';
 import MenuTemplate from '../util/MenuTemplate.vue';
-import OfflineBadge from '../util/OfflineBadge.vue';
 import {
     TablerDelete,
     TablerIconButton,
     TablerInput,
     TablerLoading,
-    TablerNone,
-    TablerRange
+    TablerNone
 } from '@tak-ps/vue-tabler';
-import TreeVector from './Overlays/TreeVector.vue';
+import OverlayRow from './Overlays/OverlayRow.vue';
+import type { OverlayBadge, OverlayCard, OverlayStatus, OverlayUpdate } from './Overlays/overlay-card.ts';
 import {
     IconGripVertical,
-    IconCloudPin,
-    IconMaximize,
-    IconVector,
-    IconEyeOff,
     IconPencil,
     IconPencilCheck,
     IconPlus,
-    IconEye,
-    IconMap
+    IconFolderPlus,
+    IconChevronDown,
+    IconChevronRight,
+    IconCursorText,
+    IconCheck,
+    IconX
 } from '@tabler/icons-vue';
-import StandardItem from '../util/StandardItem.vue';
 import Sortable from 'sortablejs';
 import type { SortableEvent } from 'sortablejs';
+import { setAllVisible, visibilityState } from '../../../base/overlay-visibility.ts';
+import type { VisibilityState } from '../../../base/overlay-visibility.ts';
+import {
+    GROUP_NAME_MAX,
+    moveInLayout,
+    moveIndex,
+    normalizeGroupName,
+    partitionLayout,
+    partitionOverlays,
+    renumberGroups,
+    restoreNode,
+    sortGroups,
+    stackOrder
+} from '../../../base/overlay-groups.ts';
+import type { OverlayListKey } from '../../../base/overlay-groups.ts';
+import OverlayGroupManager from '../../../base/overlay-group-manager.ts';
 import type Overlay from '../../../../src/base/overlay-class.ts';
 import type { DBOverlay } from '../../../../src/database.ts';
+import type { ProfileOverlayGroup } from '../../../types.ts';
 import OverlayManager from '../../../../src/base/overlay.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { profileAssetIdFromUrl } from '../../../utils/offline-tiles.ts';
 
-type OverlayBadge = { label: string; variant: string };
-type OverlayStatus = { label: string; variant: string; tooltip?: string };
-type OverlayUpdate = Parameters<Overlay['update']>[0];
-type OverlayCard = { overlay: Overlay; visible: boolean; status: OverlayStatus; badges: OverlayBadge[]; offline: boolean };
+type OverlaySection = {
+    id: string;
+    key: OverlayListKey;
+    group: ProfileOverlayGroup;
+    cards: OverlayCard[];
+    /** Every overlay of the group, including those hidden by the search */
+    members: OverlayCard[];
+    state: VisibilityState;
+};
 
 const router = useRouter();
 const mapStore = useMapStore();
 
-let sortable: Sortable | undefined;
+/** Sortables by list element - created and destroyed with their element by the directives below */
+const sortables = new Map<HTMLElement, Sortable>();
 
 const isDraggable = ref(false);
 const loading = ref(false);
@@ -320,12 +377,28 @@ const overlayFilter = ref('');
 const overlayRenderTick = ref(0);
 
 const dbOverlays = ref<DBOverlay[]>([]);
+const groups = ref<ProfileOverlayGroup[]>([]);
+/** Groups must be known before a drop, or the drop would ungroup the overlay */
+const groupsLoaded = ref(false);
+
+const creatingGroup = ref(false);
+const newGroupName = ref('');
+const renamingGroupId = ref<number | null>(null);
+const renameValue = ref('');
+const groupBusy = ref(false);
+const groupError = ref('');
 
 let listSubscription: Subscription | undefined;
 
-const sortableRef = useTemplateRef<HTMLElement>('sortableRef');
+/** nextSibling of the row or group being dragged, recorded on drag start */
+let dragNext: Node | null = null;
+
+const newGroupInput = useTemplateRef<HTMLInputElement>('newGroupInput');
+const renameInput = useTemplateRef<HTMLInputElement[] | HTMLInputElement>('renameInput');
 
 const hasSearchTerm = computed(() => overlayFilter.value.trim().length > 0);
+
+const dragEnabled = computed(() => isDraggable.value && groupsLoaded.value && !hasSearchTerm.value);
 
 function overlayMatchesTerm(overlay: Overlay, term: string): boolean {
     return (
@@ -335,21 +408,26 @@ function overlayMatchesTerm(overlay: Overlay, term: string): boolean {
     );
 }
 
-const overlayCards = computed<OverlayCard[]>(() => {
+/** Cards of every overlay in map stacking order, ignoring the search */
+const allCards = computed<OverlayCard[]>(() => {
     void overlayRenderTick.value;
 
-    const term = overlayFilter.value.trim().toLowerCase();
+    const records = new Map(dbOverlays.value.map((record) => [record.id, record]));
     const seen = new Set<number>();
     const cards: OverlayCard[] = [];
 
     const consider = (overlay: Overlay | undefined): void => {
         if (!overlay || seen.has(overlay.id)) return;
         seen.add(overlay.id);
-        if (term && !overlayMatchesTerm(overlay, term)) return;
+
+        // The local record is written on every change (also from other
+        // devices through sync), so it is the reactive source of membership
+        const record = records.get(overlay.id);
 
         cards.push({
             overlay,
             visible: overlay.visible,
+            groupId: record ? record.group_id ?? null : overlay.group_id,
             status: resolveOverlayStatus(overlay),
             badges: getOverlayBadges(overlay),
             offline: isOfflineOverlay(overlay)
@@ -369,11 +447,71 @@ const overlayCards = computed<OverlayCard[]>(() => {
     return cards.sort((a, b) => OverlayManager.loaded.indexOf(a.overlay) - OverlayManager.loaded.indexOf(b.overlay));
 });
 
-const sortableCount = computed(() => overlayCards.value.filter((card) => !OverlayManager.isPinned(card.overlay)).length);
+const overlayCards = computed<OverlayCard[]>(() => {
+    const term = overlayFilter.value.trim().toLowerCase();
+    if (!term) return allCards.value;
+    return allCards.value.filter((card) => overlayMatchesTerm(card.overlay, term));
+});
 
-const canEditOrder = computed(() => !hasSearchTerm.value && sortableCount.value > 1);
+/** Ordinary (not pinned) overlays split into the ungrouped list and the groups */
+const partition = computed(() => partitionOverlays(
+    allCards.value.filter((card) => !OverlayManager.isPinned(card.overlay)),
+    groups.value,
+    (card) => card.groupId
+));
 
-const showDragHint = computed(() => sortableCount.value > 1 && !isDraggable.value && !canEditOrder.value);
+/*
+ * Menu, top to bottom - the map stack, bottom to top: the basemap, the
+ * ungrouped overlays, the groups (lowest `pos` first) and the internal
+ * overlays ("Map Features")
+ */
+const basemapCards = computed(() => overlayCards.value.filter((card) => card.overlay.mode === 'basemap'));
+const internalCards = computed(() => overlayCards.value.filter((card) => OverlayManager.isPinned(card.overlay) && card.overlay.mode !== 'basemap'));
+
+const groupSections = computed<OverlaySection[]>(() => {
+    const shown = new Set(overlayCards.value);
+    const result: OverlaySection[] = [];
+
+    for (const { group, items } of partition.value.groups) {
+        const cards = items.filter((card) => shown.has(card));
+        if (hasSearchTerm.value && !cards.length) continue;
+
+        result.push({
+            id: `group-${group.id}`,
+            key: group.id,
+            group,
+            cards,
+            members: items,
+            state: visibilityState(items)
+        });
+    }
+
+    return result;
+});
+
+/** The ungrouped overlays - kept as an (empty) drop target while reordering so an overlay can be taken out of a group */
+const ungroupedSection = computed<{ cards: OverlayCard[] } | null>(() => {
+    const shown = new Set(overlayCards.value);
+    const cards = partition.value.ungrouped.filter((card) => shown.has(card));
+    if (!cards.length && !(isDraggable.value && partition.value.groups.length)) return null;
+    return { cards };
+});
+
+const hasRows = computed(() => basemapCards.value.length > 0
+    || ungroupedSection.value !== null
+    || groupSections.value.length > 0
+    || internalCards.value.length > 0);
+
+const sortableCount = computed(() => allCards.value.filter((card) => !OverlayManager.isPinned(card.overlay)).length);
+
+/** Something can be moved: two overlays, an overlay and a group, or two groups */
+const hasOrder = computed(() => sortableCount.value > 1
+    || (sortableCount.value > 0 && groups.value.length > 0)
+    || groups.value.length > 1);
+
+const canEditOrder = computed(() => !hasSearchTerm.value && hasOrder.value);
+
+const showDragHint = computed(() => hasOrder.value && !isDraggable.value && !canEditOrder.value);
 
 const dragHintCopy = computed(() => {
     if (!showDragHint.value) return '';
@@ -383,11 +521,21 @@ const dragHintCopy = computed(() => {
 const reorderButtonTitle = computed(() => {
     if (isDraggable.value) return 'Save Order';
     if (!canEditOrder.value) {
-        if (sortableCount.value <= 1) return 'Add another overlay to reorder';
+        if (!hasOrder.value) return 'Add another overlay to reorder';
         return 'Clear the search to reorder overlays';
     }
     return 'Edit Order';
 });
+
+function listKeyAttr(key: OverlayListKey): string {
+    return key === null ? 'ungrouped' : String(key);
+}
+
+function parseListKey(attr: string | undefined): OverlayListKey | undefined {
+    if (attr === 'ungrouped') return null;
+    const id = Number(attr);
+    return Number.isInteger(id) ? id : undefined;
+}
 
 function subscribeList(): void {
     listSubscription?.unsubscribe();
@@ -406,8 +554,16 @@ function subscribeList(): void {
     });
 }
 
+async function loadGroups(): Promise<void> {
+    // Show the local copy first so the grouping survives an offline start
+    groups.value = await OverlayGroupManager.cached();
+    groups.value = await OverlayGroupManager.list();
+    groupsLoaded.value = true;
+}
+
 onMounted(() => {
     subscribeList();
+    void loadGroups();
 });
 
 watch(overlayFilter, () => {
@@ -416,41 +572,63 @@ watch(overlayFilter, () => {
     }
 });
 
-watch(
-    () => ({
-        container: sortableRef.value,
-        draggable: isDraggable.value,
-        hasSearch: hasSearchTerm.value
+/*
+ * Sortables live and die with their list element. The lists are rendered in
+ * the slot of MenuTemplate, so this component's own onUpdated does not run
+ * when a list appears (a group created at runtime, the lists shown after
+ * loading) - a directive is bound to the element itself and always does.
+ */
+function bindSortable(el: HTMLElement, enabled: boolean, options: Sortable.Options): void {
+    sortables.set(el, new Sortable(el, { ...options, disabled: !enabled }));
+}
+
+function unbindSortable(el: HTMLElement): void {
+    sortables.get(el)?.destroy();
+    sortables.delete(el);
+}
+
+function toggleSortable(el: HTMLElement, enabled: boolean): void {
+    const sortable = sortables.get(el);
+    if (sortable && sortable.option('disabled') === enabled) sortable.option('disabled', !enabled);
+}
+
+/** A list of overlays (a group or the ungrouped list) - rows move between all of them */
+const vSortableList: Directive<HTMLElement, boolean> = {
+    mounted: (el, binding) => bindSortable(el, binding.value, {
+        group: 'overlays',
+        sort: true,
+        handle: '.drag-handle',
+        draggable: '.overlay-row',
+        dataIdAttr: 'id',
+        // An empty group is a small target - accept a drop near it
+        emptyInsertThreshold: 24,
+        onStart: (ev) => { dragNext = ev.item.nextSibling; },
+        onEnd: (ev) => void handleDrop(ev)
     }),
-    ({ container, draggable, hasSearch }) => {
-        const canSort = !!container && draggable && !hasSearch;
-        if (canSort && container) {
-            if (sortable && sortable.el === container) return;
-            if (sortable) sortable.destroy();
-            sortable = new Sortable(container, {
-                sort: true,
-                handle: '.drag-handle',
-                dataIdAttr: 'id',
-                // Basemap & Map Features are pinned to the ends of the stack
-                onMove: (ev) => !ev.related.classList.contains('overlay-pinned'),
-                onEnd: saveOrder
-            });
-        } else if (sortable) {
-            sortable.destroy();
-            sortable = undefined;
-        }
-    },
-    { immediate: true }
-);
+    updated: (el, binding) => toggleSortable(el, binding.value),
+    beforeUnmount: (el) => unbindSortable(el)
+};
+
+/** The container of the groups - a group only moves among the groups */
+const vSortableGroups: Directive<HTMLElement, boolean> = {
+    mounted: (el, binding) => bindSortable(el, binding.value, {
+        group: 'overlay-groups',
+        sort: true,
+        handle: '.group-drag-handle',
+        draggable: '.overlay-group',
+        onStart: (ev) => { dragNext = ev.item.nextSibling; },
+        onEnd: (ev) => void handleGroupDrop(ev)
+    }),
+    updated: (el, binding) => toggleSortable(el, binding.value),
+    beforeUnmount: (el) => unbindSortable(el)
+};
 
 onBeforeUnmount(() => {
     listSubscription?.unsubscribe();
     listSubscription = undefined;
 
-    if (sortable) {
-        sortable.destroy();
-        sortable = undefined;
-    }
+    for (const sortable of sortables.values()) sortable.destroy();
+    sortables.clear();
 });
 
 function handleReorderToggle() {
@@ -556,19 +734,88 @@ function getOverlayBadges(overlay: Overlay): OverlayBadge[] {
     return badges;
 }
 
-async function saveOrder(sortableEv: SortableEvent) {
-    if (!sortable) return;
-    if (sortableEv.newIndex === undefined || isNaN(parseInt(String(sortableEv.newIndex)))) return;
+/**
+ * An overlay was dropped. Sortable moved its DOM node - it is put back so Vue
+ * stays the only owner of the rows, and the new order and group are applied
+ * to the data instead, which Vue then renders.
+ */
+async function handleDrop(ev: SortableEvent): Promise<void> {
+    const { item, from, to, oldIndex, newIndex } = ev;
 
-    const id = sortableEv.item.getAttribute('id');
-    if (!id) return;
+    restoreNode(item, from, dragNext);
+    dragNext = null;
 
-    const overlay_ids = sortable.toArray().map((i) => parseInt(i));
+    if (oldIndex === undefined || newIndex === undefined) return;
+
+    const id = Number(item.getAttribute('id'));
+    const target = parseListKey(to.dataset.listKey);
+    if (!Number.isFinite(id) || target === undefined) return;
+    if (from === to && oldIndex === newIndex) return;
+
+    // An overlay in a group this client does not know (yet) is listed as
+    // ungrouped - reordering it there must not drop its membership
+    const current = allCards.value.find((card) => card.overlay.id === id)?.groupId ?? null;
+    const unknownGroup = current !== null && !groups.value.some((group) => group.id === current);
+    const groupId = target === null && unknownGroup ? undefined : target;
 
     try {
-        await OverlayManager.reorderLoaded(overlay_ids, id);
+        const layout = moveInLayout(partitionLayout(partition.value, (card) => card.overlay.id), id, target, newIndex);
+
+        const reorder = OverlayManager.reorderLoaded(stackOrder(layout), id, { groupId });
+
+        // Show the new membership right away - the local record follows
+        if (groupId !== undefined) {
+            dbOverlays.value = dbOverlays.value.map((record) => record.id === id ? { ...record, group_id: groupId } : record);
+        }
+        overlayRenderTick.value += 1;
+
+        await reorder;
     } catch (err) {
         console.error('Failed to sync overlay order:', err);
+        groupError.value = errorText('Failed to move overlay', err);
+        // The group may be gone on another device - reload groups and overlays
+        void loadGroups();
+        OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
+    } finally {
+        overlayRenderTick.value += 1;
+    }
+}
+
+/**
+ * A group was dropped. As with overlays the DOM node is put back; the groups
+ * are renumbered in their new order and the map stack follows them.
+ */
+async function handleGroupDrop(ev: SortableEvent): Promise<void> {
+    const { item, from, oldIndex, newIndex } = ev;
+
+    restoreNode(item, from, dragNext);
+    dragNext = null;
+
+    if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
+
+    const order = sortGroups(groups.value).map((group) => group.id);
+    if (order[oldIndex] !== Number(item.dataset.groupId)) return;
+
+    const changes = renumberGroups(groups.value, moveIndex(order, oldIndex, newIndex));
+    const posOf = new Map(changes.map((change) => [change.id, change.pos]));
+
+    groups.value = groups.value.map((group) => posOf.has(group.id) ? { ...group, pos: posOf.get(group.id) as number } : group);
+
+    try {
+        const restack = OverlayManager.restackLoaded(stackOrder(partitionLayout(partition.value, (card) => card.overlay.id)));
+        overlayRenderTick.value += 1;
+
+        await Promise.all([
+            ...changes.map((change) => OverlayGroupManager.update(change.id, { pos: change.pos })),
+            restack
+        ]);
+    } catch (err) {
+        console.error('Failed to sync overlay group order:', err);
+        groupError.value = errorText('Failed to move group', err);
+        void loadGroups();
+        OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
+    } finally {
+        overlayRenderTick.value += 1;
     }
 }
 
@@ -585,6 +832,17 @@ async function updateOverlay(overlay: Overlay, body: OverlayUpdate): Promise<voi
     }
 }
 
+async function toggleGroup(ev: Event, members: OverlayCard[], state: VisibilityState): Promise<void> {
+    await setAllVisible(members, state !== 'all', (card, body) => updateOverlay(card.overlay, body));
+
+    // Keep the checkbox in line with the overlays even when every update failed and Vue sees no change
+    const el = ev.target as HTMLInputElement | null;
+    if (!el) return;
+    const current = visibilityState(members.map((card) => ({ visible: card.overlay.visible })));
+    el.checked = current === 'all';
+    el.indeterminate = current === 'some';
+}
+
 async function removeOverlay(id: number) {
     try {
         await OverlayManager.deleteLoaded(id);
@@ -592,5 +850,136 @@ async function removeOverlay(id: number) {
         console.error('Failed to sync overlay delete:', err);
     }
 }
+
+function errorText(prefix: string, err: unknown): string {
+    return `${prefix}: ${err instanceof Error ? err.message : String(err)}`;
+}
+
+async function startCreateGroup(): Promise<void> {
+    groupError.value = '';
+    creatingGroup.value = true;
+    await nextTick();
+    newGroupInput.value?.focus();
+}
+
+function cancelCreateGroup(): void {
+    creatingGroup.value = false;
+    newGroupName.value = '';
+}
+
+async function createGroup(): Promise<void> {
+    const name = normalizeGroupName(newGroupName.value);
+    if (!name || groupBusy.value) return;
+
+    groupBusy.value = true;
+    groupError.value = '';
+
+    try {
+        // The server gives a new group the lowest position - it is listed first
+        const group = await OverlayGroupManager.create(name);
+        groups.value = sortGroups([...groups.value, group]);
+        cancelCreateGroup();
+    } catch (err) {
+        groupError.value = errorText('Failed to create group', err);
+    } finally {
+        groupBusy.value = false;
+    }
+}
+
+async function startRename(group: ProfileOverlayGroup): Promise<void> {
+    groupError.value = '';
+    renamingGroupId.value = group.id;
+    renameValue.value = group.name;
+    await nextTick();
+    const input = Array.isArray(renameInput.value) ? renameInput.value[0] : renameInput.value;
+    input?.focus();
+    input?.select();
+}
+
+function cancelRename(): void {
+    renamingGroupId.value = null;
+    renameValue.value = '';
+}
+
+async function saveRename(group: ProfileOverlayGroup): Promise<void> {
+    const name = normalizeGroupName(renameValue.value);
+    if (!name) {
+        groupError.value = `Group name must be 1-${GROUP_NAME_MAX} characters`;
+        return;
+    }
+
+    if (name === group.name) {
+        cancelRename();
+        return;
+    }
+
+    try {
+        const updated = await OverlayGroupManager.update(group.id, { name });
+        groups.value = groups.value.map((current) => current.id === group.id ? updated : current);
+        groupError.value = '';
+        cancelRename();
+    } catch (err) {
+        groupError.value = errorText('Failed to rename group', err);
+    }
+}
+
+async function toggleCollapsed(group: ProfileOverlayGroup): Promise<void> {
+    const collapsed = !group.collapsed;
+    groups.value = groups.value.map((current) => current.id === group.id ? { ...current, collapsed } : current);
+
+    try {
+        await OverlayGroupManager.update(group.id, { collapsed });
+    } catch (err) {
+        console.error('Failed to sync overlay group collapse:', err);
+    }
+}
+
+/** Delete a group - its overlays are kept and listed as ungrouped */
+async function deleteGroup(group: ProfileOverlayGroup): Promise<void> {
+    if (groupBusy.value) return;
+
+    groupBusy.value = true;
+    groupError.value = '';
+
+    try {
+        await OverlayGroupManager.delete(group.id);
+        groups.value = groups.value.filter((current) => current.id !== group.id);
+        dbOverlays.value = dbOverlays.value.map((record) => record.group_id === group.id ? { ...record, group_id: null } : record);
+
+        // The former members keep their positions - restack so the map
+        // matches the menu, where they are now ungrouped
+        await OverlayManager.restackLoaded(stackOrder(partitionLayout(partition.value, (card) => card.overlay.id)));
+    } catch (err) {
+        groupError.value = errorText('Failed to delete group', err);
+    } finally {
+        groupBusy.value = false;
+        overlayRenderTick.value += 1;
+    }
+}
 </script>
 
+<style scoped>
+.overlay-group {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.overlay-list[data-list-key] {
+    min-height: 2.5rem;
+}
+
+.overlay-list[data-list-key]:empty::before {
+    content: attr(data-empty);
+    display: block;
+    padding: 0.5rem;
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+.group-drag-handle {
+    touch-action: none;
+}
+</style>

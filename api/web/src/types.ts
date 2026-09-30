@@ -235,6 +235,9 @@ export type ProfileOverlayList = paths["/api/profile/overlay"]["get"]["responses
 export type ProfileOverlay_Create = paths["/api/profile/overlay"]["post"]["requestBody"]["content"]["application/json"]
 export type ProfileOverlay_Update = paths["/api/profile/overlay/{:overlay}"]["patch"]["requestBody"]["content"]["application/json"]
 export type OverlayTileJSON = NonNullable<ProfileOverlay["tilejson"]>
+export type ProfileOverlayGroupList = paths["/api/profile/overlay/group"]["get"]["responses"]["200"]["content"]["application/json"]
+export type ProfileOverlayGroup = ProfileOverlayGroupList["items"][number]
+export type ProfileOverlayGroup_Update = paths["/api/profile/overlay/group/{:group}"]["patch"]["requestBody"]["content"]["application/json"]
 
 export type ProfileTokenList = paths["/api/profile/token"]["get"]["responses"]["200"]["content"]["application/json"]
 export type ProfileToken = ProfileTokenList["items"][0]

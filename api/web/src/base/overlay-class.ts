@@ -58,6 +58,8 @@ export default class Overlay {
     visible: boolean;
     mode: string;
     mode_id: string | null;
+    /** User defined Overlay Group - null when ungrouped */
+    group_id: number | null;
     encoding: 'mapbox' | 'terrarium' | null;
     attribution: string;
 
@@ -195,6 +197,7 @@ export default class Overlay {
         this.visible = overlay.visible;
         this.mode = overlay.mode;
         this.mode_id = overlay.mode_id || null;
+        this.group_id = overlay.group_id ?? null;
         this.encoding = overlay.encoding || null;
         this.attribution = overlay.attribution || '';
         this.url = overlay.url;
@@ -717,6 +720,7 @@ export default class Overlay {
         this.type = record.type;
         this.mode = record.mode;
         this.mode_id = record.mode_id || null;
+        this.group_id = record.group_id ?? null;
         this.encoding = record.encoding || null;
         this.attribution = record.attribution || '';
         this.url = record.url;
@@ -808,7 +812,12 @@ export default class Overlay {
         }
     }
 
-    async save(): Promise<void> {
+    /**
+     * Persist the overlay locally and to the API. `group_id` is only sent
+     * with `opts.group`, so a membership that went stale (the group was
+     * deleted on another device) is never written back.
+     */
+    async save(opts: { group?: boolean } = {}): Promise<void> {
         if (this._destroyed) throw new Error('Cannot save a destroyed layer');
         if (this._internal) return;
 
@@ -829,7 +838,8 @@ export default class Overlay {
                 mode_id: this.mode_id,
                 url: this.url,
                 visible: this.visible,
-                styles: dropStyles ? [] : this.styles
+                styles: dropStyles ? [] : this.styles,
+                ...(opts.group ? { group_id: this.group_id } : {})
             }
         }) as ProfileOverlay;
 
@@ -862,6 +872,7 @@ export default class Overlay {
             visible: this.visible,
             mode: this.mode,
             mode_id: this.mode_id,
+            group_id: this.group_id,
             encoding: this.encoding,
             attribution: this.attribution,
             actions: this.actions,

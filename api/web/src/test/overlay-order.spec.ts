@@ -72,6 +72,74 @@ describe('OverlayManager stack order', () => {
         expect(ordinary[0].moveBefore).toHaveBeenCalledWith(OverlayManager.loaded[2]);
     });
 
+    it('reorderLoaded moves an overlay into a group even when its position is unchanged', async () => {
+        for (const overlay of ordinary) overlay.group_id = null;
+
+        await OverlayManager.reorderLoaded([1, 2, 3, 4, 5], 5, { groupId: 7 });
+
+        expect(ordinary[4].group_id).toBe(7);
+        expect(ordinary[4].save).toHaveBeenCalledWith({ group: true });
+        expect(ids()).toEqual([10, 1, 2, 3, 4, 5, -1]);
+    });
+
+    it('reorderLoaded does not send group_id when the group is unchanged', async () => {
+        for (const overlay of ordinary) overlay.group_id = 7;
+
+        await OverlayManager.reorderLoaded([2, 1, 3, 4, 5], 2, { groupId: 7 });
+
+        expect(ordinary[1].save).toHaveBeenCalledWith({ group: false });
+        expect(ordinary[1].group_id).toBe(7);
+    });
+
+    it('reorderLoaded repairs a stack where every overlay has the same pos', async () => {
+        // Overlays created before positions were assigned all carry the API default
+        for (const overlay of ordinary) overlay.pos = 5;
+        OverlayManager.loaded.sort(OverlayManager.compareStack);
+
+        await OverlayManager.reorderLoaded([3, 1, 2, 4, 5], 3);
+
+        expect(ordinary.map((overlay) => overlay.pos)).toEqual([1, 2, 0, 3, 4]);
+        expect(ids()).toEqual([10, 3, 1, 2, 4, 5, -1]);
+        // none of the new positions is 5, so every overlay is saved
+        for (const overlay of ordinary) expect(overlay.save).toHaveBeenCalledTimes(1);
+    });
+
+    it('reorderLoaded restacks the whole map when stale positions move more than the dragged overlay', async () => {
+        // Stale positions: the stack order is 5, 4, 3, 2, 1 while the menu shows 1..5
+        ordinary.forEach((overlay, i) => { overlay.pos = 10 - i; });
+        OverlayManager.loaded.sort(OverlayManager.compareStack);
+
+        await OverlayManager.reorderLoaded([2, 1, 3, 4, 5], 2);
+
+        expect(ids()).toEqual([10, 2, 1, 3, 4, 5, -1]);
+        // every overlay was moved, top of the stack first
+        for (const overlay of ordinary) expect(overlay.moveBefore).toHaveBeenCalled();
+    });
+
+    it('restackLoaded applies a new order to every ordinary overlay', async () => {
+        await OverlayManager.restackLoaded([4, 5, 1, 2, 3]);
+
+        expect(ids()).toEqual([10, 4, 5, 1, 2, 3, -1]);
+        expect(ordinary.map((overlay) => overlay.pos)).toEqual([2, 3, 4, 0, 1]);
+        for (const overlay of ordinary) {
+            expect(overlay.save).toHaveBeenCalledWith({ group: false });
+            expect(overlay.moveBefore).toHaveBeenCalled();
+        }
+        expect(basemap.save).not.toHaveBeenCalled();
+        expect(features.save).not.toHaveBeenCalled();
+    });
+
+    it('loadedLayerAnchor skips overlays with no layer on the map yet', () => {
+        // Overlay 3 is still loading (or failed): nothing to move layers before
+        (ordinary[2] as unknown as { anchorLayerId: () => string | undefined }).anchorLayerId = () => undefined;
+
+        expect(OverlayManager.loadedLayerAnchor(3)).toBe(ordinary[3]);
+
+        OverlayManager.applyLoadedOrder();
+        // Overlay 2 goes below overlay 4, not to the top of the map
+        expect(ordinary[1].moveBefore).toHaveBeenCalledWith(ordinary[3]);
+    });
+
     it('compareStack pins by overlay kind even when pos is corrupted', () => {
         basemap.pos = 4;
         features.pos = 0;
