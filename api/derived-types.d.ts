@@ -3666,6 +3666,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/config/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return the domain that incoming Layer Email is addressed to */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            domain: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/connection/{:connectionid}/asset": {
         parameters: {
             query?: never;
@@ -11725,10 +11833,14 @@ export interface paths {
                             name: string;
                             version: string;
                             incoming?: {
-                                invocation: ("manual" | "schedule" | "webhook")[];
+                                invocation: ("manual" | "schedule" | "webhook" | "email")[];
                                 invocationDefaults: {
                                     webhook?: {
                                         enabled: boolean;
+                                    };
+                                    email?: {
+                                        enabled: boolean;
+                                        senders?: string[];
                                     };
                                     schedule?: {
                                         enabled: boolean;
@@ -12182,6 +12294,8 @@ export interface paths {
                                     };
                                     cron: null | string;
                                     webhooks: boolean;
+                                    email: boolean;
+                                    email_senders: string[];
                                     enabled_styles: boolean;
                                     styles: {
                                         line?: {
@@ -12596,6 +12710,9 @@ export interface paths {
                         incoming?: {
                             cron?: null | string;
                             webhooks?: boolean;
+                            email?: boolean;
+                            /** @description Addresses or @domains allowed to email the Layer - empty allows any sender */
+                            email_senders?: string[];
                         };
                         /** @description Create an Outgoing Config alongside the Layer */
                         outgoing?: Record<string, never>;
@@ -12655,6 +12772,8 @@ export interface paths {
                                 };
                                 cron: null | string;
                                 webhooks: boolean;
+                                email: boolean;
+                                email_senders: string[];
                                 enabled_styles: boolean;
                                 styles: {
                                     line?: {
@@ -13049,6 +13168,9 @@ export interface paths {
                 content: {
                     "application/json": {
                         webhooks?: boolean;
+                        email?: boolean;
+                        /** @description Addresses or @domains allowed to email the Layer - empty allows any sender */
+                        email_senders?: string[];
                         cron?: string;
                         stale?: number;
                         data?: number;
@@ -13343,6 +13465,8 @@ export interface paths {
                             };
                             cron: null | string;
                             webhooks: boolean;
+                            email: boolean;
+                            email_senders: string[];
                             enabled_styles: boolean;
                             styles: {
                                 line?: {
@@ -13808,6 +13932,9 @@ export interface paths {
                 content: {
                     "application/json": {
                         webhooks?: boolean;
+                        email?: boolean;
+                        /** @description Addresses or @domains allowed to email the Layer - empty allows any sender */
+                        email_senders?: string[];
                         cron?: null | string;
                         enabled_styles?: boolean;
                         styles?: {
@@ -14103,6 +14230,8 @@ export interface paths {
                             };
                             cron: null | string;
                             webhooks: boolean;
+                            email: boolean;
+                            email_senders: string[];
                             enabled_styles: boolean;
                             styles: {
                                 line?: {
@@ -14890,6 +15019,8 @@ export interface paths {
                                 };
                                 cron: null | string;
                                 webhooks: boolean;
+                                email: boolean;
+                                email_senders: string[];
                                 enabled_styles: boolean;
                                 styles: {
                                     line?: {
@@ -15450,6 +15581,8 @@ export interface paths {
                                 };
                                 cron: null | string;
                                 webhooks: boolean;
+                                email: boolean;
+                                email_senders: string[];
                                 enabled_styles: boolean;
                                 styles: {
                                     line?: {
@@ -31391,6 +31524,8 @@ export interface paths {
                                             description: string;
                                             default: {
                                                 enabled: boolean;
+                                                /** @description Addresses or @domains allowed to email the Layer - omitted or empty allows any sender */
+                                                senders?: string[];
                                             };
                                         };
                                     };
@@ -31794,6 +31929,8 @@ export interface paths {
                                     };
                                     cron: null | string;
                                     webhooks: boolean;
+                                    email: boolean;
+                                    email_senders: string[];
                                     enabled_styles: boolean;
                                     styles: {
                                         line?: {
@@ -32244,6 +32381,8 @@ export interface paths {
                                 };
                                 cron: null | string;
                                 webhooks: boolean;
+                                email: boolean;
+                                email_senders: string[];
                                 enabled_styles: boolean;
                                 styles: {
                                     line?: {
