@@ -18,6 +18,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 attribution: Type.String(),
                 updated: Type.Union([Type.Null(), Type.String()]),
                 stale: Type.Boolean(),
+                category: Type.Optional(Type.String({ description: 'Overlay Explorer category of the layer, e.g. "Transport"' })),
             })),
         }),
     }, async (req, res) => {

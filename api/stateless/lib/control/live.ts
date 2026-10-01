@@ -15,6 +15,8 @@ export type LiveLayer = {
     attribution: string;
     updated: string | null;
     stale: boolean;
+    /** Overlay Explorer category, e.g. "Transport" - optional */
+    category?: string;
 };
 
 /**

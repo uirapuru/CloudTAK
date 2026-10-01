@@ -11,7 +11,7 @@ flight.user();
 flight.user({ admin: false });
 
 const calls: string[] = [];
-const INDEX = { items: [{ name: 'mpk-wroclaw', label: 'Komunikacja miejska Wrocław', refresh: 10, attribution: 'MPK Wrocław', updated: null, stale: true }] };
+const INDEX = { items: [{ name: 'mpk-wroclaw', label: 'Komunikacja miejska Wrocław', refresh: 10, attribution: 'MPK Wrocław', updated: null, stale: true, category: 'Transport' }, { name: 'adsb', label: 'Samoloty', refresh: 10, attribution: 'adsb.lol', updated: null, stale: false }] };
 const LAYER = { type: 'FeatureCollection', features: [], attribution: 'MPK Wrocław', updated: null, stale: true };
 
 test('mock live-feeds pod', () => {
