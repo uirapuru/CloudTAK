@@ -128,6 +128,33 @@ describe('OverlayManager stack order', () => {
         expect(features.save).not.toHaveBeenCalled();
     });
 
+    it('regroupLoaded moves several overlays into groups and restacks once', async () => {
+        for (const overlay of ordinary) overlay.group_id = null;
+
+        await OverlayManager.regroupLoaded([3, 4, 5, 1, 2], new Map<number, number | null>([[1, 7], [2, 8], [10, 7]]));
+
+        expect(ordinary[0].group_id).toBe(7);
+        expect(ordinary[1].group_id).toBe(8);
+        // the basemap is pinned - never regrouped
+        expect((basemap as { group_id?: number | null }).group_id).toBeUndefined();
+        expect(ids()).toEqual([10, 3, 4, 5, 1, 2, -1]);
+
+        expect(ordinary[0].save).toHaveBeenCalledWith({ group: true });
+        expect(ordinary[1].save).toHaveBeenCalledWith({ group: true });
+        expect(ordinary[2].save).toHaveBeenCalledWith({ group: false });
+        expect(basemap.save).not.toHaveBeenCalled();
+    });
+
+    it('regroupLoaded does not save an overlay whose group and position stay the same', async () => {
+        for (const overlay of ordinary) overlay.group_id = null;
+        ordinary.forEach((overlay, i) => { overlay.pos = i; });
+
+        await OverlayManager.regroupLoaded([1, 2, 3, 4, 5], new Map([[5, 9]]));
+
+        expect(ordinary[4].save).toHaveBeenCalledWith({ group: true });
+        for (const overlay of ordinary.slice(0, 4)) expect(overlay.save).not.toHaveBeenCalled();
+    });
+
     it('loadedLayerAnchor skips overlays with no layer on the map yet', () => {
         // Overlay 3 is still loading (or failed): nothing to move layers before
         (ordinary[2] as unknown as { anchorLayerId: () => string | undefined }).anchorLayerId = () => undefined;

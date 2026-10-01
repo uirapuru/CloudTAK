@@ -174,6 +174,34 @@ export default class OverlayManager extends BaseInterface {
         await this.saveAll(changed, () => ({ group: false }));
     }
 
+    /**
+     * Move several overlays into groups at once (e.g. "Ułóż w kategorie") and
+     * apply the new stack order. `orderedIds` is bottom first; `groupIds`
+     * maps an overlay id to its new group (null: ungrouped). Pinned overlays
+     * are never regrouped. Only overlays whose group or `pos` changed are saved.
+     */
+    static async regroupLoaded(orderedIds: number[], groupIds: Map<number, number | null>): Promise<void> {
+        const regrouped: Overlay[] = [];
+
+        for (const [id, groupId] of groupIds) {
+            const overlay = this.loadedFrom(id);
+            if (!overlay || this.isPinned(overlay)) continue;
+            if ((overlay.group_id ?? null) === groupId) continue;
+
+            overlay.group_id = groupId;
+            regrouped.push(overlay);
+        }
+
+        const changed = this.assignPositions(orderedIds);
+        this.applyLoadedOrder();
+
+        for (const overlay of regrouped) {
+            if (!changed.includes(overlay)) changed.push(overlay);
+        }
+
+        await this.saveAll(changed, (current) => ({ group: regrouped.includes(current) }));
+    }
+
     /** Give every ordinary overlay its index in `orderedIds` as `pos` and resort the stack; returns the overlays whose `pos` changed */
     private static assignPositions(orderedIds: number[]): Overlay[] {
         // Pinned overlays keep their sentinel `pos` - only ordinary overlays
