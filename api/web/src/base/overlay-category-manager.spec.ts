@@ -29,10 +29,11 @@ vi.mock('./overlay.ts', () => ({
         get loaded() { return state.loaded; },
         isPinned: (o: Loaded) => o.mode === 'basemap' || o.mode === 'internal',
         regroupLoaded: state.regroup,
+        loadedFrom: (id: number) => state.loaded.find((o) => o.id === id),
     },
 }));
 
-import CategoryPlacer from './overlay-category-manager.ts';
+import CategoryPlacer, { syncCatalogNames } from './overlay-category-manager.ts';
 
 describe('CategoryPlacer', () => {
     beforeEach(() => {
@@ -94,5 +95,31 @@ describe('CategoryPlacer', () => {
         // Menu, top first: Moje [], Woda [11, 12], Transport [], Kosmos [10]
         expect(order).toEqual([10, 12, 11]);
         expect(groups).toEqual(new Map([[12, 2], [10, kosmos.id]]));
+    });
+});
+
+describe('syncCatalogNames', () => {
+    it('renames loaded catalog overlays to the catalog name, once per difference', async () => {
+        const save = vi.fn(async () => {});
+        const live = { id: 20, mode: 'live', mode_id: 'mpk', name: 'MPK', group_id: null, save };
+        const kept = { id: 21, mode: 'overlay', mode_id: '5', name: 'Rzeki', group_id: null, save };
+        const basemap = { id: 22, mode: 'basemap', mode_id: '5', name: 'Podkład', group_id: null, save };
+        state.loaded = [basemap, live, kept] as unknown as Loaded[];
+
+        const catalog = {
+            basemaps: [{ id: 5, name: 'Rzeki' }],
+            live: [{ name: 'mpk', label: '[WROCLAW] MPK' }],
+            ion: [],
+        };
+
+        expect(await syncCatalogNames(catalog)).toBe(1);
+        expect(live.name).toBe('[WROCLAW] MPK');
+        expect(basemap.name).toBe('Podkład');
+        expect(save).toHaveBeenCalledTimes(1);
+
+        // A name that came back (another device saved the old one) is not fought over
+        live.name = 'MPK';
+        expect(await syncCatalogNames(catalog)).toBe(0);
+        expect(save).toHaveBeenCalledTimes(1);
     });
 });

@@ -1,6 +1,7 @@
 import OverlayManager from './overlay.ts';
 import OverlayGroupManager from './overlay-group-manager.ts';
-import { categoryGroupOrder } from './overlay-categories.ts';
+import { categoryGroupOrder, staleNames } from './overlay-categories.ts';
+import type { OverlayCatalog } from './overlay-categories.ts';
 import {
     moveInLayout,
     partitionLayout,
@@ -80,4 +81,38 @@ export default class CategoryPlacer {
         const items = OverlayManager.loaded.filter((overlay) => !OverlayManager.isPinned(overlay)).reverse();
         return partitionLayout(partitionOverlays(items, this.groups, (overlay) => overlay.group_id), (overlay) => overlay.id);
     }
+}
+
+/** Renames already tried in this session (`id` NUL `name`) - each difference is sent once */
+const renamed = new Set<string>();
+
+/**
+ * Give loaded catalog overlays (tile overlays, live layers, 3D buildings)
+ * the name the catalog has now - labels change (e.g. a "[WROCLAW] " prefix)
+ * while profiles keep the name from when the overlay was added. Quiet: a
+ * failed save is logged, and the same rename is not tried again until
+ * reload. Returns how many overlays were renamed.
+ */
+export async function syncCatalogNames(catalog: OverlayCatalog): Promise<number> {
+    const loaded = OverlayManager.loaded.filter((overlay) => !OverlayManager.isPinned(overlay));
+    let count = 0;
+
+    for (const { id, name } of staleNames(loaded, catalog)) {
+        const key = `${id}\u0000${name}`;
+        if (renamed.has(key)) continue;
+        renamed.add(key);
+
+        const overlay = OverlayManager.loadedFrom(id);
+        if (!overlay) continue;
+
+        overlay.name = name;
+        try {
+            await overlay.save();
+            count += 1;
+        } catch (err) {
+            console.error('Failed to rename overlay to its catalog name', id, err);
+        }
+    }
+
+    return count;
 }
