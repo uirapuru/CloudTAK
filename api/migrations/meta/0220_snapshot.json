@@ -1,6 +1,6 @@
 {
-  "id": "b071cf9c-9adf-4fa8-a81c-4f1c71c29efd",
-  "prevId": "ebda3a81-26c7-449f-90af-e97cfd0cb928",
+  "id": "c6bfb4d8-dca5-4227-8d33-343199256e7a",
+  "prevId": "b472e55a-407d-4322-845b-aa62d39098ec",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1077,6 +1077,13 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'CoreEvent'"
+        },
         "mission_guid": {
           "name": "mission_guid",
           "type": "uuid",
@@ -1656,8 +1663,8 @@
       "name": "core_entity_channel",
       "schema": "",
       "columns": {
-        "event": {
-          "name": "event",
+        "entity": {
+          "name": "entity",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1671,12 +1678,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "core_entity_channel_event_core_entity_id_fk": {
-          "name": "core_entity_channel_event_core_entity_id_fk",
+        "core_entity_channel_entity_core_entity_id_fk": {
+          "name": "core_entity_channel_entity_core_entity_id_fk",
           "tableFrom": "core_entity_channel",
           "tableTo": "core_entity",
           "columnsFrom": [
-            "event"
+            "entity"
           ],
           "columnsTo": [
             "id"
@@ -1686,10 +1693,10 @@
         }
       },
       "compositePrimaryKeys": {
-        "core_entity_channel_event_channel_pk": {
-          "name": "core_entity_channel_event_channel_pk",
+        "core_entity_channel_entity_channel_pk": {
+          "name": "core_entity_channel_entity_channel_pk",
           "columns": [
-            "event",
+            "entity",
             "channel"
           ]
         }
@@ -4260,6 +4267,60 @@
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.profile_overlay_favorites": {
+      "name": "profile_overlay_favorites",
+      "schema": "",
+      "columns": {
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created": {
+          "name": "created",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "Now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "profile_overlay_favorites_username_profile_username_fk": {
+          "name": "profile_overlay_favorites_username_profile_username_fk",
+          "tableFrom": "profile_overlay_favorites",
+          "tableTo": "profile",
+          "columnsFrom": [
+            "username"
+          ],
+          "columnsTo": [
+            "username"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "profile_overlay_favorites_username_key_pk": {
+          "name": "profile_overlay_favorites_username_key_pk",
+          "columns": [
+            "username",
+            "key"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},

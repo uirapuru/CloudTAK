@@ -152,7 +152,7 @@ export default class OverlayManager extends BaseInterface {
         if (others().join() === othersBefore.join()) {
             // Anchor against the resolved stack rather than the dragged list so a
             // drop beyond a pinned overlay cannot leave the map out of step
-            overlay.moveBefore(this.loadedLayerAnchor(this.loaded.indexOf(overlay) + 1));
+            overlay.moveBefore(this.loadedAnchorOverlayFrom(this.loaded.indexOf(overlay) + 1));
         } else {
             // Positions were stale (e.g. all equal) - more than the dragged
             // overlay changed place, so restack the whole map
@@ -261,21 +261,21 @@ export default class OverlayManager extends BaseInterface {
      */
     static applyLoadedOrder(): void {
         for (let i = this.loaded.length - 1; i >= 0; i--) {
-            this.loaded[i].moveBefore(this.loadedLayerAnchor(i + 1));
+            this.loaded[i].moveBefore(this.loadedAnchorOverlayFrom(i + 1));
         }
     }
 
     /**
-     * First loaded overlay at or above the given index that MapLibre layers
-     * can be moved before. An overlay without a layer on the map is skipped:
-     * 3D Tiles overlays are drawn by deck.gl, and an overlay still loading
-     * or failed has no layers yet - either would send the moved layers to
-     * the top of the map.
+     * Nearest overlay at or above the given index that MapLibre layers can
+     * be moved before. An overlay without a layer on the map is skipped:
+     * 3D Tiles overlays are drawn by deck.gl, and raster-dem terrain or an
+     * overlay still loading or failed has no layers - anchoring against any
+     * of them would send the moved layers to the top of the map.
      */
-    static loadedLayerAnchor(idx: number): Overlay | undefined {
+    static loadedAnchorOverlayFrom(idx: number): Overlay | undefined {
         for (let i = idx; i < this.loaded.length; i++) {
             const overlay = this.loaded[i];
-            if (overlay.type !== '3dtiles' && overlay.anchorLayerId() !== undefined) return overlay;
+            if (overlay.type !== '3dtiles' && overlay.anchorLayerId()) return overlay;
         }
 
         return undefined;
@@ -298,12 +298,7 @@ export default class OverlayManager extends BaseInterface {
      * still initializing have no layers and are skipped
      */
     static loadedAnchorFrom(idx: number): string | undefined {
-        for (let i = idx; i < this.loaded.length; i++) {
-            const anchor = this.loaded[i].anchorLayerId();
-            if (anchor) return anchor;
-        }
-
-        return undefined;
+        return this.loadedAnchorOverlayFrom(idx)?.anchorLayerId();
     }
 
     static async deleteLoaded(idOrOverlay: string | number | Overlay): Promise<void> {

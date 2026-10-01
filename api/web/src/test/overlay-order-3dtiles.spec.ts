@@ -50,10 +50,10 @@ describe('OverlayManager stack order next to a 3D Tiles overlay', () => {
         OverlayManager.appendLoaded(basemap, a, tiles, b, features);
     });
 
-    it('loadedLayerAnchor skips 3D Tiles overlays', () => {
-        expect(OverlayManager.loadedLayerAnchor(2)).toBe(b);
-        expect(OverlayManager.loadedLayerAnchor(3)).toBe(b);
-        expect(OverlayManager.loadedLayerAnchor(5)).toBeUndefined();
+    it('loadedAnchorOverlayFrom skips 3D Tiles overlays', () => {
+        expect(OverlayManager.loadedAnchorOverlayFrom(2)).toBe(b);
+        expect(OverlayManager.loadedAnchorOverlayFrom(3)).toBe(b);
+        expect(OverlayManager.loadedAnchorOverlayFrom(5)).toBeUndefined();
     });
 
     it('applyLoadedOrder anchors the overlay below a 3D Tiles overlay to the next one with layers', () => {
