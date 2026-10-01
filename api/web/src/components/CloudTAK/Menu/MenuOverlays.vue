@@ -63,7 +63,28 @@
                         />
                         Dodaj grupę
                     </button>
+
+                    <button
+                        type='button'
+                        class='btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1'
+                        :class='{ "ms-auto": creatingGroup }'
+                        title='Przenieś nakładki bez grupy do grup ich kategorii'
+                        :disabled='arrangeBusy || !groupsLoaded'
+                        @click='void arrangeIntoCategories()'
+                    >
+                        <IconCategory
+                            :size='16'
+                            stroke='1'
+                        />
+                        <span v-text='arrangeBusy ? "Układam…" : "Ułóż w kategorie"' />
+                    </button>
                 </div>
+
+                <p
+                    v-if='arrangeNotice'
+                    class='arrange-notice small mb-0 text-white-50'
+                    v-text='arrangeNotice'
+                />
 
                 <form
                     v-if='creatingGroup'
@@ -118,6 +139,78 @@
                         v-if='hasRows'
                         class='d-flex flex-column gap-3'
                     >
+                        <!-- Shortcuts to favorite overlays: the same overlays as below, outside drag and map order -->
+                        <div
+                            v-if='favoriteCards.length'
+                            class='overlay-favorites rounded-3 p-2'
+                        >
+                            <div class='d-flex align-items-center gap-2'>
+                                <TablerIconButton
+                                    :title='favoritesCollapsed ? "Rozwiń ulubione" : "Zwiń ulubione"'
+                                    @click='void toggleFavoritesCollapsed()'
+                                >
+                                    <IconChevronRight
+                                        v-if='favoritesCollapsed'
+                                        :size='20'
+                                        stroke='1'
+                                    />
+                                    <IconChevronDown
+                                        v-else
+                                        :size='20'
+                                        stroke='1'
+                                    />
+                                </TablerIconButton>
+                                <IconStarFilled
+                                    class='text-warning flex-shrink-0'
+                                    :size='18'
+                                />
+                                <span class='fw-semibold flex-grow-1'>Ulubione</span>
+                                <span
+                                    class='badge rounded-pill text-bg-secondary'
+                                    :title='`Ulubione nakładki: ${favoriteCards.length}`'
+                                    v-text='favoriteCards.length'
+                                />
+                            </div>
+
+                            <div v-show='!favoritesCollapsed'>
+                                <div class='d-flex flex-column gap-2 mt-2'>
+                                    <StandardItem
+                                        v-for='card in favoriteCards'
+                                        :key='`favorite-${card.overlay.id}`'
+                                        class='favorite-row px-3 py-2'
+                                        :hover='false'
+                                        :data-overlay-id='card.overlay.id'
+                                    >
+                                        <div class='d-flex align-items-center gap-2'>
+                                            <span
+                                                class='fw-semibold flex-grow-1 text-break'
+                                                v-text='card.overlay.name'
+                                            />
+                                            <FavoriteStar
+                                                :active='true'
+                                                @toggle='void toggleFavorite(card.overlay)'
+                                            />
+                                            <TablerIconButton
+                                                :title='card.visible ? "Hide Layer" : "Show Layer"'
+                                                @click.stop.prevent='void updateOverlay(card.overlay, { visible: !card.visible })'
+                                            >
+                                                <IconEye
+                                                    v-if='card.visible'
+                                                    :size='20'
+                                                    stroke='1'
+                                                />
+                                                <IconEyeOff
+                                                    v-else
+                                                    :size='20'
+                                                    stroke='1'
+                                                />
+                                            </TablerIconButton>
+                                        </div>
+                                    </StandardItem>
+                                </div>
+                            </div>
+                        </div>
+
                         <div
                             v-if='pinnedTop.length'
                             class='overlay-list d-flex flex-column gap-3'
@@ -282,6 +375,8 @@
                                             :card='card'
                                             :draggable='dragEnabled'
                                             :opened='opened.has(card.overlay.id)'
+                                            :favorite='favoriteOf(card.overlay)'
+                                            @favorite='void toggleFavorite(card.overlay)'
                                             @toggle='handleCardClick(card.overlay)'
                                             @update='void updateOverlay(card.overlay, $event)'
                                             @remove='void removeOverlay(card.overlay.id)'
@@ -304,6 +399,8 @@
                                 :card='card'
                                 :draggable='dragEnabled'
                                 :opened='opened.has(card.overlay.id)'
+                                :favorite='favoriteOf(card.overlay)'
+                                @favorite='void toggleFavorite(card.overlay)'
                                 @toggle='handleCardClick(card.overlay)'
                                 @update='void updateOverlay(card.overlay, $event)'
                                 @remove='void removeOverlay(card.overlay.id)'
@@ -351,6 +448,8 @@ import {
     TablerNone
 } from '@tak-ps/vue-tabler';
 import OverlayRow from './Overlays/OverlayRow.vue';
+import FavoriteStar from './Overlays/FavoriteStar.vue';
+import StandardItem from '../util/StandardItem.vue';
 import type { OverlayBadge, OverlayCard, OverlayStatus, OverlayUpdate } from './Overlays/overlay-card.ts';
 import {
     IconGripVertical,
@@ -361,7 +460,11 @@ import {
     IconChevronRight,
     IconTrash,
     IconCheck,
-    IconX
+    IconX,
+    IconEye,
+    IconEyeOff,
+    IconStarFilled,
+    IconCategory
 } from '@tabler/icons-vue';
 import { setAllVisible, visibilityState } from '../../../base/overlay-visibility.ts';
 import type { VisibilityState } from '../../../base/overlay-visibility.ts';
@@ -379,6 +482,13 @@ import {
 } from '../../../base/overlay-groups.ts';
 import type { OverlayListKey } from '../../../base/overlay-groups.ts';
 import OverlayGroupManager from '../../../base/overlay-group-manager.ts';
+import OverlayFavoriteManager, { favoriteKeys } from '../../../base/overlay-favorite-manager.ts';
+import CategoryPlacer, { syncCatalogNames } from '../../../base/overlay-category-manager.ts';
+import { OVERLAY_CATEGORIES, catalogCategory, favoriteKey, normalizeCategory } from '../../../base/overlay-categories.ts';
+import type { CategoryMove } from '../../../base/overlay-category-manager.ts';
+import { loadCatalog } from '../../../base/overlay-catalog.ts';
+import { overlayCountText } from '../../../base/overlay-explorer-bulk.ts';
+import { db } from '../../../database.ts';
 import Sortable from 'sortablejs';
 import type { SortableEvent } from 'sortablejs';
 import type Overlay from '../../../../src/base/overlay-class.ts';
@@ -577,7 +687,119 @@ async function loadGroups(): Promise<void> {
 onMounted(() => {
     subscribeList();
     void loadGroups();
+    void loadFavoritesCollapsed();
+    OverlayFavoriteManager.load().catch((err: unknown) => console.error('Failed to load overlay favorites:', err));
+    void syncNames();
 });
+
+/** Collapse state of the favorites section on this device */
+const FAVORITES_COLLAPSED_KV_KEY = 'overlay-menu-favorites-collapsed';
+const favoritesCollapsed = ref(false);
+
+async function loadFavoritesCollapsed(): Promise<void> {
+    try {
+        const entry = await db.kv.get(FAVORITES_COLLAPSED_KV_KEY);
+        favoritesCollapsed.value = entry?.value === 'true';
+    } catch (err) {
+        console.error('Failed to read the favorites collapse state:', err);
+    }
+}
+
+async function toggleFavoritesCollapsed(): Promise<void> {
+    favoritesCollapsed.value = !favoritesCollapsed.value;
+    try {
+        await db.kv.put({ key: FAVORITES_COLLAPSED_KV_KEY, value: String(favoritesCollapsed.value) });
+    } catch (err) {
+        console.error('Failed to store the favorites collapse state:', err);
+    }
+}
+
+/** Star state of an ordinary overlay - null (no star) for pinned ones and those without mode_id */
+function favoriteOf(overlay: Overlay): boolean | null {
+    if (OverlayManager.isPinned(overlay)) return null;
+    const key = favoriteKey(overlay.mode, overlay.mode_id);
+    return key === null ? null : favoriteKeys.value.has(key);
+}
+
+async function toggleFavorite(overlay: Overlay): Promise<void> {
+    const key = favoriteKey(overlay.mode, overlay.mode_id);
+    if (key === null) return;
+
+    try {
+        await OverlayFavoriteManager.toggle(key);
+    } catch (err) {
+        groupError.value = errorText('Nie udało się zmienić ulubionych', err);
+    }
+}
+
+/** Favorite overlays of the profile, in menu order - shortcuts to the same overlays */
+const favoriteCards = computed<OverlayCard[]>(() => overlayCards.value.filter((card) => favoriteOf(card.overlay) === true));
+
+/** Overlays added earlier keep the name they had then - follow the catalog quietly */
+async function syncNames(): Promise<void> {
+    try {
+        if (await syncCatalogNames(await loadCatalog())) overlayRenderTick.value += 1;
+    } catch (err) {
+        console.error('Failed to sync overlay names with the catalog:', err);
+    }
+}
+
+const arrangeBusy = ref(false);
+const arrangeNotice = ref('');
+
+/**
+ * "Ułóż w kategorie": every overlay without a group goes to the group of
+ * its category (missing groups are created). Overlays already in a group
+ * stay where they are; catalog overlays the catalog no longer lists are
+ * left alone rather than put in "Inne".
+ */
+async function arrangeIntoCategories(): Promise<void> {
+    if (arrangeBusy.value) return;
+    arrangeBusy.value = true;
+    arrangeNotice.value = '';
+    groupError.value = '';
+
+    try {
+        const catalog = await loadCatalog();
+        const extra = [
+            ...catalog.basemaps.map((basemap) => normalizeCategory(basemap.collection)),
+            ...catalog.live.map((item) => normalizeCategory(item.category))
+        ].filter((name) => !OVERLAY_CATEGORIES.includes(name));
+
+        const moves: CategoryMove[] = [];
+        let unknown = 0;
+        for (const card of partition.value.ungrouped) {
+            if (card.groupId !== null) continue;
+            const category = catalogCategory(catalog, card.overlay.mode, card.overlay.mode_id);
+            if (category === null) unknown += 1;
+            else moves.push({ id: card.overlay.id, category });
+        }
+
+        if (!moves.length) {
+            arrangeNotice.value = unknown
+                ? `Nic do ułożenia. Nakładki spoza katalogu zostały bez grupy: ${unknown}.`
+                : 'Nic do ułożenia: wszystkie nakładki są już w grupach.';
+            return;
+        }
+
+        const placer = await CategoryPlacer.load([...new Set(extra)]);
+        await placer.place(moves, 'bottom');
+        groups.value = await OverlayGroupManager.list();
+        overlayRenderTick.value += 1;
+
+        const parts = [`Ułożono w kategorie ${overlayCountText(moves.length)}.`];
+        if (placer.created.length) parts.push(`Nowe grupy: ${placer.created.join(', ')}.`);
+        if (unknown) parts.push(`Nakładki spoza katalogu zostały bez grupy: ${unknown}.`);
+        arrangeNotice.value = parts.join(' ');
+    } catch (err) {
+        console.error('Failed to arrange overlays into categories:', err);
+        groupError.value = errorText('Nie udało się ułożyć nakładek w kategorie', err);
+        void loadGroups();
+        OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
+    } finally {
+        arrangeBusy.value = false;
+    }
+}
 
 /*
  * Sortables live and die with their list element. The lists are rendered in
@@ -971,6 +1193,11 @@ async function deleteGroup(group: ProfileOverlayGroup): Promise<void> {
 </script>
 
 <style scoped>
+.overlay-favorites {
+    border: 1px solid rgba(247, 161, 0, 0.45);
+    background: rgba(247, 161, 0, 0.06);
+}
+
 .overlay-group {
     border: 1px solid rgba(255, 255, 255, 0.18);
     background: rgba(0, 0, 0, 0.15);

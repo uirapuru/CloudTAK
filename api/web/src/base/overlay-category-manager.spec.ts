@@ -7,7 +7,7 @@ const state = vi.hoisted(() => ({
     groups: [] as Group[],
     loaded: [] as Loaded[],
     nextId: 100,
-    regroup: vi.fn(async (_order: number[], _groups: Map<number, number | null>) => {}),
+    regroup: vi.fn<(order: number[], groups: Map<number, number | null>) => Promise<void>>(async () => {}),
     update: vi.fn(async (id: number, body: object) => ({ id, ...body })),
 }));
 

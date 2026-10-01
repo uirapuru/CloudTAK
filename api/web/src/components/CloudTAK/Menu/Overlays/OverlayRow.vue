@@ -126,6 +126,12 @@
                 </span>
 
                 <div class='d-flex align-items-center gap-2 flex-wrap justify-content-end w-100'>
+                    <FavoriteStar
+                        v-if='favorite !== null && favorite !== undefined'
+                        :active='favorite'
+                        @toggle='emit("favorite")'
+                    />
+
                     <TablerIconButton
                         v-if='card.overlay.hasBounds()'
                         title='Zoom To Overlay'
@@ -216,22 +222,29 @@ import {
 import StandardItem from '../../util/StandardItem.vue';
 import OfflineBadge from '../../util/OfflineBadge.vue';
 import TreeVector from './TreeVector.vue';
+import FavoriteStar from './FavoriteStar.vue';
 import OverlayManager from '../../../../base/overlay.ts';
 import type Overlay from '../../../../base/overlay-class.ts';
 import type { OverlayCard, OverlayUpdate } from './overlay-card.ts';
 
-defineProps<{
+withDefaults(defineProps<{
     card: OverlayCard;
     /** Show the drag handle */
     draggable: boolean;
     /** Show the details panel */
     opened: boolean;
-}>();
+    /** Whether the overlay is a favorite - no star when null or not given */
+    favorite?: boolean | null;
+}>(), {
+    // An absent boolean prop would be cast to false - and show an empty star
+    favorite: null
+});
 
 const emit = defineEmits<{
     toggle: [];
     update: [body: OverlayUpdate];
     remove: [];
+    favorite: [];
 }>();
 
 const router = useRouter();

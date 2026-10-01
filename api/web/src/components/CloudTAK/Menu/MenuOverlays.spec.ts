@@ -5,7 +5,8 @@ import Sortable from 'sortablejs';
 
 type Group = { id: number; name: string; pos: number; collapsed: boolean };
 type Stub = {
-    id: number; name: string; mode: string; type: string; pos: number; group_id: number | null;
+    id: number; name: string; mode: string; mode_id: string | null; type: string; pos: number; group_id: number | null;
+    update: ReturnType<typeof vi.fn>;
     visible: boolean; loading: boolean; styles: unknown[]; url: string; _internal: boolean;
     healthy: () => boolean; hasBounds: () => boolean;
 };
@@ -17,7 +18,8 @@ const state = vi.hoisted(() => ({
 
 function overlay(id: number, name: string, mode: string, extra: Partial<Stub> = {}): Stub {
     return shallowReactive({
-        id, name, mode, type: 'raster', pos: 0, group_id: null, visible: true, loading: false,
+        id, name, mode, mode_id: String(id), type: 'raster', pos: 0, group_id: null, visible: true, loading: false,
+        update: vi.fn(async () => {}),
         styles: [{}], url: '', _internal: mode === 'internal',
         healthy: () => true, hasBounds: () => false,
         ...extra,
@@ -35,6 +37,45 @@ const groupManager = vi.hoisted(() => ({
     update: vi.fn(async (id: number, body: object) => ({ id, ...body })),
 }));
 
+const placer = vi.hoisted(() => ({
+    place: vi.fn(async () => {}),
+    created: [] as string[],
+}));
+
+const favorites = vi.hoisted(() => ({
+    toggle: vi.fn(async () => {}),
+}));
+
+vi.mock('../../../base/overlay-favorite-manager.ts', async () => {
+    const { shallowRef } = await import('vue');
+    const favoriteKeys = shallowRef<ReadonlySet<string>>(new Set());
+    return {
+        favoriteKeys,
+        default: { load: async () => favoriteKeys.value, toggle: favorites.toggle },
+    };
+});
+vi.mock('../../../base/overlay-category-manager.ts', () => ({
+    default: { load: vi.fn(async () => placer) },
+    syncCatalogNames: vi.fn(async () => 0),
+}));
+vi.mock('../../../base/overlay-catalog.ts', () => ({
+    loadCatalog: async () => ({
+        basemaps: [{ id: 11, name: 'Ortofoto', collection: 'Zdjęcia lotnicze' }],
+        live: [{ name: '12', label: 'Jakość powietrza (GIOŚ)', category: 'Pogoda i powietrze' }],
+        ion: [{ name: '13', label: 'Budynki 3D' }],
+    }),
+}));
+vi.mock('../../../database.ts', () => {
+    const kv = new Map<string, string>();
+    return {
+        db: {
+            kv: {
+                get: async (key: string) => kv.has(key) ? { key, value: kv.get(key) } : undefined,
+                put: async ({ key, value }: { key: string; value: string }) => { kv.set(key, value); },
+            },
+        },
+    };
+});
 vi.mock('vue-router', () => ({
     useRouter: () => ({ push: vi.fn() }),
 }));
@@ -90,6 +131,7 @@ vi.mock('../../../base/overlay.ts', () => {
 });
 
 import MenuOverlays from './MenuOverlays.vue';
+import { favoriteKeys } from '../../../base/overlay-favorite-manager.ts';
 
 async function mountMenu() {
     const wrapper = mount(MenuOverlays, { attachTo: document.body });
@@ -128,6 +170,7 @@ describe('MenuOverlays drag and drop', () => {
             overlay(0, 'Map Features', 'internal', { type: 'geojson' }),
         ];
         state.groups = [{ id: 1, name: 'Alfa', pos: 0, collapsed: false }];
+        favoriteKeys.value = new Set();
 
         groupManager.create.mockImplementation(async (name: string) => {
             const group: Group = { id: 2, name, pos: -1, collapsed: false };
@@ -253,6 +296,64 @@ describe('MenuOverlays drag and drop', () => {
         await wrapper.find('[id="12"] [title="Delete Overlay"]').trigger('click');
         await flushPromises();
         expect(manager.deleteLoaded).toHaveBeenCalledWith(12);
+
+        wrapper.unmount();
+    });
+
+    it('pins favorites on top as shortcuts that toggle the same overlay', async () => {
+        favoriteKeys.value = new Set(['live:12']);
+        const wrapper = await mountMenu();
+
+        const section = document.querySelector('.overlay-favorites') as HTMLElement;
+        expect(section).not.toBeNull();
+        // Above Map Features and every list
+        expect(section.compareDocumentPosition(document.querySelector('.overlay-list') as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(Array.from(section.querySelectorAll('.favorite-row')).map((row) => (row as HTMLElement).dataset.overlayId)).toEqual(['12']);
+        // Not a second row of the overlay: no drag handle, no id
+        expect(section.querySelector('.drag-handle')).toBeNull();
+        expect(section.querySelector('.overlay-row')).toBeNull();
+
+        await wrapper.find('.overlay-favorites [title="Hide Layer"]').trigger('click');
+        const live = (state.loaded as Stub[]).find((o) => o.id === 12) as Stub;
+        expect(live.update).toHaveBeenCalledWith({ visible: false });
+
+        // The overlay row itself shows a filled star, the others an empty one
+        expect(document.querySelector('[id="12"] .favorite-star')?.getAttribute('aria-pressed')).toBe('true');
+        expect(document.querySelector('[id="11"] .favorite-star')?.getAttribute('aria-pressed')).toBe('false');
+        // No star on the basemap and Map Features
+        expect(document.querySelector('[id="-1"] .favorite-star')).toBeNull();
+        expect(document.querySelector('[id="0"] .favorite-star')).toBeNull();
+
+        await wrapper.find('.overlay-favorites .favorite-star').trigger('click');
+        expect(favorites.toggle).toHaveBeenCalledWith('live:12');
+
+        wrapper.unmount();
+    });
+
+    it('hides the favorites section when no overlay of the profile is a favorite', async () => {
+        favoriteKeys.value = new Set(['live:999']);
+        const wrapper = await mountMenu();
+
+        expect(document.querySelector('.overlay-favorites')).toBeNull();
+
+        wrapper.unmount();
+    });
+
+    it('arranges the ungrouped overlays into their category groups', async () => {
+        (state.loaded as Stub[]).find((o) => o.id === 11)!.group_id = 1;
+        placer.created = ['Pogoda i powietrze'];
+        const wrapper = await mountMenu();
+
+        const button = wrapper.findAll('button').find((b) => b.text().includes('Ułóż w kategorie'));
+        await button!.trigger('click');
+        await flushPromises();
+
+        // Menu order (top first); overlay 11 is already in a group and stays there
+        expect(placer.place).toHaveBeenCalledWith([
+            { id: 13, category: 'Budynki 3D' },
+            { id: 12, category: 'Pogoda i powietrze' },
+        ], 'bottom');
+        expect(wrapper.find('.arrange-notice').text()).toBe('Ułożono w kategorie 2 nakładki. Nowe grupy: Pogoda i powietrze.');
 
         wrapper.unmount();
     });
