@@ -552,6 +552,8 @@ export const ProfileOverlayGroupResponse = createSelectSchema(schemas.ProfileOve
     pos: Type.Integer(),
 });
 
+export const ProfileOverlayFavoriteResponse = createSelectSchema(schemas.ProfileOverlayFavorite);
+
 export const ProfileInterestResponse = createSelectSchema(schemas.ProfileInterest, {
     id: Type.Integer(),
     bounds: Feature.Geometry,

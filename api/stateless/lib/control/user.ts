@@ -7,7 +7,7 @@ import S3 from '../../../common/aws/s3.js';
 import {
     Basemap, BasemapVector, Profile, ProfileSession, ProfileSetting, ProfileFile, ProfileChatroom, ProfileChat,
     ProfileVideo, ProfileFeature, ProfileFusionSource, ProfileToken, ProfileInterest, ProfilePaging,
-    ProfilePasskey, ProfilePasskeyChallenge, ProfileOverlay, ProfileOverlayGroup, VideoLease, Errors, Import, Iconset, Icon,
+    ProfilePasskey, ProfilePasskeyChallenge, ProfileOverlay, ProfileOverlayGroup, ProfileOverlayFavorite, VideoLease, Errors, Import, Iconset, Icon,
     CoreEvent, CoreDevice, CoreForm, CoreFormResponse, Connection, Layer, Data,
 } from '../../../common/schema.js';
 import { ProfileConfigDefaults } from './profile.js';
@@ -151,6 +151,7 @@ export default class UserControl {
 
             await tx.delete(ProfileOverlay).where(eq(ProfileOverlay.username, username));
             await tx.delete(ProfileOverlayGroup).where(eq(ProfileOverlayGroup.username, username));
+            await tx.delete(ProfileOverlayFavorite).where(eq(ProfileOverlayFavorite.username, username));
             await tx.delete(ProfileFile).where(eq(ProfileFile.username, username));
 
             if (iconsets.length) {

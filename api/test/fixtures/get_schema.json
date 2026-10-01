@@ -1479,6 +1479,21 @@
         "query": false,
         "res": true
     },
+    "GET /profile/overlay/favorite": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "PUT /profile/overlay/favorite": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "DELETE /profile/overlay/favorite": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
     "GET /profile/overlay": {
         "body": false,
         "query": true,

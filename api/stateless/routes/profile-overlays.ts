@@ -11,11 +11,11 @@ import S3 from '../../common/aws/s3.js';
 import Err from '@openaddresses/batch-error';
 import Auth, { AuthUser } from '../../common/auth.js';
 import { BasemapTerrain_Encoding } from '../../common/enums.js';
-import { ProfileOverlay, ProfileOverlayGroup } from '../../common/schema.js';
+import { ProfileOverlay, ProfileOverlayGroup, ProfileOverlayFavorite } from '../../common/schema.js';
 import path from 'node:path';
-import { StandardResponse, ProfileOverlayResponse, ProfileOverlayGroupResponse } from '../../common/types.js';
+import { StandardResponse, ProfileOverlayResponse, ProfileOverlayGroupResponse, ProfileOverlayFavoriteResponse } from '../../common/types.js';
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
-import { sql, and, eq } from 'drizzle-orm';
+import { sql, and, eq, asc } from 'drizzle-orm';
 import { TAKAPI, APIAuthCertificate } from '@tak-ps/node-tak';
 import * as Default from '../lib/limits.js';
 import { authenticatedProfile } from '../../common/control/profile.js';
@@ -139,6 +139,17 @@ function groupName(name: string): string {
         throw new Err(400, null, `Group name must be 1-${GROUP_NAME_MAX} characters`);
     }
     return trimmed;
+}
+
+const FAVORITE_KEY_MAX = 256;
+const FAVORITES_MAX = 1000;
+
+/** `${mode}:${mode_id}` with both parts present, or a 400 */
+function favoriteKey(key: string): string {
+    if (key.length > FAVORITE_KEY_MAX || !/^[a-z0-9_-]+:.+$/.test(key)) {
+        throw new Err(400, null, `Favorite key must be "<mode>:<mode_id>" of at most ${FAVORITE_KEY_MAX} characters`);
+    }
+    return key;
 }
 
 export default async function router(schema: Schema, config: ConfigStateless) {
@@ -266,6 +277,99 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             res.json({
                 status: 200,
                 message: 'Overlay Group Removed',
+            });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.get('/profile/overlay/favorite', {
+        name: 'List Overlay Favorites',
+        group: 'ProfileOverlayFavorite',
+        description: 'Return the overlays the user starred, as `<mode>:<mode_id>` keys, oldest first',
+        res: Type.Object({
+            total: Type.Integer(),
+            items: Type.Array(Type.Object({
+                key: Type.String(),
+                created: Type.String(),
+            })),
+        }),
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            const items = await config.pg.select({
+                key: ProfileOverlayFavorite.key,
+                created: ProfileOverlayFavorite.created,
+            })
+                .from(ProfileOverlayFavorite)
+                .where(eq(ProfileOverlayFavorite.username, user.email))
+                .orderBy(asc(ProfileOverlayFavorite.created), asc(ProfileOverlayFavorite.key));
+
+            res.json({ total: items.length, items });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.put('/profile/overlay/favorite', {
+        name: 'Add Overlay Favorite',
+        group: 'ProfileOverlayFavorite',
+        description: 'Star an overlay - adding a key that is already starred changes nothing',
+        body: Type.Object({
+            key: Type.String({ description: '`<mode>:<mode_id>`, e.g. "overlay:12" or "live:adsb"' }),
+        }),
+        res: Type.Omit(ProfileOverlayFavoriteResponse, ['username']),
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+            const key = favoriteKey(req.body.key);
+
+            const own = and(eq(ProfileOverlayFavorite.username, user.email), eq(ProfileOverlayFavorite.key, key));
+
+            const [existing] = await config.pg.select().from(ProfileOverlayFavorite).where(own);
+            if (!existing) {
+                const count = await config.models.ProfileOverlayFavorite.count({
+                    where: eq(ProfileOverlayFavorite.username, user.email),
+                });
+                if (count >= FAVORITES_MAX) throw new Err(400, null, `At most ${FAVORITES_MAX} favorites are allowed`);
+
+                await config.pg.insert(ProfileOverlayFavorite)
+                    .values({ username: user.email, key })
+                    .onConflictDoNothing();
+            }
+
+            const [favorite] = await config.pg.select({
+                key: ProfileOverlayFavorite.key,
+                created: ProfileOverlayFavorite.created,
+            }).from(ProfileOverlayFavorite).where(own);
+
+            res.json(favorite);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.delete('/profile/overlay/favorite', {
+        name: 'Delete Overlay Favorite',
+        group: 'ProfileOverlayFavorite',
+        description: 'Unstar an overlay - a key that is not starred is not an error',
+        query: Type.Object({
+            key: Type.String(),
+        }),
+        res: StandardResponse,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            await config.pg.delete(ProfileOverlayFavorite).where(and(
+                eq(ProfileOverlayFavorite.username, user.email),
+                eq(ProfileOverlayFavorite.key, req.query.key),
+            ));
+
+            res.json({
+                status: 200,
+                message: 'Overlay Favorite Removed',
             });
         } catch (err) {
             Err.respond(err, res);

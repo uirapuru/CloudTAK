@@ -832,6 +832,17 @@ export const ProfileOverlayGroup = pgTable('profile_overlay_groups', {
     updated: timestamp({ withTimezone: true, mode: 'string' }).notNull().default(sql`Now()`),
 });
 
+/** Overlays a user starred in the Overlay Explorer, keyed `${mode}:${mode_id}` (e.g. "overlay:12", "live:adsb") */
+export const ProfileOverlayFavorite = pgTable('profile_overlay_favorites', {
+    username: text().notNull().references(() => Profile.username),
+    key: text().notNull(),
+    created: timestamp({ withTimezone: true, mode: 'string' }).notNull().default(sql`Now()`),
+}, t => ({
+    pk: primaryKey({
+        columns: [t.username, t.key],
+    }),
+}));
+
 export const ProfileOverlay = pgTable('profile_overlays', {
     id: serial().primaryKey(),
     name: text().notNull(),

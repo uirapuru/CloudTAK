@@ -307,6 +307,7 @@ test('DELETE: api/user/:username', async () => {
     await models.ProfileFile.generate({ username, name: 'file.kml', size: 1 });
     const group = await models.ProfileOverlayGroup.generate({ username, name: 'Group' });
     await models.ProfileOverlay.generate({ username, name: 'Grouped', mode: 'profile', url: '/grouped', group_id: group.id });
+    await models.ProfileOverlayFavorite.generate({ username, key: 'live:adsb' });
 
     const connection = await models.Connection.generate({
         name: 'Erased User Connection',
@@ -362,7 +363,7 @@ test('DELETE: api/user/:username', async () => {
 
         await assert.rejects(models.Profile.from(username), 'the user no longer exists');
 
-        for (const model of [models.ProfileToken, models.ProfileChat, models.ProfileFile, models.ProfileOverlay, models.ProfileOverlayGroup]) {
+        for (const model of [models.ProfileToken, models.ProfileChat, models.ProfileFile, models.ProfileOverlay, models.ProfileOverlayGroup, models.ProfileOverlayFavorite]) {
             assert.equal(await model.count({
                 where: sql`username = ${username}`,
             }), 0);
