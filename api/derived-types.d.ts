@@ -2436,6 +2436,9 @@ export interface paths {
                             "osm::enabled"?: boolean;
                             /** @description Photon Base URL */
                             "osm::url"?: string;
+                            "taklab::routing::enabled"?: boolean;
+                            "taklab::routing::graphhopper_url"?: string;
+                            "taklab::routing::terrain_url"?: string;
                             /** @description Base URL for Media Service */
                             "media::url"?: string;
                             "media::proxy::allow"?: string[];
@@ -2732,6 +2735,9 @@ export interface paths {
                         "osm::enabled"?: boolean;
                         /** @description Photon Base URL */
                         "osm::url"?: string;
+                        "taklab::routing::enabled"?: boolean;
+                        "taklab::routing::graphhopper_url"?: string;
+                        "taklab::routing::terrain_url"?: string;
                         /** @description Base URL for Media Service */
                         "media::url"?: string;
                         "media::proxy::allow"?: string[];
@@ -2953,6 +2959,9 @@ export interface paths {
                             "osm::enabled"?: boolean;
                             /** @description Photon Base URL */
                             "osm::url"?: string;
+                            "taklab::routing::enabled"?: boolean;
+                            "taklab::routing::graphhopper_url"?: string;
+                            "taklab::routing::terrain_url"?: string;
                             /** @description Base URL for Media Service */
                             "media::url"?: string;
                             "media::proxy::allow"?: string[];

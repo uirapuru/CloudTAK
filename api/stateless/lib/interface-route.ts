@@ -32,9 +32,15 @@ export interface RouteInterface {
 export class RouteManager extends ProviderManager<RouteInterface> {
     label = 'Routing';
 
-    settingKeys: ProviderSettingKey[] = [...arcgisSettingKeys('routing')];
+    settingKeys: ProviderSettingKey[] = [
+        'taklab::routing::enabled', 'taklab::routing::graphhopper_url', 'taklab::routing::terrain_url',
+        ...arcgisSettingKeys('routing'),
+    ];
 
+    // Pierwszy załadowany dostawca zostaje domyślny (interface-provider.ts),
+    // a menu tras wybiera providers[0], więc kolejność listy jest decyzją.
     providers: ProviderLoader<RouteInterface>[] = [
+        { name: 'taklab', load: async config => (await import('./routing/taklab.js')).default.init(config) },
         { name: 'AGOL', load: async config => (await import('./routing/agol.js')).default.init(config) },
     ];
 
