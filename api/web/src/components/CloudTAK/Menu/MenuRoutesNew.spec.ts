@@ -31,8 +31,10 @@ const SearchBoxStub = defineComponent({
     props: { label: { type: String, default: '' }, initialValue: { type: String, default: '' } },
     emits: ['select'],
     setup(props, { emit }) {
+        // Jak prawdziwy SearchBox: wartość początkowa jest czytana tylko raz, przy montowaniu
+        const value = props.initialValue;
         return () => h('div', { class: 'search-box', 'data-label': props.label }, [
-            h('input', { value: props.initialValue }),
+            h('input', { value }),
             h('button', {
                 class: 'pick',
                 onClick: () => emit('select', { name: 'Cel', coordinates: [21, 52.4] })
@@ -98,6 +100,25 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
         expect(call).toBeDefined();
         expect(call![1].params.query.start).toBe('20.94,52.29');
+    });
+
+    it('fills the start from a preset position', async () => {
+        location.mockResolvedValue({ source: LocationState.Preset, coordinates: [19.5, 51.7] });
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        expect(box(wrapper, 'Start Location').find('input').element.value).toBe('Moja pozycja');
+    });
+
+    it('leaves the start empty when the location call rejects on open', async () => {
+        location.mockRejectedValue(new Error('worker down'));
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        expect(box(wrapper, 'Start Location').find('input').element.value).toBe('');
+        expect(wrapper.text()).not.toContain('Pozycja nieznana');
     });
 
     it('leaves the start empty without an error when the position is unknown on open', async () => {

@@ -171,7 +171,11 @@ onMounted(async () => {
 
     if (!route.query.start) {
         // Automatyczne wywołanie nie pokazuje błędu, gdy pozycji nie ma
-        await useMyLocation();
+        try {
+            await useMyLocation();
+        } catch (err) {
+            console.error('Nie udało się odczytać pozycji', err);
+        }
         locationError.value = '';
     }
 
