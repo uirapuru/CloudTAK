@@ -3,6 +3,7 @@ import Config from '../../../common/config.js';
 import { Static, TSchema, Type } from '@sinclair/typebox';
 import { Search } from '../interface-search.js';
 import { Search_Type } from '../../../common/enums.js';
+import { parseCategory } from './categories.js';
 import { SearchConfig, FetchSuggest, FetchReverse, FetchForward } from './types.js';
 
 export const OSM_PUBLIC_API = 'https://photon.komoot.io';
@@ -243,6 +244,72 @@ export default class OSMSearch extends Search {
         };
     }
 
+    // Photon szuka po nazwie, wiec kategorie ("apteka bielany") rozbijamy na
+    // znacznik OSM i miejsce: najpierw geokodujemy miejsce, potem /reverse
+    async categorySearch(
+        query: string,
+        limit: number,
+        location?: [number, number],
+    ): Promise<Array<Static<typeof PhotonFeature>>> {
+        const match = parseCategory(query);
+        if (!match) return [];
+
+        let center = location;
+
+        if (match.place) {
+            const params: Record<string, string> = { q: match.place, limit: '1' };
+            if (location) {
+                params.lon = String(location[0]);
+                params.lat = String(location[1]);
+            }
+            const place = await this.fetch('/api', params, PhotonCollection);
+            if (!place.features.length) return [];
+            const [lon, lat] = place.features[0].geometry.coordinates;
+            center = [lon, lat];
+        }
+
+        if (!center) return [];
+
+        // Kilka znacznikow to powtorzony klucz, wiec URL budujemy recznie
+        const url = new URL(this.api + '/reverse');
+        url.searchParams.set('lon', String(center[0]));
+        url.searchParams.set('lat', String(center[1]));
+        url.searchParams.set('radius', '3');
+        url.searchParams.set('limit', String(limit));
+        for (const tag of match.tags) url.searchParams.append('osm_tag', tag);
+
+        const res = await fetch(url, {
+            safeUrlAllow: [this.api],
+            headers: {
+                'User-Agent': this.userAgent,
+                'Accept': 'application/json',
+            },
+        });
+        if (!res.ok) throw new Error(`Photon API failed: ${res.status}`);
+        const body = await res.typed(PhotonCollection);
+
+        return body.features.map(feature => feature.properties.name
+            ? feature
+            : { ...feature, properties: { ...feature.properties, name: match.label } });
+    }
+
+    // Wyniki kategorii, potem zwykle, bez duplikatow i przyciete do limitu
+    private merge(
+        categorised: Array<Static<typeof PhotonFeature>>,
+        plain: Array<Static<typeof PhotonFeature>>,
+        limit?: number,
+    ): Array<Static<typeof PhotonFeature>> {
+        const seen = new Set<string>();
+        const merged = [...categorised, ...plain].filter((feature) => {
+            const key = magicKey(feature);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        return limit ? merged.slice(0, limit) : merged;
+    }
+
     async forward(query: string, magicKey: string, limit?: number): Promise<Array<Static<typeof FetchForward>>> {
         const key = magicKey.match(MAGIC_KEY);
 
@@ -275,9 +342,10 @@ export default class OSMSearch extends Search {
         const params: Record<string, string> = { q: query };
         if (limit) params.limit = String(limit);
 
+        const categorised = await this.categorySearch(query, limit || 10);
         const body = await this.fetch('/api', params, PhotonCollection);
 
-        return body.features.map(forward);
+        return this.merge(categorised, body.features, limit).map(forward);
     }
 
     async suggest(query: string, limit?: number, location?: [number, number]): Promise<Array<Static<typeof FetchSuggest>>> {
@@ -291,9 +359,10 @@ export default class OSMSearch extends Search {
             params.lat = String(lat);
         }
 
+        const categorised = await this.categorySearch(query, limit || 10, location);
         const body = await this.fetch('/api', params, PhotonCollection);
 
-        return body.features.map((feature) => {
+        return this.merge(categorised, body.features, limit).map((feature) => {
             const type = searchType(feature.properties);
 
             return {

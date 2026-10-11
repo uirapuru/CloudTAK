@@ -51,6 +51,24 @@ const denver = {
     geometry: { type: 'Point', coordinates: [-105, 39.7] },
 };
 
+const bielany = {
+    type: 'Feature',
+    properties: { osm_type: 'R', osm_id: 11, osm_key: 'place', osm_value: 'suburb', type: 'district', name: 'bielany' },
+    geometry: { type: 'Point', coordinates: [20.9472, 52.2776] },
+};
+
+const orlen = {
+    type: 'Feature',
+    properties: { osm_type: 'N', osm_id: 21, osm_key: 'amenity', osm_value: 'fuel', name: 'Orlen', street: 'Marymoncka', city: 'Warszawa' },
+    geometry: { type: 'Point', coordinates: [20.9488, 52.2907] },
+};
+
+const nameless = {
+    type: 'Feature',
+    properties: { osm_type: 'N', osm_id: 22, osm_key: 'amenity', osm_value: 'fuel', street: 'Sokratesa' },
+    geometry: { type: 'Point', coordinates: [20.9277, 52.2847] },
+};
+
 const requests: Array<{ url: URL; userAgent?: string }> = [];
 
 const server = http.createServer((req, res) => {
@@ -62,12 +80,16 @@ const server = http.createServer((req, res) => {
     if (url.pathname === '/reverse') {
         res.end(JSON.stringify({
             type: 'FeatureCollection',
-            features: url.searchParams.get('lat') === '0' ? [] : [capitol],
+            features: url.searchParams.get('lat') === '0'
+                ? []
+                : url.searchParams.has('osm_tag') ? [orlen, nameless] : [capitol],
         }));
     } else if (url.pathname === '/api') {
         res.end(JSON.stringify({
             type: 'FeatureCollection',
-            features: url.searchParams.get('q') === 'nowhere' ? [] : [capitol, denver],
+            features: ['nowhere', 'apteka nowhere'].includes(url.searchParams.get('q') || '')
+                ? []
+                : url.searchParams.get('q') === 'bielany' ? [bielany] : [capitol, denver],
         }));
     } else {
         res.statusCode = 404;
@@ -332,6 +354,55 @@ test('OSM - searchType', async () => {
     for (const [props, expected] of cases) {
         assert.equal(searchType(props), expected, JSON.stringify(props));
     }
+});
+
+test('OSM - suggest: kategoria + miejsce idzie dwukrokowo', async () => {
+    requests.length = 0;
+    const items = await osm.suggest('stacja benzynowa bielany', 10, [21.01, 52.23]);
+
+    const place = requests.find(r => r.url.pathname === '/api' && r.url.searchParams.get('q') === 'bielany');
+    assert.ok(place, 'najpierw szuka miejsca');
+    assert.equal(place.url.searchParams.get('lat'), '52.23');
+
+    const reverse = requests.find(r => r.url.pathname === '/reverse');
+    assert.ok(reverse);
+    assert.equal(reverse.url.searchParams.get('lat'), '52.2776');
+    assert.equal(reverse.url.searchParams.get('radius'), '3');
+    assert.deepEqual(reverse.url.searchParams.getAll('osm_tag'), ['amenity:fuel']);
+
+    assert.match(items[0].text, /^Orlen, Marymoncka/);
+    assert.match(items[1].text, /^Stacja paliw, Sokratesa/);
+});
+
+test('OSM - suggest: kilka znaczników to powtórzony parametr', async () => {
+    requests.length = 0;
+    await osm.suggest('nocleg bielany', 10);
+    const reverse = requests.find(r => r.url.pathname === '/reverse');
+    assert.deepEqual(reverse?.url.searchParams.getAll('osm_tag'), [
+        'tourism:hotel', 'tourism:motel', 'tourism:guest_house', 'tourism:hostel',
+    ]);
+});
+
+test('OSM - suggest: zwykłe wyniki zostają obok kategorii', async () => {
+    requests.length = 0;
+    const items = await osm.suggest('szpitalna 5 bielany', 10, [21.01, 52.23]);
+    assert.ok(requests.some(r => r.url.pathname === '/api' && r.url.searchParams.get('q') === 'szpitalna 5 bielany'));
+    assert.ok(items.some(i => i.text.startsWith('Colorado State Capitol')), 'wynik zwykłego zapytania jest na liście');
+});
+
+test('OSM - suggest: sama kategoria szuka wokół środka mapy', async () => {
+    requests.length = 0;
+    await osm.suggest('apteka', 5, [21.01, 52.23]);
+    const reverse = requests.find(r => r.url.pathname === '/reverse');
+    assert.equal(reverse?.url.searchParams.get('lon'), '21.01');
+    assert.equal(reverse?.url.searchParams.get('limit'), '5');
+});
+
+test('OSM - suggest: miejsce nie znalezione = tylko zwykłe wyniki', async () => {
+    requests.length = 0;
+    const items = await osm.suggest('apteka nowhere', 10);
+    assert.equal(requests.filter(r => r.url.pathname === '/reverse').length, 0);
+    assert.ok(Array.isArray(items));
 });
 
 test('OSM - upstream failure', async () => {
