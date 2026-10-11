@@ -22,11 +22,29 @@
                 </div>
                 <div class='my-2'>
                     <SearchBox
+                        :key='startKey'
                         label='Start Location'
                         placeholder='Start Location'
                         :autofocus='true'
                         :location-picker='true'
+                        :initial-value='startInitialValue'
                         @select='routePlan.start = $event || null'
+                    />
+                    <button
+                        type='button'
+                        class='btn btn-sm btn-outline-primary my-location mt-2'
+                        @click='useMyLocation'
+                    >
+                        <IconCurrentLocation
+                            :size='18'
+                            stroke='1'
+                            class='me-1'
+                        />Moja pozycja
+                    </button>
+                    <div
+                        v-if='locationError'
+                        class='text-danger small mt-1'
+                        v-text='locationError'
                     />
                 </div>
                 <div class='my-2'>
@@ -74,6 +92,8 @@ import {
 } from '@tak-ps/vue-tabler';
 import { server } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
+import { IconCurrentLocation } from '@tabler/icons-vue';
+import { LocationState } from '../../../utils/events.ts';
 import type { Search } from '../../../types.ts';
 
 const router = useRouter();
@@ -91,6 +111,12 @@ const endInitialValue = computed<string>(() => {
 });
 
 const loading = ref(true);
+
+// Wartość początkowa pola startu; SearchBox czyta ją tylko przy montowaniu,
+// więc zmiana klucza wymusza ponowne zamontowanie pola
+const startInitialValue = ref('');
+const startKey = ref(0);
+const locationError = ref('');
 
 const routePlan = ref<{
     provider: string;
@@ -125,8 +151,29 @@ const modes = computed(() => {
     return [];
 });
 
+async function useMyLocation(): Promise<boolean> {
+    const location = await mapStore.worker.profile.location;
+
+    if (![LocationState.Preset, LocationState.Live].includes(location.source)) {
+        locationError.value = 'Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.';
+        return false;
+    }
+
+    locationError.value = '';
+    routePlan.value.start = { name: 'Moja pozycja', coordinates: [location.coordinates[0], location.coordinates[1]] };
+    startInitialValue.value = 'Moja pozycja';
+    startKey.value++;
+    return true;
+}
+
 onMounted(async () => {
     await settings();
+
+    if (!route.query.start) {
+        // Automatyczne wywołanie nie pokazuje błędu, gdy pozycji nie ma
+        await useMyLocation();
+        locationError.value = '';
+    }
 
     if (route.query.end) {
         const parts = String(route.query.end).split(',').map(Number);
