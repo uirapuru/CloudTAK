@@ -77,12 +77,22 @@ const server = http.createServer((req, res) => {
 
     res.setHeader('Content-Type', 'application/json');
 
-    if (url.pathname === '/reverse') {
+    if (url.pathname === '/reverse' && url.searchParams.getAll('osm_tag').includes('amenity:bank')) {
+        res.statusCode = 500;
+        res.end(JSON.stringify({ message: 'boom' }));
+    } else if (url.pathname === '/reverse') {
         res.end(JSON.stringify({
             type: 'FeatureCollection',
             features: url.searchParams.get('lat') === '0'
                 ? []
-                : url.searchParams.has('osm_tag') ? [orlen, nameless] : [capitol],
+                : url.searchParams.getAll('osm_tag').includes('amenity:school')
+                    ? Array.from({ length: Number(url.searchParams.get('limit')) }, (_, i) => ({
+                            ...orlen,
+                            properties: { ...orlen.properties, osm_id: 100 + i, name: `Szkoła ${i}` },
+                        }))
+                    : url.searchParams.getAll('osm_tag').includes('amenity:bank')
+                        ? []
+                        : url.searchParams.has('osm_tag') ? [orlen, nameless] : [capitol],
         }));
     } else if (url.pathname === '/api') {
         res.end(JSON.stringify({
@@ -403,6 +413,37 @@ test('OSM - suggest: miejsce nie znalezione = tylko zwykłe wyniki', async () =>
     const items = await osm.suggest('apteka nowhere', 10);
     assert.equal(requests.filter(r => r.url.pathname === '/reverse').length, 0);
     assert.ok(Array.isArray(items));
+});
+
+test('OSM - suggest: kategoria nie wypiera zwykłych wyników', async () => {
+    requests.length = 0;
+    const items = await osm.suggest('szkoła bielany', 4);
+    assert.equal(items.length, 4);
+    assert.equal(items.filter(i => i.text.startsWith('Szkoła')).length, 2, 'kategoria dostaje połowę limitu');
+    assert.ok(items.some(i => i.text.startsWith('Colorado State Capitol')), 'zwykłe wyniki są obecne');
+});
+
+test('OSM - suggest: błąd kategorii zostawia zwykłe wyniki', async () => {
+    const errors: unknown[][] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => {
+        errors.push(args);
+    };
+    try {
+        const items = await osm.suggest('bank bielany', 10);
+        assert.ok(items.some(i => i.text.startsWith('Colorado State Capitol')));
+        assert.equal(errors.length, 1);
+    } finally {
+        console.error = original;
+    }
+});
+
+test('OSM - forward: kategoria + miejsce', async () => {
+    requests.length = 0;
+    const items = await osm.forward('stacja benzynowa bielany', 'test', 5);
+    assert.ok(requests.some(r => r.url.pathname === '/reverse'));
+    assert.match(items[0].address, /^Orlen, Marymoncka/);
+    assert.ok(items.some(i => i.address.startsWith('Colorado State Capitol')));
 });
 
 test('OSM - upstream failure', async () => {

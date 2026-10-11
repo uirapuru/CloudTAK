@@ -246,7 +246,21 @@ export default class OSMSearch extends Search {
 
     // Photon szuka po nazwie, wiec kategorie ("apteka bielany") rozbijamy na
     // znacznik OSM i miejsce: najpierw geokodujemy miejsce, potem /reverse
-    async categorySearch(
+    private async categorySearch(
+        query: string,
+        limit: number,
+        location?: [number, number],
+    ): Promise<Array<Static<typeof PhotonFeature>>> {
+        // Blad kategorii nie moze zabic zwyklych wynikow
+        try {
+            return await this.lookupCategory(query, limit, location);
+        } catch (err) {
+            console.error('OSM category search failed:', err instanceof Error ? err.message : err);
+            return [];
+        }
+    }
+
+    private async lookupCategory(
         query: string,
         limit: number,
         location?: [number, number],
@@ -293,21 +307,29 @@ export default class OSMSearch extends Search {
             : { ...feature, properties: { ...feature.properties, name: match.label } });
     }
 
-    // Wyniki kategorii, potem zwykle, bez duplikatow i przyciete do limitu
+    // Kategoria zajmuje co najwyzej polowe limitu, zwykle wyniki wypelniaja
+    // reszte, a wolne miejsca dostaja nadwyzki kategorii. Bez duplikatow.
     private merge(
         categorised: Array<Static<typeof PhotonFeature>>,
         plain: Array<Static<typeof PhotonFeature>>,
         limit?: number,
     ): Array<Static<typeof PhotonFeature>> {
         const seen = new Set<string>();
-        const merged = [...categorised, ...plain].filter((feature) => {
+        const unique = (features: Array<Static<typeof PhotonFeature>>) => features.filter((feature) => {
             const key = magicKey(feature);
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
         });
 
-        return limit ? merged.slice(0, limit) : merged;
+        const category = unique(categorised);
+        const rest = unique(plain);
+
+        if (!limit) return [...category, ...rest];
+
+        const kept = Math.ceil(limit / 2);
+
+        return [...category.slice(0, kept), ...rest, ...category.slice(kept)].slice(0, limit);
     }
 
     async forward(query: string, magicKey: string, limit?: number): Promise<Array<Static<typeof FetchForward>>> {
