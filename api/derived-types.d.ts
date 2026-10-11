@@ -2436,8 +2436,11 @@ export interface paths {
                             "osm::enabled"?: boolean;
                             /** @description Photon Base URL */
                             "osm::url"?: string;
+                            /** @description Enable taklab Routing Provider (GraphHopper + cross-country) */
                             "taklab::routing::enabled"?: boolean;
+                            /** @description taklab GraphHopper Base URL */
                             "taklab::routing::graphhopper_url"?: string;
+                            /** @description taklab cross-country routing Base URL */
                             "taklab::routing::terrain_url"?: string;
                             /** @description Base URL for Media Service */
                             "media::url"?: string;
@@ -2735,8 +2738,11 @@ export interface paths {
                         "osm::enabled"?: boolean;
                         /** @description Photon Base URL */
                         "osm::url"?: string;
+                        /** @description Enable taklab Routing Provider (GraphHopper + cross-country) */
                         "taklab::routing::enabled"?: boolean;
+                        /** @description taklab GraphHopper Base URL */
                         "taklab::routing::graphhopper_url"?: string;
+                        /** @description taklab cross-country routing Base URL */
                         "taklab::routing::terrain_url"?: string;
                         /** @description Base URL for Media Service */
                         "media::url"?: string;
@@ -2959,8 +2965,11 @@ export interface paths {
                             "osm::enabled"?: boolean;
                             /** @description Photon Base URL */
                             "osm::url"?: string;
+                            /** @description Enable taklab Routing Provider (GraphHopper + cross-country) */
                             "taklab::routing::enabled"?: boolean;
+                            /** @description taklab GraphHopper Base URL */
                             "taklab::routing::graphhopper_url"?: string;
+                            /** @description taklab cross-country routing Base URL */
                             "taklab::routing::terrain_url"?: string;
                             /** @description Base URL for Media Service */
                             "media::url"?: string;

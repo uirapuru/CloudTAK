@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import SearchBox from '../util/SearchBox.vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
@@ -151,8 +151,21 @@ const modes = computed(() => {
     return [];
 });
 
+// Tryb jednego dostawcy nie istnieje u drugiego: po zmianie dostawcy
+// wybieramy pierwszy tryb nowego (albo żaden)
+watch(() => routePlan.value.provider, () => {
+    routePlan.value.travelMode = modes.value[0]?.name ?? '';
+});
+
 async function useMyLocation(): Promise<boolean> {
-    const location = await mapStore.worker.profile.location;
+    let location;
+    try {
+        location = await mapStore.worker.profile.location;
+    } catch (err) {
+        console.error('Nie udało się odczytać pozycji', err);
+        locationError.value = 'Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.';
+        return false;
+    }
 
     if (![LocationState.Preset, LocationState.Live].includes(location.source)) {
         locationError.value = 'Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.';

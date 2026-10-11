@@ -144,6 +144,67 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         expect(box(wrapper, 'Start Location').find('input').element.value).toBe('');
     });
 
+    it('shows the message when the location call rejects on button click', async () => {
+        location.mockResolvedValueOnce({ source: LocationState.Disabled, coordinates: [0, 0] });
+        location.mockRejectedValueOnce(new Error('worker down'));
+        const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        await wrapper.find('button.my-location').trigger('click');
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.');
+        spy.mockRestore();
+    });
+
+    it('resets the travel mode to the first mode of the newly selected provider', async () => {
+        location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+        GET.mockImplementation(async (url: string) => {
+            if (url === '/api/search') {
+                return {
+                    error: undefined,
+                    data: {
+                        route: {
+                            enabled: true,
+                            providers: [
+                                { id: 'taklab', name: 'taklab', modes: [{ id: 'car', name: 'Samochód' }, { id: 'foot', name: 'Pieszo' }] },
+                                { id: 'agol', name: 'ArcGIS Online', modes: [{ id: '1', name: 'Driving Time' }] },
+                                { id: 'empty', name: 'Pusty', modes: [] }
+                            ]
+                        }
+                    }
+                };
+            }
+            return { error: undefined, data: { features: [{ type: 'Feature' }] } };
+        });
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        // Prawdziwy TablerEnum renderuje <select>: pierwszy to dostawca, drugi tryb
+        const selects = () => wrapper.findAll('select');
+        const mode = () => selects()[1]?.element.value;
+
+        expect(mode()).toBe('Samochód');
+
+        await selects()[1].setValue('Pieszo');
+        expect(mode()).toBe('Pieszo');
+
+        await selects()[0].setValue('ArcGIS Online');
+        await flushPromises();
+        expect(mode()).toBe('Driving Time');
+
+        await selects()[0].setValue('Pusty');
+        await flushPromises();
+        expect(selects()).toHaveLength(1);
+
+        await selects()[0].setValue('taklab');
+        await flushPromises();
+        expect(mode()).toBe('Samochód');
+    });
+
     it('does not overwrite a start given in the query', async () => {
         routeQuery.start = '21,52';
         location.mockResolvedValue({ source: LocationState.Live, coordinates: [20.94, 52.29] });

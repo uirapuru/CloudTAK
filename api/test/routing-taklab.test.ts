@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import http from 'node:http';
 import { AddressInfo } from 'node:net';
 import { GenerateUpsert } from '@openaddresses/batch-generic';
-import TaklabRoute from '../stateless/lib/routing/taklab.js';
+import TaklabRoute, { simplifyLine } from '../stateless/lib/routing/taklab.js';
 import { RouteManager } from '../stateless/lib/interface-route.js';
 import Config from '../common/config.js';
 import { testDatabase } from './db.js';
@@ -34,6 +34,11 @@ const server = http.createServer((req, res) => {
             ghBodies.push(body as unknown as Record<string, unknown>);
             if (body.points[0][0] === 0) return send(400, JSON.stringify({ message: 'Cannot find point 0: 0.0,0.0' }));
             if (body.points[0][0] === 1) return send(400, JSON.stringify({ hints: [] }));
+            if (body.points[0][0] === 3) {
+                // gęsta geometria: zygzak z 5000 punktów
+                const coordinates = Array.from({ length: 5000 }, (_, i) => [21 + i * 0.0001, 52 + (i % 2) * 0.0003]);
+                return send(200, JSON.stringify({ paths: [{ distance: 1, time: 1000, points: { type: 'LineString', coordinates } }] }));
+            }
             return send(200, JSON.stringify({ paths: [{
                 distance: 12345,
                 time: 1080000,
@@ -99,6 +104,7 @@ test('car_no_motorway wysyła model bez autostrad', async () => {
     assert.deepEqual(ghBodies[0].custom_model, { priority: [{ if: 'road_class == MOTORWAY', multiply_by: '0' }] });
     assert.equal(ghBodies[0].locale, 'pl');
     assert.equal(ghBodies[0].points_encoded, false);
+    assert.equal(ghBodies[0].way_point_max_distance, 20);
 });
 
 test('car nie wysyła custom_model', async () => {
@@ -122,6 +128,65 @@ test('domyślny tryb to car', async () => {
     ghBodies.length = 0;
     await new TaklabRoute(config, base, '').route([[21, 52.2], [21.1, 52.3]]);
     assert.equal(ghBodies[0].profile, 'car');
+});
+
+test('tryb domyślny schematu zapytania (Driving Time), pusty i brak to car', async () => {
+    const route = new TaklabRoute(config, base, '');
+    for (const mode of ['Driving Time', '', undefined]) {
+        ghBodies.length = 0;
+        await route.route([[21, 52.2], [21.1, 52.3]], mode);
+        assert.equal(ghBodies[0].profile, 'car', `tryb ${JSON.stringify(mode)}`);
+    }
+});
+
+test('trasa drogowa ma najwyżej 1000 punktów, z końcami', async () => {
+    const fc = await new TaklabRoute(config, base, '').route([[3, 52.2], [21.1, 52.3]], 'car');
+    const coordinates = fc.features[0].geometry.coordinates as number[][];
+    assert.ok(coordinates.length <= 1000);
+    assert.deepEqual(coordinates[0], [21, 52]);
+    assert.deepEqual(coordinates[coordinates.length - 1], [21 + 4999 * 0.0001, 52 + 0.0003]);
+});
+
+test('simplifyLine: prosta linia zwija się do dwóch punktów', () => {
+    const line = Array.from({ length: 2000 }, (_, i) => [21 + i * 0.001, 52 + i * 0.0005]);
+    assert.deepEqual(simplifyLine(line), [line[0], line[1999]]);
+});
+
+test('simplifyLine: zygzak z 5000 punktów schodzi do 1000, końce zostają', () => {
+    const zigzag = Array.from({ length: 5000 }, (_, i) => [21 + i * 0.0001, 52 + (i % 2) * 0.0003]);
+    const out = simplifyLine(zigzag);
+    assert.ok(out.length <= 1000);
+    assert.deepEqual(out[0], zigzag[0]);
+    assert.deepEqual(out[out.length - 1], zigzag[4999]);
+});
+
+test('simplifyLine: łuk z 5000 punktów schodzi do 1000 i dalej go przypomina', () => {
+    const arc = Array.from({ length: 5000 }, (_, i) => [21 + Math.sin(i / 800) * 0.5, 52 + Math.cos(i / 800) * 0.5]);
+    const out = simplifyLine(arc);
+    assert.ok(out.length <= 1000 && out.length > 10);
+    assert.deepEqual(out[0], arc[0]);
+    assert.deepEqual(out[out.length - 1], arc[4999]);
+});
+
+test('simplifyLine: krótka linia bez zmian', () => {
+    const line = [[0, 0], [1, 1], [2, 0]];
+    assert.equal(simplifyLine(line), line);
+});
+
+test('zawieszona usługa = 400 po limicie czasu (GraphHopper i przełaj)', async () => {
+    const hanging = http.createServer(() => undefined);
+    await new Promise<void>(resolve => hanging.listen(0, '127.0.0.1', resolve));
+    const url = `http://127.0.0.1:${(hanging.address() as AddressInfo).port}`;
+    try {
+        const route = new TaklabRoute(config, url, url, { graphhopper: 150, terrain: 150 });
+        await assert.rejects(route.route([[21, 52], [21.1, 52.1]], 'car'),
+            (err: { status: number; safe: string }) => err.status === 400 && err.safe === 'Usługa tras drogowych nie odpowiada.');
+        await assert.rejects(route.route([[21, 52], [21.1, 52.1]], 'foot_cross_country'),
+            (err: { status: number; safe: string }) => err.status === 400 && err.safe === 'Usługa tras na przełaj nie odpowiada.');
+    } finally {
+        hanging.closeAllConnections();
+        await new Promise<void>(resolve => hanging.close(() => resolve()));
+    }
 });
 
 test('błąd GraphHoppera = 400 po polsku', async () => {

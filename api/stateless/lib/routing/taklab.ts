@@ -16,6 +16,14 @@ type Mode = {
     terrain?: boolean;
 };
 
+// Górna granica liczby wierzchołków trasy: ATAK robi z każdego punkt kontrolny
+export const MAX_ROUTE_POINTS = 1000;
+
+// Domyślny tryb schematu zapytania /search/route w upstreamie (nazwa trybu AGOL)
+const AGOL_DEFAULT_MODE = 'Driving Time';
+
+export const DEFAULT_TIMEOUTS = { graphhopper: 30000, terrain: 60000 };
+
 export const MODES: Mode[] = [
     { id: 'car', name: 'Samochód', profile: 'car' },
     { id: 'car_no_motorway', name: 'Samochód bez autostrad', profile: 'car', avoidMotorway: true },
@@ -70,6 +78,52 @@ function field(body: unknown, key: string): unknown {
     return body && typeof body === 'object' ? (body as Record<string, unknown>)[key] : undefined;
 }
 
+/**
+ * Douglas-Peucker w stopniach (lon/lat), bez rekursji. Pierwszy i ostatni punkt
+ * zawsze zostają. Tolerancja rośnie dwukrotnie, aż wynik zmieści się w limicie.
+ */
+export function simplifyLine(coordinates: number[][], maxPoints: number = MAX_ROUTE_POINTS): number[][] {
+    if (coordinates.length <= maxPoints || coordinates.length <= 2) return coordinates;
+
+    const last = coordinates.length - 1;
+    for (let tolerance = 0.0001; ; tolerance *= 2) {
+        const keep = new Uint8Array(coordinates.length);
+        keep[0] = 1;
+        keep[last] = 1;
+
+        const stack: Array<[number, number]> = [[0, last]];
+        while (stack.length) {
+            const [from, to] = stack.pop() as [number, number];
+            const [ax, ay] = coordinates[from];
+            const [bx, by] = coordinates[to];
+            const dx = bx - ax;
+            const dy = by - ay;
+            const length = Math.hypot(dx, dy);
+
+            let farthest = -1;
+            let max = tolerance;
+            for (let i = from + 1; i < to; i++) {
+                const [px, py] = coordinates[i];
+                const distance = length === 0
+                    ? Math.hypot(px - ax, py - ay)
+                    : Math.abs(dy * (px - ax) - dx * (py - ay)) / length;
+                if (distance > max) {
+                    max = distance;
+                    farthest = i;
+                }
+            }
+
+            if (farthest !== -1) {
+                keep[farthest] = 1;
+                stack.push([from, farthest], [farthest, to]);
+            }
+        }
+
+        const result = coordinates.filter((_, i) => keep[i]);
+        if (result.length <= maxPoints) return result;
+    }
+}
+
 export function formatDistance(meters: number): string {
     if (meters >= 1000) return `${(meters / 1000).toFixed(1).replace('.', ',')} km`;
     return `${Math.round(meters)} m`;
@@ -95,8 +149,10 @@ export default class TaklabRoute implements RouteInterface {
 
     graphhopper: string;
     terrain: string;
+    timeouts: { graphhopper: number; terrain: number };
 
-    constructor(config: Config, graphhopper: string, terrain: string) {
+    constructor(config: Config, graphhopper: string, terrain: string, timeouts = DEFAULT_TIMEOUTS) {
+        this.timeouts = timeouts;
         this._id = 'taklab';
         this._name = 'taklab';
         this._config = config;
@@ -134,7 +190,13 @@ export default class TaklabRoute implements RouteInterface {
         stops: Array<[number, number]>,
         travelMode?: string,
     ): Promise<Static<typeof Feature.FeatureCollection>> {
-        const mode = this.modes().find(m => m.id === (travelMode || 'car'));
+        // Schemat zapytania wstawia 'Driving Time' (domyślny tryb AGOL), gdy klient
+        // nie poda trybu albo został przy trybie poprzedniego dostawcy; to znaczy: samochód.
+        const modes = this.modes();
+        const requested = !travelMode || (travelMode === AGOL_DEFAULT_MODE && !modes.some(m => m.id === travelMode))
+            ? 'car'
+            : travelMode;
+        const mode = modes.find(m => m.id === requested);
         if (!mode) throw new Err(400, null, 'Nieznany tryb trasy');
 
         const { coordinates, remarks } = mode.terrain
@@ -164,6 +226,7 @@ export default class TaklabRoute implements RouteInterface {
         const body: Record<string, unknown> = {
             profile: mode.profile,
             points: stops,
+            way_point_max_distance: 20,
             points_encoded: false,
             instructions: true,
             locale: 'pl',
@@ -179,6 +242,7 @@ export default class TaklabRoute implements RouteInterface {
                 safeUrlAllow: [this.graphhopper],
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify(body),
+                signal: AbortSignal.timeout(this.timeouts.graphhopper),
             });
         } catch (err) {
             throw new Err(400, err instanceof Error ? err : null, 'Usługa tras drogowych nie odpowiada.');
@@ -202,7 +266,7 @@ export default class TaklabRoute implements RouteInterface {
             .map((step, i) => `${i + 1}. ${step.text} (${formatDistance(step.distance)})`);
         if (steps.length) lines.push('', ...steps);
 
-        return { coordinates: path.points.coordinates, remarks: lines.join('\n') };
+        return { coordinates: simplifyLine(path.points.coordinates), remarks: lines.join('\n') };
     }
 
     async terrainRoute(stops: Array<[number, number]>): Promise<{ coordinates: number[][]; remarks: string }> {
@@ -215,6 +279,7 @@ export default class TaklabRoute implements RouteInterface {
                 safeUrlAllow: [this.terrain],
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ start: stops[0], end: stops[1] }),
+                signal: AbortSignal.timeout(this.timeouts.terrain),
             });
         } catch (err) {
             throw new Err(400, err instanceof Error ? err : null, 'Usługa tras na przełaj nie odpowiada.');
@@ -238,6 +303,6 @@ export default class TaklabRoute implements RouteInterface {
             'Trasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.',
         ].join('\n');
 
-        return { coordinates: parsed.geometry.coordinates, remarks };
+        return { coordinates: simplifyLine(parsed.geometry.coordinates), remarks };
     }
 }
