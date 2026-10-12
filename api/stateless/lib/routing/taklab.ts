@@ -11,25 +11,72 @@ import { RouteConfig } from './types.js';
 type Mode = {
     id: string;
     name: string;
-    profile?: 'car' | 'offroad' | 'foot';
+    profile?: 'car' | 'offroad' | 'foot' | 'hike';
     avoidMotorway?: boolean;
     terrain?: boolean;
+    // Tryb widoczny tylko wtedy, gdy GraphHopper ma ten profil (GET /info)
+    optionalProfile?: boolean;
+};
+
+/** Odcinek trasy między dwoma kolejnymi punktami usera; start i end to indeksy wierzchołków linii (włącznie). */
+export type RouteLeg = {
+    start: number;
+    end: number;
+    distance_m: number;
+    duration_s: number;
+    ascent_m?: number;
+    descent_m?: number;
+    offpath_ratio?: number;
+    steps?: string[];
+};
+
+/** Plan trasy: punkty usera i granice odcinków, zapisywany w properties.metadata.taklab_route. */
+export type RoutePlan = {
+    version: 1;
+    mode: string;
+    mode_name: string;
+    waypoints: Array<[number, number]>;
+    legs: RouteLeg[];
+};
+
+type LegStats = Omit<RouteLeg, 'start' | 'end'>;
+type LegSlice = { coordinates: number[][]; leg: LegStats };
+
+export type RerouteInput = {
+    travelMode: string;
+    waypoints: Array<[number, number]>;
+    coordinates: number[][];
+    legs: RouteLeg[];
+    first: number;
+    count: number;
+    added: -1 | 0 | 1;
 };
 
 // Górna granica liczby wierzchołków trasy: ATAK robi z każdego punkt kontrolny
 export const MAX_ROUTE_POINTS = 1000;
 
+// Najwięcej punktów pośrednich na trasę (bez startu i celu)
+export const MAX_VIA_POINTS = 25;
+
+const TERRAIN_MODE = 'foot_cross_country';
+
+const TERRAIN_NOTE = 'Trasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.';
+
+// Jak długo pamiętamy listę profili GraphHoppera
+const PROFILES_TTL_MS = 60000;
+
 // Domyślny tryb schematu zapytania /search/route w upstreamie (nazwa trybu AGOL)
 const AGOL_DEFAULT_MODE = 'Driving Time';
 
-export const DEFAULT_TIMEOUTS = { graphhopper: 30000, terrain: 60000 };
+export const DEFAULT_TIMEOUTS = { graphhopper: 30000, terrain: 60000, info: 3000 };
 
 export const MODES: Mode[] = [
     { id: 'car', name: 'Samochód', profile: 'car' },
     { id: 'car_no_motorway', name: 'Samochód bez autostrad', profile: 'car', avoidMotorway: true },
     { id: 'offroad', name: 'Drogi gruntowe', profile: 'offroad' },
     { id: 'foot', name: 'Pieszo', profile: 'foot' },
-    { id: 'foot_cross_country', name: 'Pieszo na przełaj', terrain: true },
+    { id: 'hike', name: 'Szlaki', profile: 'hike', optionalProfile: true },
+    { id: TERRAIN_MODE, name: 'Pieszo na przełaj', terrain: true },
 ];
 
 const GraphHopperPath = Type.Object({
@@ -135,6 +182,92 @@ export function formatDuration(seconds: number): string {
     return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
 }
 
+/**
+ * Skleja odcinki w jedną linię. Każdy odcinek dostaje część limitu punktów
+ * proporcjonalną do liczby swoich wierzchołków, najmniej 2, a jego końce zostają.
+ * Pierwszy punkt odcinka równy ostatniemu poprzedniego staje się wspólnym wierzchołkiem.
+ */
+export function joinLegs(slices: LegSlice[], maxPoints: number = MAX_ROUTE_POINTS): { coordinates: number[][]; legs: RouteLeg[] } {
+    const total = slices.reduce((sum, slice) => sum + slice.coordinates.length, 0);
+    const spare = Math.max(0, maxPoints - 2 * slices.length);
+
+    const coordinates: number[][] = [];
+    const legs: RouteLeg[] = [];
+    for (const slice of slices) {
+        const budget = 2 + (total ? Math.floor(spare * slice.coordinates.length / total) : 0);
+        const simplified = simplifyLine(slice.coordinates.map(c => [c[0], c[1]]), budget);
+
+        const last = coordinates[coordinates.length - 1];
+        const shared = last !== undefined && simplified.length > 0
+            && last[0] === simplified[0][0] && last[1] === simplified[0][1];
+
+        const start = shared ? coordinates.length - 1 : coordinates.length;
+        coordinates.push(...(shared ? simplified.slice(1) : simplified));
+        legs.push({ ...slice.leg, start, end: coordinates.length - 1 });
+    }
+
+    return { coordinates, legs };
+}
+
+/** Czy plan pasuje do linii o podanej liczbie wierzchołków. */
+export function validPlan(plan: unknown, vertexCount: number): plan is RoutePlan {
+    if (!plan || typeof plan !== 'object') return false;
+    const p = plan as Partial<RoutePlan>;
+    if (p.version !== 1 || typeof p.mode !== 'string' || !Array.isArray(p.waypoints) || !Array.isArray(p.legs)) return false;
+    if (p.waypoints.length < 2 || p.legs.length !== p.waypoints.length - 1) return false;
+    if (!p.waypoints.every(w => Array.isArray(w) && w.length >= 2 && w.every(n => typeof n === 'number' && Number.isFinite(n)))) return false;
+
+    let previousEnd = -1;
+    for (const leg of p.legs) {
+        if (!leg || !Number.isInteger(leg.start) || !Number.isInteger(leg.end)) return false;
+        if (leg.start > leg.end) return false;
+        // pierwszy od zera, kolejne zaczynają się na końcu poprzedniego albo tuż za nim
+        if (previousEnd === -1 ? leg.start !== 0 : (leg.start !== previousEnd && leg.start !== previousEnd + 1)) return false;
+        previousEnd = leg.end;
+    }
+
+    return previousEnd === vertexCount - 1;
+}
+
+/** Opis trasy dla pola remarks: sumy, a przy kilku odcinkach bloki odcinków. */
+export function composeRemarks(plan: RoutePlan): string {
+    const terrain = plan.mode === TERRAIN_MODE;
+    const legs = plan.legs;
+    const distance = legs.reduce((sum, leg) => sum + leg.distance_m, 0);
+    const duration = legs.reduce((sum, leg) => sum + leg.duration_s, 0);
+
+    const lines = [
+        `Tryb: ${plan.mode_name}`,
+        `Długość: ${formatDistance(distance)}`,
+        `${terrain ? 'Czas marszu' : 'Czas'}: ${formatDuration(duration)}`,
+    ];
+
+    if (legs.every(leg => leg.ascent_m !== undefined && leg.descent_m !== undefined)) {
+        const ascent = legs.reduce((sum, leg) => sum + (leg.ascent_m ?? 0), 0);
+        const descent = legs.reduce((sum, leg) => sum + (leg.descent_m ?? 0), 0);
+        lines.push(`Podejścia: ${Math.round(ascent)} m, zejścia: ${Math.round(descent)} m`);
+    }
+
+    if (terrain && distance > 0) {
+        const offpath = legs.reduce((sum, leg) => sum + (leg.offpath_ratio ?? 0) * leg.distance_m, 0) / distance;
+        lines.push(`Poza drogami: ${Math.round(offpath * 100)}%`);
+    }
+
+    if (legs.length === 1) {
+        const steps = legs[0].steps || [];
+        if (steps.length) lines.push('', ...steps);
+    } else {
+        legs.forEach((leg, i) => {
+            lines.push('', `Odcinek ${i + 1}: ${formatDistance(leg.distance_m)}, ${formatDuration(leg.duration_s)}`);
+            lines.push(...(leg.steps || []));
+        });
+    }
+
+    if (terrain) lines.push('', TERRAIN_NOTE);
+
+    return lines.join('\n');
+}
+
 function graphHopperError(message: string | undefined): string {
     if (!message) return 'Nie udało się wyznaczyć trasy.';
     if (/Cannot find point|out of bounds/i.test(message)) return 'Punkt poza siecią dróg albo poza obszarem mapy.';
@@ -149,9 +282,11 @@ export default class TaklabRoute implements RouteInterface {
 
     graphhopper: string;
     terrain: string;
-    timeouts: { graphhopper: number; terrain: number };
+    timeouts: { graphhopper: number; terrain: number; info?: number };
 
-    constructor(config: Config, graphhopper: string, terrain: string, timeouts = DEFAULT_TIMEOUTS) {
+    private profilesCache?: { at: number; profiles: Set<string> | null };
+
+    constructor(config: Config, graphhopper: string, terrain: string, timeouts: { graphhopper: number; terrain: number; info?: number } = DEFAULT_TIMEOUTS) {
         this.timeouts = timeouts;
         this._id = 'taklab';
         this._name = 'taklab';
@@ -174,42 +309,153 @@ export default class TaklabRoute implements RouteInterface {
         return new TaklabRoute(config, settings['taklab::routing::graphhopper_url'], settings['taklab::routing::terrain_url']);
     }
 
-    modes(): Mode[] {
-        return MODES.filter(mode => !mode.terrain || this.terrain);
+    /**
+     * Profile GraphHoppera z GET /info, pamiętane 60 s. Błąd = null, czyli
+     * tryby z optionalProfile są ukryte, a reszta działa.
+     */
+    async profiles(): Promise<Set<string> | null> {
+        if (this.profilesCache && Date.now() - this.profilesCache.at < PROFILES_TTL_MS) {
+            return this.profilesCache.profiles;
+        }
+
+        let profiles: Set<string> | null = null;
+        try {
+            const res = await fetch(new URL(this.graphhopper + '/info'), {
+                method: 'GET',
+                safeUrlAllow: [this.graphhopper],
+                headers: { Accept: 'application/json' },
+                signal: AbortSignal.timeout(this.timeouts.info ?? DEFAULT_TIMEOUTS.info),
+            });
+            const body = await readJson(res);
+            const list = field(body, 'profiles');
+            if (res.ok && Array.isArray(list)) {
+                profiles = new Set(list.map(item => field(item, 'name')).filter((name): name is string => typeof name === 'string'));
+            }
+        } catch {
+            profiles = null;
+        }
+
+        this.profilesCache = { at: Date.now(), profiles };
+        return profiles;
     }
 
-    config(): Promise<Static<typeof RouteConfig>> {
-        return Promise.resolve({
+    async modes(): Promise<Mode[]> {
+        const needsProfiles = MODES.some(mode => mode.optionalProfile);
+        const profiles = needsProfiles ? await this.profiles() : null;
+
+        return MODES.filter((mode) => {
+            if (mode.terrain) return !!this.terrain;
+            if (mode.optionalProfile) return !!profiles && !!mode.profile && profiles.has(mode.profile);
+            return true;
+        });
+    }
+
+    async config(): Promise<Static<typeof RouteConfig>> {
+        return {
             id: this._id,
             name: this._name,
-            modes: this.modes().map(mode => ({ id: mode.id, name: mode.name })),
-        });
+            modes: (await this.modes()).map(mode => ({ id: mode.id, name: mode.name })),
+        };
+    }
+
+    async resolveMode(travelMode?: string): Promise<Mode> {
+        // Schemat zapytania wstawia 'Driving Time' (domyślny tryb AGOL), gdy klient
+        // nie poda trybu albo został przy trybie poprzedniego dostawcy; to znaczy: samochód.
+        const modes = await this.modes();
+        const requested = !travelMode || (travelMode === AGOL_DEFAULT_MODE && !modes.some(m => m.id === travelMode))
+            ? 'car'
+            : travelMode;
+        const mode = modes.find(m => m.id === requested);
+        if (!mode) throw new Err(400, null, 'Nieznany tryb trasy');
+        return mode;
     }
 
     async route(
         stops: Array<[number, number]>,
         travelMode?: string,
     ): Promise<Static<typeof Feature.FeatureCollection>> {
-        // Schemat zapytania wstawia 'Driving Time' (domyślny tryb AGOL), gdy klient
-        // nie poda trybu albo został przy trybie poprzedniego dostawcy; to znaczy: samochód.
-        const modes = this.modes();
-        const requested = !travelMode || (travelMode === AGOL_DEFAULT_MODE && !modes.some(m => m.id === travelMode))
-            ? 'car'
-            : travelMode;
-        const mode = modes.find(m => m.id === requested);
-        if (!mode) throw new Err(400, null, 'Nieznany tryb trasy');
+        if (stops.length < 2) throw new Err(400, null, 'Trasa wymaga co najmniej dwóch punktów.');
+        if (stops.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
 
-        const { coordinates, remarks } = mode.terrain
-            ? await this.terrainRoute(stops)
-            : await this.roadRoute(stops, mode);
+        const mode = await this.resolveMode(travelMode);
+        const waypoints = stops.map(s => [s[0], s[1]] as [number, number]);
+        const slices = await this.computeLegs(waypoints, mode, 0);
+
+        return await this.feature(mode, waypoints, slices);
+    }
+
+    /**
+     * Przelicza część istniejącej trasy: odcinki first..first+count-1 starego planu
+     * zastępuje count+added nowymi, policzonymi między kolejnymi punktami z waypoints.
+     */
+    async reroute(input: RerouteInput): Promise<Static<typeof Feature.FeatureCollection>> {
+        const { waypoints, coordinates, legs, first, count, added } = input;
+        const mode = await this.resolveMode(input.travelMode);
+
+        const oldPlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints: Array.from({ length: legs.length + 1 }, () => [0, 0]), legs };
+        if (!validPlan(oldPlan, coordinates.length)) throw new Err(400, null, 'Plan trasy nie pasuje do jej linii.');
+        if (![-1, 0, 1].includes(added)) throw new Err(400, null, 'Nieprawidłowa zmiana trasy.');
+        if (!Number.isInteger(first) || !Number.isInteger(count) || first < 0 || count < 0 || first + count > legs.length) {
+            throw new Err(400, null, 'Nieprawidłowy zakres odcinków.');
+        }
+        const freshCount = count + added;
+        if (freshCount < 0 || waypoints.length !== legs.length + 1 + added || waypoints.length < 2) {
+            throw new Err(400, null, 'Liczba punktów nie pasuje do zmiany trasy.');
+        }
+        if (waypoints.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
+
+        const fresh = freshCount > 0
+            ? await this.computeLegs(waypoints.slice(first, first + freshCount + 1), mode, first)
+            : [];
+
+        const old: LegSlice[] = legs.map(leg => ({
+            coordinates: coordinates.slice(leg.start, leg.end + 1),
+            leg: legStats(leg),
+        }));
+
+        const slices = [...old.slice(0, first), ...fresh, ...old.slice(first + count)];
+
+        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices);
+    }
+
+    /** Liczy odcinki między kolejnymi punktami; offset służy tylko numeracji w komunikacie błędu. */
+    async computeLegs(stops: Array<[number, number]>, mode: Mode, offset: number): Promise<LegSlice[]> {
+        const pairs = stops.slice(1).map((end, i) => [stops[i], end] as [[number, number], [number, number]]);
+        const numbered = async (i: number, job: Promise<LegSlice>): Promise<LegSlice> => {
+            try {
+                return await job;
+            } catch (err) {
+                if (err instanceof Err && stops.length > 2) {
+                    // null zamiast err: wtedy message = safe, czyli tekst z numerem odcinka
+                    throw new Err(err.status, null, `Odcinek ${offset + i + 1}: ${err.safe}`);
+                }
+                throw err;
+            }
+        };
+
+        if (mode.terrain) {
+            // Usługa przełaju ma dwa miejsca na liczenie: odcinki idą po kolei
+            const slices: LegSlice[] = [];
+            for (const [i, [a, b]] of pairs.entries()) {
+                slices.push(await numbered(i, this.terrainLeg(a, b)));
+            }
+            return slices;
+        }
+
+        return await Promise.all(pairs.map(([a, b], i) => numbered(i, this.roadLeg(a, b, mode))));
+    }
+
+    async feature(mode: Mode, waypoints: Array<[number, number]>, slices: LegSlice[]): Promise<Static<typeof Feature.FeatureCollection>> {
+        const { coordinates, legs } = joinLegs(slices);
+        const plan: RoutePlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints, legs };
 
         const norm = await CoTParser.normalize_geojson({
             id: String(randomUUID()),
             type: 'Feature',
-            properties: { metadata: { provider: 'taklab', mode: mode.id } },
+            properties: {},
             geometry: {
                 type: 'LineString',
-                coordinates: coordinates.map(c => [c[0], c[1]]),
+                coordinates,
             },
         });
 
@@ -217,15 +463,16 @@ export default class TaklabRoute implements RouteInterface {
         norm.properties.how = 'm-g';
         norm.properties.callsign = mode.name;
         norm.properties.archived = true;
-        norm.properties.remarks = `Tryb: ${mode.name}\n${remarks}`;
+        norm.properties.remarks = composeRemarks(plan);
+        norm.properties.metadata = { taklab_route: plan };
 
         return { type: 'FeatureCollection', features: [norm] };
     }
 
-    async roadRoute(stops: Array<[number, number]>, mode: Mode): Promise<{ coordinates: number[][]; remarks: string }> {
+    async roadLeg(a: [number, number], b: [number, number], mode: Mode): Promise<LegSlice> {
         const body: Record<string, unknown> = {
             profile: mode.profile,
-            points: stops,
+            points: [a, b],
             way_point_max_distance: 20,
             points_encoded: false,
             instructions: true,
@@ -254,31 +501,28 @@ export default class TaklabRoute implements RouteInterface {
         const path = res.ok && Array.isArray(paths) && Value.Check(GraphHopperPath, paths[0]) ? paths[0] as Static<typeof GraphHopperPath> : undefined;
         if (!path) throw new Err(400, null, graphHopperError(typeof message === 'string' ? message : undefined));
 
-        const lines = [
-            `Długość: ${formatDistance(path.distance)}`,
-            `Czas: ${formatDuration(path.time / 1000)}`,
-        ];
-        if (path.ascend !== undefined && path.descend !== undefined) {
-            lines.push(`Podejścia: ${Math.round(path.ascend)} m, zejścia: ${Math.round(path.descend)} m`);
-        }
         const steps = (path.instructions || [])
             .filter(step => step.distance > 0)
             .map((step, i) => `${i + 1}. ${step.text} (${formatDistance(step.distance)})`);
-        if (steps.length) lines.push('', ...steps);
 
-        return { coordinates: simplifyLine(path.points.coordinates), remarks: lines.join('\n') };
+        const leg: LegStats = { distance_m: path.distance, duration_s: path.time / 1000 };
+        if (path.ascend !== undefined && path.descend !== undefined) {
+            leg.ascent_m = path.ascend;
+            leg.descent_m = path.descend;
+        }
+        if (steps.length) leg.steps = steps;
+
+        return { coordinates: path.points.coordinates, leg };
     }
 
-    async terrainRoute(stops: Array<[number, number]>): Promise<{ coordinates: number[][]; remarks: string }> {
-        if (stops.length !== 2) throw new Err(400, null, 'Przełaj wyznacza trasę tylko między dwoma punktami.');
-
+    async terrainLeg(a: [number, number], b: [number, number]): Promise<LegSlice> {
         let res;
         try {
             res = await fetch(new URL(this.terrain + '/route'), {
                 method: 'POST',
                 safeUrlAllow: [this.terrain],
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ start: stops[0], end: stops[1] }),
+                body: JSON.stringify({ start: a, end: b }),
                 signal: AbortSignal.timeout(this.timeouts.terrain),
             });
         } catch (err) {
@@ -292,17 +536,23 @@ export default class TaklabRoute implements RouteInterface {
             throw new Err(400, null, typeof message === 'string' && message ? message : 'Nie udało się wyznaczyć trasy na przełaj.');
         }
 
-        const parsed = body;
-        const p = parsed.properties;
-        const remarks = [
-            `Długość: ${formatDistance(p.distance_m)}`,
-            `Czas marszu: ${formatDuration(p.duration_s)}`,
-            `Podejścia: ${Math.round(p.ascent_m)} m, zejścia: ${Math.round(p.descent_m)} m`,
-            `Poza drogami: ${Math.round(p.offpath_ratio * 100)}%`,
-            '',
-            'Trasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.',
-        ].join('\n');
-
-        return { coordinates: simplifyLine(parsed.geometry.coordinates), remarks };
+        const p = body.properties;
+        return {
+            coordinates: body.geometry.coordinates,
+            leg: {
+                distance_m: p.distance_m,
+                duration_s: p.duration_s,
+                ascent_m: p.ascent_m,
+                descent_m: p.descent_m,
+                offpath_ratio: p.offpath_ratio,
+            },
+        };
     }
+}
+
+function legStats(leg: RouteLeg): LegStats {
+    const { start: _start, end: _end, ...stats } = leg;
+    void _start;
+    void _end;
+    return stats;
 }

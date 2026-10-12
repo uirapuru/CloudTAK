@@ -18,6 +18,12 @@ const graphhopper = http.createServer((req, res) => {
     let raw = '';
     req.on('data', chunk => raw += chunk);
     req.on('end', () => {
+        if (req.method === 'GET') {
+            // GET /info: atrapa nie zna profili, więc tryb Szlaki jest ukryty
+            res.statusCode = 404;
+            res.end('{}');
+            return;
+        }
         profiles.push(JSON.parse(raw).profile);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ paths: [{
