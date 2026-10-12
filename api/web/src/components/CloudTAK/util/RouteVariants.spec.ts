@@ -88,4 +88,40 @@ describe('RouteVariants', () => {
         await flushPromises();
         expect(wrapper.text()).toContain('Usługa tras na przełaj nie odpowiada.');
     });
+
+    it('zamknięcie okna w trakcie ładowania nie zostawia podglądu na mapie', async () => {
+        let resolve: (value: unknown) => void = () => undefined;
+        std.mockReturnValue(new Promise((r) => { resolve = r; }));
+        const wrapper = mountIt();
+        await flushPromises();
+        wrapper.unmount();
+        resolve({ type: 'FeatureCollection', features: [variant(0.7)] });
+        await flushPromises();
+        expect(map.layers.size).toBe(0);
+        expect(map.sources.size).toBe(0);
+    });
+
+    it('dwa szybkie kliknięcia dodają wariant raz', async () => {
+        std.mockResolvedValue({ type: 'FeatureCollection', features: [variant(0.7)] });
+        const wrapper = mountIt();
+        await flushPromises();
+        const button = wrapper.find('button.add-variant');
+        await button.trigger('click');
+        await button.trigger('click');
+        await flushPromises();
+        expect(add).toHaveBeenCalledTimes(1);
+        expect(wrapper.find('button.add-variant').text()).toBe('Dodano');
+    });
+
+    it('błąd dodawania zostawia tabelę i pokazuje komunikat', async () => {
+        std.mockResolvedValue({ type: 'FeatureCollection', features: [variant(0.7)] });
+        add.mockRejectedValueOnce(new Error('Nie udało się zapisać.'));
+        const wrapper = mountIt();
+        await flushPromises();
+        await wrapper.find('button.add-variant').trigger('click');
+        await flushPromises();
+        expect(wrapper.text()).toContain('Nie udało się zapisać.');
+        expect(wrapper.findAll('tbody tr')).toHaveLength(2);
+        expect(wrapper.find('button.add-variant').text()).toBe('Dodaj na mapę');
+    });
 });

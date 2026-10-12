@@ -20,6 +20,10 @@
                     :err='error'
                 />
                 <template v-else>
+                    <TablerAlert
+                        v-if='addError'
+                        :err='addError'
+                    />
                     <div
                         v-if='intermediate'
                         class='text-secondary mb-2'
@@ -115,7 +119,10 @@ const map = mapStore.map as unknown as PreviewMap;
 const loading = ref(true);
 const error = ref<Error | null>(null);
 const variants = ref<Feature[]>([]);
+const addError = ref<Error | null>(null);
+// Warianty dodane albo dodawane w tej chwili (blokuje podwójne kliknięcie).
 const added = ref<Set<number>>(new Set());
+let unmounted = false;
 
 // Plan czytamy z metadanych bez dopasowania do geometrii: obiekt przeszedł już
 // readRoutePlan w CoTView, a warianty przychodzą prosto z API.
@@ -161,6 +168,7 @@ const rows = computed(() => [
 ]);
 
 function drawPreview(): void {
+    removePreview();
     map.addSource(SOURCE, {
         type: 'geojson',
         data: {
@@ -182,7 +190,10 @@ function removePreview(): void {
 }
 
 async function addVariant(index: number): Promise<void> {
+    if (added.value.has(index)) return;
     const variant = variants.value[index];
+    addError.value = null;
+    added.value = new Set(added.value).add(index);
     try {
         await mapStore.worker.db.add({
             ...variant,
@@ -193,9 +204,11 @@ async function addVariant(index: number): Promise<void> {
                 stroke: COLORS[index],
             },
         } as Feature, { authored: true });
-        added.value = new Set(added.value).add(index);
     } catch (err) {
-        error.value = err instanceof Error ? err : new Error(String(err));
+        const rest = new Set(added.value);
+        rest.delete(index);
+        added.value = rest;
+        addError.value = err instanceof Error ? err : new Error(String(err));
     }
 }
 
@@ -216,14 +229,18 @@ onMounted(async () => {
                 count: 2,
             },
         }) as { features: Feature[] };
+        if (unmounted) return;
         variants.value = result.features;
         if (variants.value.length) drawPreview();
     } catch (err) {
-        error.value = err instanceof Error ? err : new Error(String(err));
+        if (!unmounted) error.value = err instanceof Error ? err : new Error(String(err));
     } finally {
-        loading.value = false;
+        if (!unmounted) loading.value = false;
     }
 });
 
-onUnmounted(removePreview);
+onUnmounted(() => {
+    unmounted = true;
+    removePreview();
+});
 </script>
