@@ -3,7 +3,8 @@ import assert from 'node:assert';
 import http from 'node:http';
 import { AddressInfo } from 'node:net';
 import { GenerateUpsert } from '@openaddresses/batch-generic';
-import TaklabRoute, { simplifyLine, joinLegs, composeRemarks, validPlan, MAX_ROUTE_POINTS } from '../stateless/lib/routing/taklab.js';
+import TaklabRoute, { simplifyLine, joinLegs, composeRemarks, composeAnalysis, validPlan, MAX_ROUTE_POINTS } from '../stateless/lib/routing/taklab.js';
+import type { RouteAnalysis } from '../stateless/lib/routing/taklab.js';
 import type { RoutePlan } from '../stateless/lib/routing/taklab.js';
 import { RouteManager } from '../stateless/lib/interface-route.js';
 import Config from '../common/config.js';
@@ -19,6 +20,37 @@ let infoCalls = 0;
 const terrainLog: Array<{ start: number[]; received: number; sent: number }> = [];
 // Przełaj: ciała zapytań (opcje trasy)
 const terrainBodies: Array<Record<string, unknown>> = [];
+
+// Analiza terenu zwracana przez atrapę /terrain/analyze
+const ANALYSIS: RouteAnalysis = {
+    length_m: 9179,
+    elevation_min_m: 320,
+    elevation_max_m: 503,
+    ascent_m: 210,
+    descent_m: 180,
+    land: { path: 0.52, open: 0.11, forest: 0.28, scrub: 0.008, built_up: 0.01, wetland: 0, stream: 0.07, water: 0 },
+    cover: { concealed: 0.284, exposed: 0.125, unknown: 0.52 },
+    slope: { max_deg: 27, buckets: { '0-5': 0.716, '5-15': 0.162, '15-25': 0.11, '25+': 0.012 } },
+    obstacles: [
+        { kind: 'steep', from_m: 267, to_m: 351 },
+        { kind: 'stream', from_m: 815, to_m: 839 },
+        { kind: 'wetland', from_m: 3000, to_m: 3200 },
+        { kind: 'water_near', from_m: 5431, to_m: 5966 },
+    ],
+    danger: [
+        { kind: 'built_up', from_m: 486, to_m: 1573 },
+        { kind: 'road_crossing', from_m: 1435, to_m: 1521 },
+        { kind: 'open', from_m: 2100, to_m: 2600 },
+        { kind: 'open', from_m: 4000, to_m: 4250 },
+        { kind: 'skyline', from_m: 7100, to_m: 7400 },
+    ],
+    key_terrain: [
+        { kind: 'crossing', from_m: 5103, to_m: 5163 },
+        { kind: 'height', lon: 16.66483, lat: 50.35886, elevation_m: 517, above_route_m: 89, nearest_m: 9179, distance_m: 1434, bearing_deg: 308, visible_ratio: 0.35, visible: [{ from_m: 6100, to_m: 6800 }, { from_m: 8000, to_m: 9179 }] },
+        { kind: 'height', lon: 16.59, lat: 50.29, elevation_m: 601, above_route_m: 99, nearest_m: 0, distance_m: 400, bearing_deg: 195, visible_ratio: 0, visible: [] },
+    ],
+};
+let analyzeBodies: Array<{ coordinates: number[][] }> = [];
 
 // Jeden serwer udaje oba silniki: GraphHopper pod /route, przełaj pod /terrain/route
 const server = http.createServer((req, res) => {
@@ -66,6 +98,13 @@ const server = http.createServer((req, res) => {
                     { text: 'Cel', distance: 0, time: 0 },
                 ],
             }] }));
+        }
+
+        if (req.method === 'POST' && req.url === '/terrain/analyze') {
+            const analyzeBody = body as unknown as { coordinates: number[][] };
+            analyzeBodies.push(analyzeBody);
+            if (analyzeBody.coordinates[0][0] === 4) return send(502, '<html>Bad Gateway</html>');
+            return send(200, JSON.stringify(ANALYSIS));
         }
 
         if (req.method === 'POST' && req.url === '/terrain/route') {
@@ -555,6 +594,52 @@ test('reroute przełaju liczy z opcjami i zostawia je w planie', async () => {
     assert.equal(terrainBodies.length, 1);
     assert.equal(terrainBodies[0].avoid_wetland, true);
     assert.deepEqual((after.properties.metadata as { taklab_route: RoutePlan }).taklab_route.options, options);
+});
+
+test('composeAnalysis: blok OCOKA z charakterystyką, ukryciem, nachyleniem, przeszkodami, strefami i terenem kluczowym', () => {
+    const text = composeAnalysis(ANALYSIS);
+    assert.equal(text, [
+        'Analiza terenu (OCOKA)',
+        'Charakterystyka: 9,2 km, wysokość 320–503 m n.p.m., podejścia 210 m, zejścia 180 m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.',
+        'Ukrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).',
+        'Nachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.',
+        'Przeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.',
+        'Strefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.',
+        'Teren kluczowy i obserwacja:',
+        '- przeprawa (most) km 5,1',
+        '- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2',
+        '- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi',
+        'Założenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.',
+    ].join('\n'));
+});
+
+test('composeAnalysis: długie listy są skracane', () => {
+    const many = { ...ANALYSIS, obstacles: Array.from({ length: 10 }, (_, i) => ({ kind: 'stream' as const, from_m: i * 1000, to_m: i * 1000 + 30 })) };
+    assert.match(composeAnalysis(many), /ciek km 5,0; i 4 inne\./);
+});
+
+test('trasa dostaje analizę terenu w opisie i w planie', async () => {
+    analyzeBodies = [];
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[21, 52], [21.1, 52.1]], 'foot');
+    assert.equal(analyzeBodies.length, 1);
+    assert.deepEqual(analyzeBodies[0].coordinates, fc.features[0].geometry.coordinates.map(c => [(c as number[])[0], (c as number[])[1]]));
+    assert.match(String(fc.features[0].properties.remarks), /\n\nAnaliza terenu \(OCOKA\)\nCharakterystyka:/);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.equal(plan.analysis?.length_m, 9179);
+});
+
+test('błąd analizy nie psuje trasy, opis o tym mówi', async () => {
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[4, 52], [4.1, 52.1]], 'foot');
+    assert.match(String(fc.features[0].properties.remarks), /Analiza terenu: niedostępna\./);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.equal(plan.analysis, undefined);
+});
+
+test('bez usługi terenu trasa nie ma analizy ani wzmianki o niej', async () => {
+    analyzeBodies = [];
+    const fc = await new TaklabRoute(config, base, '').route([[21, 52], [21.1, 52.1]], 'foot');
+    assert.equal(analyzeBodies.length, 0);
+    assert.doesNotMatch(String(fc.features[0].properties.remarks), /Analiza terenu/);
 });
 
 test('Taklab routing - teardown', async () => {

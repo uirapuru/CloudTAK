@@ -42,6 +42,37 @@ export type RouteOptions = {
 export type Exposure = 'allow' | 'medium' | 'avoid';
 export const EXPOSURES: Exposure[] = ['allow', 'medium', 'avoid'];
 
+type Span = { from_m: number; to_m: number };
+
+/** Analiza terenu wzdłuż trasy z usługi terenu (POST /analyze), układ OCOKA. */
+export type RouteAnalysis = {
+    length_m: number;
+    elevation_min_m: number;
+    elevation_max_m: number;
+    ascent_m: number;
+    descent_m: number;
+    land: Record<string, number>;
+    cover: { concealed: number; exposed: number; unknown: number };
+    slope: { max_deg: number; buckets: Record<string, number> };
+    obstacles: Array<Span & { kind: 'stream' | 'wetland' | 'water_near' | 'steep' }>;
+    danger: Array<Span & { kind: 'open' | 'road_crossing' | 'built_up' | 'skyline' }>;
+    key_terrain: Array<
+        | (Span & { kind: 'crossing' })
+        | {
+            kind: 'height';
+            lon: number;
+            lat: number;
+            elevation_m: number;
+            above_route_m: number;
+            nearest_m: number;
+            distance_m: number;
+            bearing_deg: number;
+            visible_ratio: number;
+            visible: Span[];
+        }
+    >;
+};
+
 /** Plan trasy: punkty usera i granice odcinków, zapisywany w properties.metadata.taklab_route. */
 export type RoutePlan = {
     version: 1;
@@ -50,6 +81,9 @@ export type RoutePlan = {
     waypoints: Array<[number, number]>;
     legs: RouteLeg[];
     options?: RouteOptions;
+    analysis?: RouteAnalysis;
+    // Analizy nie udało się policzyć (usługa terenu jest, ale odpowiedziała błędem)
+    analysis_failed?: boolean;
 };
 
 type LegStats = Omit<RouteLeg, 'start' | 'end'>;
@@ -86,7 +120,42 @@ const PROFILES_TTL_MS = 60000;
 // Domyślny tryb schematu zapytania /search/route w upstreamie (nazwa trybu AGOL)
 const AGOL_DEFAULT_MODE = 'Driving Time';
 
-export const DEFAULT_TIMEOUTS = { graphhopper: 30000, terrain: 60000, info: 3000 };
+export const DEFAULT_TIMEOUTS = { graphhopper: 30000, terrain: 60000, info: 3000, analyze: 15000 };
+
+// Najwięcej pozycji w jednej linii analizy; resztę zastępuje „i N inne”
+const ANALYSIS_ITEMS = 6;
+
+const LAND_NAMES: Record<string, string> = {
+    path: 'drogi i ścieżki',
+    open: 'teren otwarty',
+    forest: 'las',
+    scrub: 'zarośla',
+    built_up: 'zabudowa',
+    wetland: 'bagna',
+    stream: 'cieki',
+    water: 'woda',
+};
+
+const OBSTACLE_NAMES: Record<string, string> = {
+    stream: 'ciek',
+    wetland: 'bagno',
+    water_near: 'woda przy trasie',
+    steep: 'stromo (ponad 25°)',
+};
+
+const DANGER_NAMES: Record<string, string> = {
+    open: 'teren otwarty',
+    road_crossing: 'przejście przez drogę',
+    built_up: 'zabudowa',
+    skyline: 'grzbiet, sylwetka na tle nieba',
+};
+
+// Miejsca, nie odcinki: podajemy kilometr początku
+const POINT_KINDS = new Set(['stream', 'road_crossing', 'crossing']);
+
+const COMPASS = ['płn.', 'płn.-wsch.', 'wsch.', 'płd.-wsch.', 'płd.', 'płd.-zach.', 'zach.', 'płn.-zach.'];
+
+const ANALYSIS_NOTE = 'Założenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.';
 
 export const MODES: Mode[] = [
     { id: 'car', name: 'Samochód', profile: 'car' },
@@ -286,6 +355,9 @@ export function composeRemarks(plan: RoutePlan): string {
 
     if (terrain) lines.push('', TERRAIN_NOTE);
 
+    if (plan.analysis) lines.push('', composeAnalysis(plan.analysis));
+    else if (plan.analysis_failed) lines.push('', 'Analiza terenu: niedostępna.');
+
     return lines.join('\n');
 }
 
@@ -323,6 +395,73 @@ function describeOptions(options?: RouteOptions): string {
     return parts.join(', ');
 }
 
+function km(meters: number): string {
+    return (meters / 1000).toFixed(1).replace('.', ',');
+}
+
+function percent(ratio: number): string {
+    return `${Math.round(ratio * 100)}%`;
+}
+
+function where(kind: string, span: Span): string {
+    const from = km(span.from_m);
+    const to = km(span.to_m);
+    return POINT_KINDS.has(kind) || from === to ? `km ${from}` : `km ${from}–${to}`;
+}
+
+function list(items: string[]): string {
+    const shown = items.slice(0, ANALYSIS_ITEMS);
+    const rest = items.length - shown.length;
+    return shown.join('; ') + (rest > 0 ? `; i ${rest} inne` : '') + '.';
+}
+
+/** Blok opisu trasy z analizą terenu: charakterystyka, ukrycie, nachylenie, przeszkody, strefy, teren kluczowy. */
+export function composeAnalysis(a: RouteAnalysis): string {
+    const land = Object.entries(a.land)
+        .filter(([, ratio]) => Math.round(ratio * 100) > 0)
+        .sort((x, y) => y[1] - x[1])
+        .map(([name, ratio]) => `${LAND_NAMES[name] ?? name} ${percent(ratio)}`);
+    if (land.length) land[0] = land[0][0].toUpperCase() + land[0].slice(1);
+
+    const lines = [
+        'Analiza terenu (OCOKA)',
+        `Charakterystyka: ${km(a.length_m)} km, wysokość ${a.elevation_min_m}–${a.elevation_max_m} m n.p.m., podejścia ${a.ascent_m} m, zejścia ${a.descent_m} m.${land.length ? ' ' + land.join(', ') + '.' : ''}`,
+    ];
+
+    const open = a.danger.filter(d => d.kind === 'open').sort((x, y) => (y.to_m - y.from_m) - (x.to_m - x.from_m))[0];
+    lines.push(`Ukrycie: osłona lasu lub zarośli ${percent(a.cover.concealed)} trasy, teren odsłonięty ${percent(a.cover.exposed)}, drogi ${percent(a.cover.unknown)} (osłona zależy od otoczenia drogi).`
+        + (open ? ` Najdłuższy odsłonięty odcinek: ${where('open', open)} (${formatDistance(open.to_m - open.from_m)}).` : ''));
+
+    const b = a.slope.buckets;
+    lines.push(`Nachylenie: największe ${Math.round(a.slope.max_deg)}°. Do 5°: ${percent(b['0-5'] ?? 0)}, 5–15°: ${percent(b['5-15'] ?? 0)}, 15–25°: ${percent(b['15-25'] ?? 0)}, ponad 25°: ${percent(b['25+'] ?? 0)}.`);
+
+    lines.push(a.obstacles.length
+        ? `Przeszkody: ${list(a.obstacles.map(o => `${OBSTACLE_NAMES[o.kind] ?? o.kind} ${where(o.kind, o)}`))}`
+        : 'Przeszkody: brak w danych.');
+
+    lines.push(a.danger.length
+        ? `Strefy niebezpieczne: ${list(a.danger.map(d => `${DANGER_NAMES[d.kind] ?? d.kind} ${where(d.kind, d)}`))}`
+        : 'Strefy niebezpieczne: brak w danych.');
+
+    if (a.key_terrain.length) {
+        lines.push('Teren kluczowy i obserwacja:');
+        for (const k of a.key_terrain) {
+            if (k.kind === 'crossing') {
+                lines.push(`- przeprawa (most) ${where('crossing', k)}`);
+                continue;
+            }
+            const direction = COMPASS[Math.round(k.bearing_deg / 45) % 8];
+            const seen = k.visible_ratio > 0
+                ? `widzi ${percent(k.visible_ratio)} trasy` + (k.visible.length ? ', ' + k.visible.slice(0, ANALYSIS_ITEMS).map(v => where('open', v)).join(', ') : '')
+                : 'trasy nie widzi';
+            lines.push(`- wzgórze ${k.elevation_m} m n.p.m. (${k.above_route_m} m nad trasą), ${km(k.distance_m)} km na ${direction} od km ${km(k.nearest_m)} (${k.lat.toFixed(5)}, ${k.lon.toFixed(5)}): ${seen}`);
+        }
+    }
+
+    lines.push(ANALYSIS_NOTE);
+    return lines.join('\n');
+}
+
 function graphHopperError(message: string | undefined): string {
     if (!message) return 'Nie udało się wyznaczyć trasy.';
     if (/Cannot find point|out of bounds/i.test(message)) return 'Punkt poza siecią dróg albo poza obszarem mapy.';
@@ -337,11 +476,11 @@ export default class TaklabRoute implements RouteInterface {
 
     graphhopper: string;
     terrain: string;
-    timeouts: { graphhopper: number; terrain: number; info?: number };
+    timeouts: { graphhopper: number; terrain: number; info?: number; analyze?: number };
 
     private profilesCache?: { at: number; profiles: Set<string> | null };
 
-    constructor(config: Config, graphhopper: string, terrain: string, timeouts: { graphhopper: number; terrain: number; info?: number } = DEFAULT_TIMEOUTS) {
+    constructor(config: Config, graphhopper: string, terrain: string, timeouts: { graphhopper: number; terrain: number; info?: number; analyze?: number } = DEFAULT_TIMEOUTS) {
         this.timeouts = timeouts;
         this._id = 'taklab';
         this._name = 'taklab';
@@ -508,6 +647,12 @@ export default class TaklabRoute implements RouteInterface {
         const plan: RoutePlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints, legs };
         if (options) plan.options = options;
 
+        if (this.terrain) {
+            const analysis = await this.analyze(coordinates);
+            if (analysis) plan.analysis = analysis;
+            else plan.analysis_failed = true;
+        }
+
         const norm = await CoTParser.normalize_geojson({
             id: String(randomUUID()),
             type: 'Feature',
@@ -572,6 +717,24 @@ export default class TaklabRoute implements RouteInterface {
         if (steps.length) leg.steps = steps;
 
         return { coordinates: path.points.coordinates, leg };
+    }
+
+    /** Analiza terenu wzdłuż linii; null, gdy usługa zawiodła (trasa powstaje i bez niej). */
+    async analyze(coordinates: number[][]): Promise<RouteAnalysis | null> {
+        try {
+            const res = await fetch(new URL(this.terrain + '/analyze'), {
+                method: 'POST',
+                safeUrlAllow: [this.terrain],
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ coordinates: coordinates.map(c => [c[0], c[1]]) }),
+                signal: AbortSignal.timeout(this.timeouts.analyze ?? DEFAULT_TIMEOUTS.analyze),
+            });
+            const body = await readJson(res);
+            if (!res.ok || typeof field(body, 'length_m') !== 'number') return null;
+            return body as RouteAnalysis;
+        } catch {
+            return null;
+        }
     }
 
     async terrainLeg(a: [number, number], b: [number, number], options?: RouteOptions): Promise<LegSlice> {
