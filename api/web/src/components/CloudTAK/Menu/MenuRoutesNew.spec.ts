@@ -20,6 +20,7 @@ const draw = reactive({
         draw.routeWaypoints = [opts.start];
     }),
     setRouteCallsign: vi.fn(),
+    setRouteTravelMode: vi.fn<(travelMode: string) => Promise<boolean>>(async () => true),
     removeRouteWaypoint: vi.fn(),
     finish: vi.fn(async () => { draw.mode = 'static'; }),
     stop: vi.fn(async () => { draw.mode = 'static'; }),
@@ -225,6 +226,63 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await selects()[0].setValue('taklab');
         await flushPromises();
         expect(mode()).toBe('Samochód');
+    });
+
+    describe('zmiana trybu w czasie budowania', () => {
+        beforeEach(() => {
+            GET.mockImplementation(async (url: string) => {
+                if (url === '/api/search') {
+                    return {
+                        error: undefined,
+                        data: {
+                            route: {
+                                enabled: true,
+                                providers: [{ id: 'taklab', name: 'taklab', modes: [{ id: 'car', name: 'Samochód' }, { id: 'foot', name: 'Pieszo' }] }]
+                            }
+                        }
+                    };
+                }
+                return { error: undefined, data: { features: [{ type: 'Feature' }] } };
+            });
+        });
+
+        async function building() {
+            location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+            const wrapper = mountMenu();
+            await flushPromises();
+            await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+            await flushPromises();
+            const select = () => wrapper.findAll('select')[1];
+            return { wrapper, select };
+        }
+
+        it('pole trybu jest aktywne, a zmiana idzie do edytora trasy', async () => {
+            const { select } = await building();
+            expect(select().attributes('disabled')).toBeUndefined();
+
+            await select().setValue('Pieszo');
+            await flushPromises();
+            expect(draw.setRouteTravelMode).toHaveBeenCalledWith('foot');
+            expect(select().element.value).toBe('Pieszo');
+        });
+
+        it('gdy edytor odrzuci zmianę, pole wraca do poprzedniego trybu', async () => {
+            const { select } = await building();
+            draw.setRouteTravelMode.mockImplementationOnce(async () => false);
+
+            await select().setValue('Pieszo');
+            await flushPromises();
+            expect(select().element.value).toBe('Samochód');
+        });
+
+        it('poza budowaniem zmiana trybu nie woła edytora', async () => {
+            location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+            const wrapper = mountMenu();
+            await flushPromises();
+            await wrapper.findAll('select')[1].setValue('Pieszo');
+            await flushPromises();
+            expect(draw.setRouteTravelMode).not.toHaveBeenCalled();
+        });
     });
 
     it('does not overwrite a start given in the query', async () => {

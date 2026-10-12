@@ -150,6 +150,46 @@ describe('RouteEditor - tryb budowania (f)', () => {
         expect(rendered(sources).filter((f) => f.geometry.type === 'Point').map((p) => p.properties.label)).toEqual(['A', '1', 'B']);
     });
 
+    it('zmiana trybu przed drugim punktem nie pyta API, a drugi punkt liczy już nowym trybem', async () => {
+        const { fire, first, instance } = editor({ mode: 'build', waypoints: [[21, 52]] });
+        expect(await instance.setTravelMode('car')).toBe(true);
+        expect(first).not.toHaveBeenCalled();
+
+        await click(fire, 21.2, 52);
+        expect(first).toHaveBeenCalledWith('car', [[21, 52], [21.2, 52]]);
+    });
+
+    it('zmiana trybu przy gotowej trasie liczy całą trasę od nowa przez wszystkie punkty', async () => {
+        const { fire, first, reroute, instance, s } = editor({ mode: 'build', waypoints: [[21, 52]] });
+        await click(fire, 21.2, 52);
+        await click(fire, 21.2, 52.3);
+
+        expect(await instance.setTravelMode('car')).toBe(true);
+        expect(first).toHaveBeenLastCalledWith('car', [[21, 52], [21.2, 52], [21.2, 52.3]]);
+        expect(instance.travel).toBe('car');
+        expect(s.waypoints.value).toEqual([[21, 52], [21.2, 52], [21.2, 52.3]]);
+
+        await click(fire, 21.5, 52.5);
+        expect(reroute).toHaveBeenLastCalledWith(expect.objectContaining({ travelMode: 'car', added: 1 }));
+    });
+
+    it('błąd przeliczenia po zmianie trybu zostawia poprzedni tryb i trasę', async () => {
+        let fail = false;
+        const first: RouteFirstLeg = vi.fn(async (_mode, stops) => {
+            if (fail) throw new Error('Brak trasy w tym trybie.');
+            return apiFeature(stops);
+        });
+        const { fire, instance, s } = editor({ mode: 'build', waypoints: [[21, 52]], first });
+        await click(fire, 21.2, 52);
+        const before = instance.result();
+
+        fail = true;
+        expect(await instance.setTravelMode('offroad')).toBe(false);
+        expect(instance.travel).toBe('foot');
+        expect(s.error.value).toBe('Brak trasy w tym trybie.');
+        expect(instance.result()).toEqual(before);
+    });
+
     it('kliknięcie przy linii w budowaniu też dopisuje na koniec', async () => {
         const { fire, reroute } = editor({ mode: 'build', waypoints: [[21, 52]] });
         await click(fire, 21.2, 52);

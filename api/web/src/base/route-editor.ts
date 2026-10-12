@@ -192,6 +192,29 @@ export default class RouteEditor {
         return this.travelMode;
     }
 
+    /**
+     * Zmiana trybu trasy. Gotowa trasa jest liczona od nowa przez wszystkie punkty usera;
+     * przy błędzie zostaje poprzedni tryb i trasa. Zwraca false, gdy trybu nie zmieniono.
+     */
+    async setTravelMode(travelMode: string): Promise<boolean> {
+        if (this.state.busy.value) return false;
+        if (travelMode === this.travelMode) return true;
+
+        if (!this.plan) {
+            this.travelMode = travelMode;
+            return true;
+        }
+
+        const stops = this.waypoints.map((w) => [w[0], w[1]] as LngLat);
+        let changed = false;
+        await this.run(async () => {
+            this.accept(await this.first(travelMode, stops));
+            this.travelMode = travelMode;
+            changed = true;
+        });
+        return changed;
+    }
+
     async removeWaypoint(index: number): Promise<void> {
         if (this.state.busy.value) return;
         this.state.menu.value = null;

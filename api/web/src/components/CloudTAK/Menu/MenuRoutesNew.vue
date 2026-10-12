@@ -138,7 +138,7 @@
                     <TablerEnum
                         v-if='modes.length > 0'
                         v-model='routePlan.travelMode'
-                        :disabled='building'
+                        :disabled='building && mapStore.draw.routeBusy'
                         label='Travel Mode'
                         :options='modes.map(m => m.name)'
                     />
@@ -246,11 +246,15 @@ function removeVia(index: number): void {
     routePlan.value.via.splice(index, 1);
 }
 
-function selectedModeId(): string | undefined {
+function modeId(name: string): string | undefined {
     for (const m of modes.value) {
-        if (m.name === routePlan.value.travelMode) return m.id;
+        if (m.name === name) return m.id;
     }
     return undefined;
+}
+
+function selectedModeId(): string | undefined {
+    return modeId(routePlan.value.travelMode);
 }
 
 function selectedProviderId(): string | undefined {
@@ -273,6 +277,17 @@ async function selectStart(event: null | (RoutePoint & { source?: string })): Pr
     });
     building.value = true;
 }
+
+// Zmiana trybu w czasie budowania liczy trasę od nowa; gdy edytor jej nie przyjmie,
+// pole wraca do poprzedniego trybu (powrót trafia tu jeszcze raz, ale tryb edytora się nie zmienił)
+watch(() => routePlan.value.travelMode, async (name, previous) => {
+    if (!building.value) return;
+    const id = modeId(name);
+    if (!id) return;
+    if (!await mapStore.draw.setRouteTravelMode(id)) {
+        routePlan.value.travelMode = previous;
+    }
+});
 
 // Anulowanie edytora na pasku dolnym kończy budowanie
 watch(() => mapStore.draw.mode, (mode) => {

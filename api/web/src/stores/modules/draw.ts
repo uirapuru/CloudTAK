@@ -986,6 +986,12 @@ export default class DrawTool {
         this.routeCallsign = callsign;
     }
 
+    /** Zmiana trybu trasy w otwartym edytorze; false, gdy trybu nie zmieniono. */
+    async setRouteTravelMode(travelMode: string): Promise<boolean> {
+        if (!this.routeEditor) return false;
+        return await this.routeEditor.setTravelMode(travelMode);
+    }
+
     /** Usunięcie punktu usera z otwartego edytora trasy. */
     async removeRouteWaypoint(index: number): Promise<void> {
         if (this.routeEditor) await this.routeEditor.removeWaypoint(index);
