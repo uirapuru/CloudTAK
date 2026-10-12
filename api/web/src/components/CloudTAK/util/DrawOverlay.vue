@@ -340,6 +340,86 @@
             </div>
         </div>
         <div
+            v-else-if='mapStore.draw.mode === DrawToolMode.ROUTE'
+            class='card cloudtak-panel user-select-none route-editor-panel'
+        >
+            <div class='card-header'>
+                <IconRoute
+                    :size='24'
+                    stroke='1'
+                /><span
+                    class='mx-2'
+                    v-text='mapStore.draw.routeEditorKind === "build" ? "Wyznaczanie trasy" : "Edycja trasy"'
+                />
+
+                <div class='ms-auto btn-list'>
+                    <TablerIconButton
+                        title='Zapisz trasę'
+                        :disabled='!mapStore.draw.canFinish'
+                        @click='mapStore.draw.finish()'
+                    >
+                        <IconCheck
+                            :size='24'
+                            stroke='1'
+                        />
+                    </TablerIconButton>
+                    <TablerIconButton
+                        title='Anuluj'
+                        @click='mapStore.draw.stop()'
+                    >
+                        <IconX
+                            :size='24'
+                            stroke='1'
+                        />
+                    </TablerIconButton>
+                </div>
+            </div>
+            <div class='card-body py-2'>
+                <div
+                    class='route-summary'
+                    v-text='mapStore.draw.routeSummary'
+                />
+                <div
+                    v-if='mapStore.draw.routeBusy'
+                    class='text-secondary small route-busy'
+                >
+                    Przeliczam trasę…
+                </div>
+                <div
+                    v-if='mapStore.draw.routeError'
+                    class='text-danger small route-error'
+                    v-text='mapStore.draw.routeError'
+                />
+                <div
+                    v-if='mapStore.draw.routeMenu'
+                    class='d-flex align-items-center gap-2 mt-2 route-point-menu'
+                >
+                    <span v-text='"Punkt " + routePointLabel(mapStore.draw.routeMenu.index)' />
+                    <button
+                        type='button'
+                        class='btn btn-sm btn-outline-danger route-remove-point'
+                        @click='mapStore.draw.removeRouteWaypoint(mapStore.draw.routeMenu.index)'
+                    >
+                        Usuń punkt
+                    </button>
+                    <button
+                        type='button'
+                        class='btn btn-sm btn-outline-secondary'
+                        @click='mapStore.draw.routeMenu = null'
+                    >
+                        Zamknij
+                    </button>
+                </div>
+                <div
+                    v-else
+                    class='text-secondary small mt-1'
+                    v-text='mapStore.draw.routeEditorKind === "build"
+                        ? "Kliknij mapę, aby dodać kolejny punkt. Przeciągnij punkt albo odcinek, aby zmienić trasę."
+                        : "Kliknij mapę, aby dodać punkt do najbliższego odcinka. Przeciągnij punkt albo odcinek, aby zmienić trasę."'
+                />
+            </div>
+        </div>
+        <div
             v-else-if='mapStore.draw.mode === DrawToolMode.SELECT'
             class='card cloudtak-panel user-select-none'
         >
@@ -400,12 +480,18 @@ import {
     IconVector,
     IconPolygon,
     IconCheck,
+    IconRoute,
 } from '@tabler/icons-vue';
+import { waypointLabel } from '../../../base/route-plan.ts';
 
 const mapStore = useMapStore();
 const appStore = useAppStore();
 
 const opened = ref(false);
+
+function routePointLabel(index: number): string {
+    return waypointLabel(index, mapStore.draw.routeWaypointCount);
+}
 
 const filteredOverlayNames = computed((): string[] => {
     return OverlayManager.queryableOverlayNames();

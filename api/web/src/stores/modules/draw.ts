@@ -26,6 +26,10 @@ import { std, stdurl, server } from '../../std.ts';
 import type { Feature, FeatureCollection } from '../../types.ts';
 import type { paths } from '@cloudtak/api-types';
 import OverlayManager from '../../base/overlay.ts';
+import RouteEditor from '../../base/route-editor.ts';
+import type { EditorState, Reroute, RouteFirstLeg } from '../../base/route-editor.ts';
+import { readRoutePlan } from '../../base/route-plan.ts';
+import type { LngLat } from '../../base/route-plan.ts';
 
 type AugmentedBasemapResponse = paths['/api/basemap']['get']['responses']['200']['content']['application/json']['items'][0];
 import type { Polygon, Position, LineString, Feature as GeoJSONFeature, FeatureCollection as GeoJSONFeatureCollection } from 'geojson';
@@ -43,6 +47,49 @@ export enum DrawToolMode {
     RECTANGLE = 'angled-rectangle',
     CIRCLE = 'circle',
     SECTOR = 'sector',
+
+    // Edytor trasy taklab (budowanie kliknięciami albo edycja trasy z planem)
+    ROUTE = 'route',
+}
+
+/**
+ * Flagi trybu select terra-draw. Trasy (b-m-r) nie da się chwycić i przenieść
+ * w całości (wymaganie d specyfikacji edycji tras), zwykłej linii tak.
+ */
+export function selectFlags(lineDraggable: boolean) {
+    return {
+        polygon: {
+            feature: {
+                draggable: true,
+                coordinates: {
+                    snappable: true,
+                    deletable: true,
+                    midpoints: {
+                        draggable: true
+                    },
+                    draggable: true,
+                }
+            }
+        },
+        linestring: {
+            feature: {
+                draggable: lineDraggable,
+                coordinates: {
+                    snappable: true,
+                    deletable: true,
+                    midpoints: {
+                        draggable: true
+                    },
+                    draggable: true,
+                }
+            }
+        },
+        point: {
+            feature: {
+                draggable: true,
+            }
+        }
+    };
 }
 
 export default class DrawTool {
@@ -56,6 +103,18 @@ export default class DrawTool {
 
     // Bumped on every TerraDraw change event to drive reactivity for canFinish
     private _changeCount = ref(0);
+
+    // Edytor trasy taklab; stan dla paska edycji i menu New Route
+    private routeEditor: RouteEditor | null = null;
+    private routeKind: 'build' | 'edit' | null = null;
+    private routeCallsign = '';
+    private _routeState: EditorState = {
+        busy: ref(false),
+        error: ref(''),
+        waypoints: ref<LngLat[]>([]),
+        menu: ref(null),
+        summary: ref(''),
+    };
 
     public get editing(): COT | null {
         return this._editing.value;
@@ -146,6 +205,12 @@ export default class DrawTool {
 
         if (this.mode === DrawToolMode.SELECT) {
             return !!this.editing;
+        }
+
+        if (this.mode === DrawToolMode.ROUTE) {
+            // waypoints jest odświeżane po każdej zmianie edytora
+            void this._routeState.waypoints.value;
+            return !this._routeState.busy.value && !!this.routeEditor && this.routeEditor.result() !== null;
         }
 
         const features = this.draw.getSnapshot();
@@ -305,39 +370,7 @@ export default class DrawTool {
                     drawInteraction
                 }),
                 new terraDraw.TerraDrawSelectMode({
-                    flags: {
-                        polygon: {
-                            feature: {
-                                draggable: true,
-                                coordinates: {
-                                    snappable: true,
-                                    deletable: true,
-                                    midpoints: {
-                                        draggable: true
-                                    },
-                                    draggable: true,
-                                }
-                            }
-                        },
-                        linestring: {
-                            feature: {
-                                draggable: true,
-                                coordinates: {
-                                    snappable: true,
-                                    deletable: true,
-                                    midpoints: {
-                                        draggable: true
-                                    },
-                                    draggable: true,
-                                }
-                            }
-                        },
-                        point: {
-                            feature: {
-                                draggable: true,
-                            }
-                        }
-                    }
+                    flags: selectFlags(true)
                 })
             ]
         });
@@ -732,6 +765,11 @@ export default class DrawTool {
     }
 
     async finish(): Promise<void> {
+        if (this.mode === DrawToolMode.ROUTE) {
+            await this.finishRoute();
+            return;
+        }
+
         if (this.mode === DrawToolMode.SELECT && this.editing) {
             // For editing mode, deselectFeature triggers the 'deselect' handler which saves
             this.draw.deselectFeature(this.editing.id);
@@ -800,14 +838,18 @@ export default class DrawTool {
     }
 
     async stop(refresh = true): Promise<void> {
+        const previous = this.mode;
         this.mode = DrawToolMode.STATIC;
+
+        this.stopRouteEditor();
 
         await this.removeNetwork();
 
         // Reset cursor to default BEFORE stopping draw operations
         this.mapStore.map.getCanvas().style.cursor = '';
 
-        this.draw.stop();
+        // Edytor trasy nie uruchamia terra-draw
+        if (previous !== DrawToolMode.ROUTE) this.draw.stop();
         this.snapping.clear()
 
         if (!this.editing) return;
@@ -828,9 +870,17 @@ export default class DrawTool {
     }
 
     async edit(cot: COT) {
+        if (cot.is_route && readRoutePlan(cot.as_feature({ clone: true }))) {
+            await this.editRoute(cot);
+            return;
+        }
+
         this.editing = cot;
 
         this.start(DrawToolMode.SELECT);
+
+        // Trasy nie da się przenieść w całości; zwykłą linię tak
+        this.draw.updateModeOptions(DrawToolMode.SELECT, { flags: selectFlags(!cot.is_route) });
 
         try {
             const feat = cot.as_feature({ clone: true });
@@ -881,6 +931,169 @@ export default class DrawTool {
             await this.stop();
 
             throw err;
+        }
+    }
+
+    /**
+     * Budowanie trasy kliknięciami (menu New Route, start wskazany na mapie):
+     * kolejne kliknięcia mapy dopisują punkty na koniec trasy.
+     */
+    async buildRoute(opts: { travelMode: string; start: LngLat; callsign?: string }): Promise<void> {
+        if (this.mode !== DrawToolMode.STATIC) await this.stop();
+
+        this.routeKind = 'build';
+        this.routeCallsign = opts.callsign ?? '';
+        this.startRouteEditor({ mode: 'build', travelMode: opts.travelMode, waypoints: [opts.start] });
+    }
+
+    // Stan edytora trasy dla paska edycji; pola Ref są prywatne jak _mode i _editing,
+    // bo DrawTool siedzi w sklepie Pinia, który odpakowuje publiczne Ref-y w typie
+    public get routeBusy(): boolean {
+        return this._routeState.busy.value;
+    }
+
+    public get routeError(): string {
+        return this._routeState.error.value;
+    }
+
+    public get routeSummary(): string {
+        return this._routeState.summary.value;
+    }
+
+    public get routeWaypointCount(): number {
+        return this._routeState.waypoints.value.length;
+    }
+
+    public get routeMenu(): null | { index: number; x: number; y: number } {
+        return this._routeState.menu.value;
+    }
+
+    public set routeMenu(menu: null | { index: number; x: number; y: number }) {
+        this._routeState.menu.value = menu;
+    }
+
+    /** 'build', 'edit' albo null, gdy edytor trasy jest zamknięty. */
+    get routeEditorKind(): 'build' | 'edit' | null {
+        return this.routeKind;
+    }
+
+    /** Nazwa trasy zapisywanej z trybu budowania (menu ustawia ją z pól startu i celu). */
+    setRouteCallsign(callsign: string): void {
+        this.routeCallsign = callsign;
+    }
+
+    /** Usunięcie punktu usera z otwartego edytora trasy. */
+    async removeRouteWaypoint(index: number): Promise<void> {
+        if (this.routeEditor) await this.routeEditor.removeWaypoint(index);
+    }
+
+    private async editRoute(cot: COT): Promise<void> {
+        if (this.mode !== DrawToolMode.STATIC) await this.stop();
+
+        this.editing = cot;
+        this.routeKind = 'edit';
+
+        await Filter.create(
+            cot.properties.callsign + ' Hidden',
+            `hidden-${cot.id}`,
+            'AtlasDatabase',
+            true,
+            `id = "${cot.id}"`
+        );
+
+        if (cot.origin.mode === OriginMode.MISSION && cot.origin.mode_id) {
+            await this.mapStore.loadMission(cot.origin.mode_id);
+        } else {
+            await this.mapStore.worker.db.hide(cot.id);
+            await this.mapStore.refresh();
+        }
+
+        try {
+            this.startRouteEditor({ mode: 'edit', travelMode: '', feature: cot.as_feature({ clone: true }) as Feature });
+        } catch (err) {
+            await this.stop();
+            throw err;
+        }
+    }
+
+    private startRouteEditor(opts: { mode: 'build' | 'edit'; travelMode: string; waypoints?: LngLat[]; feature?: Feature }): void {
+        this._routeState.busy.value = false;
+        this._routeState.error.value = '';
+        this._routeState.menu.value = null;
+
+        const reroute: Reroute = async (body) => {
+            const fc = await std('/api/search/route/legs', {
+                method: 'POST',
+                body: { provider: 'taklab', ...body },
+            }) as FeatureCollection;
+            if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
+            return fc.features[0];
+        };
+
+        const first: RouteFirstLeg = async (travelMode, stops) => {
+            const url = stdurl('/api/search/route');
+            url.searchParams.set('provider', 'taklab');
+            url.searchParams.set('travelMode', travelMode);
+            url.searchParams.set('callsign', this.routeCallsign || 'Trasa');
+            url.searchParams.set('start', stops[0].join(','));
+            url.searchParams.set('end', stops[stops.length - 1].join(','));
+            if (stops.length > 2) url.searchParams.set('via', stops.slice(1, -1).map((s) => s.join(',')).join(';'));
+            const fc = await std(url) as FeatureCollection;
+            if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
+            return fc.features[0];
+        };
+
+        this.routeEditor = new RouteEditor(this.mapStore.map as unknown as ConstructorParameters<typeof RouteEditor>[0], {
+            mode: opts.mode,
+            travelMode: opts.travelMode,
+            feature: opts.feature,
+            waypoints: opts.waypoints,
+            reroute,
+            first,
+            state: this._routeState,
+        });
+
+        this.mode = DrawToolMode.ROUTE;
+        this.routeEditor.start();
+    }
+
+    private stopRouteEditor(): void {
+        if (!this.routeEditor) return;
+        this.routeEditor.destroy();
+        this.routeEditor = null;
+        this.routeKind = null;
+        this._routeState.menu.value = null;
+        this._routeState.waypoints.value = [];
+    }
+
+    private async finishRoute(): Promise<void> {
+        if (!this.routeEditor) return;
+        const result = this.routeEditor.result();
+        if (!result) return;
+
+        const kind = this.routeKind;
+        const editing = this.editing;
+
+        if (kind === 'edit') {
+            delete (result.properties as Record<string, unknown>).center;
+            // stop() przywraca widoczność edytowanej trasy
+            await this.stop();
+            await this.mapStore.worker.db.add(result, { authored: true });
+            await this.mapStore.refresh();
+            if (editing && editing.origin.mode === OriginMode.MISSION && editing.origin.mode_id) {
+                await this.mapStore.loadMission(editing.origin.mode_id);
+            }
+            return;
+        }
+
+        if (this.routeCallsign) result.properties.callsign = this.routeCallsign;
+        await this.stop();
+
+        const cot = await this.mapStore.worker.db.add(result, { authored: true });
+        await this.mapStore.refresh();
+        if (cot) {
+            cot.flyTo();
+            router.push(`/cot/${cot.id}`);
         }
     }
 

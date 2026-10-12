@@ -23,7 +23,7 @@ function setup() {
         as_feature() {
             return { id: 'route-1', type: 'Feature', path: '/', properties: this.properties, geometry: this.geometry };
         },
-        update: vi.fn(async () => true),
+        update: vi.fn<(update: unknown) => Promise<boolean>>(async () => true),
     };
 
     const database = new AtlasDatabase({ postMessage: vi.fn() } as unknown as Atlas);
@@ -45,21 +45,21 @@ describe('AtlasDatabase.add: plan trasy a echo z serwera TAK', () => {
     it('zostawia plan, gdy trasa wraca z serwera z tą samą geometrią', async () => {
         const { database, existing } = setup();
         await database.add(incoming());
-        const update = existing.update.mock.calls[0][0] as { properties: { metadata: Record<string, unknown> } };
+        const update = existing.update.mock.calls[0][0] as unknown as { properties: { metadata: Record<string, unknown> } };
         expect(update.properties.metadata.taklab_route).toEqual(plan);
     });
 
     it('nie zostawia planu, gdy geometria trasy się zmieniła', async () => {
         const { database, existing } = setup();
         await database.add(incoming([[21, 52], [22, 53]]));
-        const update = existing.update.mock.calls[0][0] as { properties: { metadata: Record<string, unknown> } };
+        const update = existing.update.mock.calls[0][0] as unknown as { properties: { metadata: Record<string, unknown> } };
         expect(update.properties.metadata).toEqual({});
     });
 
     it('zmiana napisana przez tego klienta wygrywa', async () => {
         const { database, existing } = setup();
         await database.add(incoming(), { authored: true });
-        const update = existing.update.mock.calls[0][0] as { properties: { metadata: Record<string, unknown> } };
+        const update = existing.update.mock.calls[0][0] as unknown as { properties: { metadata: Record<string, unknown> } };
         expect(update.properties.metadata).toEqual({});
     });
 });
