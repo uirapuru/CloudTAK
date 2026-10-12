@@ -36,7 +36,16 @@ export type RouteOptions = {
     avoid_streams?: boolean;
     max_slope_deg?: number;
     exposure?: Exposure;
+    avoid_observation?: boolean;
 };
+
+/** Zagrożenia narysowane na mapie: posterunki przeciwnika i tereny zamknięte (wielokąty lon/lat). */
+export type RouteThreats = {
+    observers?: Array<[number, number]>;
+    closed_areas?: Array<Array<[number, number]>>;
+};
+
+export const MAX_THREATS = 50;
 
 /** Ekspozycja na przełaju: 'allow' = bez kary za teren odsłonięty (domyślnie). */
 export type Exposure = 'allow' | 'medium' | 'avoid';
@@ -71,6 +80,8 @@ export type RouteAnalysis = {
             visible: Span[];
         }
     >;
+    // Część trasy widoczna z choć jednego wzgórza
+    observed_ratio?: number;
 };
 
 /** Plan trasy: punkty usera i granice odcinków, zapisywany w properties.metadata.taklab_route. */
@@ -81,6 +92,8 @@ export type RoutePlan = {
     waypoints: Array<[number, number]>;
     legs: RouteLeg[];
     options?: RouteOptions;
+    // Liczby użytych obiektów z mapy
+    threats?: { observers: number; closed_areas: number };
     analysis?: RouteAnalysis;
     // Analizy nie udało się policzyć (usługa terenu jest, ale odpowiedziała błędem)
     analysis_failed?: boolean;
@@ -98,6 +111,7 @@ export type RerouteInput = {
     count: number;
     added: -1 | 0 | 1;
     options?: RouteOptions;
+    threats?: RouteThreats;
 };
 
 // Górna granica liczby wierzchołków trasy: ATAK robi z każdego punkt kontrolny
@@ -338,6 +352,13 @@ export function composeRemarks(plan: RoutePlan): string {
     const options = describeOptions(plan.options);
     if (terrain && options) lines.push(`Opcje: ${options}`);
 
+    if (plan.threats) {
+        const parts: string[] = [];
+        if (plan.threats.observers) parts.push(`${plan.threats.observers} ${plural(plan.threats.observers, 'posterunek', 'posterunki', 'posterunków')} przeciwnika`);
+        if (plan.threats.closed_areas) parts.push(`${plan.threats.closed_areas} ${plural(plan.threats.closed_areas, 'teren zamknięty', 'tereny zamknięte', 'terenów zamkniętych')}`);
+        lines.push(`Z mapy: ${parts.join(', ')}.`);
+    }
+
     if (terrain && distance > 0) {
         const offpath = legs.reduce((sum, leg) => sum + (leg.offpath_ratio ?? 0) * leg.distance_m, 0) / distance;
         lines.push(`Poza drogami: ${Math.round(offpath * 100)}%`);
@@ -370,6 +391,7 @@ export function normalizeOptions(options?: RouteOptions): RouteOptions | undefin
     const result: RouteOptions = {};
     if (options.avoid_wetland) result.avoid_wetland = true;
     if (options.avoid_streams) result.avoid_streams = true;
+    if (options.avoid_observation) result.avoid_observation = true;
     if (options.max_slope_deg !== undefined) {
         const slope = options.max_slope_deg;
         if (!Number.isFinite(slope) || slope < MIN_SLOPE_DEG || slope > MAX_SLOPE_DEG) {
@@ -384,6 +406,38 @@ export function normalizeOptions(options?: RouteOptions): RouteOptions | undefin
     return Object.keys(result).length ? result : undefined;
 }
 
+function finitePoint(p: unknown): p is [number, number] {
+    return Array.isArray(p) && p.length >= 2 && Number.isFinite(p[0]) && Number.isFinite(p[1]);
+}
+
+/** Zagrożenia z mapy: puste = undefined; za dużo obiektów albo zły wielokąt = 400. */
+export function normalizeThreats(threats?: RouteThreats): RouteThreats | undefined {
+    if (!threats) return undefined;
+    const observers = threats.observers ?? [];
+    const areas = threats.closed_areas ?? [];
+    if (observers.length > MAX_THREATS || areas.length > MAX_THREATS) {
+        throw new Err(400, null, `Najwyżej ${MAX_THREATS} posterunków i ${MAX_THREATS} terenów zamkniętych.`);
+    }
+    if (!observers.every(finitePoint)) throw new Err(400, null, 'Nieprawidłowa pozycja posterunku.');
+    for (const ring of areas) {
+        if (!Array.isArray(ring) || ring.length < 4 || ring.length > 1000 || !ring.every(finitePoint)) {
+            throw new Err(400, null, 'Teren zamknięty musi być wielokątem z 4–1000 punktów.');
+        }
+    }
+    const result: RouteThreats = {};
+    if (observers.length) result.observers = observers.map(p => [p[0], p[1]] as [number, number]);
+    if (areas.length) result.closed_areas = areas.map(ring => ring.map(p => [p[0], p[1]] as [number, number]));
+    return Object.keys(result).length ? result : undefined;
+}
+
+function plural(n: number, one: string, few: string, many: string): string {
+    const tens = n % 100;
+    const units = n % 10;
+    if (n === 1) return one;
+    if (units >= 2 && units <= 4 && (tens < 12 || tens > 14)) return few;
+    return many;
+}
+
 function describeOptions(options?: RouteOptions): string {
     if (!options) return '';
     const parts: string[] = [];
@@ -392,6 +446,7 @@ function describeOptions(options?: RouteOptions): string {
     if (options.max_slope_deg !== undefined) parts.push(`nachylenie do ${options.max_slope_deg}°`);
     if (options.exposure === 'medium') parts.push('ogranicza teren odsłonięty');
     if (options.exposure === 'avoid') parts.push('unika terenu odsłoniętego');
+    if (options.avoid_observation) parts.push('unika widoczności ze wzgórz');
     return parts.join(', ');
 }
 
@@ -456,6 +511,10 @@ export function composeAnalysis(a: RouteAnalysis): string {
                 : 'trasy nie widzi';
             lines.push(`- wzgórze ${k.elevation_m} m n.p.m. (${k.above_route_m} m nad trasą), ${km(k.distance_m)} km na ${direction} od km ${km(k.nearest_m)} (${k.lat.toFixed(5)}, ${k.lon.toFixed(5)}): ${seen}`);
         }
+    }
+
+    if (a.observed_ratio !== undefined && a.key_terrain.some(k => k.kind === 'height')) {
+        lines.push(`Widoczność ze wzgórz łącznie: ${percent(a.observed_ratio)} trasy.`);
     }
 
     lines.push(ANALYSIS_NOTE);
@@ -568,16 +627,18 @@ export default class TaklabRoute implements RouteInterface {
         stops: Array<[number, number]>,
         travelMode?: string,
         options?: RouteOptions,
+        threats?: RouteThreats,
     ): Promise<Static<typeof Feature.FeatureCollection>> {
         if (stops.length < 2) throw new Err(400, null, 'Trasa wymaga co najmniej dwóch punktów.');
         if (stops.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
 
         const mode = await this.resolveMode(travelMode);
         const terrainOptions = mode.terrain ? normalizeOptions(options) : undefined;
+        const mapThreats = normalizeThreats(threats);
         const waypoints = stops.map(s => [s[0], s[1]] as [number, number]);
-        const slices = await this.computeLegs(waypoints, mode, 0, terrainOptions);
+        const slices = await this.computeLegs(waypoints, mode, 0, terrainOptions, mapThreats);
 
-        return await this.feature(mode, waypoints, slices, terrainOptions);
+        return await this.feature(mode, waypoints, slices, terrainOptions, mapThreats);
     }
 
     /**
@@ -588,6 +649,7 @@ export default class TaklabRoute implements RouteInterface {
         const { waypoints, coordinates, legs, first, count, added } = input;
         const mode = await this.resolveMode(input.travelMode);
         const terrainOptions = mode.terrain ? normalizeOptions(input.options) : undefined;
+        const mapThreats = normalizeThreats(input.threats);
 
         const oldPlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints: Array.from({ length: legs.length + 1 }, () => [0, 0]), legs };
         if (!validPlan(oldPlan, coordinates.length)) throw new Err(400, null, 'Plan trasy nie pasuje do jej linii.');
@@ -602,7 +664,7 @@ export default class TaklabRoute implements RouteInterface {
         if (waypoints.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
 
         const fresh = freshCount > 0
-            ? await this.computeLegs(waypoints.slice(first, first + freshCount + 1), mode, first, terrainOptions)
+            ? await this.computeLegs(waypoints.slice(first, first + freshCount + 1), mode, first, terrainOptions, mapThreats)
             : [];
 
         const old: LegSlice[] = legs.map(leg => ({
@@ -612,11 +674,11 @@ export default class TaklabRoute implements RouteInterface {
 
         const slices = [...old.slice(0, first), ...fresh, ...old.slice(first + count)];
 
-        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices, terrainOptions);
+        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices, terrainOptions, mapThreats);
     }
 
     /** Liczy odcinki między kolejnymi punktami; offset służy tylko numeracji w komunikacie błędu. */
-    async computeLegs(stops: Array<[number, number]>, mode: Mode, offset: number, options?: RouteOptions): Promise<LegSlice[]> {
+    async computeLegs(stops: Array<[number, number]>, mode: Mode, offset: number, options?: RouteOptions, threats?: RouteThreats): Promise<LegSlice[]> {
         const pairs = stops.slice(1).map((end, i) => [stops[i], end] as [[number, number], [number, number]]);
         const numbered = async (i: number, job: Promise<LegSlice>): Promise<LegSlice> => {
             try {
@@ -634,18 +696,23 @@ export default class TaklabRoute implements RouteInterface {
             // Usługa przełaju ma dwa miejsca na liczenie: odcinki idą po kolei
             const slices: LegSlice[] = [];
             for (const [i, [a, b]] of pairs.entries()) {
-                slices.push(await numbered(i, this.terrainLeg(a, b, options)));
+                slices.push(await numbered(i, this.terrainLeg(a, b, options, threats)));
             }
             return slices;
         }
 
-        return await Promise.all(pairs.map(([a, b], i) => numbered(i, this.roadLeg(a, b, mode))));
+        return await Promise.all(pairs.map(([a, b], i) => numbered(i, this.roadLeg(a, b, mode, threats))));
     }
 
-    async feature(mode: Mode, waypoints: Array<[number, number]>, slices: LegSlice[], options?: RouteOptions): Promise<Static<typeof Feature.FeatureCollection>> {
+    async feature(mode: Mode, waypoints: Array<[number, number]>, slices: LegSlice[], options?: RouteOptions, threats?: RouteThreats): Promise<Static<typeof Feature.FeatureCollection>> {
         const { coordinates, legs } = joinLegs(slices);
         const plan: RoutePlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints, legs };
         if (options) plan.options = options;
+        if (threats) {
+            // Posterunki zmieniają tylko trasę na przełaj; drogowa uwzględnia same tereny zamknięte
+            const used = { observers: mode.terrain ? (threats.observers?.length ?? 0) : 0, closed_areas: threats.closed_areas?.length ?? 0 };
+            if (used.observers || used.closed_areas) plan.threats = used;
+        }
 
         if (this.terrain) {
             const analysis = await this.analyze(coordinates);
@@ -673,7 +740,7 @@ export default class TaklabRoute implements RouteInterface {
         return { type: 'FeatureCollection', features: [norm] };
     }
 
-    async roadLeg(a: [number, number], b: [number, number], mode: Mode): Promise<LegSlice> {
+    async roadLeg(a: [number, number], b: [number, number], mode: Mode, threats?: RouteThreats): Promise<LegSlice> {
         const body: Record<string, unknown> = {
             profile: mode.profile,
             points: [a, b],
@@ -682,8 +749,16 @@ export default class TaklabRoute implements RouteInterface {
             instructions: true,
             locale: 'pl',
         };
-        if (mode.avoidMotorway) {
-            body.custom_model = { priority: [{ if: 'road_class == MOTORWAY', multiply_by: '0' }] };
+        const priority: Array<{ if: string; multiply_by: string }> = [];
+        if (mode.avoidMotorway) priority.push({ if: 'road_class == MOTORWAY', multiply_by: '0' });
+        const areas = (threats?.closed_areas ?? []).map((ring, i) => {
+            priority.push({ if: `in_closed${i}`, multiply_by: '0' });
+            return { type: 'Feature', id: `closed${i}`, properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } };
+        });
+        if (priority.length) {
+            body.custom_model = areas.length
+                ? { priority, areas: { type: 'FeatureCollection', features: areas } }
+                : { priority };
         }
 
         let res;
@@ -737,14 +812,14 @@ export default class TaklabRoute implements RouteInterface {
         }
     }
 
-    async terrainLeg(a: [number, number], b: [number, number], options?: RouteOptions): Promise<LegSlice> {
+    async terrainLeg(a: [number, number], b: [number, number], options?: RouteOptions, threats?: RouteThreats): Promise<LegSlice> {
         let res;
         try {
             res = await fetch(new URL(this.terrain + '/route'), {
                 method: 'POST',
                 safeUrlAllow: [this.terrain],
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ start: a, end: b, ...options }),
+                body: JSON.stringify({ start: a, end: b, ...options, ...threats }),
                 signal: AbortSignal.timeout(this.timeouts.terrain),
             });
         } catch (err) {

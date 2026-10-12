@@ -642,6 +642,62 @@ test('bez usługi terenu trasa nie ma analizy ani wzmianki o niej', async () => 
     assert.doesNotMatch(String(fc.features[0].properties.remarks), /Analiza terenu/);
 });
 
+test('zagrożenia z mapy idą do usługi terenu i do opisu', async () => {
+    terrainBodies.length = 0;
+    const threats = {
+        observers: [[20.51, 52.31]] as Array<[number, number]>,
+        closed_areas: [[[20.5, 52.3], [20.51, 52.3], [20.51, 52.29], [20.5, 52.3]]] as Array<Array<[number, number]>>,
+    };
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { avoid_observation: true }, threats);
+    assert.deepEqual(terrainBodies[0].observers, threats.observers);
+    assert.deepEqual(terrainBodies[0].closed_areas, threats.closed_areas);
+    assert.equal(terrainBodies[0].avoid_observation, true);
+    const remarks = String(fc.features[0].properties.remarks);
+    assert.match(remarks, /Opcje: unika widoczności ze wzgórz/);
+    assert.match(remarks, /Z mapy: 1 posterunek przeciwnika, 1 teren zamknięty\./);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.deepEqual(plan.threats, { observers: 1, closed_areas: 1 });
+});
+
+test('teren zamknięty w trasie drogowej to obszar w custom_model', async () => {
+    ghBodies.length = 0;
+    const ring: Array<[number, number]> = [[21, 52], [21.01, 52], [21.01, 52.01], [21, 52]];
+    await new TaklabRoute(config, base, '').route([[21, 52], [21.1, 52.1]], 'car_no_motorway', undefined, { closed_areas: [ring] });
+    assert.deepEqual(ghBodies[0].custom_model, {
+        priority: [
+            { if: 'road_class == MOTORWAY', multiply_by: '0' },
+            { if: 'in_closed0', multiply_by: '0' },
+        ],
+        areas: { type: 'FeatureCollection', features: [{ type: 'Feature', id: 'closed0', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } }] },
+    });
+});
+
+test('posterunki w trasie drogowej są pomijane, bez zagrożeń brak custom_model', async () => {
+    ghBodies.length = 0;
+    await new TaklabRoute(config, base, '').route([[21, 52], [21.1, 52.1]], 'car', undefined, { observers: [[21, 52]] });
+    assert.equal(ghBodies[0].custom_model, undefined);
+});
+
+test('zły wielokąt albo za dużo zagrożeń = 400', async () => {
+    const route = new TaklabRoute(config, base, base + '/terrain');
+    await assert.rejects(route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', undefined, { closed_areas: [[[1, 1], [2, 2]]] }), status(400));
+    const many = Array.from({ length: 51 }, () => [20.5, 52.3] as [number, number]);
+    await assert.rejects(route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', undefined, { observers: many }), status(400));
+});
+
+test('composeAnalysis: łączna widoczność ze wzgórz, gdy jest observed_ratio', () => {
+    assert.match(composeAnalysis({ ...ANALYSIS, observed_ratio: 0.42 }), /\nWidoczność ze wzgórz łącznie: 42% trasy\.\n/);
+});
+
+test('odmiana liczebników w opisie zagrożeń', async () => {
+    const ring: Array<[number, number]> = [[20.5, 52.3], [20.51, 52.3], [20.51, 52.29], [20.5, 52.3]];
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', undefined, {
+        observers: Array.from({ length: 5 }, () => [20.51, 52.31] as [number, number]),
+        closed_areas: [ring, ring],
+    });
+    assert.match(String(fc.features[0].properties.remarks), /Z mapy: 5 posterunków przeciwnika, 2 tereny zamknięte\./);
+});
+
 test('Taklab routing - teardown', async () => {
     await new Promise<void>(resolve => server.close(() => resolve()));
     await config.pg.end();
