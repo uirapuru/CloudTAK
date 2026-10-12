@@ -382,6 +382,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 description: 'Travel mode for routing',
                 default: 'Driving Time',
             })),
+            avoidWetland: Type.Optional(Type.Boolean({ description: 'Cross-country only: treat wetland as impassable' })),
+            avoidStreams: Type.Optional(Type.Boolean({ description: 'Cross-country only: treat streams and ditches as impassable' })),
+            maxSlope: Type.Optional(Type.Number({ minimum: 5, maximum: 35, description: 'Cross-country only: steepest allowed slope in degrees' })),
         }),
         res: RouteResponse,
     }, async (req, res) => {
@@ -397,6 +400,11 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                     req.query.provider || routeManager.defaultProvider,
                     stops,
                     req.query.travelMode,
+                    {
+                        avoid_wetland: req.query.avoidWetland,
+                        avoid_streams: req.query.avoidStreams,
+                        max_slope_deg: req.query.maxSlope,
+                    },
                 );
 
                 if (route.features.length === 1) {
@@ -443,6 +451,11 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             first: Type.Integer({ minimum: 0, description: 'First old leg to replace' }),
             count: Type.Integer({ minimum: 0, description: 'Number of old legs to replace' }),
             added: Type.Integer({ minimum: -1, maximum: 1, description: 'Change in the number of waypoints' }),
+            options: Type.Optional(Type.Object({
+                avoid_wetland: Type.Optional(Type.Boolean()),
+                avoid_streams: Type.Optional(Type.Boolean()),
+                max_slope_deg: Type.Optional(Type.Number({ minimum: 5, maximum: 35 })),
+            }, { description: 'Cross-country route options, as stored in the route plan' })),
         }),
         res: RouteResponse,
     }, async (req, res) => {
@@ -462,6 +475,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 first: req.body.first,
                 count: req.body.count,
                 added: req.body.added as -1 | 0 | 1,
+                options: req.body.options,
             });
 
             res.json(route);

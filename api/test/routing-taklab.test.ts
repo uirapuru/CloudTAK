@@ -17,6 +17,8 @@ let infoProfiles: string[] | null = null;
 let infoCalls = 0;
 // Przełaj: kiedy przyszło zapytanie i kiedy poszła odpowiedź
 const terrainLog: Array<{ start: number[]; received: number; sent: number }> = [];
+// Przełaj: ciała zapytań (opcje trasy)
+const terrainBodies: Array<Record<string, unknown>> = [];
 
 // Jeden serwer udaje oba silniki: GraphHopper pod /route, przełaj pod /terrain/route
 const server = http.createServer((req, res) => {
@@ -75,6 +77,7 @@ const server = http.createServer((req, res) => {
                 return send(422, JSON.stringify({ detail: [{ loc: ['body', 'start'], msg: 'field required', type: 'missing' }] }));
             }
             if (body.start[0] === 2) return send(502, '<html>Bad Gateway</html>');
+            terrainBodies.push(body as unknown as Record<string, unknown>);
             const entry = { start: body.start, received: Date.now(), sent: 0 };
             terrainLog.push(entry);
             const end = (body as unknown as { end: number[] }).end;
@@ -480,6 +483,59 @@ test('reroute: plan niezgodny z linią albo zła liczba punktów = 400', async (
     await assert.rejects(route.reroute({ travelMode: 'foot', waypoints: [[21, 52], [21.1, 52.1]], coordinates: [[21, 52], [21.05, 52], [21.1, 52.1]], legs, first: 0, count: 1, added: 0 }), status(400));
     await assert.rejects(route.reroute({ travelMode: 'foot', waypoints: [[21, 52]], coordinates: [[21, 52], [21.1, 52.1]], legs, first: 0, count: 1, added: 0 }), status(400));
     await assert.rejects(route.reroute({ travelMode: 'foot', waypoints: [[21, 52], [21.1, 52.1]], coordinates: [[21, 52], [21.1, 52.1]], legs, first: 1, count: 1, added: 0 }), status(400));
+});
+
+test('opcje przełaju idą do usługi terenu, do planu i do opisu', async () => {
+    terrainBodies.length = 0;
+    const options = { avoid_wetland: true, avoid_streams: true, max_slope_deg: 20 };
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', options);
+    assert.equal(terrainBodies.length, 1);
+    assert.equal(terrainBodies[0].avoid_wetland, true);
+    assert.equal(terrainBodies[0].avoid_streams, true);
+    assert.equal(terrainBodies[0].max_slope_deg, 20);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.deepEqual(plan.options, options);
+    assert.match(String(fc.features[0].properties.remarks), /Opcje: omija bagna, omija strumienie i rowy, nachylenie do 20°/);
+});
+
+test('przełaj bez opcji nie wysyła pól opcji i nie zapisuje ich w planie', async () => {
+    terrainBodies.length = 0;
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { avoid_wetland: false, max_slope_deg: 35 });
+    assert.deepEqual(Object.keys(terrainBodies[0]).sort(), ['end', 'start']);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.equal(plan.options, undefined);
+    assert.doesNotMatch(String(fc.features[0].properties.remarks), /Opcje:/);
+});
+
+test('opcje przełaju w trybie drogowym są pomijane', async () => {
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[21, 52], [21.1, 52.1]], 'foot', { avoid_wetland: true });
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.equal(plan.options, undefined);
+});
+
+test('nachylenie poza 5–35° = 400', async () => {
+    const route = new TaklabRoute(config, base, base + '/terrain');
+    await assert.rejects(route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { max_slope_deg: 50 }), status(400));
+    await assert.rejects(route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { max_slope_deg: 2 }), status(400));
+});
+
+test('reroute przełaju liczy z opcjami i zostawia je w planie', async () => {
+    const route = new TaklabRoute(config, base, base + '/terrain');
+    const options = { avoid_wetland: true };
+    const before = (await route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', options)).features[0];
+    const plan = (before.properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    terrainBodies.length = 0;
+    const after = (await route.reroute({
+        travelMode: 'foot_cross_country',
+        waypoints: [[20.5, 52.3], [20.53, 52.32]],
+        coordinates: before.geometry.coordinates as number[][],
+        legs: plan.legs,
+        first: 0, count: 1, added: 0,
+        options,
+    })).features[0];
+    assert.equal(terrainBodies.length, 1);
+    assert.equal(terrainBodies[0].avoid_wetland, true);
+    assert.deepEqual((after.properties.metadata as { taklab_route: RoutePlan }).taklab_route.options, options);
 });
 
 test('Taklab routing - teardown', async () => {

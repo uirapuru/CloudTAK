@@ -30,6 +30,13 @@ export type RouteLeg = {
     steps?: string[];
 };
 
+/** Opcje trasy na przełaj wybrane przez usera; brak pola = zachowanie domyślne usługi terenu. */
+export type RouteOptions = {
+    avoid_wetland?: boolean;
+    avoid_streams?: boolean;
+    max_slope_deg?: number;
+};
+
 /** Plan trasy: punkty usera i granice odcinków, zapisywany w properties.metadata.taklab_route. */
 export type RoutePlan = {
     version: 1;
@@ -37,6 +44,7 @@ export type RoutePlan = {
     mode_name: string;
     waypoints: Array<[number, number]>;
     legs: RouteLeg[];
+    options?: RouteOptions;
 };
 
 type LegStats = Omit<RouteLeg, 'start' | 'end'>;
@@ -50,6 +58,7 @@ export type RerouteInput = {
     first: number;
     count: number;
     added: -1 | 0 | 1;
+    options?: RouteOptions;
 };
 
 // Górna granica liczby wierzchołków trasy: ATAK robi z każdego punkt kontrolny
@@ -59,6 +68,10 @@ export const MAX_ROUTE_POINTS = 1000;
 export const MAX_VIA_POINTS = 25;
 
 const TERRAIN_MODE = 'foot_cross_country';
+
+// Granice limitu nachylenia; 35° to limit usługi terenu bez opcji
+export const MIN_SLOPE_DEG = 5;
+export const MAX_SLOPE_DEG = 35;
 
 const TERRAIN_NOTE = 'Trasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.';
 
@@ -248,6 +261,9 @@ export function composeRemarks(plan: RoutePlan): string {
         lines.push(`Podejścia: ${Math.round(ascent)} m, zejścia: ${Math.round(descent)} m`);
     }
 
+    const options = describeOptions(plan.options);
+    if (terrain && options) lines.push(`Opcje: ${options}`);
+
     if (terrain && distance > 0) {
         const offpath = legs.reduce((sum, leg) => sum + (leg.offpath_ratio ?? 0) * leg.distance_m, 0) / distance;
         lines.push(`Poza drogami: ${Math.round(offpath * 100)}%`);
@@ -266,6 +282,34 @@ export function composeRemarks(plan: RoutePlan): string {
     if (terrain) lines.push('', TERRAIN_NOTE);
 
     return lines.join('\n');
+}
+
+/**
+ * Opcje znaczące dla usługi terenu: pomija wartości domyślne, a pusty wynik to undefined.
+ * Limit nachylenia spoza 5–35° = 400.
+ */
+export function normalizeOptions(options?: RouteOptions): RouteOptions | undefined {
+    if (!options) return undefined;
+    const result: RouteOptions = {};
+    if (options.avoid_wetland) result.avoid_wetland = true;
+    if (options.avoid_streams) result.avoid_streams = true;
+    if (options.max_slope_deg !== undefined) {
+        const slope = options.max_slope_deg;
+        if (!Number.isFinite(slope) || slope < MIN_SLOPE_DEG || slope > MAX_SLOPE_DEG) {
+            throw new Err(400, null, `Limit nachylenia musi mieścić się w ${MIN_SLOPE_DEG}–${MAX_SLOPE_DEG}°.`);
+        }
+        if (slope < MAX_SLOPE_DEG) result.max_slope_deg = slope;
+    }
+    return Object.keys(result).length ? result : undefined;
+}
+
+function describeOptions(options?: RouteOptions): string {
+    if (!options) return '';
+    const parts: string[] = [];
+    if (options.avoid_wetland) parts.push('omija bagna');
+    if (options.avoid_streams) parts.push('omija strumienie i rowy');
+    if (options.max_slope_deg !== undefined) parts.push(`nachylenie do ${options.max_slope_deg}°`);
+    return parts.join(', ');
 }
 
 function graphHopperError(message: string | undefined): string {
@@ -373,15 +417,17 @@ export default class TaklabRoute implements RouteInterface {
     async route(
         stops: Array<[number, number]>,
         travelMode?: string,
+        options?: RouteOptions,
     ): Promise<Static<typeof Feature.FeatureCollection>> {
         if (stops.length < 2) throw new Err(400, null, 'Trasa wymaga co najmniej dwóch punktów.');
         if (stops.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
 
         const mode = await this.resolveMode(travelMode);
+        const terrainOptions = mode.terrain ? normalizeOptions(options) : undefined;
         const waypoints = stops.map(s => [s[0], s[1]] as [number, number]);
-        const slices = await this.computeLegs(waypoints, mode, 0);
+        const slices = await this.computeLegs(waypoints, mode, 0, terrainOptions);
 
-        return await this.feature(mode, waypoints, slices);
+        return await this.feature(mode, waypoints, slices, terrainOptions);
     }
 
     /**
@@ -391,6 +437,7 @@ export default class TaklabRoute implements RouteInterface {
     async reroute(input: RerouteInput): Promise<Static<typeof Feature.FeatureCollection>> {
         const { waypoints, coordinates, legs, first, count, added } = input;
         const mode = await this.resolveMode(input.travelMode);
+        const terrainOptions = mode.terrain ? normalizeOptions(input.options) : undefined;
 
         const oldPlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints: Array.from({ length: legs.length + 1 }, () => [0, 0]), legs };
         if (!validPlan(oldPlan, coordinates.length)) throw new Err(400, null, 'Plan trasy nie pasuje do jej linii.');
@@ -405,7 +452,7 @@ export default class TaklabRoute implements RouteInterface {
         if (waypoints.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
 
         const fresh = freshCount > 0
-            ? await this.computeLegs(waypoints.slice(first, first + freshCount + 1), mode, first)
+            ? await this.computeLegs(waypoints.slice(first, first + freshCount + 1), mode, first, terrainOptions)
             : [];
 
         const old: LegSlice[] = legs.map(leg => ({
@@ -415,11 +462,11 @@ export default class TaklabRoute implements RouteInterface {
 
         const slices = [...old.slice(0, first), ...fresh, ...old.slice(first + count)];
 
-        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices);
+        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices, terrainOptions);
     }
 
     /** Liczy odcinki między kolejnymi punktami; offset służy tylko numeracji w komunikacie błędu. */
-    async computeLegs(stops: Array<[number, number]>, mode: Mode, offset: number): Promise<LegSlice[]> {
+    async computeLegs(stops: Array<[number, number]>, mode: Mode, offset: number, options?: RouteOptions): Promise<LegSlice[]> {
         const pairs = stops.slice(1).map((end, i) => [stops[i], end] as [[number, number], [number, number]]);
         const numbered = async (i: number, job: Promise<LegSlice>): Promise<LegSlice> => {
             try {
@@ -437,7 +484,7 @@ export default class TaklabRoute implements RouteInterface {
             // Usługa przełaju ma dwa miejsca na liczenie: odcinki idą po kolei
             const slices: LegSlice[] = [];
             for (const [i, [a, b]] of pairs.entries()) {
-                slices.push(await numbered(i, this.terrainLeg(a, b)));
+                slices.push(await numbered(i, this.terrainLeg(a, b, options)));
             }
             return slices;
         }
@@ -445,9 +492,10 @@ export default class TaklabRoute implements RouteInterface {
         return await Promise.all(pairs.map(([a, b], i) => numbered(i, this.roadLeg(a, b, mode))));
     }
 
-    async feature(mode: Mode, waypoints: Array<[number, number]>, slices: LegSlice[]): Promise<Static<typeof Feature.FeatureCollection>> {
+    async feature(mode: Mode, waypoints: Array<[number, number]>, slices: LegSlice[], options?: RouteOptions): Promise<Static<typeof Feature.FeatureCollection>> {
         const { coordinates, legs } = joinLegs(slices);
         const plan: RoutePlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints, legs };
+        if (options) plan.options = options;
 
         const norm = await CoTParser.normalize_geojson({
             id: String(randomUUID()),
@@ -515,14 +563,14 @@ export default class TaklabRoute implements RouteInterface {
         return { coordinates: path.points.coordinates, leg };
     }
 
-    async terrainLeg(a: [number, number], b: [number, number]): Promise<LegSlice> {
+    async terrainLeg(a: [number, number], b: [number, number], options?: RouteOptions): Promise<LegSlice> {
         let res;
         try {
             res = await fetch(new URL(this.terrain + '/route'), {
                 method: 'POST',
                 safeUrlAllow: [this.terrain],
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ start: a, end: b }),
+                body: JSON.stringify({ start: a, end: b, ...options }),
                 signal: AbortSignal.timeout(this.timeouts.terrain),
             });
         } catch (err) {
