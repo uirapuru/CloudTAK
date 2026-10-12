@@ -513,6 +513,25 @@ test('opcje przełaju w trybie drogowym są pomijane', async () => {
     assert.equal(plan.options, undefined);
 });
 
+test('ekspozycja: średnia i unikaj idą do usługi i opisu, może być jest pomijane, nieznana = 400', async () => {
+    const route = new TaklabRoute(config, base, base + '/terrain');
+    terrainBodies.length = 0;
+    const fc = await route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { exposure: 'avoid' });
+    assert.equal(terrainBodies[0].exposure, 'avoid');
+    assert.match(String(fc.features[0].properties.remarks), /Opcje: unika terenu odsłoniętego/);
+
+    terrainBodies.length = 0;
+    const medium = await route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { exposure: 'medium' });
+    assert.match(String(medium.features[0].properties.remarks), /Opcje: ogranicza teren odsłonięty/);
+
+    terrainBodies.length = 0;
+    const allow = await route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { exposure: 'allow' });
+    assert.equal(terrainBodies[0].exposure, undefined);
+    assert.equal((allow.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route.options, undefined);
+
+    await assert.rejects(route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { exposure: 'never' as 'avoid' }), status(400));
+});
+
 test('nachylenie poza 5–35° = 400', async () => {
     const route = new TaklabRoute(config, base, base + '/terrain');
     await assert.rejects(route.route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country', { max_slope_deg: 50 }), status(400));

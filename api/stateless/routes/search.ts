@@ -385,6 +385,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             avoidWetland: Type.Optional(Type.Boolean({ description: 'Cross-country only: treat wetland as impassable' })),
             avoidStreams: Type.Optional(Type.Boolean({ description: 'Cross-country only: treat streams and ditches as impassable' })),
             maxSlope: Type.Optional(Type.Number({ minimum: 5, maximum: 35, description: 'Cross-country only: steepest allowed slope in degrees' })),
+            exposure: Type.Optional(Type.Union([Type.Literal('allow'), Type.Literal('medium'), Type.Literal('avoid')], { description: 'Cross-country only: how strongly to avoid open terrain' })),
         }),
         res: RouteResponse,
     }, async (req, res) => {
@@ -404,6 +405,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                         avoid_wetland: req.query.avoidWetland,
                         avoid_streams: req.query.avoidStreams,
                         max_slope_deg: req.query.maxSlope,
+                        exposure: req.query.exposure,
                     },
                 );
 
@@ -455,6 +457,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 avoid_wetland: Type.Optional(Type.Boolean()),
                 avoid_streams: Type.Optional(Type.Boolean()),
                 max_slope_deg: Type.Optional(Type.Number({ minimum: 5, maximum: 35 })),
+                exposure: Type.Optional(Type.Union([Type.Literal('allow'), Type.Literal('medium'), Type.Literal('avoid')])),
             }, { description: 'Cross-country route options, as stored in the route plan' })),
         }),
         res: RouteResponse,

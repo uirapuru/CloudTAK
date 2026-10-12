@@ -93,7 +93,7 @@ test('GET /api/search/route - zły via = 400', async () => {
 });
 
 test('GET /api/search/route - opcje przełaju w zapytaniu: dobre przechodzą, zły limit nachylenia = 400', async () => {
-    const ok = await flight.fetch('/api/search/route?start=21,52&end=21.01,52.01&callsign=Test&travelMode=foot&avoidWetland=true&avoidStreams=false&maxSlope=20', {
+    const ok = await flight.fetch('/api/search/route?start=21,52&end=21.01,52.01&callsign=Test&travelMode=foot&avoidWetland=true&avoidStreams=false&maxSlope=20&exposure=avoid', {
         method: 'GET',
         auth: { bearer: flight.token.admin },
     }, false);
@@ -104,6 +104,12 @@ test('GET /api/search/route - opcje przełaju w zapytaniu: dobre przechodzą, z�
         auth: { bearer: flight.token.admin },
     }, false);
     assert.equal(bad.status, 400);
+
+    const badExposure = await flight.fetch('/api/search/route?start=21,52&end=21.01,52.01&callsign=Test&travelMode=foot&exposure=never', {
+        method: 'GET',
+        auth: { bearer: flight.token.admin },
+    }, false);
+    assert.equal(badExposure.status, 400);
 });
 
 test('POST /api/search/route/legs - przesunięcie celu przelicza jeden odcinek', async () => {

@@ -329,7 +329,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         it('formularz wysyła opcje w zapytaniu o trasę', async () => {
             const wrapper = await crossCountry();
             await wetland(wrapper).setValue(true);
-            await wrapper.find('.route-options select').setValue('20°');
+            await wrapper.find('.route-options .max-slope select').setValue('20°');
             for (const b of wrapper.findAll('.search-box').map((x) => x.find('.pick'))) await b.trigger('click');
             await wrapper.find('button.btn-primary').trigger('click');
             await flushPromises();
@@ -337,6 +337,20 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
             const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
             expect(call![1].params.query).toMatchObject({ travelMode: 'foot_cross_country', avoidWetland: true, maxSlope: 20 });
             expect(call![1].params.query.avoidStreams).toBeUndefined();
+            expect(call![1].params.query.exposure).toBeUndefined();
+        });
+
+        it('ekspozycja trafia do zapytania, a domyślna nie', async () => {
+            const wrapper = await crossCountry();
+            const exposure = () => wrapper.find('.route-options .exposure select');
+            expect((exposure().element as HTMLSelectElement).value).toBe('może być');
+            await exposure().setValue('unikaj');
+            for (const b of wrapper.findAll('.search-box').map((x) => x.find('.pick'))) await b.trigger('click');
+            await wrapper.find('button.btn-primary').trigger('click');
+            await flushPromises();
+
+            const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
+            expect(call![1].params.query.exposure).toBe('avoid');
         });
 
         it('bez przełaju zapytanie nie ma opcji', async () => {

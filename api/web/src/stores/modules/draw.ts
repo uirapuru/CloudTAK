@@ -1057,6 +1057,7 @@ export default class DrawTool {
             if (options?.avoid_wetland) url.searchParams.set('avoidWetland', 'true');
             if (options?.avoid_streams) url.searchParams.set('avoidStreams', 'true');
             if (options?.max_slope_deg !== undefined) url.searchParams.set('maxSlope', String(options.max_slope_deg));
+            if (options?.exposure) url.searchParams.set('exposure', options.exposure);
             const fc = await std(url) as FeatureCollection;
             if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
             return fc.features[0];

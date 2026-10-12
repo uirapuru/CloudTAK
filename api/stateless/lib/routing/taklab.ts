@@ -35,7 +35,12 @@ export type RouteOptions = {
     avoid_wetland?: boolean;
     avoid_streams?: boolean;
     max_slope_deg?: number;
+    exposure?: Exposure;
 };
+
+/** Ekspozycja na przełaju: 'allow' = bez kary za teren odsłonięty (domyślnie). */
+export type Exposure = 'allow' | 'medium' | 'avoid';
+export const EXPOSURES: Exposure[] = ['allow', 'medium', 'avoid'];
 
 /** Plan trasy: punkty usera i granice odcinków, zapisywany w properties.metadata.taklab_route. */
 export type RoutePlan = {
@@ -300,6 +305,10 @@ export function normalizeOptions(options?: RouteOptions): RouteOptions | undefin
         }
         if (slope < MAX_SLOPE_DEG) result.max_slope_deg = slope;
     }
+    if (options.exposure !== undefined) {
+        if (!EXPOSURES.includes(options.exposure)) throw new Err(400, null, 'Nieznany poziom ekspozycji.');
+        if (options.exposure !== 'allow') result.exposure = options.exposure;
+    }
     return Object.keys(result).length ? result : undefined;
 }
 
@@ -309,6 +318,8 @@ function describeOptions(options?: RouteOptions): string {
     if (options.avoid_wetland) parts.push('omija bagna');
     if (options.avoid_streams) parts.push('omija strumienie i rowy');
     if (options.max_slope_deg !== undefined) parts.push(`nachylenie do ${options.max_slope_deg}°`);
+    if (options.exposure === 'medium') parts.push('ogranicza teren odsłonięty');
+    if (options.exposure === 'avoid') parts.push('unika terenu odsłoniętego');
     return parts.join(', ');
 }
 

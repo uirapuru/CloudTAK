@@ -26,6 +26,7 @@ export type RouteOptions = {
     avoid_wetland?: boolean;
     avoid_streams?: boolean;
     max_slope_deg?: number;
+    exposure?: 'allow' | 'medium' | 'avoid';
 };
 
 export type RoutePlan = {

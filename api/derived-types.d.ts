@@ -62063,6 +62063,8 @@ export interface paths {
                     avoidStreams?: boolean;
                     /** @description Cross-country only: steepest allowed slope in degrees */
                     maxSlope?: number;
+                    /** @description Cross-country only: how strongly to avoid open terrain */
+                    exposure?: "allow" | "medium" | "avoid";
                 };
                 header?: never;
                 path?: never;

@@ -164,8 +164,17 @@
                     />
                     <TablerEnum
                         v-model='crossCountry.maxSlope'
+                        class='max-slope'
                         label='Największe nachylenie'
                         :options='SLOPE_CHOICES'
+                        :disabled='building && mapStore.draw.routeBusy'
+                    />
+                    <TablerEnum
+                        v-model='crossCountry.exposure'
+                        class='exposure'
+                        label='Ekspozycja'
+                        description='Średnia i unikaj prowadzą trasę lasem zamiast przez pola i drogi. Model zna rodzaj terenu z OSM, ale nie gęstość lasu.'
+                        :options='Object.keys(EXPOSURE_CHOICES)'
                         :disabled='building && mapStore.draw.routeBusy'
                     />
                 </div>
@@ -251,10 +260,18 @@ const CROSS_COUNTRY = 'foot_cross_country';
 const NO_SLOPE_LIMIT = 'bez limitu (35°)';
 const SLOPE_CHOICES = [NO_SLOPE_LIMIT, '25°', '20°', '15°', '10°'];
 
+// Etykieta w formularzu → wartość API; pierwsza = bez kary za teren odsłonięty
+const EXPOSURE_CHOICES: Record<string, NonNullable<RouteOptions['exposure']>> = {
+    'może być': 'allow',
+    'średnia': 'medium',
+    'unikaj': 'avoid',
+};
+
 const crossCountry = ref({
     avoidWetland: false,
     avoidStreams: false,
     maxSlope: NO_SLOPE_LIMIT,
+    exposure: 'może być',
 });
 
 const isCrossCountry = computed(() => selectedModeId() === CROSS_COUNTRY);
@@ -265,6 +282,8 @@ function routeOptions(): RouteOptions | undefined {
     if (crossCountry.value.avoidWetland) options.avoid_wetland = true;
     if (crossCountry.value.avoidStreams) options.avoid_streams = true;
     if (crossCountry.value.maxSlope !== NO_SLOPE_LIMIT) options.max_slope_deg = parseInt(crossCountry.value.maxSlope, 10);
+    const exposure = EXPOSURE_CHOICES[crossCountry.value.exposure];
+    if (exposure && exposure !== 'allow') options.exposure = exposure;
     return Object.keys(options).length ? options : undefined;
 }
 
@@ -507,6 +526,7 @@ async function generateRoute(): Promise<void> {
                     avoidWetland: options?.avoid_wetland,
                     avoidStreams: options?.avoid_streams,
                     maxSlope: options?.max_slope_deg,
+                    exposure: options?.exposure,
                 }
             }
         });
