@@ -10,6 +10,7 @@ import { RouteManager } from '../lib/interface-route.js';
 import { parseStops } from '../lib/routing/stops.js';
 import { SearchManagerConfig, FetchReverse, FetchSuggest, FetchForward } from '../lib/search/types.js';
 import { Feature } from '@tak-ps/node-cot';
+import type { RouteThreats } from '../lib/routing/taklab.js';
 import type ConfigStateless from '../config.js';
 
 function optionalISOString(date: Date | null): string | null {
@@ -431,6 +432,19 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
     const LngLat = Type.Array(Type.Number(), { minItems: 2, maxItems: 3 });
 
+    const RouteOptionsBody = Type.Object({
+        avoid_wetland: Type.Optional(Type.Boolean()),
+        avoid_streams: Type.Optional(Type.Boolean()),
+        max_slope_deg: Type.Optional(Type.Number({ minimum: 5, maximum: 35 })),
+        exposure: Type.Optional(Type.Union([Type.Literal('allow'), Type.Literal('medium'), Type.Literal('avoid')])),
+        avoid_observation: Type.Optional(Type.Boolean()),
+    }, { description: 'Cross-country route options, as stored in the route plan' });
+
+    const RouteThreatsBody = Type.Object({
+        observers: Type.Optional(Type.Array(LngLat, { maxItems: 50 })),
+        closed_areas: Type.Optional(Type.Array(Type.Array(LngLat, { minItems: 4, maxItems: 1000 }), { maxItems: 50 })),
+    }, { description: 'Hostile observation posts and closed areas taken from the map' });
+
     await schema.post('/search/route/legs', {
         name: 'Route Legs',
         group: 'Search',
@@ -453,12 +467,8 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             first: Type.Integer({ minimum: 0, description: 'First old leg to replace' }),
             count: Type.Integer({ minimum: 0, description: 'Number of old legs to replace' }),
             added: Type.Integer({ minimum: -1, maximum: 1, description: 'Change in the number of waypoints' }),
-            options: Type.Optional(Type.Object({
-                avoid_wetland: Type.Optional(Type.Boolean()),
-                avoid_streams: Type.Optional(Type.Boolean()),
-                max_slope_deg: Type.Optional(Type.Number({ minimum: 5, maximum: 35 })),
-                exposure: Type.Optional(Type.Union([Type.Literal('allow'), Type.Literal('medium'), Type.Literal('avoid')])),
-            }, { description: 'Cross-country route options, as stored in the route plan' })),
+            options: Type.Optional(RouteOptionsBody),
+            threats: Type.Optional(RouteThreatsBody),
         }),
         res: RouteResponse,
     }, async (req, res) => {
@@ -479,9 +489,84 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 count: req.body.count,
                 added: req.body.added as -1 | 0 | 1,
                 options: req.body.options,
+                threats: req.body.threats as RouteThreats | undefined,
             });
 
             res.json(route);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.post('/search/route/plan', {
+        name: 'Route Plan',
+        group: 'Search',
+        description: 'Generate a route through the given waypoints, with options and map threats in the body',
+        body: Type.Object({
+            provider: Type.Optional(Type.String()),
+            callsign: Type.Optional(Type.String()),
+            travelMode: Type.String(),
+            waypoints: Type.Array(LngLat, { minItems: 2, maxItems: 27 }),
+            options: Type.Optional(RouteOptionsBody),
+            threats: Type.Optional(RouteThreatsBody),
+        }),
+        res: RouteResponse,
+    }, async (req, res) => {
+        try {
+            await Auth.as_user(config, req);
+
+            await routeManager.refresh();
+
+            const provider = req.body.provider || routeManager.defaultProvider;
+            if (!provider) throw new Err(400, null, 'No routing provider configured');
+
+            const route = await routeManager.route(
+                provider,
+                req.body.waypoints.map(w => [w[0], w[1]] as [number, number]),
+                req.body.travelMode,
+                req.body.options,
+                req.body.threats as RouteThreats | undefined,
+            );
+
+            for (const feature of route.features) feature.properties.callsign = req.body.callsign || 'Trasa';
+
+            res.json(route);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.post('/search/route/variants', {
+        name: 'Route Variants',
+        group: 'Search',
+        description: 'Propose up to two alternative routes between the start and the end of a route',
+        body: Type.Object({
+            provider: Type.Optional(Type.String()),
+            travelMode: Type.String(),
+            waypoints: Type.Array(LngLat, { minItems: 2, maxItems: 27 }),
+            coordinates: Type.Array(LngLat, { minItems: 2, maxItems: 5000 }),
+            options: Type.Optional(RouteOptionsBody),
+            threats: Type.Optional(RouteThreatsBody),
+            count: Type.Optional(Type.Integer({ minimum: 1, maximum: 2 })),
+        }),
+        res: RouteResponse,
+    }, async (req, res) => {
+        try {
+            await Auth.as_user(config, req);
+
+            await routeManager.refresh();
+
+            const provider = req.body.provider || routeManager.defaultProvider;
+            if (!provider) throw new Err(400, null, 'No routing provider configured');
+
+            res.json(await routeManager.variants(provider, {
+                travelMode: req.body.travelMode,
+                waypoints: req.body.waypoints.map(w => [w[0], w[1]] as [number, number]),
+                coordinates: req.body.coordinates,
+                options: req.body.options,
+                threats: req.body.threats as RouteThreats | undefined,
+                count: req.body.count,
+            }));
         } catch (err) {
             Err.respond(err, res);
         }

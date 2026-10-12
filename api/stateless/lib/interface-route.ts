@@ -3,7 +3,7 @@ import Err from '@openaddresses/batch-error';
 import { Static } from '@sinclair/typebox';
 import { Feature } from '@tak-ps/node-cot';
 import { RouteConfig, RouteManagerConfig } from './routing/types.js';
-import type { RerouteInput, RouteOptions, RouteThreats } from './routing/taklab.js';
+import type { RerouteInput, RouteOptions, RouteThreats, VariantsInput } from './routing/taklab.js';
 import { arcgisSettingKeys } from './search/arcgis-settings.js';
 import { ProviderManager } from './interface-provider.js';
 import type { ProviderLoader, ProviderSettingKey } from './interface-provider.js';
@@ -29,6 +29,7 @@ export interface RouteInterface {
 
     /** Przeliczenie części istniejącej trasy; tylko dostawcy z planem trasy. */
     reroute?(input: RerouteInput): Promise<Static<typeof Feature.FeatureCollection>>;
+    variants?(input: VariantsInput): Promise<Static<typeof Feature.FeatureCollection>>;
 }
 
 /**
@@ -103,5 +104,22 @@ export class RouteManager extends ProviderManager<RouteInterface> {
         }
 
         return await route.reroute(input);
+    }
+
+    async variants(
+        provider: string,
+        input: VariantsInput,
+    ): Promise<Static<typeof Feature.FeatureCollection>> {
+        const route = this.get(provider);
+
+        if (!route) {
+            throw new Err(400, null, `Invalid routing provider: ${provider}`);
+        }
+
+        if (!route.variants) {
+            throw new Err(400, null, `Routing provider ${provider} does not support route variants`);
+        }
+
+        return await route.variants(input);
     }
 }

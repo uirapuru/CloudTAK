@@ -78,6 +78,10 @@ const server = http.createServer((req, res) => {
 
         if (req.method === 'POST' && req.url === '/route') {
             ghBodies.push(body as unknown as Record<string, unknown>);
+            if ((body as unknown as { algorithm?: string }).algorithm === 'alternative_route') {
+                const path = (dy: number) => ({ distance: 12000 + dy * 1e5, time: 1000000, points: { type: 'LineString', coordinates: [body.points[0], [body.points[0][0], body.points[0][1] + dy], body.points[1]] } });
+                return send(200, JSON.stringify({ paths: [path(0), path(0.01), path(-0.01)] }));
+            }
             if (body.points[0][0] === 0) return send(400, JSON.stringify({ message: 'Cannot find point 0: 0.0,0.0' }));
             if (body.points[0][0] === 1) return send(400, JSON.stringify({ hints: [] }));
             if (body.points[0][0] === 7) return send(400, JSON.stringify({ message: 'Cannot find point 0: 7.0,52.0' }));
@@ -105,6 +109,17 @@ const server = http.createServer((req, res) => {
             analyzeBodies.push(analyzeBody);
             if (analyzeBody.coordinates[0][0] === 4) return send(502, '<html>Bad Gateway</html>');
             return send(200, JSON.stringify(ANALYSIS));
+        }
+
+        if (req.method === 'POST' && req.url === '/terrain/variants') {
+            terrainBodies.push(body as unknown as Record<string, unknown>);
+            const end = (body as unknown as { end: number[] }).end;
+            const variant = (dy: number) => ({
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: [body.start, [body.start[0], body.start[1] + dy], end] },
+                properties: { distance_m: 2600, duration_s: 3000, ascent_m: 10, descent_m: 5, offpath_ratio: 0.8, overlap_ratio: 0.1 },
+            });
+            return send(200, JSON.stringify({ type: 'FeatureCollection', features: [variant(0.01), variant(-0.01)] }));
         }
 
         if (req.method === 'POST' && req.url === '/terrain/route') {
@@ -696,6 +711,43 @@ test('odmiana liczebników w opisie zagrożeń', async () => {
         closed_areas: [ring, ring],
     });
     assert.match(String(fc.features[0].properties.remarks), /Z mapy: 5 posterunków przeciwnika, 2 tereny zamknięte\./);
+});
+
+test('variants przełaju: start i cel trasy, linia trasy jako avoid_lines, dwa warianty z analizą', async () => {
+    terrainBodies.length = 0;
+    const route = new TaklabRoute(config, base, base + '/terrain');
+    const fc = await route.variants({
+        travelMode: 'foot_cross_country',
+        waypoints: [[20.5, 52.3], [20.51, 52.305], [20.52, 52.31]],
+        coordinates: [[20.5, 52.3], [20.51, 52.305], [20.52, 52.31]],
+        options: { avoid_wetland: true },
+    });
+    const call = terrainBodies.find(b => 'avoid_lines' in b)!;
+    assert.deepEqual(call.start, [20.5, 52.3]);
+    assert.deepEqual(call.end, [20.52, 52.31]);
+    assert.deepEqual(call.avoid_lines, [[[20.5, 52.3], [20.51, 52.305], [20.52, 52.31]]]);
+    assert.equal(call.count, 2);
+    assert.equal(call.avoid_wetland, true);
+    assert.equal(fc.features.length, 2);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.deepEqual(plan.waypoints, [[20.5, 52.3], [20.52, 52.31]]);
+    assert.match(String(fc.features[0].properties.remarks), /Analiza terenu \(OCOKA\)/);
+});
+
+test('variants drogowe: alternative_route GraphHoppera bez pierwszej ścieżki', async () => {
+    ghBodies.length = 0;
+    const fc = await new TaklabRoute(config, base, '').variants({
+        travelMode: 'car', waypoints: [[21, 52], [21.1, 52.1]], coordinates: [[21, 52], [21.1, 52.1]], count: 2,
+    });
+    assert.equal(ghBodies[0].algorithm, 'alternative_route');
+    assert.equal(ghBodies[0]['alternative_route.max_paths'], 3);
+    assert.equal(fc.features.length, 2);
+});
+
+test('variants: count spoza 1–2 = 400', async () => {
+    await assert.rejects(new TaklabRoute(config, base, '').variants({
+        travelMode: 'car', waypoints: [[21, 52], [21.1, 52.1]], coordinates: [[21, 52], [21.1, 52.1]], count: 3,
+    }), status(400));
 });
 
 test('Taklab routing - teardown', async () => {

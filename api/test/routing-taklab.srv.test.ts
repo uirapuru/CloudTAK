@@ -159,6 +159,24 @@ test('POST /api/search/route/legs - dostawca bez przeliczania odcinków = 400', 
     assert.equal(res.status, 400);
 });
 
+test('POST /api/search/route/plan liczy trasę z body', async () => {
+    const res = await flight.fetch('/api/search/route/plan', {
+        method: 'POST', auth: { bearer: flight.token.admin },
+        body: { travelMode: 'foot', callsign: 'Z body', waypoints: [[21, 52], [21.01, 52.01]], threats: { closed_areas: [[[21, 52], [21.001, 52], [21.001, 52.001], [21, 52]]] } },
+    }, false);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.features[0].properties.callsign, 'Z body');
+});
+
+test('POST /api/search/route/variants zwraca FeatureCollection', async () => {
+    const res = await flight.fetch('/api/search/route/variants', {
+        method: 'POST', auth: { bearer: flight.token.admin },
+        body: { travelMode: 'foot', waypoints: [[21, 52], [21.01, 52.01]], coordinates: [[21, 52], [21.01, 52.01]], count: 1 },
+    }, false);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.type, 'FeatureCollection');
+});
+
 test('Teardown', async () => {
     await new Promise<void>(resolve => graphhopper.close(() => resolve()));
 });

@@ -39,6 +39,16 @@ export type RouteOptions = {
     avoid_observation?: boolean;
 };
 
+/** Wejście warianty trasy: stan trasy z planu plus liczba propozycji (1–2, domyślnie 2). */
+export type VariantsInput = {
+    travelMode: string;
+    waypoints: Array<[number, number]>;
+    coordinates: number[][];
+    options?: RouteOptions;
+    threats?: RouteThreats;
+    count?: number;
+};
+
 /** Zagrożenia narysowane na mapie: posterunki przeciwnika i tereny zamknięte (wielokąty lon/lat). */
 export type RouteThreats = {
     observers?: Array<[number, number]>;
@@ -740,7 +750,8 @@ export default class TaklabRoute implements RouteInterface {
         return { type: 'FeatureCollection', features: [norm] };
     }
 
-    async roadLeg(a: [number, number], b: [number, number], mode: Mode, threats?: RouteThreats): Promise<LegSlice> {
+    /** Ciało zapytania do GraphHoppera: profil, kary za autostrady i tereny zamknięte. */
+    roadBody(a: [number, number], b: [number, number], mode: Mode, threats?: RouteThreats): Record<string, unknown> {
         const body: Record<string, unknown> = {
             profile: mode.profile,
             points: [a, b],
@@ -760,7 +771,27 @@ export default class TaklabRoute implements RouteInterface {
                 ? { priority, areas: { type: 'FeatureCollection', features: areas } }
                 : { priority };
         }
+        return body;
+    }
 
+    /** Zamienia ścieżkę GraphHoppera na odcinek trasy. */
+    roadSlice(path: Static<typeof GraphHopperPath>): LegSlice {
+        const steps = (path.instructions || [])
+            .filter(step => step.distance > 0)
+            .map((step, i) => `${i + 1}. ${step.text} (${formatDistance(step.distance)})`);
+
+        const leg: LegStats = { distance_m: path.distance, duration_s: path.time / 1000 };
+        if (path.ascend !== undefined && path.descend !== undefined) {
+            leg.ascent_m = path.ascend;
+            leg.descent_m = path.descend;
+        }
+        if (steps.length) leg.steps = steps;
+
+        return { coordinates: path.points.coordinates, leg };
+    }
+
+    /** Pyta GraphHoppera; zwraca poprawne ścieżki albo rzuca 400 z jego komunikatem. */
+    async roadPaths(body: Record<string, unknown>): Promise<Array<Static<typeof GraphHopperPath>>> {
         let res;
         try {
             res = await fetch(new URL(this.graphhopper + '/route'), {
@@ -776,22 +807,15 @@ export default class TaklabRoute implements RouteInterface {
 
         const reply = await readJson(res);
         const message = field(reply, 'message');
-        const paths = field(reply, 'paths');
-        const path = res.ok && Array.isArray(paths) && Value.Check(GraphHopperPath, paths[0]) ? paths[0] as Static<typeof GraphHopperPath> : undefined;
-        if (!path) throw new Err(400, null, graphHopperError(typeof message === 'string' ? message : undefined));
+        const raw = field(reply, 'paths');
+        const paths = res.ok && Array.isArray(raw) ? raw.filter((p): p is Static<typeof GraphHopperPath> => Value.Check(GraphHopperPath, p)) : [];
+        if (!paths.length) throw new Err(400, null, graphHopperError(typeof message === 'string' ? message : undefined));
+        return paths;
+    }
 
-        const steps = (path.instructions || [])
-            .filter(step => step.distance > 0)
-            .map((step, i) => `${i + 1}. ${step.text} (${formatDistance(step.distance)})`);
-
-        const leg: LegStats = { distance_m: path.distance, duration_s: path.time / 1000 };
-        if (path.ascend !== undefined && path.descend !== undefined) {
-            leg.ascent_m = path.ascend;
-            leg.descent_m = path.descend;
-        }
-        if (steps.length) leg.steps = steps;
-
-        return { coordinates: path.points.coordinates, leg };
+    async roadLeg(a: [number, number], b: [number, number], mode: Mode, threats?: RouteThreats): Promise<LegSlice> {
+        const res = await this.roadPaths(this.roadBody(a, b, mode, threats));
+        return this.roadSlice(res[0]);
     }
 
     /** Analiza terenu wzdłuż linii; null, gdy usługa zawiodła (trasa powstaje i bez niej). */
@@ -812,6 +836,27 @@ export default class TaklabRoute implements RouteInterface {
         }
     }
 
+    /** Komunikat błędu usługi przełaju (detail.message) albo tekst domyślny. */
+    terrainError(body: unknown): Err {
+        const message = field(field(body, 'detail'), 'message');
+        return new Err(400, null, typeof message === 'string' && message ? message : 'Nie udało się wyznaczyć trasy na przełaj.');
+    }
+
+    /** Zamienia Feature z usługi przełaju na odcinek trasy. */
+    terrainSlice(feature: Static<typeof TerrainFeature>): LegSlice {
+        const p = feature.properties;
+        return {
+            coordinates: feature.geometry.coordinates,
+            leg: {
+                distance_m: p.distance_m,
+                duration_s: p.duration_s,
+                ascent_m: p.ascent_m,
+                descent_m: p.descent_m,
+                offpath_ratio: p.offpath_ratio,
+            },
+        };
+    }
+
     async terrainLeg(a: [number, number], b: [number, number], options?: RouteOptions, threats?: RouteThreats): Promise<LegSlice> {
         let res;
         try {
@@ -827,23 +872,77 @@ export default class TaklabRoute implements RouteInterface {
         }
 
         const body = await readJson(res);
-        if (!res.ok || !Value.Check(TerrainFeature, body)) {
-            const detail = field(body, 'detail');
-            const message = field(detail, 'message');
-            throw new Err(400, null, typeof message === 'string' && message ? message : 'Nie udało się wyznaczyć trasy na przełaj.');
+        if (!res.ok || !Value.Check(TerrainFeature, body)) throw this.terrainError(body);
+
+        return this.terrainSlice(body);
+    }
+
+    /** Warianty na przełaj: usługa omija podane linie (istniejącą trasę) metodą kar. */
+    async terrainVariants(start: [number, number], end: [number, number], coordinates: number[][], count: number, options?: RouteOptions, threats?: RouteThreats): Promise<LegSlice[]> {
+        let res;
+        try {
+            res = await fetch(new URL(this.terrain + '/variants'), {
+                method: 'POST',
+                safeUrlAllow: [this.terrain],
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    start,
+                    end,
+                    ...options,
+                    ...threats,
+                    avoid_lines: [coordinates.map(c => [c[0], c[1]])],
+                    count,
+                }),
+                signal: AbortSignal.timeout(this.timeouts.terrain),
+            });
+        } catch (err) {
+            throw new Err(400, err instanceof Error ? err : null, 'Usługa tras na przełaj nie odpowiada.');
         }
 
-        const p = body.properties;
-        return {
-            coordinates: body.geometry.coordinates,
-            leg: {
-                distance_m: p.distance_m,
-                duration_s: p.duration_s,
-                ascent_m: p.ascent_m,
-                descent_m: p.descent_m,
-                offpath_ratio: p.offpath_ratio,
-            },
+        const body = await readJson(res);
+        const features = field(body, 'features');
+        if (!res.ok || !Array.isArray(features)) throw this.terrainError(body);
+
+        return features
+            .filter((f): f is Static<typeof TerrainFeature> => Value.Check(TerrainFeature, f))
+            .map(f => this.terrainSlice(f));
+    }
+
+    /** Warianty drogowe: alternatywne ścieżki GraphHoppera, bez pierwszej (to trasa główna). */
+    async roadVariants(start: [number, number], end: [number, number], mode: Mode, count: number, threats?: RouteThreats): Promise<LegSlice[]> {
+        const body = {
+            ...this.roadBody(start, end, mode, threats),
+            'algorithm': 'alternative_route',
+            'alternative_route.max_paths': count + 1,
         };
+        const paths = await this.roadPaths(body);
+        return paths.slice(1, count + 1).map(p => this.roadSlice(p));
+    }
+
+    /** Proponuje do dwóch tras zastępczych między początkiem a końcem trasy; zwraca je jak route(). */
+    async variants(input: VariantsInput): Promise<Static<typeof Feature.FeatureCollection>> {
+        const count = input.count ?? 2;
+        if (!Number.isInteger(count) || count < 1 || count > 2) throw new Err(400, null, 'Liczba wariantów: 1 albo 2.');
+        if (input.waypoints.length < 2) throw new Err(400, null, 'Trasa wymaga co najmniej dwóch punktów.');
+
+        const mode = await this.resolveMode(input.travelMode);
+        const options = mode.terrain ? normalizeOptions(input.options) : undefined;
+        const threats = normalizeThreats(input.threats);
+        const first = input.waypoints[0];
+        const last = input.waypoints[input.waypoints.length - 1];
+        const start: [number, number] = [first[0], first[1]];
+        const end: [number, number] = [last[0], last[1]];
+
+        const slices = mode.terrain
+            ? await this.terrainVariants(start, end, input.coordinates, count, options, threats)
+            : await this.roadVariants(start, end, mode, count, threats);
+
+        const features: Static<typeof Feature.FeatureCollection>['features'] = [];
+        for (const slice of slices) {
+            features.push(...(await this.feature(mode, [start, end], [slice], options, threats)).features);
+        }
+
+        return { type: 'FeatureCollection', features };
     }
 }
 
