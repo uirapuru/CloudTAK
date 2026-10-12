@@ -600,7 +600,7 @@ test('composeAnalysis: blok OCOKA z charakterystyką, ukryciem, nachyleniem, prz
     const text = composeAnalysis(ANALYSIS);
     assert.equal(text, [
         'Analiza terenu (OCOKA)',
-        'Charakterystyka: 9,2 km, wysokość 320–503 m n.p.m., podejścia 210 m, zejścia 180 m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.',
+        'Charakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.',
         'Ukrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).',
         'Nachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.',
         'Przeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.',
@@ -609,7 +609,7 @@ test('composeAnalysis: blok OCOKA z charakterystyką, ukryciem, nachyleniem, prz
         '- przeprawa (most) km 5,1',
         '- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2',
         '- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi',
-        'Założenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.',
+        'Założenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.',
     ].join('\n'));
 });
 

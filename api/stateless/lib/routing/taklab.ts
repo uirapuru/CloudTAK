@@ -155,7 +155,7 @@ const POINT_KINDS = new Set(['stream', 'road_crossing', 'crossing']);
 
 const COMPASS = ['płn.', 'płn.-wsch.', 'wsch.', 'płd.-wsch.', 'płd.', 'płd.-zach.', 'zach.', 'płn.-zach.'];
 
-const ANALYSIS_NOTE = 'Założenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.';
+const ANALYSIS_NOTE = 'Założenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.';
 
 export const MODES: Mode[] = [
     { id: 'car', name: 'Samochód', profile: 'car' },
@@ -425,7 +425,7 @@ export function composeAnalysis(a: RouteAnalysis): string {
 
     const lines = [
         'Analiza terenu (OCOKA)',
-        `Charakterystyka: ${km(a.length_m)} km, wysokość ${a.elevation_min_m}–${a.elevation_max_m} m n.p.m., podejścia ${a.ascent_m} m, zejścia ${a.descent_m} m.${land.length ? ' ' + land.join(', ') + '.' : ''}`,
+        `Charakterystyka: ${km(a.length_m)} km, wysokość ${a.elevation_min_m}–${a.elevation_max_m} m n.p.m.${land.length ? ' ' + land.join(', ') + '.' : ''}`,
     ];
 
     const open = a.danger.filter(d => d.kind === 'open').sort((x, y) => (y.to_m - y.from_m) - (x.to_m - x.from_m))[0];
