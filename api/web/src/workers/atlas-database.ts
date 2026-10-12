@@ -20,6 +20,7 @@ import { booleanWithin } from '@turf/boolean-within';
 import { isEqual } from '@ver0/deep-equal';
 import type { Polygon } from 'geojson';
 import { mapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
+import { preserveRoutePlan } from '../base/route-plan.ts';
 import type { MapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import type { InputFeature, Feature, APIList, Contact } from '../types.ts';
 import type {
@@ -964,6 +965,13 @@ export default class AtlasDatabase {
         } else {
             if (exists) {
                 const existing = exists;
+
+                // Trasa z serwera TAK ma pusty metadata (CoT nie niesie planu trasy),
+                // a update() scala właściwości: bez tego echo skasowałoby plan
+                if (!opts.authored) {
+                    preserveRoutePlan(existing.as_feature(), feat);
+                }
+
                 const geometryMoved = opts.authored === true
                     && !!feat.geometry
                     && !isEqual(existing.geometry, feat.geometry);
