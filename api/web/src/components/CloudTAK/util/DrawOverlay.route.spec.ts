@@ -1,5 +1,5 @@
-import { mount } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { reactive } from 'vue';
 import { DrawToolMode } from '../../../stores/modules/draw.ts';
 
@@ -16,7 +16,21 @@ const draw = reactive({
     stop: vi.fn(),
     removeRouteWaypoint: vi.fn(),
     populateSnappingLayers: vi.fn(),
+    routeTravelMode: 'foot',
+    routeOptions: undefined as undefined | Record<string, unknown>,
+    setRouteTravelMode: vi.fn<(travelMode: string) => Promise<boolean>>(async () => true),
+    setRouteOptions: vi.fn<(options: unknown) => Promise<boolean>>(async () => true),
 });
+
+const GET = vi.fn(async () => ({
+    error: undefined,
+    data: { route: { enabled: true, providers: [{ id: 'taklab', name: 'taklab', modes: [
+        { id: 'car', name: 'Samochód' },
+        { id: 'foot', name: 'Pieszo' },
+        { id: 'foot_cross_country', name: 'Pieszo na przełaj' },
+    ] }] } },
+}));
+vi.mock('../../../std.ts', () => ({ server: { GET: () => GET() } }));
 
 vi.mock('../../../stores/map.ts', () => ({ useMapStore: () => ({ draw }) }));
 vi.mock('../../../stores/app.ts', () => ({ useAppStore: () => reactive({ isMobileDetected: false }) }));
@@ -63,5 +77,78 @@ describe('DrawOverlay - edytor trasy', () => {
         await wrapper.find('.route-remove-point').trigger('click');
         expect(draw.removeRouteWaypoint).toHaveBeenCalledWith(1);
         draw.routeMenu = null;
+    });
+
+    describe('tryb i opcje w edycji', () => {
+        afterEach(() => {
+            draw.routeEditorKind = 'edit';
+            draw.routeTravelMode = 'foot';
+            draw.routeOptions = undefined;
+            vi.clearAllMocks();
+        });
+
+        async function settings() {
+            const wrapper = mountOverlay();
+            await flushPromises();
+            await wrapper.find('.route-settings-toggle').trigger('click');
+            await flushPromises();
+            return wrapper;
+        }
+
+        it('w edycji pokazuje tryb trasy wczytany z edytora', async () => {
+            const wrapper = await settings();
+            const select = wrapper.find('.route-travel-mode select');
+            expect((select.element as HTMLSelectElement).value).toBe('Pieszo');
+            expect(wrapper.find('.route-options').exists()).toBe(false);
+        });
+
+        it('w budowaniu nie ma przycisku ustawień (są w menu trasy)', async () => {
+            draw.routeEditorKind = 'build';
+            const wrapper = mountOverlay();
+            await flushPromises();
+            expect(wrapper.find('.route-settings-toggle').exists()).toBe(false);
+        });
+
+        it('zmiana trybu idzie do edytora, a odrzucona wraca', async () => {
+            const wrapper = await settings();
+            await wrapper.find('.route-travel-mode select').setValue('Samochód');
+            await flushPromises();
+            expect(draw.setRouteTravelMode).toHaveBeenCalledWith('car');
+
+            draw.setRouteTravelMode.mockImplementationOnce(async () => false);
+            await wrapper.find('.route-travel-mode select').setValue('Pieszo na przełaj');
+            await flushPromises();
+            expect(draw.setRouteTravelMode).toHaveBeenNthCalledWith(2, 'foot_cross_country');
+            expect((wrapper.find('.route-travel-mode select').element as HTMLSelectElement).value).toBe('Samochód');
+        });
+
+        it('przy przełaju pokazuje opcje z planu i wysyła zmiany do edytora', async () => {
+            draw.routeTravelMode = 'foot_cross_country';
+            draw.routeOptions = { avoid_wetland: true };
+            const wrapper = await settings();
+            expect((wrapper.find('.route-options .avoid-wetland input').element as HTMLInputElement).checked).toBe(true);
+
+            await wrapper.find('.route-options .avoid-streams input').setValue(true);
+            await flushPromises();
+            expect(draw.setRouteOptions).toHaveBeenCalledWith({ avoid_wetland: true, avoid_streams: true });
+        });
+
+        it('odrzucone opcje wracają do poprzednich', async () => {
+            draw.routeTravelMode = 'foot_cross_country';
+            const wrapper = await settings();
+            draw.setRouteOptions.mockImplementationOnce(async () => false);
+            await wrapper.find('.route-options .avoid-wetland input').setValue(true);
+            await flushPromises();
+            expect((wrapper.find('.route-options .avoid-wetland input').element as HTMLInputElement).checked).toBe(false);
+        });
+
+        it('w trakcie przeliczania pola są zablokowane', async () => {
+            draw.routeTravelMode = 'foot_cross_country';
+            draw.routeBusy = true;
+            const wrapper = await settings();
+            expect(wrapper.find('.route-travel-mode select').attributes('disabled')).toBeDefined();
+            expect(wrapper.find('.route-options .avoid-wetland input').attributes('disabled')).toBeDefined();
+            draw.routeBusy = false;
+        });
     });
 });

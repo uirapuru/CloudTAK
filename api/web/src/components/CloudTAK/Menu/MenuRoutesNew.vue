@@ -147,41 +147,8 @@
                     v-if='isCrossCountry'
                     class='my-2 route-options'
                 >
-                    <div class='text-secondary small mb-1'>
-                        Opcje przełaju
-                    </div>
-                    <TablerToggle
-                        v-model='crossCountry.avoidWetland'
-                        class='avoid-wetland'
-                        label='Omijaj bagna'
-                        :disabled='building && mapStore.draw.routeBusy'
-                    />
-                    <TablerToggle
-                        v-model='crossCountry.avoidStreams'
-                        class='avoid-streams'
-                        label='Omijaj strumienie i rowy'
-                        :disabled='building && mapStore.draw.routeBusy'
-                    />
-                    <TablerEnum
-                        v-model='crossCountry.maxSlope'
-                        class='max-slope'
-                        label='Największe nachylenie'
-                        :options='SLOPE_CHOICES'
-                        :disabled='building && mapStore.draw.routeBusy'
-                    />
-                    <TablerEnum
-                        v-model='crossCountry.exposure'
-                        class='exposure'
-                        label='Ekspozycja'
-                        description='Średnia i unikaj prowadzą trasę lasem zamiast przez pola i drogi. Model zna rodzaj terenu z OSM, ale nie gęstość lasu.'
-                        :options='Object.keys(EXPOSURE_CHOICES)'
-                        :disabled='building && mapStore.draw.routeBusy'
-                    />
-                    <TablerToggle
-                        v-model='crossCountry.avoidObservation'
-                        class='avoid-observation'
-                        label='Unikaj widoczności ze wzgórz'
-                        description='Trasa omija pole widzenia dominujących wzgórz do 3 km.'
+                    <RouteCrossCountryOptions
+                        v-model='crossCountry'
                         :disabled='building && mapStore.draw.routeBusy'
                     />
                 </div>
@@ -209,10 +176,10 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import SearchBox from '../util/SearchBox.vue';
+import RouteCrossCountryOptions from '../util/RouteCrossCountryOptions.vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import {
     TablerEnum,
-    TablerToggle,
     TablerAlert,
     TablerLoading,
 } from '@tak-ps/vue-tabler';
@@ -271,37 +238,13 @@ let viaKey = 0;
 
 // Tryb przełaju dostawcy taklab; tylko on ma opcje trasy
 const CROSS_COUNTRY = 'foot_cross_country';
-// Pierwsza pozycja = limit usługi terenu, czyli brak dodatkowego ograniczenia
-const NO_SLOPE_LIMIT = 'bez limitu (35°)';
-const SLOPE_CHOICES = [NO_SLOPE_LIMIT, '25°', '20°', '15°', '10°'];
-
-// Etykieta w formularzu → wartość API; pierwsza = bez kary za teren odsłonięty
-const EXPOSURE_CHOICES: Record<string, NonNullable<RouteOptions['exposure']>> = {
-    'może być': 'allow',
-    'średnia': 'medium',
-    'unikaj': 'avoid',
-};
-
-const crossCountry = ref({
-    avoidWetland: false,
-    avoidStreams: false,
-    avoidObservation: false,
-    maxSlope: NO_SLOPE_LIMIT,
-    exposure: 'może być',
-});
+// Opcje przełaju w formacie planu trasy (undefined = bez opcji)
+const crossCountry = ref<RouteOptions | undefined>();
 
 const isCrossCountry = computed(() => selectedModeId() === CROSS_COUNTRY);
 
-// Opcje w formacie planu trasy; pomija wartości domyślne
 function routeOptions(): RouteOptions | undefined {
-    const options: RouteOptions = {};
-    if (crossCountry.value.avoidWetland) options.avoid_wetland = true;
-    if (crossCountry.value.avoidStreams) options.avoid_streams = true;
-    if (crossCountry.value.avoidObservation) options.avoid_observation = true;
-    if (crossCountry.value.maxSlope !== NO_SLOPE_LIMIT) options.max_slope_deg = parseInt(crossCountry.value.maxSlope, 10);
-    const exposure = EXPOSURE_CHOICES[crossCountry.value.exposure];
-    if (exposure && exposure !== 'allow') options.exposure = exposure;
-    return Object.keys(options).length ? options : undefined;
+    return crossCountry.value;
 }
 
 // Budowanie trasy kliknięciami: start wskazany na mapie, kolejne kliknięcia
@@ -377,10 +320,10 @@ watch(() => routePlan.value.travelMode, async (name, previous) => {
 });
 
 // Zmiana opcji w czasie budowania liczy trasę od nowa; odrzuconą cofamy jak tryb
-// (obserwujemy kopię, bo przy głębokim obserwatorze obiektu poprzednia wartość to ten sam obiekt)
-watch(() => ({ ...crossCountry.value }), async (_current, previous) => {
+// (komponent opcji emituje nowy obiekt, więc poprzednia wartość jest osobną kopią)
+watch(crossCountry, async (current, previous) => {
     if (!building.value) return;
-    if (!await mapStore.draw.setRouteOptions(routeOptions())) {
+    if (!await mapStore.draw.setRouteOptions(current)) {
         crossCountry.value = previous;
     }
 });

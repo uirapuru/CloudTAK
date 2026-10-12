@@ -410,8 +410,37 @@
                         Zamknij
                     </button>
                 </div>
+                <template v-if='mapStore.draw.routeEditorKind === "edit"'>
+                    <button
+                        type='button'
+                        class='btn btn-sm btn-outline-secondary mt-2 route-settings-toggle'
+                        @click='toggleRouteSettings'
+                        v-text='routeSettingsOpen ? "Ukryj tryb i opcje" : "Tryb i opcje"'
+                    />
+                    <div
+                        v-if='routeSettingsOpen && routeModes.length'
+                        class='mt-2 route-settings'
+                    >
+                        <TablerEnum
+                            v-model='routeModeName'
+                            class='route-travel-mode'
+                            label='Tryb trasy'
+                            :options='routeModes.map((m) => m.name)'
+                            :disabled='mapStore.draw.routeBusy'
+                        />
+                        <div
+                            v-if='routeModeId === CROSS_COUNTRY'
+                            class='mt-2 route-options'
+                        >
+                            <RouteCrossCountryOptions
+                                v-model='routeEditOptions'
+                                :disabled='mapStore.draw.routeBusy'
+                            />
+                        </div>
+                    </div>
+                </template>
                 <div
-                    v-else
+                    v-if='!mapStore.draw.routeMenu'
                     class='text-secondary small mt-1'
                     v-text='mapStore.draw.routeEditorKind === "build"
                         ? "Kliknij mapę, aby dodać kolejny punkt. Przeciągnij punkt albo odcinek, aby zmienić trasę."
@@ -456,7 +485,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import GenericBottomPane from '../GenericBottomPane.vue';
 import CoordinateType from '../util/CoordinateType.vue';
 import { DrawToolMode } from '../../../stores/modules/draw.ts';
@@ -483,6 +512,9 @@ import {
     IconRoute,
 } from '@tabler/icons-vue';
 import { waypointLabel } from '../../../base/route-plan.ts';
+import type { RouteOptions } from '../../../base/route-plan.ts';
+import { server } from '../../../std.ts';
+import RouteCrossCountryOptions from './RouteCrossCountryOptions.vue';
 
 const mapStore = useMapStore();
 const appStore = useAppStore();
@@ -492,6 +524,56 @@ const opened = ref(false);
 function routePointLabel(index: number): string {
     return waypointLabel(index, mapStore.draw.routeWaypointCount);
 }
+
+// Tryb i opcje edytowanej trasy: te same, co przy wyznaczaniu w menu trasy.
+// Każda zmiana liczy trasę od nowa; odrzuconą (błąd usługi) cofamy.
+const CROSS_COUNTRY = 'foot_cross_country';
+
+const routeSettingsOpen = ref(false);
+const routeModes = ref<Array<{ id: string; name: string }>>([]);
+const routeModeName = ref('');
+const routeEditOptions = ref<RouteOptions | undefined>();
+// Obserwatory reagują dopiero po wczytaniu stanu z edytora, nie na samo wczytanie
+let routeSettingsReady = false;
+
+const routeModeId = computed(() => routeModes.value.find((m) => m.name === routeModeName.value)?.id);
+
+async function toggleRouteSettings(): Promise<void> {
+    if (routeSettingsOpen.value) {
+        routeSettingsOpen.value = false;
+        return;
+    }
+
+    routeSettingsReady = false;
+    if (!routeModes.value.length) {
+        const res = await server.GET('/api/search');
+        const taklab = res.data?.route.providers.find((p) => p.id === 'taklab');
+        routeModes.value = taklab ? taklab.modes : [];
+    }
+    routeModeName.value = routeModes.value.find((m) => m.id === mapStore.draw.routeTravelMode)?.name ?? '';
+    routeEditOptions.value = mapStore.draw.routeOptions;
+    routeSettingsOpen.value = true;
+    await nextTick();
+    routeSettingsReady = true;
+}
+
+watch(routeModeName, async (name, previous) => {
+    if (!routeSettingsReady) return;
+    const id = routeModes.value.find((m) => m.name === name)?.id;
+    if (!id) return;
+    if (!await mapStore.draw.setRouteTravelMode(id)) routeModeName.value = previous;
+});
+
+watch(routeEditOptions, async (options, previous) => {
+    if (!routeSettingsReady) return;
+    if (!await mapStore.draw.setRouteOptions(options)) routeEditOptions.value = previous;
+});
+
+// Zamknięcie edytora albo przejście do budowania chowa panel
+watch(() => mapStore.draw.routeEditorKind, () => {
+    routeSettingsOpen.value = false;
+    routeSettingsReady = false;
+});
 
 const filteredOverlayNames = computed((): string[] => {
     return OverlayManager.queryableOverlayNames();

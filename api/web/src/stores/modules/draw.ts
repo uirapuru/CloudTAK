@@ -988,6 +988,16 @@ export default class DrawTool {
         this.routeCallsign = callsign;
     }
 
+    /** Tryb trasy w otwartym edytorze (id trybu dostawcy taklab), pusty bez edytora. */
+    public get routeTravelMode(): string {
+        return this.routeEditor?.travel ?? '';
+    }
+
+    /** Opcje przełaju w otwartym edytorze (z planu trasy albo ustawione w trakcie). */
+    public get routeOptions(): RouteOptions | undefined {
+        return this.routeEditor?.options;
+    }
+
     /** Zmiana trybu trasy w otwartym edytorze; false, gdy trybu nie zmieniono. */
     async setRouteTravelMode(travelMode: string): Promise<boolean> {
         if (!this.routeEditor) return false;
