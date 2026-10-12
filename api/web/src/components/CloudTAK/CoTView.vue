@@ -197,6 +197,18 @@
                         />
                     </TablerIconButton>
 
+                    <TablerIconButton
+                        v-if='hasRoutePlan'
+                        title='Warianty trasy'
+                        class='route-variants-button'
+                        @click='variantsOpen = true'
+                    >
+                        <IconRoute2
+                            :size='actionIconSize'
+                            stroke='1'
+                        />
+                    </TablerIconButton>
+
                     <TablerDropdown
                         v-if='hasGeoJSONTransforms'
                     >
@@ -701,6 +713,12 @@
         :cot-id='bufferCotId'
         @close='bufferCotId = null'
     />
+
+    <RouteVariants
+        v-if='variantsOpen && cot'
+        :feature='cot.as_feature({ clone: true })'
+        @close='variantsOpen = false'
+    />
 </template>
 
 <script setup lang='ts'>
@@ -708,6 +726,8 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
 import FeatureIcon from './util/FeatureIcon.vue';
 import BufferInput from './Inputs/BufferInput.vue';
+import RouteVariants from './util/RouteVariants.vue';
+import { readRoutePlan } from '../../base/route-plan.ts';
 import MenuTemplate from './util/MenuTemplate.vue';
 import type COT from '../../base/cot.ts';
 import type { COTType } from '../../types.ts';
@@ -763,6 +783,7 @@ import {
     IconPencil,
     IconMovie,
     IconRoute,
+    IconRoute2,
     IconCone,
     IconStar,
     IconStarFilled,
@@ -923,6 +944,10 @@ onUnmounted(() => {
         cot.value._liveQuerySubscription.unsubscribe();
     }
 });
+
+const variantsOpen = ref(false);
+
+const hasRoutePlan = computed(() => !!cot.value && cot.value.is_route && !!readRoutePlan(cot.value.as_feature({ clone: true })));
 
 const is_editable = computed(() => {
     if (!cot.value || !cot.value.is_editable) return false;

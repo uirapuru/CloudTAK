@@ -36,6 +36,13 @@ export type RouteThreats = {
     closed_areas?: Array<Array<[number, number]>>;
 };
 
+/** Analiza trasy z API (stateless/lib/routing/taklab.ts): osłona, widoczność ze wzgórz, zagrożenia. */
+export type RouteAnalysis = {
+    cover?: { concealed: number; exposed: number; unknown: number };
+    observed_ratio?: number;
+    danger?: Array<{ kind: string; from_m: number; to_m: number }>;
+};
+
 export type RoutePlan = {
     version: 1;
     mode: string;
@@ -43,6 +50,7 @@ export type RoutePlan = {
     waypoints: LngLat[];
     legs: RouteLeg[];
     options?: RouteOptions;
+    analysis?: RouteAnalysis;
 };
 
 /**
