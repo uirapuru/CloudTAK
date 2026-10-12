@@ -1,6 +1,6 @@
 import { mount, flushPromises } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, reactive } from 'vue';
 import { LocationState } from '../../../utils/events.ts';
 
 const GET = vi.fn();
@@ -11,8 +11,23 @@ vi.mock('../../../std.ts', () => ({
     server: { GET: (...args: unknown[]) => GET(...args) }
 }));
 
+const draw = reactive({
+    mode: 'static',
+    routeWaypoints: [] as Array<[number, number]>,
+    get canFinish() { return draw.routeWaypoints.length >= 2; },
+    buildRoute: vi.fn(async (opts: { start: [number, number] }) => {
+        draw.mode = 'route';
+        draw.routeWaypoints = [opts.start];
+    }),
+    setRouteCallsign: vi.fn(),
+    removeRouteWaypoint: vi.fn(),
+    finish: vi.fn(async () => { draw.mode = 'static'; }),
+    stop: vi.fn(async () => { draw.mode = 'static'; }),
+});
+
 vi.mock('../../../stores/map.ts', () => ({
     useMapStore: () => ({
+        draw,
         worker: {
             profile: { get location() { return location(); } },
             db: { add: async () => ({ id: 'route-1', flyTo: () => undefined }) }
@@ -38,6 +53,10 @@ const SearchBoxStub = defineComponent({
             h('button', {
                 class: 'pick',
                 onClick: () => emit('select', { name: 'Cel', coordinates: [21, 52.4] })
+            }),
+            h('button', {
+                class: 'pick-map',
+                onClick: () => emit('select', { name: '52.10000, 21.00000', coordinates: [21, 52.1], source: 'map' })
             })
         ]);
     }
@@ -80,6 +99,9 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
     });
 
     afterEach(() => {
+        draw.mode = 'static';
+        draw.routeWaypoints = [];
+        vi.clearAllMocks();
         GET.mockReset();
         location.mockReset();
         delete routeQuery.start;
@@ -213,5 +235,104 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await flushPromises();
 
         expect(box(wrapper, 'Start Location').find('input').element.value).toBe('');
+    });
+
+    it('dodaje punkt pośredni i wysyła go jako via', async () => {
+        location.mockResolvedValue({ source: LocationState.Live, coordinates: [20.94, 52.29] });
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        await wrapper.find('button.add-via').trigger('click');
+        expect(box(wrapper, 'Punkt pośredni 1').exists()).toBe(true);
+        await box(wrapper, 'Punkt pośredni 1').find('.pick').trigger('click');
+        await box(wrapper, 'End Location').find('.pick').trigger('click');
+        await wrapper.find('button.btn-primary').trigger('click');
+        await flushPromises();
+
+        const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
+        expect(call![1].params.query.via).toBe('21,52.4');
+    });
+
+    it('pusty punkt pośredni blokuje generowanie, usunięcie go odblokowuje', async () => {
+        location.mockResolvedValue({ source: LocationState.Live, coordinates: [20.94, 52.29] });
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        await box(wrapper, 'End Location').find('.pick').trigger('click');
+        await wrapper.find('button.add-via').trigger('click');
+        expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeDefined();
+
+        await wrapper.find('button.remove-via').trigger('click');
+        expect(box(wrapper, 'Punkt pośredni 1').exists()).toBe(false);
+        expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeUndefined();
+    });
+
+    it('start wskazany na mapie uruchamia budowanie trasy kliknięciami', async () => {
+        location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+        await flushPromises();
+
+        expect(draw.buildRoute).toHaveBeenCalledWith(expect.objectContaining({ travelMode: 'car', start: [21, 52.1] }));
+        expect(wrapper.find('.route-build-list').exists()).toBe(true);
+        expect(wrapper.findAll('.route-build-point').map(r => r.find('.route-build-label').text())).toEqual(['A']);
+    });
+
+    it('lista budowania pokazuje punkty edytora w kolejności A, 1, B i usuwa wskazany', async () => {
+        location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+        const wrapper = mountMenu();
+        await flushPromises();
+        await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+        await flushPromises();
+
+        draw.routeWaypoints = [[21, 52.1], [21.1, 52.1], [21.2, 52.2]];
+        await flushPromises();
+        expect(wrapper.findAll('.route-build-label').map(l => l.text())).toEqual(['A', '1', 'B']);
+
+        await wrapper.findAll('.route-build-remove')[1].trigger('click');
+        expect(draw.removeRouteWaypoint).toHaveBeenCalledWith(1);
+    });
+
+    it('w budowaniu Generate Route zapisuje trasę z edytora', async () => {
+        location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+        const wrapper = mountMenu();
+        await flushPromises();
+        await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+        await flushPromises();
+        draw.routeWaypoints = [[21, 52.1], [21.2, 52.2]];
+        await flushPromises();
+
+        await wrapper.find('button.btn-primary').trigger('click');
+        await flushPromises();
+
+        expect(draw.setRouteCallsign).toHaveBeenCalled();
+        expect(draw.finish).toHaveBeenCalled();
+        expect(GET.mock.calls.find(c => c[0] === '/api/search/route')).toBeUndefined();
+    });
+
+    it('zamknięcie menu w trakcie budowania zamyka edytor', async () => {
+        location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+        const wrapper = mountMenu();
+        await flushPromises();
+        await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+        await flushPromises();
+
+        wrapper.unmount();
+        expect(draw.stop).toHaveBeenCalled();
+    });
+
+    it('anulowanie edytora na pasku wraca do zwykłego formularza', async () => {
+        location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+        const wrapper = mountMenu();
+        await flushPromises();
+        await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+        await flushPromises();
+
+        draw.mode = 'static';
+        await flushPromises();
+        expect(wrapper.find('.route-build-list').exists()).toBe(false);
+        expect(box(wrapper, 'Start Location').exists()).toBe(true);
     });
 });

@@ -960,6 +960,10 @@ export default class DrawTool {
         return this._routeState.summary.value;
     }
 
+    public get routeWaypoints(): LngLat[] {
+        return this._routeState.waypoints.value;
+    }
+
     public get routeWaypointCount(): number {
         return this._routeState.waypoints.value.length;
     }

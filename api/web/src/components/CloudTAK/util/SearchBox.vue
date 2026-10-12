@@ -201,9 +201,11 @@ function onMapClick(e: { lngLat: { lng: number, lat: number } }): void {
     query.value.filter = label;
     selected.value = true;
 
+    // source: 'map' - punkt wskazany na mapie (menu New Route włącza wtedy budowanie trasy)
     emit('select', {
         name: label,
-        coordinates: [lng, lat]
+        coordinates: [lng, lat],
+        source: 'map'
     });
 }
 

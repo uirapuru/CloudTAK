@@ -16,59 +16,136 @@
                     <TablerEnum
                         v-if='config.providers.length'
                         v-model='routePlan.provider'
+                        :disabled='building'
                         label='Routing Provider'
                         :options='config.providers.map(p => p.name)'
                     />
                 </div>
-                <div class='my-2'>
-                    <SearchBox
-                        :key='startKey'
-                        label='Start Location'
-                        placeholder='Start Location'
-                        :autofocus='true'
-                        :location-picker='true'
-                        :initial-value='startInitialValue'
-                        @select='routePlan.start = $event || null'
-                    />
-                    <button
-                        type='button'
-                        class='btn btn-sm btn-outline-primary my-location mt-2'
-                        @click='useMyLocation'
-                    >
-                        <IconCurrentLocation
-                            :size='18'
-                            stroke='1'
-                            class='me-1'
-                        />Moja pozycja
-                    </button>
+                <div
+                    v-if='building'
+                    class='my-2 route-build-list'
+                >
+                    <div class='text-secondary small mb-1'>
+                        Kliknij mapę, aby dodać kolejny punkt. Ostatni punkt jest celem.
+                    </div>
                     <div
-                        v-if='locationError'
-                        class='text-danger small mt-1'
-                        v-text='locationError'
-                    />
+                        v-for='(point, index) in buildPoints'
+                        :key='index'
+                        class='d-flex align-items-center gap-2 py-1 route-build-point'
+                    >
+                        <span
+                            class='badge route-build-label'
+                            :class='point.label === "A" || point.label === "B" ? "bg-orange text-white" : "bg-secondary text-white"'
+                            v-text='point.label'
+                        />
+                        <span
+                            class='flex-grow-1 small'
+                            v-text='point.name'
+                        />
+                        <button
+                            type='button'
+                            class='btn btn-sm btn-link text-danger p-0 route-build-remove'
+                            title='Usuń punkt'
+                            @click='mapStore.draw.removeRouteWaypoint(index)'
+                        >
+                            <IconX
+                                :size='16'
+                                stroke='1'
+                            />
+                        </button>
+                    </div>
                 </div>
-                <div class='my-2'>
-                    <SearchBox
-                        label='End Location'
-                        placeholder='End Location'
-                        :autofocus='false'
-                        :location-picker='true'
-                        :initial-value='endInitialValue'
-                        @select='routePlan.end = $event || null'
-                    />
-                </div>
+                <template v-else>
+                    <div class='my-2'>
+                        <SearchBox
+                            :key='startKey'
+                            label='Start Location'
+                            placeholder='Start Location'
+                            :autofocus='true'
+                            :location-picker='true'
+                            :initial-value='startInitialValue'
+                            @select='selectStart'
+                        />
+                        <button
+                            type='button'
+                            class='btn btn-sm btn-outline-primary my-location mt-2'
+                            @click='useMyLocation'
+                        >
+                            <IconCurrentLocation
+                                :size='18'
+                                stroke='1'
+                                class='me-1'
+                            />Moja pozycja
+                        </button>
+                        <div
+                            v-if='locationError'
+                            class='text-danger small mt-1'
+                            v-text='locationError'
+                        />
+                    </div>
+                    <div
+                        v-for='(via, index) in routePlan.via'
+                        :key='via.key'
+                        class='my-2 d-flex align-items-end gap-2'
+                    >
+                        <div class='flex-grow-1'>
+                            <SearchBox
+                                :label='"Punkt pośredni " + (index + 1)'
+                                placeholder='Punkt pośredni'
+                                :autofocus='false'
+                                :location-picker='true'
+                                @select='via.value = $event ? { name: $event.name, coordinates: $event.coordinates } : null'
+                            />
+                        </div>
+                        <button
+                            type='button'
+                            class='btn btn-sm btn-outline-danger mb-1 remove-via'
+                            title='Usuń punkt pośredni'
+                            @click='removeVia(index)'
+                        >
+                            <IconX
+                                :size='16'
+                                stroke='1'
+                            />
+                        </button>
+                    </div>
+                    <div class='my-2'>
+                        <button
+                            type='button'
+                            class='btn btn-sm btn-outline-secondary add-via'
+                            @click='addVia'
+                        >
+                            <IconPlus
+                                :size='16'
+                                stroke='1'
+                                class='me-1'
+                            />Dodaj punkt pośredni
+                        </button>
+                    </div>
+                    <div class='my-2'>
+                        <SearchBox
+                            label='End Location'
+                            placeholder='End Location'
+                            :autofocus='false'
+                            :location-picker='true'
+                            :initial-value='endInitialValue'
+                            @select='routePlan.end = $event ? { name: $event.name, coordinates: $event.coordinates } : null'
+                        />
+                    </div>
+                </template>
 
                 <div class='my-2'>
                     <TablerEnum
                         v-if='modes.length > 0'
                         v-model='routePlan.travelMode'
+                        :disabled='building'
                         label='Travel Mode'
                         :options='modes.map(m => m.name)'
                     />
                 </div>
                 <div class='my-3'>
                     <button
-                        :disabled='!routePlan.start || !routePlan.end'
+                        :disabled='!canGenerate'
                         class='btn btn-primary w-100'
                         @click='generateRoute'
                     >
@@ -81,7 +158,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import SearchBox from '../util/SearchBox.vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
@@ -92,7 +169,9 @@ import {
 } from '@tak-ps/vue-tabler';
 import { server } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
-import { IconCurrentLocation } from '@tabler/icons-vue';
+import { IconCurrentLocation, IconPlus, IconX } from '@tabler/icons-vue';
+import { waypointLabel } from '../../../base/route-plan.ts';
+import type { LngLat } from '../../../base/route-plan.ts';
 import { LocationState } from '../../../utils/events.ts';
 import type { Search } from '../../../types.ts';
 
@@ -118,22 +197,98 @@ const startInitialValue = ref('');
 const startKey = ref(0);
 const locationError = ref('');
 
+type RoutePoint = {
+    name: string;
+    coordinates: [number, number]
+};
+
 const routePlan = ref<{
     provider: string;
-    start: null | {
-        name: string;
-        coordinates: [number, number]
-    };
-    end: null | {
-        name: string;
-        coordinates: [number, number]
-    }
+    start: null | RoutePoint;
+    via: Array<{ key: number; value: null | RoutePoint }>;
+    end: null | RoutePoint;
     travelMode: string;
 }>({
     provider: '',
     start: null,
+    via: [],
     end: null,
     travelMode: ''
+});
+
+let viaKey = 0;
+
+// Budowanie trasy kliknięciami: start wskazany na mapie, kolejne kliknięcia
+// dopisują punkty w edytorze trasy (DrawTool.buildRoute)
+const building = ref(false);
+
+const buildPoints = computed(() => {
+    const waypoints: LngLat[] = mapStore.draw.routeWaypoints;
+    return waypoints.map((w, index) => ({
+        label: waypointLabel(index, waypoints.length),
+        name: `${w[1].toFixed(5)}, ${w[0].toFixed(5)}`,
+    }));
+});
+
+const canGenerate = computed(() => {
+    // Edytor wie, czy trasa jest policzona (pierwszy odcinek mógł się nie udać)
+    if (building.value) return mapStore.draw.canFinish;
+    return !!routePlan.value.start
+        && !!routePlan.value.end
+        && routePlan.value.via.every((via) => via.value !== null);
+});
+
+function addVia(): void {
+    routePlan.value.via.push({ key: ++viaKey, value: null });
+}
+
+function removeVia(index: number): void {
+    routePlan.value.via.splice(index, 1);
+}
+
+function selectedModeId(): string | undefined {
+    for (const m of modes.value) {
+        if (m.name === routePlan.value.travelMode) return m.id;
+    }
+    return undefined;
+}
+
+function selectedProviderId(): string | undefined {
+    for (const p of config.value?.providers ?? []) {
+        if (p.name === routePlan.value.provider) return p.id;
+    }
+    return undefined;
+}
+
+async function selectStart(event: null | (RoutePoint & { source?: string })): Promise<void> {
+    routePlan.value.start = event ? { name: event.name, coordinates: event.coordinates } : null;
+
+    // Budowanie kliknięciami tylko ze startem wskazanym na mapie i u dostawcy taklab
+    if (!event || event.source !== 'map' || selectedProviderId() !== 'taklab') return;
+
+    await mapStore.draw.buildRoute({
+        travelMode: selectedModeId() ?? 'car',
+        start: [event.coordinates[0], event.coordinates[1]],
+        callsign: event.name,
+    });
+    building.value = true;
+}
+
+// Anulowanie edytora na pasku dolnym kończy budowanie
+watch(() => mapStore.draw.mode, (mode) => {
+    if (building.value && mode !== 'route') {
+        building.value = false;
+        routePlan.value.start = null;
+        startInitialValue.value = '';
+        startKey.value++;
+    }
+});
+
+onUnmounted(async () => {
+    if (building.value) {
+        building.value = false;
+        await mapStore.draw.stop();
+    }
 });
 
 const error = ref<Error | undefined>();
@@ -225,6 +380,14 @@ async function settings() {
 }
 
 async function generateRoute(): Promise<void> {
+    if (building.value) {
+        const points = buildPoints.value;
+        mapStore.draw.setRouteCallsign(`${points[0].name} to ${points[points.length - 1].name}`);
+        // building wyłącza obserwator trybu, gdy edytor zapisze trasę i się zamknie
+        await mapStore.draw.finish();
+        return;
+    }
+
     if (!routePlan.value.start || !routePlan.value.end) {
         return;
     }
@@ -258,6 +421,9 @@ async function generateRoute(): Promise<void> {
                 query: {
                     start: routePlan.value.start.coordinates.join(','),
                     end: routePlan.value.end.coordinates.join(','),
+                    via: routePlan.value.via.length
+                        ? routePlan.value.via.map((via) => (via.value as RoutePoint).coordinates.join(',')).join(';')
+                        : undefined,
                     callsign: routePlan.value.start.name + ' to ' + routePlan.value.end.name,
                     provider,
                     travelMode,
