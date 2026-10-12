@@ -4,11 +4,13 @@ import { defineComponent, h, reactive } from 'vue';
 import { LocationState } from '../../../utils/events.ts';
 
 const GET = vi.fn();
+const std = vi.fn();
 const location = vi.fn();
 const routeQuery: Record<string, string> = {};
 
 vi.mock('../../../std.ts', () => ({
-    server: { GET: (...args: unknown[]) => GET(...args) }
+    server: { GET: (...args: unknown[]) => GET(...args) },
+    std: (...args: unknown[]) => std(...args),
 }));
 
 const draw = reactive({
@@ -32,7 +34,10 @@ vi.mock('../../../stores/map.ts', () => ({
         draw,
         worker: {
             profile: { get location() { return location(); } },
-            db: { add: async () => ({ id: 'route-1', flyTo: () => undefined }) }
+            db: {
+                add: async () => ({ id: 'route-1', flyTo: () => undefined }),
+                filter: async () => [],
+            }
         }
     })
 }));
@@ -84,6 +89,7 @@ function box(wrapper: ReturnType<typeof mountMenu>, label: string) {
 
 describe('CloudTAK/Menu/MenuRoutesNew', () => {
     beforeEach(() => {
+        std.mockResolvedValue({ type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [[0, 0], [1, 1]] } }] });
         GET.mockImplementation(async (url: string) => {
             if (url === '/api/search') {
                 return {
@@ -105,6 +111,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         draw.routeWaypoints = [];
         vi.clearAllMocks();
         GET.mockReset();
+        std.mockReset();
         location.mockReset();
         delete routeQuery.start;
     });
@@ -121,9 +128,10 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await wrapper.find('button.btn-primary').trigger('click');
         await flushPromises();
 
-        const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
+        const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
         expect(call).toBeDefined();
-        expect(call![1].params.query.start).toBe('20.94,52.29');
+        expect(call![1].method).toBe('POST');
+        expect(call![1].body.waypoints).toEqual([[20.94, 52.29], [21, 52.4]]);
     });
 
     it('fills the start from a preset position', async () => {
@@ -334,10 +342,11 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
             await wrapper.find('button.btn-primary').trigger('click');
             await flushPromises();
 
-            const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
-            expect(call![1].params.query).toMatchObject({ travelMode: 'foot_cross_country', avoidWetland: true, maxSlope: 20 });
-            expect(call![1].params.query.avoidStreams).toBeUndefined();
-            expect(call![1].params.query.exposure).toBeUndefined();
+            const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+            const body = call![1].body;
+            expect(body.travelMode).toBe('foot_cross_country');
+            expect(body.options).toEqual({ avoid_wetland: true, max_slope_deg: 20 });
+            expect(body.callsign).toBe('Cel to Cel');
         });
 
         it('ekspozycja trafia do zapytania, a domyślna nie', async () => {
@@ -349,8 +358,8 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
             await wrapper.find('button.btn-primary').trigger('click');
             await flushPromises();
 
-            const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
-            expect(call![1].params.query.exposure).toBe('avoid');
+            const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+            expect(call![1].body.options).toEqual({ exposure: 'avoid' });
         });
 
         it('bez przełaju zapytanie nie ma opcji', async () => {
@@ -361,9 +370,18 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
             await wrapper.find('button.btn-primary').trigger('click');
             await flushPromises();
 
-            const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
-            expect(call![1].params.query.avoidWetland).toBeUndefined();
-            expect(call![1].params.query.maxSlope).toBeUndefined();
+            const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+            expect(call![1].body.options).toBeUndefined();
+        });
+
+        it('przełącznik widoczności ze wzgórz trafia do opcji', async () => {
+            const wrapper = await crossCountry();
+            await wrapper.find('.route-options .avoid-observation input').setValue(true);
+            for (const b of wrapper.findAll('.search-box').map((x) => x.find('.pick'))) await b.trigger('click');
+            await wrapper.find('button.btn-primary').trigger('click');
+            await flushPromises();
+            const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+            expect(call![1].body.options).toEqual({ avoid_observation: true });
         });
 
         it('budowanie startuje z opcjami, a zmiana opcji idzie do edytora', async () => {
@@ -412,8 +430,8 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await wrapper.find('button.btn-primary').trigger('click');
         await flushPromises();
 
-        const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
-        expect(call![1].params.query.via).toBe('21,52.4');
+        const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+        expect(call![1].body.waypoints).toEqual([[20.94, 52.29], [21, 52.4], [21, 52.4]]);
     });
 
     it('pusty punkt pośredni blokuje generowanie, usunięcie go odblokowuje', async () => {
@@ -472,7 +490,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
 
         expect(draw.setRouteCallsign).toHaveBeenCalled();
         expect(draw.finish).toHaveBeenCalled();
-        expect(GET.mock.calls.find(c => c[0] === '/api/search/route')).toBeUndefined();
+        expect(std.mock.calls.find(c => c[0] === '/api/search/route/plan')).toBeUndefined();
     });
 
     it('zamknięcie menu w trakcie budowania zamyka edytor', async () => {

@@ -177,6 +177,19 @@
                         :options='Object.keys(EXPOSURE_CHOICES)'
                         :disabled='building && mapStore.draw.routeBusy'
                     />
+                    <TablerToggle
+                        v-model='crossCountry.avoidObservation'
+                        class='avoid-observation'
+                        label='Unikaj widoczności ze wzgórz'
+                        description='Trasa omija pole widzenia dominujących wzgórz do 3 km.'
+                        :disabled='building && mapStore.draw.routeBusy'
+                    />
+                </div>
+                <div
+                    v-if='selectedProviderId() === "taklab"'
+                    class='text-secondary small my-2 route-threats-hint'
+                >
+                    Trasa omija tereny zamknięte z mapy (wielokąt z nazwą „teren zamknięty”), a na przełaju także pole widzenia wrogich znaczników do 3 km.
                 </div>
                 <div class='my-3'>
                     <button
@@ -203,11 +216,13 @@ import {
     TablerAlert,
     TablerLoading,
 } from '@tak-ps/vue-tabler';
-import { server } from '../../../std.ts';
+import { server, std } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { IconCurrentLocation, IconPlus, IconX } from '@tabler/icons-vue';
 import { waypointLabel } from '../../../base/route-plan.ts';
 import type { LngLat, RouteOptions } from '../../../base/route-plan.ts';
+import { collectThreats } from '../../../base/route-threats.ts';
+import type { ThreatSource } from '../../../base/route-threats.ts';
 import { LocationState } from '../../../utils/events.ts';
 import type { Search } from '../../../types.ts';
 
@@ -270,6 +285,7 @@ const EXPOSURE_CHOICES: Record<string, NonNullable<RouteOptions['exposure']>> = 
 const crossCountry = ref({
     avoidWetland: false,
     avoidStreams: false,
+    avoidObservation: false,
     maxSlope: NO_SLOPE_LIMIT,
     exposure: 'może być',
 });
@@ -281,6 +297,7 @@ function routeOptions(): RouteOptions | undefined {
     const options: RouteOptions = {};
     if (crossCountry.value.avoidWetland) options.avoid_wetland = true;
     if (crossCountry.value.avoidStreams) options.avoid_streams = true;
+    if (crossCountry.value.avoidObservation) options.avoid_observation = true;
     if (crossCountry.value.maxSlope !== NO_SLOPE_LIMIT) options.max_slope_deg = parseInt(crossCountry.value.maxSlope, 10);
     const exposure = EXPOSURE_CHOICES[crossCountry.value.exposure];
     if (exposure && exposure !== 'allow') options.exposure = exposure;
@@ -510,28 +527,23 @@ async function generateRoute(): Promise<void> {
             }
         }
 
-        const options = travelMode === CROSS_COUNTRY ? routeOptions() : undefined;
+        const waypoints: LngLat[] = [
+            routePlan.value.start.coordinates,
+            ...routePlan.value.via.map((via) => (via.value as RoutePoint).coordinates),
+            routePlan.value.end.coordinates,
+        ].map((c) => [c[0], c[1]] as LngLat);
 
-        const { data: route, error: reqErr } = await server.GET('/api/search/route', {
-            params: {
-                query: {
-                    start: routePlan.value.start.coordinates.join(','),
-                    end: routePlan.value.end.coordinates.join(','),
-                    via: routePlan.value.via.length
-                        ? routePlan.value.via.map((via) => (via.value as RoutePoint).coordinates.join(',')).join(';')
-                        : undefined,
-                    callsign: routePlan.value.start.name + ' to ' + routePlan.value.end.name,
-                    provider,
-                    travelMode,
-                    avoidWetland: options?.avoid_wetland,
-                    avoidStreams: options?.avoid_streams,
-                    maxSlope: options?.max_slope_deg,
-                    exposure: options?.exposure,
-                }
-            }
-        });
-
-        if (reqErr) throw new Error(String(reqErr));
+        const route = await std('/api/search/route/plan', {
+            method: 'POST',
+            body: {
+                provider,
+                callsign: routePlan.value.start.name + ' to ' + routePlan.value.end.name,
+                travelMode: travelMode ?? 'car',
+                waypoints,
+                options: travelMode === CROSS_COUNTRY ? routeOptions() : undefined,
+                threats: await collectThreats(mapStore.worker.db as unknown as ThreatSource, waypoints),
+            },
+        }) as { features: Array<Record<string, unknown>> };
 
         if (route && route.features.length > 0) {
             // @ts-expect-error Feature types are slightly incompatible

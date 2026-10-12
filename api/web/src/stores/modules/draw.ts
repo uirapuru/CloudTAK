@@ -30,6 +30,8 @@ import RouteEditor from '../../base/route-editor.ts';
 import type { EditorState, Reroute, RouteFirstLeg } from '../../base/route-editor.ts';
 import { readRoutePlan } from '../../base/route-plan.ts';
 import type { LngLat, RouteOptions } from '../../base/route-plan.ts';
+import { collectThreats } from '../../base/route-threats.ts';
+import type { ThreatSource } from '../../base/route-threats.ts';
 
 type AugmentedBasemapResponse = paths['/api/basemap']['get']['responses']['200']['content']['application/json']['items'][0];
 import type { Polygon, Position, LineString, Feature as GeoJSONFeature, FeatureCollection as GeoJSONFeatureCollection } from 'geojson';
@@ -1037,28 +1039,31 @@ export default class DrawTool {
         this._routeState.error.value = '';
         this._routeState.menu.value = null;
 
+        const threatsFor = async (points: LngLat[]) => await collectThreats(
+            this.mapStore.worker.db as unknown as ThreatSource, points,
+        );
+
         const reroute: Reroute = async (body) => {
             const fc = await std('/api/search/route/legs', {
                 method: 'POST',
-                body: { provider: 'taklab', ...body },
+                body: { provider: 'taklab', ...body, threats: await threatsFor(body.waypoints) },
             }) as FeatureCollection;
             if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
             return fc.features[0];
         };
 
         const first: RouteFirstLeg = async (travelMode, stops, options) => {
-            const url = stdurl('/api/search/route');
-            url.searchParams.set('provider', 'taklab');
-            url.searchParams.set('travelMode', travelMode);
-            url.searchParams.set('callsign', this.routeCallsign || 'Trasa');
-            url.searchParams.set('start', stops[0].join(','));
-            url.searchParams.set('end', stops[stops.length - 1].join(','));
-            if (stops.length > 2) url.searchParams.set('via', stops.slice(1, -1).map((s) => s.join(',')).join(';'));
-            if (options?.avoid_wetland) url.searchParams.set('avoidWetland', 'true');
-            if (options?.avoid_streams) url.searchParams.set('avoidStreams', 'true');
-            if (options?.max_slope_deg !== undefined) url.searchParams.set('maxSlope', String(options.max_slope_deg));
-            if (options?.exposure) url.searchParams.set('exposure', options.exposure);
-            const fc = await std(url) as FeatureCollection;
+            const fc = await std('/api/search/route/plan', {
+                method: 'POST',
+                body: {
+                    provider: 'taklab',
+                    callsign: this.routeCallsign || 'Trasa',
+                    travelMode,
+                    waypoints: stops,
+                    options,
+                    threats: await threatsFor(stops),
+                },
+            }) as FeatureCollection;
             if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
             return fc.features[0];
         };

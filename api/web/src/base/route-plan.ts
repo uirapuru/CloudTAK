@@ -27,6 +27,13 @@ export type RouteOptions = {
     avoid_streams?: boolean;
     max_slope_deg?: number;
     exposure?: 'allow' | 'medium' | 'avoid';
+    avoid_observation?: boolean;
+};
+
+/** Zagrożenia z mapy dla liczenia trasy (API: threats w POST /api/search/route/plan i /legs). */
+export type RouteThreats = {
+    observers?: Array<[number, number]>;
+    closed_areas?: Array<Array<[number, number]>>;
 };
 
 export type RoutePlan = {

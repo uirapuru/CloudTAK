@@ -23,7 +23,7 @@ import {
     removeChange,
     waypointLabel,
 } from './route-plan.ts';
-import type { LegChange, LngLat, RoutePlan, RouteLeg, RouteOptions } from './route-plan.ts';
+import type { LegChange, LngLat, RoutePlan, RouteLeg, RouteOptions, RouteThreats } from './route-plan.ts';
 
 export const EDITOR_SOURCE = 'taklab-route-edit';
 const LAYER_LINE = 'taklab-route-edit-line';
@@ -69,11 +69,13 @@ export type RerouteBody = {
     count: number;
     added: -1 | 0 | 1;
     options?: RouteOptions;
+    /** Wypełnia draw.ts tuż przed wysłaniem, nie edytor */
+    threats?: RouteThreats;
 };
 
 /** POST /api/search/route/legs */
 export type Reroute = (body: RerouteBody) => Promise<Feature>;
-/** GET /api/search/route dla pierwszego odcinka w trybie budowania */
+/** POST /api/search/route/plan dla pierwszego odcinka w trybie budowania */
 export type RouteFirstLeg = (travelMode: string, stops: LngLat[], options?: RouteOptions) => Promise<Feature>;
 
 export type EditorState = {
