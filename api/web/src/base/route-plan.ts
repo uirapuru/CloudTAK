@@ -21,12 +21,20 @@ export type RouteLeg = {
     steps?: string[];
 };
 
+/** Opcje trasy na przełaj (API: RouteOptions w stateless/lib/routing/taklab.ts). */
+export type RouteOptions = {
+    avoid_wetland?: boolean;
+    avoid_streams?: boolean;
+    max_slope_deg?: number;
+};
+
 export type RoutePlan = {
     version: 1;
     mode: string;
     mode_name: string;
     waypoints: LngLat[];
     legs: RouteLeg[];
+    options?: RouteOptions;
 };
 
 /**

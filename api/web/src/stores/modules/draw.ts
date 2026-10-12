@@ -29,7 +29,7 @@ import OverlayManager from '../../base/overlay.ts';
 import RouteEditor from '../../base/route-editor.ts';
 import type { EditorState, Reroute, RouteFirstLeg } from '../../base/route-editor.ts';
 import { readRoutePlan } from '../../base/route-plan.ts';
-import type { LngLat } from '../../base/route-plan.ts';
+import type { LngLat, RouteOptions } from '../../base/route-plan.ts';
 
 type AugmentedBasemapResponse = paths['/api/basemap']['get']['responses']['200']['content']['application/json']['items'][0];
 import type { Polygon, Position, LineString, Feature as GeoJSONFeature, FeatureCollection as GeoJSONFeatureCollection } from 'geojson';
@@ -938,12 +938,12 @@ export default class DrawTool {
      * Budowanie trasy kliknięciami (menu New Route, start wskazany na mapie):
      * kolejne kliknięcia mapy dopisują punkty na koniec trasy.
      */
-    async buildRoute(opts: { travelMode: string; start: LngLat; callsign?: string }): Promise<void> {
+    async buildRoute(opts: { travelMode: string; options?: RouteOptions; start: LngLat; callsign?: string }): Promise<void> {
         if (this.mode !== DrawToolMode.STATIC) await this.stop();
 
         this.routeKind = 'build';
         this.routeCallsign = opts.callsign ?? '';
-        this.startRouteEditor({ mode: 'build', travelMode: opts.travelMode, waypoints: [opts.start] });
+        this.startRouteEditor({ mode: 'build', travelMode: opts.travelMode, options: opts.options, waypoints: [opts.start] });
     }
 
     // Stan edytora trasy dla paska edycji; pola Ref są prywatne jak _mode i _editing,
@@ -992,6 +992,12 @@ export default class DrawTool {
         return await this.routeEditor.setTravelMode(travelMode);
     }
 
+    /** Zmiana opcji przełaju w otwartym edytorze; false, gdy opcji nie zmieniono. */
+    async setRouteOptions(options: RouteOptions | undefined): Promise<boolean> {
+        if (!this.routeEditor) return false;
+        return await this.routeEditor.setOptions(options);
+    }
+
     /** Usunięcie punktu usera z otwartego edytora trasy. */
     async removeRouteWaypoint(index: number): Promise<void> {
         if (this.routeEditor) await this.routeEditor.removeWaypoint(index);
@@ -1026,7 +1032,7 @@ export default class DrawTool {
         }
     }
 
-    private startRouteEditor(opts: { mode: 'build' | 'edit'; travelMode: string; waypoints?: LngLat[]; feature?: Feature }): void {
+    private startRouteEditor(opts: { mode: 'build' | 'edit'; travelMode: string; options?: RouteOptions; waypoints?: LngLat[]; feature?: Feature }): void {
         this._routeState.busy.value = false;
         this._routeState.error.value = '';
         this._routeState.menu.value = null;
@@ -1040,7 +1046,7 @@ export default class DrawTool {
             return fc.features[0];
         };
 
-        const first: RouteFirstLeg = async (travelMode, stops) => {
+        const first: RouteFirstLeg = async (travelMode, stops, options) => {
             const url = stdurl('/api/search/route');
             url.searchParams.set('provider', 'taklab');
             url.searchParams.set('travelMode', travelMode);
@@ -1048,6 +1054,9 @@ export default class DrawTool {
             url.searchParams.set('start', stops[0].join(','));
             url.searchParams.set('end', stops[stops.length - 1].join(','));
             if (stops.length > 2) url.searchParams.set('via', stops.slice(1, -1).map((s) => s.join(',')).join(';'));
+            if (options?.avoid_wetland) url.searchParams.set('avoidWetland', 'true');
+            if (options?.avoid_streams) url.searchParams.set('avoidStreams', 'true');
+            if (options?.max_slope_deg !== undefined) url.searchParams.set('maxSlope', String(options.max_slope_deg));
             const fc = await std(url) as FeatureCollection;
             if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
             return fc.features[0];
@@ -1056,6 +1065,7 @@ export default class DrawTool {
         this.routeEditor = new RouteEditor(this.mapStore.map as unknown as ConstructorParameters<typeof RouteEditor>[0], {
             mode: opts.mode,
             travelMode: opts.travelMode,
+            options: opts.options,
             feature: opts.feature,
             waypoints: opts.waypoints,
             reroute,

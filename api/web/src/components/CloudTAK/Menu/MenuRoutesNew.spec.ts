@@ -21,6 +21,7 @@ const draw = reactive({
     }),
     setRouteCallsign: vi.fn(),
     setRouteTravelMode: vi.fn<(travelMode: string) => Promise<boolean>>(async () => true),
+    setRouteOptions: vi.fn<(options: unknown) => Promise<boolean>>(async () => true),
     removeRouteWaypoint: vi.fn(),
     finish: vi.fn(async () => { draw.mode = 'static'; }),
     stop: vi.fn(async () => { draw.mode = 'static'; }),
@@ -282,6 +283,96 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
             await wrapper.findAll('select')[1].setValue('Pieszo');
             await flushPromises();
             expect(draw.setRouteTravelMode).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('opcje przełaju', () => {
+        beforeEach(() => {
+            GET.mockImplementation(async (url: string) => {
+                if (url === '/api/search') {
+                    return {
+                        error: undefined,
+                        data: {
+                            route: {
+                                enabled: true,
+                                providers: [{ id: 'taklab', name: 'taklab', modes: [{ id: 'foot', name: 'Pieszo' }, { id: 'foot_cross_country', name: 'Pieszo na przełaj' }] }]
+                            }
+                        }
+                    };
+                }
+                return { error: undefined, data: { features: [{ type: 'Feature' }] } };
+            });
+        });
+
+        async function crossCountry() {
+            location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+            const wrapper = mountMenu();
+            await flushPromises();
+            await wrapper.findAll('select')[1].setValue('Pieszo na przełaj');
+            await flushPromises();
+            return wrapper;
+        }
+
+        const wetland = (wrapper: ReturnType<typeof mountMenu>) => wrapper.find('.route-options .avoid-wetland input');
+
+        it('panel opcji jest tylko przy przełaju', async () => {
+            location.mockResolvedValue({ source: LocationState.Disabled, coordinates: [0, 0] });
+            const wrapper = mountMenu();
+            await flushPromises();
+            expect(wrapper.find('.route-options').exists()).toBe(false);
+
+            await wrapper.findAll('select')[1].setValue('Pieszo na przełaj');
+            await flushPromises();
+            expect(wrapper.find('.route-options').exists()).toBe(true);
+        });
+
+        it('formularz wysyła opcje w zapytaniu o trasę', async () => {
+            const wrapper = await crossCountry();
+            await wetland(wrapper).setValue(true);
+            await wrapper.find('.route-options select').setValue('20°');
+            for (const b of wrapper.findAll('.search-box').map((x) => x.find('.pick'))) await b.trigger('click');
+            await wrapper.find('button.btn-primary').trigger('click');
+            await flushPromises();
+
+            const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
+            expect(call![1].params.query).toMatchObject({ travelMode: 'foot_cross_country', avoidWetland: true, maxSlope: 20 });
+            expect(call![1].params.query.avoidStreams).toBeUndefined();
+        });
+
+        it('bez przełaju zapytanie nie ma opcji', async () => {
+            location.mockResolvedValue({ source: LocationState.Live, coordinates: [20.94, 52.29] });
+            const wrapper = mountMenu();
+            await flushPromises();
+            await box(wrapper, 'End Location').find('.pick').trigger('click');
+            await wrapper.find('button.btn-primary').trigger('click');
+            await flushPromises();
+
+            const call = GET.mock.calls.find(c => c[0] === '/api/search/route');
+            expect(call![1].params.query.avoidWetland).toBeUndefined();
+            expect(call![1].params.query.maxSlope).toBeUndefined();
+        });
+
+        it('budowanie startuje z opcjami, a zmiana opcji idzie do edytora', async () => {
+            const wrapper = await crossCountry();
+            await wetland(wrapper).setValue(true);
+            await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+            await flushPromises();
+            expect(draw.buildRoute).toHaveBeenCalledWith(expect.objectContaining({ travelMode: 'foot_cross_country', options: { avoid_wetland: true } }));
+
+            await wrapper.find('.route-options .avoid-streams input').setValue(true);
+            await flushPromises();
+            expect(draw.setRouteOptions).toHaveBeenLastCalledWith({ avoid_wetland: true, avoid_streams: true });
+        });
+
+        it('gdy edytor odrzuci opcje, przełącznik wraca', async () => {
+            const wrapper = await crossCountry();
+            await box(wrapper, 'Start Location').find('.pick-map').trigger('click');
+            await flushPromises();
+            draw.setRouteOptions.mockImplementationOnce(async () => false);
+
+            await wetland(wrapper).setValue(true);
+            await flushPromises();
+            expect((wetland(wrapper).element as HTMLInputElement).checked).toBe(false);
         });
     });
 

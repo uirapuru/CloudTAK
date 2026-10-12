@@ -62057,6 +62057,12 @@ export interface paths {
                     end: string;
                     /** @description Travel mode for routing */
                     travelMode?: string;
+                    /** @description Cross-country only: treat wetland as impassable */
+                    avoidWetland?: boolean;
+                    /** @description Cross-country only: treat streams and ditches as impassable */
+                    avoidStreams?: boolean;
+                    /** @description Cross-country only: steepest allowed slope in degrees */
+                    maxSlope?: number;
                 };
                 header?: never;
                 path?: never;

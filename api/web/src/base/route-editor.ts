@@ -12,6 +12,7 @@
  * - kliknięcie punktu usera otwiera menu z usunięciem.
  */
 import type { Ref } from 'vue';
+import { isEqual } from '@ver0/deep-equal';
 import type { Feature } from '../types.ts';
 import {
     readRoutePlan,
@@ -22,7 +23,7 @@ import {
     removeChange,
     waypointLabel,
 } from './route-plan.ts';
-import type { LegChange, LngLat, RoutePlan, RouteLeg } from './route-plan.ts';
+import type { LegChange, LngLat, RoutePlan, RouteLeg, RouteOptions } from './route-plan.ts';
 
 export const EDITOR_SOURCE = 'taklab-route-edit';
 const LAYER_LINE = 'taklab-route-edit-line';
@@ -67,12 +68,13 @@ export type RerouteBody = {
     first: number;
     count: number;
     added: -1 | 0 | 1;
+    options?: RouteOptions;
 };
 
 /** POST /api/search/route/legs */
 export type Reroute = (body: RerouteBody) => Promise<Feature>;
 /** GET /api/search/route dla pierwszego odcinka w trybie budowania */
-export type RouteFirstLeg = (travelMode: string, stops: LngLat[]) => Promise<Feature>;
+export type RouteFirstLeg = (travelMode: string, stops: LngLat[], options?: RouteOptions) => Promise<Feature>;
 
 export type EditorState = {
     busy: Ref<boolean>;
@@ -91,6 +93,7 @@ export default class RouteEditor {
     private map: EditorMap;
     private mode: 'build' | 'edit';
     private travelMode: string;
+    private routeOptions: RouteOptions | undefined;
     private reroute: Reroute;
     private first: RouteFirstLeg;
     private state: EditorState;
@@ -108,6 +111,7 @@ export default class RouteEditor {
     constructor(map: EditorMap, opts: {
         mode: 'build' | 'edit';
         travelMode: string;
+        options?: RouteOptions;
         feature?: Feature;
         waypoints?: LngLat[];
         reroute: Reroute;
@@ -117,6 +121,7 @@ export default class RouteEditor {
         this.map = map;
         this.mode = opts.mode;
         this.travelMode = opts.travelMode;
+        this.routeOptions = opts.options;
         this.reroute = opts.reroute;
         this.first = opts.first;
         this.state = opts.state;
@@ -128,7 +133,10 @@ export default class RouteEditor {
         this.waypoints = this.plan
             ? this.plan.waypoints.map((w) => [w[0], w[1]] as LngLat)
             : (opts.waypoints ?? []).map((w) => [w[0], w[1]] as LngLat);
-        if (this.plan) this.travelMode = this.plan.mode;
+        if (this.plan) {
+            this.travelMode = this.plan.mode;
+            this.routeOptions = this.plan.options;
+        }
     }
 
     start(): void {
@@ -197,19 +205,35 @@ export default class RouteEditor {
      * przy błędzie zostaje poprzedni tryb i trasa. Zwraca false, gdy trybu nie zmieniono.
      */
     async setTravelMode(travelMode: string): Promise<boolean> {
+        if (travelMode === this.travelMode && !this.state.busy.value) return true;
+        return await this.recompute(travelMode, this.routeOptions);
+    }
+
+    get options(): RouteOptions | undefined {
+        return this.routeOptions;
+    }
+
+    /** Zmiana opcji przełaju; działa jak zmiana trybu (cała trasa od nowa, przy błędzie bez zmian). */
+    async setOptions(options: RouteOptions | undefined): Promise<boolean> {
+        if (isEqual(options ?? {}, this.routeOptions ?? {}) && !this.state.busy.value) return true;
+        return await this.recompute(this.travelMode, options);
+    }
+
+    private async recompute(travelMode: string, options: RouteOptions | undefined): Promise<boolean> {
         if (this.state.busy.value) return false;
-        if (travelMode === this.travelMode) return true;
 
         if (!this.plan) {
             this.travelMode = travelMode;
+            this.routeOptions = options;
             return true;
         }
 
         const stops = this.waypoints.map((w) => [w[0], w[1]] as LngLat);
         let changed = false;
         await this.run(async () => {
-            this.accept(await this.first(travelMode, stops));
+            this.accept(await this.first(travelMode, stops, options));
             this.travelMode = travelMode;
+            this.routeOptions = options;
             changed = true;
         });
         return changed;
@@ -374,7 +398,7 @@ export default class RouteEditor {
     private async firstLeg(): Promise<void> {
         const stops = this.waypoints.map((w) => [w[0], w[1]] as LngLat);
         await this.run(async () => {
-            const feature = await this.first(this.travelMode, stops);
+            const feature = await this.first(this.travelMode, stops, this.routeOptions);
             this.accept(feature);
         });
     }
@@ -390,6 +414,7 @@ export default class RouteEditor {
             first: change.first,
             count: change.count,
             added: change.added,
+            options: this.routeOptions,
         };
 
         // Podgląd zmiany punktów do czasu odpowiedzi

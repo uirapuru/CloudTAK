@@ -142,7 +142,7 @@ describe('RouteEditor - tryb budowania (f)', () => {
         expect(first).not.toHaveBeenCalled();
 
         await click(fire, 21.2, 52);
-        expect(first).toHaveBeenCalledWith('foot', [[21, 52], [21.2, 52]]);
+        expect(first).toHaveBeenCalledWith('foot', [[21, 52], [21.2, 52]], undefined);
 
         await click(fire, 21.2, 52.3);
         expect(reroute).toHaveBeenCalledWith(expect.objectContaining({ first: 1, count: 0, added: 1, waypoints: [[21, 52], [21.2, 52], [21.2, 52.3]] }));
@@ -156,7 +156,7 @@ describe('RouteEditor - tryb budowania (f)', () => {
         expect(first).not.toHaveBeenCalled();
 
         await click(fire, 21.2, 52);
-        expect(first).toHaveBeenCalledWith('car', [[21, 52], [21.2, 52]]);
+        expect(first).toHaveBeenCalledWith('car', [[21, 52], [21.2, 52]], undefined);
     });
 
     it('zmiana trybu przy gotowej trasie liczy całą trasę od nowa przez wszystkie punkty', async () => {
@@ -165,7 +165,7 @@ describe('RouteEditor - tryb budowania (f)', () => {
         await click(fire, 21.2, 52.3);
 
         expect(await instance.setTravelMode('car')).toBe(true);
-        expect(first).toHaveBeenLastCalledWith('car', [[21, 52], [21.2, 52], [21.2, 52.3]]);
+        expect(first).toHaveBeenLastCalledWith('car', [[21, 52], [21.2, 52], [21.2, 52.3]], undefined);
         expect(instance.travel).toBe('car');
         expect(s.waypoints.value).toEqual([[21, 52], [21.2, 52], [21.2, 52.3]]);
 
@@ -188,6 +188,48 @@ describe('RouteEditor - tryb budowania (f)', () => {
         expect(instance.travel).toBe('foot');
         expect(s.error.value).toBe('Brak trasy w tym trybie.');
         expect(instance.result()).toEqual(before);
+    });
+
+    it('opcje przełaju idą do pierwszego odcinka i do każdego przeliczenia', async () => {
+        const { fire, first, reroute, instance } = editor({ mode: 'build', waypoints: [[21, 52]] });
+        expect(await instance.setOptions({ avoid_wetland: true })).toBe(true);
+        expect(first).not.toHaveBeenCalled();
+
+        await click(fire, 21.2, 52);
+        expect(first).toHaveBeenLastCalledWith('foot', [[21, 52], [21.2, 52]], { avoid_wetland: true });
+        await click(fire, 21.2, 52.3);
+        expect(reroute).toHaveBeenLastCalledWith(expect.objectContaining({ options: { avoid_wetland: true } }));
+    });
+
+    it('zmiana opcji przy gotowej trasie liczy ją od nowa; błąd zostawia poprzednie opcje', async () => {
+        let fail = false;
+        const first: RouteFirstLeg = vi.fn(async (_mode, stops) => {
+            if (fail) throw new Error('Brak przejścia między punktami.');
+            return apiFeature(stops);
+        });
+        const { fire, instance, s } = editor({ mode: 'build', waypoints: [[21, 52]], first });
+        await click(fire, 21.2, 52);
+        await click(fire, 21.2, 52.3);
+
+        expect(await instance.setOptions({ max_slope_deg: 20 })).toBe(true);
+        expect(first).toHaveBeenLastCalledWith('foot', [[21, 52], [21.2, 52], [21.2, 52.3]], { max_slope_deg: 20 });
+        expect(instance.options).toEqual({ max_slope_deg: 20 });
+
+        fail = true;
+        const before = instance.result();
+        expect(await instance.setOptions({ max_slope_deg: 10 })).toBe(false);
+        expect(instance.options).toEqual({ max_slope_deg: 20 });
+        expect(s.error.value).toBe('Brak przejścia między punktami.');
+        expect(instance.result()).toEqual(before);
+    });
+
+    it('te same opcje co obecne nie liczą trasy od nowa', async () => {
+        const { fire, first, instance } = editor({ mode: 'build', waypoints: [[21, 52]] });
+        await instance.setOptions({ avoid_streams: true });
+        await click(fire, 21.2, 52);
+        const calls = vi.mocked(first).mock.calls.length;
+        expect(await instance.setOptions({ avoid_streams: true })).toBe(true);
+        expect(vi.mocked(first).mock.calls.length).toBe(calls);
     });
 
     it('kliknięcie przy linii w budowaniu też dopisuje na koniec', async () => {
@@ -268,6 +310,23 @@ describe('RouteEditor - tryb edycji', () => {
         await drag(fire, [21.5, 52.5], [21.6, 52.6]);
         expect(dragPan.enabled).toBe(true);
         expect(reroute).not.toHaveBeenCalled();
+    });
+
+    it('edycja trasy przełaju liczy z opcjami zapisanymi w planie', async () => {
+        const fake = fakeMap();
+        const reroute: Reroute = vi.fn(async (body) => apiFeature(body.waypoints));
+        const instance = new RouteEditor(fake.map, {
+            mode: 'edit',
+            travelMode: '',
+            feature: routeFeature({ ...plan, mode: 'foot_cross_country', options: { avoid_streams: true } }),
+            reroute,
+            first: vi.fn(),
+            state: state(),
+        });
+        instance.start();
+        expect(instance.options).toEqual({ avoid_streams: true });
+        await drag(fake.fire, [21.1, 52], [21.15, 52.02]);
+        expect(reroute).toHaveBeenCalledWith(expect.objectContaining({ travelMode: 'foot_cross_country', options: { avoid_streams: true } }));
     });
 
     it('wynik zachowuje id i nazwę trasy, bierze nową geometrię, opis i plan', async () => {

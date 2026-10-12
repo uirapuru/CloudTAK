@@ -143,6 +143,32 @@
                         :options='modes.map(m => m.name)'
                     />
                 </div>
+                <div
+                    v-if='isCrossCountry'
+                    class='my-2 route-options'
+                >
+                    <div class='text-secondary small mb-1'>
+                        Opcje przełaju
+                    </div>
+                    <TablerToggle
+                        v-model='crossCountry.avoidWetland'
+                        class='avoid-wetland'
+                        label='Omijaj bagna'
+                        :disabled='building && mapStore.draw.routeBusy'
+                    />
+                    <TablerToggle
+                        v-model='crossCountry.avoidStreams'
+                        class='avoid-streams'
+                        label='Omijaj strumienie i rowy'
+                        :disabled='building && mapStore.draw.routeBusy'
+                    />
+                    <TablerEnum
+                        v-model='crossCountry.maxSlope'
+                        label='Największe nachylenie'
+                        :options='SLOPE_CHOICES'
+                        :disabled='building && mapStore.draw.routeBusy'
+                    />
+                </div>
                 <div class='my-3'>
                     <button
                         :disabled='!canGenerate'
@@ -164,6 +190,7 @@ import SearchBox from '../util/SearchBox.vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import {
     TablerEnum,
+    TablerToggle,
     TablerAlert,
     TablerLoading,
 } from '@tak-ps/vue-tabler';
@@ -171,7 +198,7 @@ import { server } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { IconCurrentLocation, IconPlus, IconX } from '@tabler/icons-vue';
 import { waypointLabel } from '../../../base/route-plan.ts';
-import type { LngLat } from '../../../base/route-plan.ts';
+import type { LngLat, RouteOptions } from '../../../base/route-plan.ts';
 import { LocationState } from '../../../utils/events.ts';
 import type { Search } from '../../../types.ts';
 
@@ -217,6 +244,29 @@ const routePlan = ref<{
 });
 
 let viaKey = 0;
+
+// Tryb przełaju dostawcy taklab; tylko on ma opcje trasy
+const CROSS_COUNTRY = 'foot_cross_country';
+// Pierwsza pozycja = limit usługi terenu, czyli brak dodatkowego ograniczenia
+const NO_SLOPE_LIMIT = 'bez limitu (35°)';
+const SLOPE_CHOICES = [NO_SLOPE_LIMIT, '25°', '20°', '15°', '10°'];
+
+const crossCountry = ref({
+    avoidWetland: false,
+    avoidStreams: false,
+    maxSlope: NO_SLOPE_LIMIT,
+});
+
+const isCrossCountry = computed(() => selectedModeId() === CROSS_COUNTRY);
+
+// Opcje w formacie planu trasy; pomija wartości domyślne
+function routeOptions(): RouteOptions | undefined {
+    const options: RouteOptions = {};
+    if (crossCountry.value.avoidWetland) options.avoid_wetland = true;
+    if (crossCountry.value.avoidStreams) options.avoid_streams = true;
+    if (crossCountry.value.maxSlope !== NO_SLOPE_LIMIT) options.max_slope_deg = parseInt(crossCountry.value.maxSlope, 10);
+    return Object.keys(options).length ? options : undefined;
+}
 
 // Budowanie trasy kliknięciami: start wskazany na mapie, kolejne kliknięcia
 // dopisują punkty w edytorze trasy (DrawTool.buildRoute)
@@ -272,6 +322,7 @@ async function selectStart(event: null | (RoutePoint & { source?: string })): Pr
 
     await mapStore.draw.buildRoute({
         travelMode: selectedModeId() ?? 'car',
+        options: routeOptions(),
         start: [event.coordinates[0], event.coordinates[1]],
         callsign: event.name,
     });
@@ -286,6 +337,15 @@ watch(() => routePlan.value.travelMode, async (name, previous) => {
     if (!id) return;
     if (!await mapStore.draw.setRouteTravelMode(id)) {
         routePlan.value.travelMode = previous;
+    }
+});
+
+// Zmiana opcji w czasie budowania liczy trasę od nowa; odrzuconą cofamy jak tryb
+// (obserwujemy kopię, bo przy głębokim obserwatorze obiektu poprzednia wartość to ten sam obiekt)
+watch(() => ({ ...crossCountry.value }), async (_current, previous) => {
+    if (!building.value) return;
+    if (!await mapStore.draw.setRouteOptions(routeOptions())) {
+        crossCountry.value = previous;
     }
 });
 
@@ -431,6 +491,8 @@ async function generateRoute(): Promise<void> {
             }
         }
 
+        const options = travelMode === CROSS_COUNTRY ? routeOptions() : undefined;
+
         const { data: route, error: reqErr } = await server.GET('/api/search/route', {
             params: {
                 query: {
@@ -442,6 +504,9 @@ async function generateRoute(): Promise<void> {
                     callsign: routePlan.value.start.name + ' to ' + routePlan.value.end.name,
                     provider,
                     travelMode,
+                    avoidWetland: options?.avoid_wetland,
+                    avoidStreams: options?.avoid_streams,
+                    maxSlope: options?.max_slope_deg,
                 }
             }
         });
