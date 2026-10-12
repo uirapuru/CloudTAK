@@ -7,6 +7,7 @@ import Auth, { AuthUser } from '../../common/auth.js';
 import { FetchHourly } from '../lib/interface-weather.js';
 import { SearchManager } from '../lib/interface-search.js';
 import { RouteManager } from '../lib/interface-route.js';
+import { parseStops } from '../lib/routing/stops.js';
 import { SearchManagerConfig, FetchReverse, FetchSuggest, FetchForward } from '../lib/search/types.js';
 import { Feature } from '@tak-ps/node-cot';
 import type ConfigStateless from '../config.js';
@@ -371,11 +372,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             start: Type.String({
                 description: 'Lat,Lng of starting position',
             }),
-            /* TODO Implement via ESRI API
-            stops: Type.Optional(Type.Array(Type.String({
-                description: 'Lat,Lng of required stops'
-            }))),
-            */
+            via: Type.Optional(Type.String({
+                description: 'Intermediate stops in order, "lon,lat;lon,lat" (at most 25)',
+            })),
             end: Type.String({
                 description: 'Lat,Lng of end position',
             }),
@@ -389,10 +388,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         try {
             await Auth.as_user(config, req);
 
-            const stops = [
-                req.query.start.split(',').map(Number),
-                req.query.end.split(',').map(Number),
-            ] as [number, number][];
+            const stops = parseStops(req.query.start, req.query.end, req.query.via);
 
             await routeManager.refresh();
 
@@ -418,6 +414,57 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                     features: [],
                 });
             }
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    const LngLat = Type.Array(Type.Number(), { minItems: 2, maxItems: 3 });
+
+    await schema.post('/search/route/legs', {
+        name: 'Route Legs',
+        group: 'Search',
+        description: 'Recalculate selected legs of an existing route and return the whole route',
+        body: Type.Object({
+            provider: Type.Optional(Type.String()),
+            travelMode: Type.String({ description: 'Travel mode of the route plan' }),
+            waypoints: Type.Array(LngLat, { minItems: 2, maxItems: 27, description: 'New list of user waypoints, lon,lat' }),
+            coordinates: Type.Array(LngLat, { minItems: 1, maxItems: 5000, description: 'Current route geometry' }),
+            legs: Type.Array(Type.Object({
+                start: Type.Integer({ minimum: 0 }),
+                end: Type.Integer({ minimum: 0 }),
+                distance_m: Type.Number(),
+                duration_s: Type.Number(),
+                ascent_m: Type.Optional(Type.Number()),
+                descent_m: Type.Optional(Type.Number()),
+                offpath_ratio: Type.Optional(Type.Number()),
+                steps: Type.Optional(Type.Array(Type.String())),
+            }), { minItems: 1, maxItems: 26, description: 'Current legs of the route plan' }),
+            first: Type.Integer({ minimum: 0, description: 'First old leg to replace' }),
+            count: Type.Integer({ minimum: 0, description: 'Number of old legs to replace' }),
+            added: Type.Integer({ minimum: -1, maximum: 1, description: 'Change in the number of waypoints' }),
+        }),
+        res: RouteResponse,
+    }, async (req, res) => {
+        try {
+            await Auth.as_user(config, req);
+
+            await routeManager.refresh();
+
+            const provider = req.body.provider || routeManager.defaultProvider;
+            if (!provider) throw new Err(400, null, 'No routing provider configured');
+
+            const route = await routeManager.reroute(provider, {
+                travelMode: req.body.travelMode,
+                waypoints: req.body.waypoints.map(w => [w[0], w[1]] as [number, number]),
+                coordinates: req.body.coordinates,
+                legs: req.body.legs,
+                first: req.body.first,
+                count: req.body.count,
+                added: req.body.added as -1 | 0 | 1,
+            });
+
+            res.json(route);
         } catch (err) {
             Err.respond(err, res);
         }

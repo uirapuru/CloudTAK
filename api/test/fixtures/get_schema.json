@@ -1929,6 +1929,11 @@
         "query": true,
         "res": true
     },
+    "POST /search/route/legs": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
     "GET /search/forward": {
         "body": false,
         "query": true,

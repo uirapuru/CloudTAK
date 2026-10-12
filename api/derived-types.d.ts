@@ -62051,6 +62051,8 @@ export interface paths {
                     callsign: string;
                     /** @description Lat,Lng of starting position */
                     start: string;
+                    /** @description Intermediate stops in order, "lon,lat;lon,lat" (at most 25) */
+                    via?: string;
                     /** @description Lat,Lng of end position */
                     end: string;
                     /** @description Travel mode for routing */

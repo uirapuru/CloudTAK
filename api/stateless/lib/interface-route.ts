@@ -3,6 +3,7 @@ import Err from '@openaddresses/batch-error';
 import { Static } from '@sinclair/typebox';
 import { Feature } from '@tak-ps/node-cot';
 import { RouteConfig, RouteManagerConfig } from './routing/types.js';
+import type { RerouteInput } from './routing/taklab.js';
 import { arcgisSettingKeys } from './search/arcgis-settings.js';
 import { ProviderManager } from './interface-provider.js';
 import type { ProviderLoader, ProviderSettingKey } from './interface-provider.js';
@@ -23,6 +24,9 @@ export interface RouteInterface {
         stops: Array<[number, number]>,
         travelMode?: string
     ): Promise<Static<typeof Feature.FeatureCollection>>;
+
+    /** Przeliczenie części istniejącej trasy; tylko dostawcy z planem trasy. */
+    reroute?(input: RerouteInput): Promise<Static<typeof Feature.FeatureCollection>>;
 }
 
 /**
@@ -78,5 +82,22 @@ export class RouteManager extends ProviderManager<RouteInterface> {
         }
 
         return await route.route(stops, travelMode);
+    }
+
+    async reroute(
+        provider: string,
+        input: RerouteInput,
+    ): Promise<Static<typeof Feature.FeatureCollection>> {
+        const route = this.get(provider);
+
+        if (!route) {
+            throw new Err(400, null, `Invalid routing provider: ${provider}`);
+        }
+
+        if (!route.reroute) {
+            throw new Err(400, null, `Routing provider ${provider} does not support editing routes`);
+        }
+
+        return await route.reroute(input);
     }
 }
