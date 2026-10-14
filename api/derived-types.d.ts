@@ -571,7 +571,7 @@ export interface paths {
         put: {
             parameters: {
                 query?: {
-                    /** @description GUID of a mission to also upload the attachment to */
+                    /** @description GUID of a mission to also upload the attachment to - requires a User token */
                     mission?: string;
                 };
                 header?: never;
@@ -2413,7 +2413,7 @@ export interface paths {
                              * @enum {string}
                              */
                             "search::agol::auth_method"?: "oauth2" | "legacy";
-                            /** @description AGOL Search Legacy Token */
+                            /** @description AGOL Search API Key */
                             "search::agol::token"?: string;
                             /** @description AGOL Search OAuth2 Client ID */
                             "search::agol::client_id"?: string;
@@ -2426,7 +2426,7 @@ export interface paths {
                              * @enum {string}
                              */
                             "routing::agol::auth_method"?: "oauth2" | "legacy";
-                            /** @description AGOL Routing Legacy Token */
+                            /** @description AGOL Routing API Key */
                             "routing::agol::token"?: string;
                             /** @description AGOL Routing OAuth2 Client ID */
                             "routing::agol::client_id"?: string;
@@ -2715,7 +2715,7 @@ export interface paths {
                          * @enum {string}
                          */
                         "search::agol::auth_method"?: "oauth2" | "legacy";
-                        /** @description AGOL Search Legacy Token */
+                        /** @description AGOL Search API Key */
                         "search::agol::token"?: string;
                         /** @description AGOL Search OAuth2 Client ID */
                         "search::agol::client_id"?: string;
@@ -2728,7 +2728,7 @@ export interface paths {
                          * @enum {string}
                          */
                         "routing::agol::auth_method"?: "oauth2" | "legacy";
-                        /** @description AGOL Routing Legacy Token */
+                        /** @description AGOL Routing API Key */
                         "routing::agol::token"?: string;
                         /** @description AGOL Routing OAuth2 Client ID */
                         "routing::agol::client_id"?: string;
@@ -2942,7 +2942,7 @@ export interface paths {
                              * @enum {string}
                              */
                             "search::agol::auth_method"?: "oauth2" | "legacy";
-                            /** @description AGOL Search Legacy Token */
+                            /** @description AGOL Search API Key */
                             "search::agol::token"?: string;
                             /** @description AGOL Search OAuth2 Client ID */
                             "search::agol::client_id"?: string;
@@ -2955,7 +2955,7 @@ export interface paths {
                              * @enum {string}
                              */
                             "routing::agol::auth_method"?: "oauth2" | "legacy";
-                            /** @description AGOL Routing Legacy Token */
+                            /** @description AGOL Routing API Key */
                             "routing::agol::token"?: string;
                             /** @description AGOL Routing OAuth2 Client ID */
                             "routing::agol::client_id"?: string;
@@ -3584,14 +3584,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/config/webhooks": {
+    "/api/config/layer": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Return the base URL that incoming Layer Webhooks are served from */
+        /** Deployment settings that apply to every Layer - webhook base URL, incoming email domain and VPC egress */
         get: {
             parameters: {
                 query?: never;
@@ -3608,115 +3608,20 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            url: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/config/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return the domain that incoming Layer Email is addressed to */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            domain: string;
+                            webhooks: {
+                                /** @description Base URL that incoming Layer Webhooks are served from */
+                                url: string;
+                            };
+                            email: {
+                                /** @description Domain that incoming Layer Email is addressed to */
+                                domain: string;
+                            };
+                            vpc: {
+                                /** @description Layers can be attached to the private VPC subnets */
+                                enabled: boolean;
+                                /** @description Static egress addresses used by VPC attached Layers */
+                                addresses: string[];
+                            };
                         };
                     };
                 };
@@ -5467,6 +5372,11 @@ export interface paths {
                                                 tool?: string;
                                                 uid: string;
                                             };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
                                             details?: {
                                                 type: string;
                                                 callsign: string;
@@ -6084,6 +5994,11 @@ export interface paths {
                                         tool?: string;
                                         uid: string;
                                     };
+                                    /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                    missionProperty?: {
+                                        key: string;
+                                        value: string;
+                                    };
                                     details?: {
                                         type: string;
                                         callsign: string;
@@ -6621,6 +6536,11 @@ export interface paths {
                                             submitter: string;
                                             tool?: string;
                                             uid: string;
+                                        };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
                                         };
                                         details?: {
                                             type: string;
@@ -7360,6 +7280,11 @@ export interface paths {
                                             submitter: string;
                                             tool?: string;
                                             uid: string;
+                                        };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
                                         };
                                         details?: {
                                             type: string;
@@ -8103,6 +8028,11 @@ export interface paths {
                                             tool?: string;
                                             uid: string;
                                         };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
+                                        };
                                         details?: {
                                             type: string;
                                             callsign: string;
@@ -8646,6 +8576,11 @@ export interface paths {
                                                     submitter: string;
                                                     tool?: string;
                                                     uid: string;
+                                                };
+                                                /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                                missionProperty?: {
+                                                    key: string;
+                                                    value: string;
                                                 };
                                                 details?: {
                                                     type: string;
@@ -9287,6 +9222,11 @@ export interface paths {
                                             submitter: string;
                                             tool?: string;
                                             uid: string;
+                                        };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
                                         };
                                         details?: {
                                             type: string;
@@ -9937,6 +9877,11 @@ export interface paths {
                                                 submitter: string;
                                                 tool?: string;
                                                 uid: string;
+                                            };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
                                             };
                                             details?: {
                                                 type: string;
@@ -12245,7 +12190,7 @@ export interface paths {
                     /** @description Order in which results are returned based on the "sort" query param */
                     order: "asc" | "desc";
                     /** @description No Description */
-                    sort: "id" | "uuid" | "created" | "updated" | "username" | "name" | "enabled" | "protected" | "description" | "priority" | "connection" | "logging" | "task" | "version" | "memory" | "timeout" | "permissions" | "alarm_period" | "alarm_evals" | "alarm_points" | "enableRLS";
+                    sort: "id" | "uuid" | "created" | "updated" | "username" | "name" | "enabled" | "protected" | "description" | "priority" | "connection" | "logging" | "task" | "version" | "schema" | "memory" | "timeout" | "vpc" | "permissions" | "alarm_period" | "alarm_evals" | "alarm_points" | "enableRLS";
                     /** @description Filter results by a human readable name field */
                     filter: string;
                     /** @description No Description */
@@ -12290,6 +12235,8 @@ export interface paths {
                                 /** @description Container tag as <integration prefix>-v<version> */
                                 task: string;
                                 version: string;
+                                /** @description Version of the static Capabilities document the Task declares - 1.1 disables Legacy Styling in favour of Field Mapping, which applies only when the Layer holds feature:submit */
+                                schema: string;
                                 integration: {
                                     name: string;
                                     /** @description Base64 Data URL of the Integration Icon */
@@ -12297,6 +12244,8 @@ export interface paths {
                                 };
                                 memory: number;
                                 timeout: number;
+                                /** @description Attach the Lambda to the private VPC subnets - egress uses the static NAT addresses and internal resources are reachable */
+                                vpc: boolean;
                                 priority: "high" | "low" | "off";
                                 permissions: string[];
                                 /** @description Deprecated: Layer Templates have been removed - this value is always false */
@@ -12730,6 +12679,11 @@ export interface paths {
                         alarm_points?: number;
                         /** @default false */
                         protected: boolean;
+                        /**
+                         * @description Attach the Lambda to the private VPC subnets - System Admin only as it grants access to internal resources
+                         * @default false
+                         */
+                        vpc: boolean;
                         /** @description Permissions granted to the Layer as <permission>:<level> pairs - ie video:read or video:* */
                         permissions?: string[];
                         /** @description Create an Incoming Config alongside the Layer */
@@ -12768,6 +12722,8 @@ export interface paths {
                             /** @description Container tag as <integration prefix>-v<version> */
                             task: string;
                             version: string;
+                            /** @description Version of the static Capabilities document the Task declares - 1.1 disables Legacy Styling in favour of Field Mapping, which applies only when the Layer holds feature:submit */
+                            schema: string;
                             integration: {
                                 name: string;
                                 /** @description Base64 Data URL of the Integration Icon */
@@ -12775,6 +12731,8 @@ export interface paths {
                             };
                             memory: number;
                             timeout: number;
+                            /** @description Attach the Lambda to the private VPC subnets - egress uses the static NAT addresses and internal resources are reachable */
+                            vpc: boolean;
                             priority: "high" | "low" | "off";
                             permissions: string[];
                             /** @description Deprecated: Layer Templates have been removed - this value is always false */
@@ -15015,6 +14973,8 @@ export interface paths {
                             /** @description Container tag as <integration prefix>-v<version> */
                             task: string;
                             version: string;
+                            /** @description Version of the static Capabilities document the Task declares - 1.1 disables Legacy Styling in favour of Field Mapping, which applies only when the Layer holds feature:submit */
+                            schema: string;
                             integration: {
                                 name: string;
                                 /** @description Base64 Data URL of the Integration Icon */
@@ -15022,6 +14982,8 @@ export interface paths {
                             };
                             memory: number;
                             timeout: number;
+                            /** @description Attach the Lambda to the private VPC subnets - egress uses the static NAT addresses and internal resources are reachable */
+                            vpc: boolean;
                             priority: "high" | "low" | "off";
                             permissions: string[];
                             /** @description Deprecated: Layer Templates have been removed - this value is always false */
@@ -15544,6 +15506,8 @@ export interface paths {
                         timeout?: number;
                         enabled?: boolean;
                         protected?: boolean;
+                        /** @description Attach the Lambda to the private VPC subnets - System Admin only as it grants access to internal resources */
+                        vpc?: boolean;
                         task?: string;
                         logging?: boolean;
                         alarm_period?: number;
@@ -15577,6 +15541,8 @@ export interface paths {
                             /** @description Container tag as <integration prefix>-v<version> */
                             task: string;
                             version: string;
+                            /** @description Version of the static Capabilities document the Task declares - 1.1 disables Legacy Styling in favour of Field Mapping, which applies only when the Layer holds feature:submit */
+                            schema: string;
                             integration: {
                                 name: string;
                                 /** @description Base64 Data URL of the Integration Icon */
@@ -15584,6 +15550,8 @@ export interface paths {
                             };
                             memory: number;
                             timeout: number;
+                            /** @description Attach the Lambda to the private VPC subnets - egress uses the static NAT addresses and internal resources are reachable */
+                            vpc: boolean;
                             priority: "high" | "low" | "off";
                             permissions: string[];
                             /** @description Deprecated: Layer Templates have been removed - this value is always false */
@@ -16231,6 +16199,11 @@ export interface paths {
                                             tool?: string;
                                             uid: string;
                                         };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
+                                        };
                                         details?: {
                                             type: string;
                                             callsign: string;
@@ -16782,6 +16755,11 @@ export interface paths {
                                                     tool?: string;
                                                     uid: string;
                                                 };
+                                                /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                                missionProperty?: {
+                                                    key: string;
+                                                    value: string;
+                                                };
                                                 details?: {
                                                     type: string;
                                                     callsign: string;
@@ -17314,6 +17292,11 @@ export interface paths {
                                                     submitter: string;
                                                     tool?: string;
                                                     uid: string;
+                                                };
+                                                /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                                missionProperty?: {
+                                                    key: string;
+                                                    value: string;
                                                 };
                                                 details?: {
                                                     type: string;
@@ -20528,11 +20511,9 @@ export interface paths {
                     /** @description Order in which results are returned based on the "sort" query param */
                     order: "asc" | "desc";
                     /** @description No Description */
-                    sort: "id" | "created" | "updated" | "username" | "connection" | "event" | "type" | "name" | "manufacturer" | "model" | "serial" | "firmware" | "status" | "battery" | "simulated" | "external_id" | "remarks" | "metadata" | "enableRLS";
+                    sort: "id" | "created" | "updated" | "username" | "connection" | "type" | "name" | "editable" | "remarks" | "metadata" | "links" | "style" | "geometry";
                     /** @description Filter results by a human readable name field */
                     filter: string;
-                    /** @description Only return Devices assigned to the given Core Event */
-                    event?: string;
                     /** @description Only return Devices shared with the given TAK Channel bitpos - can be provided multiple times to match any of the given Channels */
                     channel?: number | number[];
                 };
@@ -20593,11 +20574,6 @@ export interface paths {
                                  */
                                 simulated: boolean;
                                 /**
-                                 * External ID
-                                 * @description ID of the Device in an external system
-                                 */
-                                external_id: string;
-                                /**
                                  * Remarks
                                  * @description Free text remarks about the Device
                                  */
@@ -20608,17 +20584,63 @@ export interface paths {
                                  */
                                 channels: number[];
                                 id: string;
+                                /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                                external_id: string;
+                                /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                                external_ids: {
+                                    [key: string]: string;
+                                };
                                 created: string;
                                 updated: string;
                                 username: null | string;
                                 /** @description Connection that created the Device if created by a Connection or Layer token */
                                 connection: null | number;
-                                /** @description Core Event the Device is currently assigned to */
-                                event: null | string;
+                                /** @description Can users other than the creator edit the Device */
+                                editable: boolean;
                                 battery: null | number;
                                 /** @description User defined key/value Device metadata */
                                 metadata: {
                                     [key: string]: unknown;
+                                };
+                                /** @description Named URLs associated with the Device */
+                                links: {
+                                    /**
+                                     * Name
+                                     * @description Human readable name of the Link
+                                     */
+                                    name: string;
+                                    /**
+                                     * URL
+                                     * @description URL the Link points at
+                                     */
+                                    url: string;
+                                }[];
+                                /** @description Point styling for the Device */
+                                style: {
+                                    /**
+                                     * Icon
+                                     * @description Iconset Icon path to render the Event with - ie: <iconset uid>/<icon path>
+                                     */
+                                    icon?: string;
+                                    /**
+                                     * Marker Color
+                                     * @description Hex colour of the Event marker - ie: #00ff00
+                                     */
+                                    "marker-color"?: string;
+                                    /**
+                                     * Marker Opacity
+                                     * @description Opacity of the Event marker
+                                     */
+                                    "marker-opacity"?: number;
+                                };
+                                /** @description Last known location of the Device */
+                                geometry: null | {
+                                    /** @constant */
+                                    type: "Point";
+                                    coordinates: [
+                                        number,
+                                        number
+                                    ];
                                 };
                             }[];
                         };
@@ -20712,8 +20734,15 @@ export interface paths {
                         name: string;
                         /** @description MIL-STD-2525E Symbol ID */
                         type: string;
-                        /** @description Core Event to assign the Device to */
-                        event?: null | string;
+                        /** @description Last known location of the Device */
+                        geometry?: null | {
+                            /** @constant */
+                            type: "Point";
+                            coordinates: [
+                                number,
+                                number
+                            ];
+                        };
                         /**
                          * @description Manufacturer of the Device - ie: Ortec, Nucsafe, DJI
                          * @default
@@ -20746,11 +20775,12 @@ export interface paths {
                          * @default false
                          */
                         simulated: boolean;
-                        /**
-                         * @description ID of the Device in an external system
-                         * @default
-                         */
-                        external_id: string;
+                        external_id?: {
+                            /** @description External system the ID belongs to - ie: active911, caltopo, cad */
+                            system: string;
+                            /** @description ID of the record in the external system - an empty value removes the system from the record */
+                            value: string;
+                        } | string;
                         /** @default  */
                         remarks: string;
                         /**
@@ -20759,6 +20789,43 @@ export interface paths {
                          */
                         metadata: {
                             [key: string]: unknown;
+                        };
+                        /**
+                         * @description Named URLs associated with the Device
+                         * @default []
+                         */
+                        links: {
+                            /**
+                             * Name
+                             * @description Human readable name of the Link
+                             */
+                            name: string;
+                            /**
+                             * URL
+                             * @description URL the Link points at
+                             */
+                            url: string;
+                        }[];
+                        /**
+                         * @description Point styling for the Device
+                         * @default {}
+                         */
+                        style: {
+                            /**
+                             * Icon
+                             * @description Iconset Icon path to render the Event with - ie: <iconset uid>/<icon path>
+                             */
+                            icon?: string;
+                            /**
+                             * Marker Color
+                             * @description Hex colour of the Event marker - ie: #00ff00
+                             */
+                            "marker-color"?: string;
+                            /**
+                             * Marker Opacity
+                             * @description Opacity of the Event marker
+                             */
+                            "marker-opacity"?: number;
                         };
                         /**
                          * @description TAK Server Channels to share the Device with
@@ -20818,11 +20885,6 @@ export interface paths {
                              */
                             simulated: boolean;
                             /**
-                             * External ID
-                             * @description ID of the Device in an external system
-                             */
-                            external_id: string;
-                            /**
                              * Remarks
                              * @description Free text remarks about the Device
                              */
@@ -20833,17 +20895,63 @@ export interface paths {
                              */
                             channels: number[];
                             id: string;
+                            /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                            external_id: string;
+                            /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                            external_ids: {
+                                [key: string]: string;
+                            };
                             created: string;
                             updated: string;
                             username: null | string;
                             /** @description Connection that created the Device if created by a Connection or Layer token */
                             connection: null | number;
-                            /** @description Core Event the Device is currently assigned to */
-                            event: null | string;
+                            /** @description Can users other than the creator edit the Device */
+                            editable: boolean;
                             battery: null | number;
                             /** @description User defined key/value Device metadata */
                             metadata: {
                                 [key: string]: unknown;
+                            };
+                            /** @description Named URLs associated with the Device */
+                            links: {
+                                /**
+                                 * Name
+                                 * @description Human readable name of the Link
+                                 */
+                                name: string;
+                                /**
+                                 * URL
+                                 * @description URL the Link points at
+                                 */
+                                url: string;
+                            }[];
+                            /** @description Point styling for the Device */
+                            style: {
+                                /**
+                                 * Icon
+                                 * @description Iconset Icon path to render the Event with - ie: <iconset uid>/<icon path>
+                                 */
+                                icon?: string;
+                                /**
+                                 * Marker Color
+                                 * @description Hex colour of the Event marker - ie: #00ff00
+                                 */
+                                "marker-color"?: string;
+                                /**
+                                 * Marker Opacity
+                                 * @description Opacity of the Event marker
+                                 */
+                                "marker-opacity"?: number;
+                            };
+                            /** @description Last known location of the Device */
+                            geometry: null | {
+                                /** @constant */
+                                type: "Point";
+                                coordinates: [
+                                    number,
+                                    number
+                                ];
                             };
                         };
                     };
@@ -20995,11 +21103,6 @@ export interface paths {
                              */
                             simulated: boolean;
                             /**
-                             * External ID
-                             * @description ID of the Device in an external system
-                             */
-                            external_id: string;
-                            /**
                              * Remarks
                              * @description Free text remarks about the Device
                              */
@@ -21010,17 +21113,63 @@ export interface paths {
                              */
                             channels: number[];
                             id: string;
+                            /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                            external_id: string;
+                            /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                            external_ids: {
+                                [key: string]: string;
+                            };
                             created: string;
                             updated: string;
                             username: null | string;
                             /** @description Connection that created the Device if created by a Connection or Layer token */
                             connection: null | number;
-                            /** @description Core Event the Device is currently assigned to */
-                            event: null | string;
+                            /** @description Can users other than the creator edit the Device */
+                            editable: boolean;
                             battery: null | number;
                             /** @description User defined key/value Device metadata */
                             metadata: {
                                 [key: string]: unknown;
+                            };
+                            /** @description Named URLs associated with the Device */
+                            links: {
+                                /**
+                                 * Name
+                                 * @description Human readable name of the Link
+                                 */
+                                name: string;
+                                /**
+                                 * URL
+                                 * @description URL the Link points at
+                                 */
+                                url: string;
+                            }[];
+                            /** @description Point styling for the Device */
+                            style: {
+                                /**
+                                 * Icon
+                                 * @description Iconset Icon path to render the Event with - ie: <iconset uid>/<icon path>
+                                 */
+                                icon?: string;
+                                /**
+                                 * Marker Color
+                                 * @description Hex colour of the Event marker - ie: #00ff00
+                                 */
+                                "marker-color"?: string;
+                                /**
+                                 * Marker Opacity
+                                 * @description Opacity of the Event marker
+                                 */
+                                "marker-opacity"?: number;
+                            };
+                            /** @description Last known location of the Device */
+                            geometry: null | {
+                                /** @constant */
+                                type: "Point";
+                                coordinates: [
+                                    number,
+                                    number
+                                ];
                             };
                         };
                     };
@@ -21217,8 +21366,14 @@ export interface paths {
                         /** @description Human readable name */
                         name?: string;
                         type?: string;
-                        /** @description Core Event to assign the Device to - set to null to unassign */
-                        event?: null | string;
+                        geometry?: null | {
+                            /** @constant */
+                            type: "Point";
+                            coordinates: [
+                                number,
+                                number
+                            ];
+                        };
                         manufacturer?: string;
                         model?: string;
                         serial?: string;
@@ -21226,11 +21381,47 @@ export interface paths {
                         status?: string;
                         battery?: null | number;
                         simulated?: boolean;
-                        external_id?: string;
+                        external_id?: {
+                            /** @description External system the ID belongs to - ie: active911, caltopo, cad */
+                            system: string;
+                            /** @description ID of the record in the external system - an empty value removes the system from the record */
+                            value: string;
+                        } | string;
                         remarks?: string;
                         /** @description User defined key/value Device metadata - replaces the existing metadata object */
                         metadata?: {
                             [key: string]: unknown;
+                        };
+                        /** @description Named URLs associated with the Device - replaces the existing links array */
+                        links?: {
+                            /**
+                             * Name
+                             * @description Human readable name of the Link
+                             */
+                            name: string;
+                            /**
+                             * URL
+                             * @description URL the Link points at
+                             */
+                            url: string;
+                        }[];
+                        /** @description Point styling for the Device - replaces the existing style object */
+                        style?: {
+                            /**
+                             * Icon
+                             * @description Iconset Icon path to render the Event with - ie: <iconset uid>/<icon path>
+                             */
+                            icon?: string;
+                            /**
+                             * Marker Color
+                             * @description Hex colour of the Event marker - ie: #00ff00
+                             */
+                            "marker-color"?: string;
+                            /**
+                             * Marker Opacity
+                             * @description Opacity of the Event marker
+                             */
+                            "marker-opacity"?: number;
                         };
                         channels?: number[];
                     };
@@ -21286,11 +21477,6 @@ export interface paths {
                              */
                             simulated: boolean;
                             /**
-                             * External ID
-                             * @description ID of the Device in an external system
-                             */
-                            external_id: string;
-                            /**
                              * Remarks
                              * @description Free text remarks about the Device
                              */
@@ -21301,17 +21487,63 @@ export interface paths {
                              */
                             channels: number[];
                             id: string;
+                            /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                            external_id: string;
+                            /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                            external_ids: {
+                                [key: string]: string;
+                            };
                             created: string;
                             updated: string;
                             username: null | string;
                             /** @description Connection that created the Device if created by a Connection or Layer token */
                             connection: null | number;
-                            /** @description Core Event the Device is currently assigned to */
-                            event: null | string;
+                            /** @description Can users other than the creator edit the Device */
+                            editable: boolean;
                             battery: null | number;
                             /** @description User defined key/value Device metadata */
                             metadata: {
                                 [key: string]: unknown;
+                            };
+                            /** @description Named URLs associated with the Device */
+                            links: {
+                                /**
+                                 * Name
+                                 * @description Human readable name of the Link
+                                 */
+                                name: string;
+                                /**
+                                 * URL
+                                 * @description URL the Link points at
+                                 */
+                                url: string;
+                            }[];
+                            /** @description Point styling for the Device */
+                            style: {
+                                /**
+                                 * Icon
+                                 * @description Iconset Icon path to render the Event with - ie: <iconset uid>/<icon path>
+                                 */
+                                icon?: string;
+                                /**
+                                 * Marker Color
+                                 * @description Hex colour of the Event marker - ie: #00ff00
+                                 */
+                                "marker-color"?: string;
+                                /**
+                                 * Marker Opacity
+                                 * @description Opacity of the Event marker
+                                 */
+                                "marker-opacity"?: number;
+                            };
+                            /** @description Last known location of the Device */
+                            geometry: null | {
+                                /** @constant */
+                                type: "Point";
+                                coordinates: [
+                                    number,
+                                    number
+                                ];
                             };
                         };
                     };
@@ -22781,11 +23013,6 @@ export interface paths {
                                      */
                                     active: boolean;
                                     /**
-                                     * External ID
-                                     * @description ID of the Event in an external system
-                                     */
-                                    external_id: string;
-                                    /**
                                      * Editable
                                      * @description Can users other than the creator edit the Event
                                      * @default true
@@ -22831,8 +23058,22 @@ export interface paths {
                                         url: string;
                                     }[];
                                     id: string;
-                                    /** @description GUID of the TAK Server Mission associated with the Event */
-                                    mission_guid: null | string;
+                                    /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                                    external_id: string;
+                                    /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                                    external_ids: {
+                                        [key: string]: string;
+                                    };
+                                    /** @description TAK Server Missions associated with the Event */
+                                    missions: {
+                                        /** @description Name of the TAK Server Mission */
+                                        name: string;
+                                        /**
+                                         * Format: uuid
+                                         * @description GUID of the TAK Server Mission
+                                         */
+                                        guid: string;
+                                    }[];
                                     created: string;
                                     updated: string;
                                     /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -23037,11 +23278,6 @@ export interface paths {
                                  */
                                 active: boolean;
                                 /**
-                                 * External ID
-                                 * @description ID of the Event in an external system
-                                 */
-                                external_id: string;
-                                /**
                                  * Editable
                                  * @description Can users other than the creator edit the Event
                                  * @default true
@@ -23087,8 +23323,22 @@ export interface paths {
                                     url: string;
                                 }[];
                                 id: string;
-                                /** @description GUID of the TAK Server Mission associated with the Event */
-                                mission_guid: null | string;
+                                /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                                external_id: string;
+                                /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                                external_ids: {
+                                    [key: string]: string;
+                                };
+                                /** @description TAK Server Missions associated with the Event */
+                                missions: {
+                                    /** @description Name of the TAK Server Mission */
+                                    name: string;
+                                    /**
+                                     * Format: uuid
+                                     * @description GUID of the TAK Server Mission
+                                     */
+                                    guid: string;
+                                }[];
                                 created: string;
                                 updated: string;
                                 /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -23401,11 +23651,6 @@ export interface paths {
                                  */
                                 active: boolean;
                                 /**
-                                 * External ID
-                                 * @description ID of the Event in an external system
-                                 */
-                                external_id: string;
-                                /**
                                  * Editable
                                  * @description Can users other than the creator edit the Event
                                  * @default true
@@ -23451,8 +23696,22 @@ export interface paths {
                                     url: string;
                                 }[];
                                 id: string;
-                                /** @description GUID of the TAK Server Mission associated with the Event */
-                                mission_guid: null | string;
+                                /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                                external_id: string;
+                                /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                                external_ids: {
+                                    [key: string]: string;
+                                };
+                                /** @description TAK Server Missions associated with the Event */
+                                missions: {
+                                    /** @description Name of the TAK Server Mission */
+                                    name: string;
+                                    /**
+                                     * Format: uuid
+                                     * @description GUID of the TAK Server Mission
+                                     */
+                                    guid: string;
+                                }[];
                                 created: string;
                                 updated: string;
                                 /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -24554,7 +24813,7 @@ export interface paths {
                     /** @description Order in which results are returned based on the "sort" query param */
                     order: "asc" | "desc";
                     /** @description No Description */
-                    sort: "id" | "mission_guid" | "created" | "updated" | "started" | "ended" | "username" | "connection" | "priority" | "type" | "name" | "external_id" | "editable" | "location" | "remarks" | "metadata" | "links" | "style" | "geometry" | "enableRLS";
+                    sort: "id" | "created" | "updated" | "username" | "connection" | "type" | "name" | "editable" | "remarks" | "metadata" | "links" | "style" | "geometry";
                     /** @description Filter results by a human readable name field */
                     filter: string;
                     /** @description Only return Events shared with the given TAK Channel bitpos - can be provided multiple times to match any of the given Channels */
@@ -24615,11 +24874,6 @@ export interface paths {
                                  */
                                 active: boolean;
                                 /**
-                                 * External ID
-                                 * @description ID of the Event in an external system
-                                 */
-                                external_id: string;
-                                /**
                                  * Editable
                                  * @description Can users other than the creator edit the Event
                                  * @default true
@@ -24665,8 +24919,22 @@ export interface paths {
                                     url: string;
                                 }[];
                                 id: string;
-                                /** @description GUID of the TAK Server Mission associated with the Event */
-                                mission_guid: null | string;
+                                /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                                external_id: string;
+                                /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                                external_ids: {
+                                    [key: string]: string;
+                                };
+                                /** @description TAK Server Missions associated with the Event */
+                                missions: {
+                                    /** @description Name of the TAK Server Mission */
+                                    name: string;
+                                    /**
+                                     * Format: uuid
+                                     * @description GUID of the TAK Server Mission
+                                     */
+                                    guid: string;
+                                }[];
                                 created: string;
                                 updated: string;
                                 /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -24819,11 +25087,12 @@ export interface paths {
                          */
                         started?: string;
                         ended?: null | string;
-                        /**
-                         * @description ID of the Event in an external system
-                         * @default
-                         */
-                        external_id: string;
+                        external_id?: {
+                            /** @description External system the ID belongs to - ie: active911, caltopo, cad */
+                            system: string;
+                            /** @description ID of the record in the external system - an empty value removes the system from the record */
+                            value: string;
+                        } | string;
                         /**
                          * @description Can users other than the creator edit the Event
                          * @default true
@@ -24851,6 +25120,19 @@ export interface paths {
                              * @description URL the Link points at
                              */
                             url: string;
+                        }[];
+                        /**
+                         * @description TAK Server Missions associated with the Event
+                         * @default []
+                         */
+                        missions: {
+                            /** @description Name of the TAK Server Mission */
+                            name: string;
+                            /**
+                             * Format: uuid
+                             * @description GUID of the TAK Server Mission
+                             */
+                            guid: string;
                         }[];
                         /**
                          * @description Point styling for the Event
@@ -24926,11 +25208,6 @@ export interface paths {
                              */
                             active: boolean;
                             /**
-                             * External ID
-                             * @description ID of the Event in an external system
-                             */
-                            external_id: string;
-                            /**
                              * Editable
                              * @description Can users other than the creator edit the Event
                              * @default true
@@ -24976,8 +25253,22 @@ export interface paths {
                                 url: string;
                             }[];
                             id: string;
-                            /** @description GUID of the TAK Server Mission associated with the Event */
-                            mission_guid: null | string;
+                            /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                            external_id: string;
+                            /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                            external_ids: {
+                                [key: string]: string;
+                            };
+                            /** @description TAK Server Missions associated with the Event */
+                            missions: {
+                                /** @description Name of the TAK Server Mission */
+                                name: string;
+                                /**
+                                 * Format: uuid
+                                 * @description GUID of the TAK Server Mission
+                                 */
+                                guid: string;
+                            }[];
                             created: string;
                             updated: string;
                             /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -25163,11 +25454,6 @@ export interface paths {
                              */
                             active: boolean;
                             /**
-                             * External ID
-                             * @description ID of the Event in an external system
-                             */
-                            external_id: string;
-                            /**
                              * Editable
                              * @description Can users other than the creator edit the Event
                              * @default true
@@ -25213,8 +25499,22 @@ export interface paths {
                                 url: string;
                             }[];
                             id: string;
-                            /** @description GUID of the TAK Server Mission associated with the Event */
-                            mission_guid: null | string;
+                            /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                            external_id: string;
+                            /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                            external_ids: {
+                                [key: string]: string;
+                            };
+                            /** @description TAK Server Missions associated with the Event */
+                            missions: {
+                                /** @description Name of the TAK Server Mission */
+                                name: string;
+                                /**
+                                 * Format: uuid
+                                 * @description GUID of the TAK Server Mission
+                                 */
+                                guid: string;
+                            }[];
                             created: string;
                             updated: string;
                             /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -25447,8 +25747,16 @@ export interface paths {
                         /** @description Human readable name */
                         name?: string;
                         type?: string;
-                        /** @description GUID of a TAK Server Mission to associate with the Event - set to null to remove the association */
-                        mission_guid?: null | string;
+                        /** @description TAK Server Missions associated with the Event - replaces the existing missions array */
+                        missions?: {
+                            /** @description Name of the TAK Server Mission */
+                            name: string;
+                            /**
+                             * Format: uuid
+                             * @description GUID of the TAK Server Mission
+                             */
+                            guid: string;
+                        }[];
                         priority?: "none" | "low" | "medium" | "high" | "critical";
                         geometry?: {
                             /** @constant */
@@ -25465,7 +25773,12 @@ export interface paths {
                         /** Format: date-time */
                         started?: string;
                         ended?: null | string;
-                        external_id?: string;
+                        external_id?: {
+                            /** @description External system the ID belongs to - ie: active911, caltopo, cad */
+                            system: string;
+                            /** @description ID of the record in the external system - an empty value removes the system from the record */
+                            value: string;
+                        } | string;
                         editable?: boolean;
                         /** @description User defined key/value Event metadata - replaces the existing metadata object */
                         metadata?: {
@@ -25555,11 +25868,6 @@ export interface paths {
                              */
                             active: boolean;
                             /**
-                             * External ID
-                             * @description ID of the Event in an external system
-                             */
-                            external_id: string;
-                            /**
                              * Editable
                              * @description Can users other than the creator edit the Event
                              * @default true
@@ -25605,8 +25913,22 @@ export interface paths {
                                 url: string;
                             }[];
                             id: string;
-                            /** @description GUID of the TAK Server Mission associated with the Event */
-                            mission_guid: null | string;
+                            /** @description Deprecated - ID of the record under the default system, use external_ids - removed in v14 */
+                            external_id: string;
+                            /** @description IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" } */
+                            external_ids: {
+                                [key: string]: string;
+                            };
+                            /** @description TAK Server Missions associated with the Event */
+                            missions: {
+                                /** @description Name of the TAK Server Mission */
+                                name: string;
+                                /**
+                                 * Format: uuid
+                                 * @description GUID of the TAK Server Mission
+                                 */
+                                guid: string;
+                            }[];
                             created: string;
                             updated: string;
                             /** @description Time at which the Event ends - a future time keeps the Event active until then */
@@ -31509,8 +31831,8 @@ export interface paths {
                             version: string;
                             deployed: boolean;
                             capabilities: {
-                                /** @description Version of the Capabilities document format */
-                                version: string;
+                                /** @description Version of the Capabilities document format - 1.1 disables Legacy Styling and enforces the Layer Field Mapping UI */
+                                version: "1.0" | "1.1";
                                 /** @description Human readable name of the task */
                                 name: string;
                                 /** @description Human readable description of what the task does */
@@ -31879,7 +32201,7 @@ export interface paths {
                     /** @description Order in which results are returned based on the "sort" query param */
                     order: "asc" | "desc";
                     /** @description No Description */
-                    sort: "id" | "uuid" | "created" | "updated" | "username" | "name" | "enabled" | "protected" | "description" | "priority" | "connection" | "logging" | "task" | "version" | "memory" | "timeout" | "permissions" | "alarm_period" | "alarm_evals" | "alarm_points" | "enableRLS";
+                    sort: "id" | "uuid" | "created" | "updated" | "username" | "name" | "enabled" | "protected" | "description" | "priority" | "connection" | "logging" | "task" | "version" | "schema" | "memory" | "timeout" | "vpc" | "permissions" | "alarm_period" | "alarm_evals" | "alarm_points" | "enableRLS";
                     /** @description Filter results by a human readable name field */
                     filter: string;
                     /** @description No Description */
@@ -31925,6 +32247,8 @@ export interface paths {
                                 /** @description Container tag as <integration prefix>-v<version> */
                                 task: string;
                                 version: string;
+                                /** @description Version of the static Capabilities document the Task declares - 1.1 disables Legacy Styling in favour of Field Mapping, which applies only when the Layer holds feature:submit */
+                                schema: string;
                                 integration: {
                                     name: string;
                                     /** @description Base64 Data URL of the Integration Icon */
@@ -31932,6 +32256,8 @@ export interface paths {
                                 };
                                 memory: number;
                                 timeout: number;
+                                /** @description Attach the Lambda to the private VPC subnets - egress uses the static NAT addresses and internal resources are reachable */
+                                vpc: boolean;
                                 priority: "high" | "low" | "off";
                                 permissions: string[];
                                 /** @description Deprecated: Layer Templates have been removed - this value is always false */
@@ -32377,6 +32703,8 @@ export interface paths {
                             /** @description Container tag as <integration prefix>-v<version> */
                             task: string;
                             version: string;
+                            /** @description Version of the static Capabilities document the Task declares - 1.1 disables Legacy Styling in favour of Field Mapping, which applies only when the Layer holds feature:submit */
+                            schema: string;
                             integration: {
                                 name: string;
                                 /** @description Base64 Data URL of the Integration Icon */
@@ -32384,6 +32712,8 @@ export interface paths {
                             };
                             memory: number;
                             timeout: number;
+                            /** @description Attach the Lambda to the private VPC subnets - egress uses the static NAT addresses and internal resources are reachable */
+                            vpc: boolean;
                             priority: "high" | "low" | "off";
                             permissions: string[];
                             /** @description Deprecated: Layer Templates have been removed - this value is always false */
@@ -33120,342 +33450,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/live": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the live GeoJSON layers offered by the taklab live-feeds service */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            items: {
-                                name: string;
-                                label: string;
-                                refresh: number;
-                                attribution: string;
-                                updated: null | string;
-                                stale: boolean;
-                                /** @description Overlay Explorer category of the layer, e.g. "Transport" */
-                                category?: string;
-                            }[];
-                        };
-                    };
-                };
-                /** @description Error Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/live/{:name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get the current GeoJSON FeatureCollection of one live layer */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description ISO time of the caller's copy; unchanged layers answer {"unchanged": true} */
-                    since?: string;
-                };
-                header?: never;
-                path: {
-                    /** @description No Description */
-                    ":name": string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Error Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/live/{:name}/{:id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get the details of one object of a live layer */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description No Description */
-                    ":name": string;
-                    /** @description No Description */
-                    ":id": string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Error Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/ldap/channel": {
         parameters: {
             query?: never;
@@ -33815,6 +33809,342 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the live GeoJSON layers offered by the taklab live-feeds service */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                name: string;
+                                label: string;
+                                refresh: number;
+                                attribution: string;
+                                updated: null | string;
+                                stale: boolean;
+                                /** @description Overlay Explorer category of the layer, e.g. "Transport" */
+                                category?: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/live/{:name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current GeoJSON FeatureCollection of one live layer */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description ISO time of the caller's copy; unchanged layers answer {"unchanged": true} */
+                    since?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":name": string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/live/{:name}/{:id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the details of one object of a live layer */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":name": string;
+                    /** @description No Description */
+                    ":id": string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -35177,6 +35507,11 @@ export interface paths {
                                             tool?: string;
                                             uid: string;
                                         };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
+                                        };
                                         details?: {
                                             type: string;
                                             callsign: string;
@@ -35824,6 +36159,11 @@ export interface paths {
                                                 submitter: string;
                                                 tool?: string;
                                                 uid: string;
+                                            };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
                                             };
                                             details?: {
                                                 type: string;
@@ -37912,6 +38252,551 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/marti/missions/{:guid}/property": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Helper API to list Mission Key/Value Properties (TAK Server 5.9+) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only return properties whose key starts with this prefix */
+                    prefix?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":guid": string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            total: number;
+                            items: {
+                                key: string;
+                                value: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        /** Helper API to create or update (upsert) a Mission Key/Value Property (TAK Server 5.9+) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":guid": string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        key: string;
+                        value: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            version: string;
+                            type: string;
+                            data: {
+                                key: string;
+                                value: string;
+                            };
+                            messages?: string[];
+                            nodeId?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Helper API to delete all Mission Key/Value Properties (TAK Server 5.9+) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":guid": string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/marti/missions/{:guid}/property/{:key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Helper API to get a single Mission Key/Value Property (TAK Server 5.9+) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":guid": string;
+                    /** @description No Description */
+                    ":key": string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            version: string;
+                            type: string;
+                            data: {
+                                key: string;
+                                value: string;
+                            };
+                            messages?: string[];
+                            nodeId?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Helper API to delete a single Mission Key/Value Property (TAK Server 5.9+) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description No Description */
+                    ":guid": string;
+                    /** @description No Description */
+                    ":key": string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/marti/missions/{:guid}": {
         parameters: {
             query?: never;
@@ -38562,6 +39447,11 @@ export interface paths {
                                                 tool?: string;
                                                 uid: string;
                                             };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
                                             details?: {
                                                 type: string;
                                                 callsign: string;
@@ -39189,6 +40079,11 @@ export interface paths {
                                             submitter: string;
                                             tool?: string;
                                             uid: string;
+                                        };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
                                         };
                                         details?: {
                                             type: string;
@@ -47572,6 +48467,11 @@ export interface paths {
                                                 tool?: string;
                                                 uid: string;
                                             };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
                                             details?: {
                                                 type: string;
                                                 callsign: string;
@@ -48199,6 +49099,11 @@ export interface paths {
                                         tool?: string;
                                         uid: string;
                                     };
+                                    /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                    missionProperty?: {
+                                        key: string;
+                                        value: string;
+                                    };
                                     details?: {
                                         type: string;
                                         callsign: string;
@@ -48736,6 +49641,11 @@ export interface paths {
                                             submitter: string;
                                             tool?: string;
                                             uid: string;
+                                        };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
                                         };
                                         details?: {
                                             type: string;
@@ -49472,6 +50382,11 @@ export interface paths {
                                             submitter: string;
                                             tool?: string;
                                             uid: string;
+                                        };
+                                        /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                        missionProperty?: {
+                                            key: string;
+                                            value: string;
                                         };
                                         details?: {
                                             type: string;
@@ -50569,10 +51484,9 @@ export interface paths {
         get?: never;
         /**
          * Submit a live location update for the authenticated user.
-         *                 Only the raw coordinates are required — all profile fields
-         *                 (callsign, TAK type, group, role, remarks) are read from the
-         *                 authenticated user's saved profile, and the CoT UID is derived
-         *                 server-side from their email.
+         *                 Only the raw coordinates are required — callsign, group, role
+         *                 and remarks are read from the authenticated user's saved profile,
+         *                 and the CoT UID is derived server-side from their email.
          */
         put: {
             parameters: {
@@ -51757,7 +52671,13 @@ export interface paths {
             };
         };
         put?: never;
-        /** Create Profile Overlay */
+        /**
+         * Create Profile Overlay
+         *
+         *                 Overlays are unique per user & URL. If an overlay with the given URL already exists
+         *                 the request is treated as a patch: the supplied fields are applied to the existing
+         *                 overlay and it is returned. The mode of an existing overlay cannot be changed.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -60318,236 +61238,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/manifest.webmanifest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return the Web Manifest for PWA Use */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            name: string;
-                            short_name: string;
-                            description: string;
-                            start_url: string;
-                            display: string;
-                            background_color: string;
-                            theme_color: string;
-                            lang: string;
-                            scope: string;
-                            icons: {
-                                src: string;
-                                sizes: string;
-                                type: string;
-                            }[];
-                            orientation: string;
-                            categories: string[];
-                        };
-                    };
-                };
-                /** @description Error Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/manifest.webmanifest/logos/{:size}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return a resized PNG logo for PWA use */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Logo size in pixels */
-                    ":size": number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Successful Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Error Response */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-                /** @description Error Response */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            status: number;
-                            message: string;
-                            /** @description Extended error details (ie: TAK Server exception trace) */
-                            details?: string;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/type/cot": {
         parameters: {
             query?: never;
@@ -60955,6 +61645,236 @@ export interface paths {
                             full?: string;
                         };
                     };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manifest.webmanifest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return the Web Manifest for PWA Use */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            name: string;
+                            short_name: string;
+                            description: string;
+                            start_url: string;
+                            display: string;
+                            background_color: string;
+                            theme_color: string;
+                            lang: string;
+                            scope: string;
+                            icons: {
+                                src: string;
+                                sizes: string;
+                                type: string;
+                            }[];
+                            orientation: string;
+                            categories: string[];
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/manifest.webmanifest/logos/{:size}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return a resized PNG logo for PWA use */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Logo size in pixels */
+                    ":size": number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Error Response */
                 400: {
@@ -62193,6 +63113,11 @@ export interface paths {
                                                 tool?: string;
                                                 uid: string;
                                             };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
                                             details?: {
                                                 type: string;
                                                 callsign: string;
@@ -62687,6 +63612,2028 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/route/legs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Recalculate selected legs of an existing route and return the whole route */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        provider?: string;
+                        /** @description Travel mode of the route plan */
+                        travelMode: string;
+                        /** @description New list of user waypoints, lon,lat */
+                        waypoints: number[][];
+                        /** @description Current route geometry */
+                        coordinates: number[][];
+                        /** @description Current legs of the route plan */
+                        legs: {
+                            start: number;
+                            end: number;
+                            distance_m: number;
+                            duration_s: number;
+                            ascent_m?: number;
+                            descent_m?: number;
+                            offpath_ratio?: number;
+                            steps?: string[];
+                        }[];
+                        /** @description First old leg to replace */
+                        first: number;
+                        /** @description Number of old legs to replace */
+                        count: number;
+                        /** @description Change in the number of waypoints */
+                        added: number;
+                        /** @description Cross-country route options, as stored in the route plan */
+                        options?: {
+                            avoid_wetland?: boolean;
+                            avoid_streams?: boolean;
+                            max_slope_deg?: number;
+                            exposure?: "allow" | "medium" | "avoid";
+                            avoid_observation?: boolean;
+                            /** @description All modes: do not avoid danger zones from the map */
+                            ignore_danger_zones?: boolean;
+                        };
+                        /** @description Hostile observation posts and closed areas taken from the map */
+                        threats?: {
+                            observers?: number[][];
+                            closed_areas?: number[][][];
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @constant */
+                            type: "FeatureCollection";
+                            features: {
+                                id: string;
+                                /** @constant */
+                                type: "Feature";
+                                properties: {
+                                    /** @default UNKNOWN */
+                                    callsign: string;
+                                    /** @default a-f-G */
+                                    type: string;
+                                    how: string;
+                                    time: string;
+                                    start: string;
+                                    stale: string;
+                                    center: number[];
+                                    minzoom?: number;
+                                    maxzoom?: number;
+                                    rotate?: boolean;
+                                    range?: number;
+                                    bearing?: number;
+                                    creator?: {
+                                        /** @description The Unique ID of the creator of the CoT */
+                                        uid: string;
+                                        /** @description The Callsign of the creator of the CoT */
+                                        callsign?: string;
+                                        /** @description Time at which the CoT was created by the creator */
+                                        time?: string;
+                                        /** @description The Type of the creator - typically a- for things on the ground, b- for digital things, etc */
+                                        type: string;
+                                    };
+                                    course?: number;
+                                    slope?: number;
+                                    speed?: number;
+                                    labels?: boolean;
+                                    "marker-color"?: string;
+                                    "marker-opacity"?: number;
+                                    stroke?: string;
+                                    "stroke-opacity"?: number;
+                                    "stroke-width"?: number;
+                                    "stroke-style"?: string;
+                                    fill?: string;
+                                    "fill-opacity"?: number;
+                                    metadata?: {
+                                        [key: string]: unknown;
+                                    };
+                                    /** @description Presence of the detail.archive tag - instructs the TAK client to locally archive this feature */
+                                    archived?: boolean;
+                                    /** @description Presence of the detail.__forcedelete tag - on a t-x-d-d tasking, instructs the TAK client to remove the linked CoT immediately rather than marking it stale */
+                                    forcedelete?: boolean;
+                                    geofence?: {
+                                        elevationMonitored?: boolean;
+                                        minElevation?: string;
+                                        maxElevation?: string;
+                                        monitor?: string;
+                                        trigger?: string;
+                                        tracking?: boolean;
+                                        boundingSphere?: number;
+                                    };
+                                    contact?: {
+                                        phone?: string;
+                                        name?: string;
+                                        callsign?: string;
+                                        endpoint?: string;
+                                    };
+                                    shape?: {
+                                        ellipse?: {
+                                            /** @description The major axis of the ellipse in meters */
+                                            major: number;
+                                            /** @description The minor axis of the ellipse in meters */
+                                            minor: number;
+                                            /** @description The angle of the ellipse in degrees */
+                                            angle: number;
+                                            /** @description Whether the ellipse axes should be swapped when rendered by TAK clients */
+                                            swapAxis?: boolean;
+                                        };
+                                    };
+                                    remarks?: string;
+                                    milsym?: {
+                                        id: string;
+                                    };
+                                    milicon?: {
+                                        id: string;
+                                    };
+                                    mission?: {
+                                        type?: string;
+                                        tool?: string;
+                                        guid?: string;
+                                        name?: string;
+                                        authorUid?: string;
+                                        missionLayer?: {
+                                            name?: string;
+                                            parentUid?: string;
+                                            type?: string;
+                                            uid?: string;
+                                        };
+                                        missionChanges?: {
+                                            contentUid?: string;
+                                            creatorUid: string;
+                                            isFederatedChange: boolean;
+                                            missionName: string;
+                                            timestamp: string;
+                                            type: string;
+                                            contentResource?: {
+                                                expiration: string;
+                                                filename?: string;
+                                                hash: string;
+                                                name: string;
+                                                size: number;
+                                                submissionTime: string;
+                                                submitter: string;
+                                                tool?: string;
+                                                uid: string;
+                                            };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
+                                            details?: {
+                                                type: string;
+                                                callsign: string;
+                                                color: string;
+                                                lat: string;
+                                                lon: string;
+                                            };
+                                        }[];
+                                    };
+                                    fileshare?: {
+                                        filename: string;
+                                        name: string;
+                                        senderCallsign: string;
+                                        senderUid: string;
+                                        senderUrl: string;
+                                        sha256: string;
+                                        sizeInBytes: number;
+                                    };
+                                    ackrequest?: {
+                                        uid: string;
+                                        ackrequested: boolean;
+                                        tag: string;
+                                    };
+                                    attachments?: string[];
+                                    sensor?: {
+                                        elevation?: number;
+                                        vfov?: number;
+                                        fov?: number;
+                                        roll?: number;
+                                        range?: number;
+                                        azimuth?: number;
+                                        north?: number;
+                                        fovBlue?: number;
+                                        fovAlpha?: number;
+                                        fovGreen?: number;
+                                        fovRed?: number;
+                                        strokeWeight?: number;
+                                        strokeColor?: number;
+                                        rangeLines?: number;
+                                        rangeLineStrokeWeight?: number;
+                                        rangeLineStrokeColor?: number;
+                                        displayMagneticReference?: number;
+                                        hideFov?: boolean;
+                                        type?: string;
+                                        version?: string;
+                                        model?: string;
+                                    };
+                                    video?: {
+                                        uid?: string;
+                                        sensor?: string;
+                                        spi?: string;
+                                        url?: string;
+                                        connection?: {
+                                            uid: string;
+                                            address: string;
+                                            networkTimeout?: number;
+                                            path?: string;
+                                            protocol?: string;
+                                            bufferTime?: number;
+                                            port?: number;
+                                            roverPort?: number;
+                                            rtspReliable?: number;
+                                            ignoreEmbeddedKLV?: boolean;
+                                            alias?: string;
+                                        };
+                                    };
+                                    links?: {
+                                        uid?: string;
+                                        relation?: string;
+                                        type?: string;
+                                        point?: string;
+                                        callsign?: string;
+                                        mission?: string;
+                                        event?: string;
+                                        url?: string;
+                                        mime?: string;
+                                        remarks?: string;
+                                        production_time?: string;
+                                        parent_callsign?: string;
+                                    }[];
+                                    chat?: {
+                                        parent?: string;
+                                        groupOwner?: string;
+                                        messageId?: string;
+                                        chatroom: string;
+                                        id?: string;
+                                        senderCallsign: string;
+                                        chatgrp: unknown;
+                                    };
+                                    track?: {
+                                        speed?: string;
+                                        course?: string;
+                                        slope?: string;
+                                        eCourse?: string;
+                                        eSpeed?: string;
+                                        eSlope?: string;
+                                    };
+                                    dest?: {
+                                        uid?: string;
+                                        callsign?: string;
+                                        group?: string;
+                                        mission?: string;
+                                        "mission-guid"?: string;
+                                        after?: string;
+                                        path?: string;
+                                    } | {
+                                        uid?: string;
+                                        callsign?: string;
+                                        group?: string;
+                                        mission?: string;
+                                        "mission-guid"?: string;
+                                        after?: string;
+                                        path?: string;
+                                    }[];
+                                    /** @description Presence of marti._attributes.archive - instructs the TAK Server to archive this message */
+                                    marti_archive?: boolean;
+                                    icon?: string;
+                                    droid?: string;
+                                    takv?: {
+                                        device?: string;
+                                        platform?: string;
+                                        os?: string;
+                                        version?: string;
+                                    };
+                                    group?: {
+                                        name: string;
+                                        role: string;
+                                    };
+                                    status?: {
+                                        battery?: string;
+                                        readiness?: string;
+                                    };
+                                    precisionlocation?: {
+                                        geopointsrc?: string;
+                                        altsrc?: string;
+                                    };
+                                    flow?: {
+                                        [key: string]: string;
+                                    };
+                                    radsensordetail?: {
+                                        sensor_data: {
+                                            /** @description epoch time in Long format */
+                                            time: string;
+                                            /** @description The model of sensor (Micro Detective, IdentiFINDER 2, etc.) in string format */
+                                            model: string;
+                                            /** @description The neutron detector status (Full, Reduced or Unknown). Not available for most sensors, default to Unknown */
+                                            neutronstatus: string;
+                                            /** @description The gamma detector status (Full, Reduced or Unknown). Not available for most sensors, default to Unknown */
+                                            gammastatus: string;
+                                            /** @description The Manufacturer of the sensor (Ortec, Nucsafe, etc.) in string format */
+                                            manufacturer: string;
+                                            /** @description The name of the given sensor in string format */
+                                            callsign?: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The ID algorithm used to ID isotopes (ex. GADRAS) */
+                                            id_algorithm?: string;
+                                            /** @description The search algorithm used (ex. RDAK, SAMBA) */
+                                            search_algorithm?: string;
+                                            /** @description The alarm algorithm used (ex. RDAK, SAMBA) */
+                                            alarm_algorithm?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description Identifier of this subchannel, if this event is a report from a subchannel of a master sensor */
+                                            subchannel?: string;
+                                            /** @description Used to align subchannels */
+                                            measurement_ref?: number;
+                                            /** @description Name of the master sensor, if this event is a report from a subchannel */
+                                            master_sensor_manufacturer?: string;
+                                            /** @description Serial number of the master sensor, if this event is a report from a subchannel */
+                                            master_sensor_serial?: string;
+                                            /** @description A bearing in positive degrees if the sensor reports back a direction for the detected source, -1 otherwise */
+                                            source_bearing?: number;
+                                            /** @description A scale from 0 - 0.5 giving the magnitude of the source strength in the direction of source_bearing */
+                                            source_strength?: number;
+                                            /** @description Used for sensors that can relay data from other sensors, or that can be relayed in that way */
+                                            relay_type?: string;
+                                            /** @description The location of the sensor where it's being worn on the vest */
+                                            module_location?: string;
+                                            /** @description The number from the sensor needed in order to retrieve any specific algorithm calculated data */
+                                            detector_number?: number;
+                                            /** @description The total mR configured for the sensor's current mission */
+                                            mission_total_mR?: number;
+                                            /** @description The total seconds remaining of mission time based on current configuration of sensor and acquired dose */
+                                            mission_stay_time_sec?: number;
+                                            /** @description The total uR acquired by the sensor for the current mission */
+                                            mission_acquired_uR?: number;
+                                            /** @description The temperature of the sensor in degrees celsius */
+                                            sensor_temp_deg_c?: number;
+                                            /** @description The current directional heading of the sensor */
+                                            heading?: number;
+                                            source_distance?: "MOVE_MUCH_CLOSER" | "MOVE_CLOSER" | "OPTIMAL" | "MOVE_AWAY" | "MOVE_FAR_AWAY";
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        radmeasurement?: {
+                                            /** @description Defines the alarm level, could be standard deviations above background. Will default to 0 (no alarm) */
+                                            nalarmstddev: number;
+                                            /** @description Alarm flag for the measurement. 1 = alarmed, 0 = not alarmed */
+                                            alarm: number;
+                                            /** @description The measurement value as a float. A/B/G/N will be interpreted as CPS. Dose Rate will be interpreted as mR/Hr */
+                                            measurement: number;
+                                            name: "alpha" | "beta" | "gamma" | "neutron" | "doserate";
+                                        }[];
+                                        physical_module?: {
+                                            location: "FRONT_LEFT" | "FRONT_RIGHT" | "REAR_LEFT" | "REAR_RIGHT" | "CAB";
+                                            /** @description Gamma counts per second */
+                                            gamma_cps: number;
+                                            /** @description Alarm level for the measurement. 0 = not alarmed, > 0 = alarm level */
+                                            gamma_alarm: number;
+                                            /** @description The gamma dose rate. Will be interpreted as uR/Hr */
+                                            gamma_dose_rate: number;
+                                        }[];
+                                        search_algorithm?: {
+                                            /** @description The Neutron localization value */
+                                            neutron_loc: number;
+                                            /** @description The Gamma localization value */
+                                            gamma_loc: number;
+                                            /** @description The Neutron localization alarm level */
+                                            neutron_loc_alarm_value: number;
+                                            /** @description The Gamma localization alarm level */
+                                            gamma_loc_alarm_value: number;
+                                            /** @description Alarm flag for the neutron localization value. 1 = alarmed, 0 = not alarmed */
+                                            neutron_loc_alarm: number;
+                                            /** @description Alarm flag for the gamma localization value. 1 = alarmed, 0 = not alarmed */
+                                            gamma_loc_alarm: number;
+                                        };
+                                        spectrum?: {
+                                            /** @description Flag for zero compression. 1 = zero compressed, 0 = not compressed */
+                                            zerocompression: number;
+                                            /** @description FOREGROUND or BACKGROUND */
+                                            type: string;
+                                            /** @description Spectrum live time in epoch time (ms) */
+                                            livetime_ms: string;
+                                            /** @description Spectrum real time in epoch time (ms) */
+                                            realtime_ms: string;
+                                            /** @description The spectral channel data */
+                                            channeldata: string;
+                                            /** @description The ID of the crystal reporting the channel data */
+                                            crystal_id?: string;
+                                        }[];
+                                        isotope?: {
+                                            /** @description The confidence value as a float representation of a percentage (88.5 NOT 0.885) */
+                                            confidence: number;
+                                            /** @description The name of the isotope */
+                                            name: string;
+                                            /** @description The type of the isotope */
+                                            type: string;
+                                        }[];
+                                        data_permissions?: {
+                                            /** @description All is true if all users should have access/permission */
+                                            all: boolean;
+                                            /** @description The list of ATAK UIDs that should have access/permission */
+                                            contact_list: string;
+                                        };
+                                        command_permissions?: {
+                                            /** @description All is true if all users should have access/permission */
+                                            all: boolean;
+                                            /** @description The list of ATAK UIDs that should have access/permission */
+                                            contact_list: string;
+                                        };
+                                    };
+                                    chemsensordetail?: {
+                                        sensor_data: {
+                                            /** @description The Manufacturer of the sensor in string format */
+                                            manufacturer: string;
+                                            /** @description The model of sensor in string format */
+                                            model: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The name of the given sensor in string format. Default name is Manufacturer+SerialNum */
+                                            callsign?: string;
+                                            /** @description The revision of the ChemCoT format, at writing this is "7" */
+                                            revision?: number;
+                                            /** @description General sensor health status */
+                                            status?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        detection?: {
+                                            /** @description Timestamp for the detection, epoch time (ms) */
+                                            time: string;
+                                            /** @description Chemical Name in string format */
+                                            agent: string;
+                                            /** @description Amount of chemical detected as a float. Could be mass, density, bars etc. */
+                                            quantity: number;
+                                            /** @description The units used to describe the quantity */
+                                            quantityunits: string;
+                                            /** @description Concentration of chemical in Kg/m^3 */
+                                            concentration?: number;
+                                            /** @description Alarm state of the sensor. 1 = alarm, 0 = no alarm */
+                                            alarm: number;
+                                            /** @description The confidence of the detection from the sensor as a percentage */
+                                            confidence?: number;
+                                            /** @description The mass fraction of the detection from the sensor in ppm */
+                                            massfraction?: number;
+                                            /** @description The percentage of the detection from the sensor in percent from 0-100 */
+                                            percent?: number;
+                                            /** @description The class of chemical detected. Nerve, Blood, TIC, etc. */
+                                            class?: string;
+                                            /** @description The ID number of the detection */
+                                            id?: number;
+                                        }[];
+                                    };
+                                    biosensordetail?: {
+                                        sensor_data: {
+                                            /** @description The Manufacturer of the sensor in string format */
+                                            manufacturer: string;
+                                            /** @description The model of sensor in string format */
+                                            model: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The name of the given sensor in string format. Default name is Manufacturer+SerialNum */
+                                            callsign?: string;
+                                            /** @description The revision of the BioCoT format */
+                                            revision?: number;
+                                            /** @description General sensor health status */
+                                            status?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        measurement?: {
+                                            /** @description Timestamp for the measurement, epoch time (ms) */
+                                            time: string;
+                                            /** @description Biological class */
+                                            bioClass?: string;
+                                            /** @description Biological type */
+                                            type?: string;
+                                            /** @description Channel identifier */
+                                            channel?: number;
+                                            /** @description Is this bio measurement harmful */
+                                            harmful?: boolean;
+                                            /** @description Dose Time */
+                                            doseTime?: number;
+                                            /** @description Amount of dose */
+                                            dose: number;
+                                            /** @description The confidence of the measurement from the sensor as a percentage */
+                                            confidence?: number;
+                                            /** @description Confirmation level */
+                                            confirmationLevel?: string;
+                                            /** @description Concentration */
+                                            concentration?: number;
+                                            /** @description Sample ID of this measurement */
+                                            sampleId?: string;
+                                            /** @description Persistency */
+                                            persistency?: string;
+                                            level?: {
+                                                /** @description The name of this measurement level */
+                                                levelName: string;
+                                                /** @description The value of this measurement level */
+                                                levelValue: string;
+                                            }[];
+                                        }[];
+                                    };
+                                    spatial?: {
+                                        version?: number;
+                                        attitude: {
+                                            /** @description Roll of entity in degrees. Positive indicates listing to the right. */
+                                            roll: number;
+                                            /** @description Pitch of entity in degrees. Positive indicates nose point up. */
+                                            pitch: number;
+                                            /** @description Yaw of entity in degrees. Positive indicates turned to the right. */
+                                            yaw?: number;
+                                            /** @description 1-sigma error of roll with respect to a zero mean normal Gaussian distribution. */
+                                            eRoll?: number;
+                                            /** @description 1-sigma error of pitch with respect to a zero mean normal Gaussian distribution. */
+                                            ePitch?: number;
+                                            /** @description 1-sigma error of yaw with respect to a zero mean normal Gaussian distribution. */
+                                            eYaw?: number;
+                                        };
+                                        spin: {
+                                            /** @description Degrees per second with positive indicating to the pilots right */
+                                            roll: number;
+                                            /** @description Degrees per second with positive indicating nose up. */
+                                            pitch: number;
+                                            /** @description Degrees per second with positive indicating right. */
+                                            yaw?: number;
+                                            /** @description 1-sigma error of roll with respect to a zero mean normal Gaussian distribution. */
+                                            eRoll?: number;
+                                            /** @description 1-sigma error of pitch with respect to a zero mean normal Gaussian distribution. */
+                                            ePitch?: number;
+                                            /** @description 1-sigma error of yaw with respect to a zero mean normal Gaussian distribution. */
+                                            eYaw?: number;
+                                        };
+                                    };
+                                };
+                                path?: string;
+                                geometry: {
+                                    /** @constant */
+                                    type: "Point";
+                                    coordinates: number[];
+                                } | {
+                                    /** @constant */
+                                    type: "LineString";
+                                    coordinates: number[][];
+                                } | {
+                                    /** @constant */
+                                    type: "Polygon";
+                                    coordinates: number[][][];
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/route/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate a route through the given waypoints, with options and map threats in the body */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        provider?: string;
+                        callsign?: string;
+                        travelMode: string;
+                        waypoints: number[][];
+                        /** @description Cross-country route options, as stored in the route plan */
+                        options?: {
+                            avoid_wetland?: boolean;
+                            avoid_streams?: boolean;
+                            max_slope_deg?: number;
+                            exposure?: "allow" | "medium" | "avoid";
+                            avoid_observation?: boolean;
+                            /** @description All modes: do not avoid danger zones from the map */
+                            ignore_danger_zones?: boolean;
+                        };
+                        /** @description Hostile observation posts and closed areas taken from the map */
+                        threats?: {
+                            observers?: number[][];
+                            closed_areas?: number[][][];
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @constant */
+                            type: "FeatureCollection";
+                            features: {
+                                id: string;
+                                /** @constant */
+                                type: "Feature";
+                                properties: {
+                                    /** @default UNKNOWN */
+                                    callsign: string;
+                                    /** @default a-f-G */
+                                    type: string;
+                                    how: string;
+                                    time: string;
+                                    start: string;
+                                    stale: string;
+                                    center: number[];
+                                    minzoom?: number;
+                                    maxzoom?: number;
+                                    rotate?: boolean;
+                                    range?: number;
+                                    bearing?: number;
+                                    creator?: {
+                                        /** @description The Unique ID of the creator of the CoT */
+                                        uid: string;
+                                        /** @description The Callsign of the creator of the CoT */
+                                        callsign?: string;
+                                        /** @description Time at which the CoT was created by the creator */
+                                        time?: string;
+                                        /** @description The Type of the creator - typically a- for things on the ground, b- for digital things, etc */
+                                        type: string;
+                                    };
+                                    course?: number;
+                                    slope?: number;
+                                    speed?: number;
+                                    labels?: boolean;
+                                    "marker-color"?: string;
+                                    "marker-opacity"?: number;
+                                    stroke?: string;
+                                    "stroke-opacity"?: number;
+                                    "stroke-width"?: number;
+                                    "stroke-style"?: string;
+                                    fill?: string;
+                                    "fill-opacity"?: number;
+                                    metadata?: {
+                                        [key: string]: unknown;
+                                    };
+                                    /** @description Presence of the detail.archive tag - instructs the TAK client to locally archive this feature */
+                                    archived?: boolean;
+                                    /** @description Presence of the detail.__forcedelete tag - on a t-x-d-d tasking, instructs the TAK client to remove the linked CoT immediately rather than marking it stale */
+                                    forcedelete?: boolean;
+                                    geofence?: {
+                                        elevationMonitored?: boolean;
+                                        minElevation?: string;
+                                        maxElevation?: string;
+                                        monitor?: string;
+                                        trigger?: string;
+                                        tracking?: boolean;
+                                        boundingSphere?: number;
+                                    };
+                                    contact?: {
+                                        phone?: string;
+                                        name?: string;
+                                        callsign?: string;
+                                        endpoint?: string;
+                                    };
+                                    shape?: {
+                                        ellipse?: {
+                                            /** @description The major axis of the ellipse in meters */
+                                            major: number;
+                                            /** @description The minor axis of the ellipse in meters */
+                                            minor: number;
+                                            /** @description The angle of the ellipse in degrees */
+                                            angle: number;
+                                            /** @description Whether the ellipse axes should be swapped when rendered by TAK clients */
+                                            swapAxis?: boolean;
+                                        };
+                                    };
+                                    remarks?: string;
+                                    milsym?: {
+                                        id: string;
+                                    };
+                                    milicon?: {
+                                        id: string;
+                                    };
+                                    mission?: {
+                                        type?: string;
+                                        tool?: string;
+                                        guid?: string;
+                                        name?: string;
+                                        authorUid?: string;
+                                        missionLayer?: {
+                                            name?: string;
+                                            parentUid?: string;
+                                            type?: string;
+                                            uid?: string;
+                                        };
+                                        missionChanges?: {
+                                            contentUid?: string;
+                                            creatorUid: string;
+                                            isFederatedChange: boolean;
+                                            missionName: string;
+                                            timestamp: string;
+                                            type: string;
+                                            contentResource?: {
+                                                expiration: string;
+                                                filename?: string;
+                                                hash: string;
+                                                name: string;
+                                                size: number;
+                                                submissionTime: string;
+                                                submitter: string;
+                                                tool?: string;
+                                                uid: string;
+                                            };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
+                                            details?: {
+                                                type: string;
+                                                callsign: string;
+                                                color: string;
+                                                lat: string;
+                                                lon: string;
+                                            };
+                                        }[];
+                                    };
+                                    fileshare?: {
+                                        filename: string;
+                                        name: string;
+                                        senderCallsign: string;
+                                        senderUid: string;
+                                        senderUrl: string;
+                                        sha256: string;
+                                        sizeInBytes: number;
+                                    };
+                                    ackrequest?: {
+                                        uid: string;
+                                        ackrequested: boolean;
+                                        tag: string;
+                                    };
+                                    attachments?: string[];
+                                    sensor?: {
+                                        elevation?: number;
+                                        vfov?: number;
+                                        fov?: number;
+                                        roll?: number;
+                                        range?: number;
+                                        azimuth?: number;
+                                        north?: number;
+                                        fovBlue?: number;
+                                        fovAlpha?: number;
+                                        fovGreen?: number;
+                                        fovRed?: number;
+                                        strokeWeight?: number;
+                                        strokeColor?: number;
+                                        rangeLines?: number;
+                                        rangeLineStrokeWeight?: number;
+                                        rangeLineStrokeColor?: number;
+                                        displayMagneticReference?: number;
+                                        hideFov?: boolean;
+                                        type?: string;
+                                        version?: string;
+                                        model?: string;
+                                    };
+                                    video?: {
+                                        uid?: string;
+                                        sensor?: string;
+                                        spi?: string;
+                                        url?: string;
+                                        connection?: {
+                                            uid: string;
+                                            address: string;
+                                            networkTimeout?: number;
+                                            path?: string;
+                                            protocol?: string;
+                                            bufferTime?: number;
+                                            port?: number;
+                                            roverPort?: number;
+                                            rtspReliable?: number;
+                                            ignoreEmbeddedKLV?: boolean;
+                                            alias?: string;
+                                        };
+                                    };
+                                    links?: {
+                                        uid?: string;
+                                        relation?: string;
+                                        type?: string;
+                                        point?: string;
+                                        callsign?: string;
+                                        mission?: string;
+                                        event?: string;
+                                        url?: string;
+                                        mime?: string;
+                                        remarks?: string;
+                                        production_time?: string;
+                                        parent_callsign?: string;
+                                    }[];
+                                    chat?: {
+                                        parent?: string;
+                                        groupOwner?: string;
+                                        messageId?: string;
+                                        chatroom: string;
+                                        id?: string;
+                                        senderCallsign: string;
+                                        chatgrp: unknown;
+                                    };
+                                    track?: {
+                                        speed?: string;
+                                        course?: string;
+                                        slope?: string;
+                                        eCourse?: string;
+                                        eSpeed?: string;
+                                        eSlope?: string;
+                                    };
+                                    dest?: {
+                                        uid?: string;
+                                        callsign?: string;
+                                        group?: string;
+                                        mission?: string;
+                                        "mission-guid"?: string;
+                                        after?: string;
+                                        path?: string;
+                                    } | {
+                                        uid?: string;
+                                        callsign?: string;
+                                        group?: string;
+                                        mission?: string;
+                                        "mission-guid"?: string;
+                                        after?: string;
+                                        path?: string;
+                                    }[];
+                                    /** @description Presence of marti._attributes.archive - instructs the TAK Server to archive this message */
+                                    marti_archive?: boolean;
+                                    icon?: string;
+                                    droid?: string;
+                                    takv?: {
+                                        device?: string;
+                                        platform?: string;
+                                        os?: string;
+                                        version?: string;
+                                    };
+                                    group?: {
+                                        name: string;
+                                        role: string;
+                                    };
+                                    status?: {
+                                        battery?: string;
+                                        readiness?: string;
+                                    };
+                                    precisionlocation?: {
+                                        geopointsrc?: string;
+                                        altsrc?: string;
+                                    };
+                                    flow?: {
+                                        [key: string]: string;
+                                    };
+                                    radsensordetail?: {
+                                        sensor_data: {
+                                            /** @description epoch time in Long format */
+                                            time: string;
+                                            /** @description The model of sensor (Micro Detective, IdentiFINDER 2, etc.) in string format */
+                                            model: string;
+                                            /** @description The neutron detector status (Full, Reduced or Unknown). Not available for most sensors, default to Unknown */
+                                            neutronstatus: string;
+                                            /** @description The gamma detector status (Full, Reduced or Unknown). Not available for most sensors, default to Unknown */
+                                            gammastatus: string;
+                                            /** @description The Manufacturer of the sensor (Ortec, Nucsafe, etc.) in string format */
+                                            manufacturer: string;
+                                            /** @description The name of the given sensor in string format */
+                                            callsign?: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The ID algorithm used to ID isotopes (ex. GADRAS) */
+                                            id_algorithm?: string;
+                                            /** @description The search algorithm used (ex. RDAK, SAMBA) */
+                                            search_algorithm?: string;
+                                            /** @description The alarm algorithm used (ex. RDAK, SAMBA) */
+                                            alarm_algorithm?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description Identifier of this subchannel, if this event is a report from a subchannel of a master sensor */
+                                            subchannel?: string;
+                                            /** @description Used to align subchannels */
+                                            measurement_ref?: number;
+                                            /** @description Name of the master sensor, if this event is a report from a subchannel */
+                                            master_sensor_manufacturer?: string;
+                                            /** @description Serial number of the master sensor, if this event is a report from a subchannel */
+                                            master_sensor_serial?: string;
+                                            /** @description A bearing in positive degrees if the sensor reports back a direction for the detected source, -1 otherwise */
+                                            source_bearing?: number;
+                                            /** @description A scale from 0 - 0.5 giving the magnitude of the source strength in the direction of source_bearing */
+                                            source_strength?: number;
+                                            /** @description Used for sensors that can relay data from other sensors, or that can be relayed in that way */
+                                            relay_type?: string;
+                                            /** @description The location of the sensor where it's being worn on the vest */
+                                            module_location?: string;
+                                            /** @description The number from the sensor needed in order to retrieve any specific algorithm calculated data */
+                                            detector_number?: number;
+                                            /** @description The total mR configured for the sensor's current mission */
+                                            mission_total_mR?: number;
+                                            /** @description The total seconds remaining of mission time based on current configuration of sensor and acquired dose */
+                                            mission_stay_time_sec?: number;
+                                            /** @description The total uR acquired by the sensor for the current mission */
+                                            mission_acquired_uR?: number;
+                                            /** @description The temperature of the sensor in degrees celsius */
+                                            sensor_temp_deg_c?: number;
+                                            /** @description The current directional heading of the sensor */
+                                            heading?: number;
+                                            source_distance?: "MOVE_MUCH_CLOSER" | "MOVE_CLOSER" | "OPTIMAL" | "MOVE_AWAY" | "MOVE_FAR_AWAY";
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        radmeasurement?: {
+                                            /** @description Defines the alarm level, could be standard deviations above background. Will default to 0 (no alarm) */
+                                            nalarmstddev: number;
+                                            /** @description Alarm flag for the measurement. 1 = alarmed, 0 = not alarmed */
+                                            alarm: number;
+                                            /** @description The measurement value as a float. A/B/G/N will be interpreted as CPS. Dose Rate will be interpreted as mR/Hr */
+                                            measurement: number;
+                                            name: "alpha" | "beta" | "gamma" | "neutron" | "doserate";
+                                        }[];
+                                        physical_module?: {
+                                            location: "FRONT_LEFT" | "FRONT_RIGHT" | "REAR_LEFT" | "REAR_RIGHT" | "CAB";
+                                            /** @description Gamma counts per second */
+                                            gamma_cps: number;
+                                            /** @description Alarm level for the measurement. 0 = not alarmed, > 0 = alarm level */
+                                            gamma_alarm: number;
+                                            /** @description The gamma dose rate. Will be interpreted as uR/Hr */
+                                            gamma_dose_rate: number;
+                                        }[];
+                                        search_algorithm?: {
+                                            /** @description The Neutron localization value */
+                                            neutron_loc: number;
+                                            /** @description The Gamma localization value */
+                                            gamma_loc: number;
+                                            /** @description The Neutron localization alarm level */
+                                            neutron_loc_alarm_value: number;
+                                            /** @description The Gamma localization alarm level */
+                                            gamma_loc_alarm_value: number;
+                                            /** @description Alarm flag for the neutron localization value. 1 = alarmed, 0 = not alarmed */
+                                            neutron_loc_alarm: number;
+                                            /** @description Alarm flag for the gamma localization value. 1 = alarmed, 0 = not alarmed */
+                                            gamma_loc_alarm: number;
+                                        };
+                                        spectrum?: {
+                                            /** @description Flag for zero compression. 1 = zero compressed, 0 = not compressed */
+                                            zerocompression: number;
+                                            /** @description FOREGROUND or BACKGROUND */
+                                            type: string;
+                                            /** @description Spectrum live time in epoch time (ms) */
+                                            livetime_ms: string;
+                                            /** @description Spectrum real time in epoch time (ms) */
+                                            realtime_ms: string;
+                                            /** @description The spectral channel data */
+                                            channeldata: string;
+                                            /** @description The ID of the crystal reporting the channel data */
+                                            crystal_id?: string;
+                                        }[];
+                                        isotope?: {
+                                            /** @description The confidence value as a float representation of a percentage (88.5 NOT 0.885) */
+                                            confidence: number;
+                                            /** @description The name of the isotope */
+                                            name: string;
+                                            /** @description The type of the isotope */
+                                            type: string;
+                                        }[];
+                                        data_permissions?: {
+                                            /** @description All is true if all users should have access/permission */
+                                            all: boolean;
+                                            /** @description The list of ATAK UIDs that should have access/permission */
+                                            contact_list: string;
+                                        };
+                                        command_permissions?: {
+                                            /** @description All is true if all users should have access/permission */
+                                            all: boolean;
+                                            /** @description The list of ATAK UIDs that should have access/permission */
+                                            contact_list: string;
+                                        };
+                                    };
+                                    chemsensordetail?: {
+                                        sensor_data: {
+                                            /** @description The Manufacturer of the sensor in string format */
+                                            manufacturer: string;
+                                            /** @description The model of sensor in string format */
+                                            model: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The name of the given sensor in string format. Default name is Manufacturer+SerialNum */
+                                            callsign?: string;
+                                            /** @description The revision of the ChemCoT format, at writing this is "7" */
+                                            revision?: number;
+                                            /** @description General sensor health status */
+                                            status?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        detection?: {
+                                            /** @description Timestamp for the detection, epoch time (ms) */
+                                            time: string;
+                                            /** @description Chemical Name in string format */
+                                            agent: string;
+                                            /** @description Amount of chemical detected as a float. Could be mass, density, bars etc. */
+                                            quantity: number;
+                                            /** @description The units used to describe the quantity */
+                                            quantityunits: string;
+                                            /** @description Concentration of chemical in Kg/m^3 */
+                                            concentration?: number;
+                                            /** @description Alarm state of the sensor. 1 = alarm, 0 = no alarm */
+                                            alarm: number;
+                                            /** @description The confidence of the detection from the sensor as a percentage */
+                                            confidence?: number;
+                                            /** @description The mass fraction of the detection from the sensor in ppm */
+                                            massfraction?: number;
+                                            /** @description The percentage of the detection from the sensor in percent from 0-100 */
+                                            percent?: number;
+                                            /** @description The class of chemical detected. Nerve, Blood, TIC, etc. */
+                                            class?: string;
+                                            /** @description The ID number of the detection */
+                                            id?: number;
+                                        }[];
+                                    };
+                                    biosensordetail?: {
+                                        sensor_data: {
+                                            /** @description The Manufacturer of the sensor in string format */
+                                            manufacturer: string;
+                                            /** @description The model of sensor in string format */
+                                            model: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The name of the given sensor in string format. Default name is Manufacturer+SerialNum */
+                                            callsign?: string;
+                                            /** @description The revision of the BioCoT format */
+                                            revision?: number;
+                                            /** @description General sensor health status */
+                                            status?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        measurement?: {
+                                            /** @description Timestamp for the measurement, epoch time (ms) */
+                                            time: string;
+                                            /** @description Biological class */
+                                            bioClass?: string;
+                                            /** @description Biological type */
+                                            type?: string;
+                                            /** @description Channel identifier */
+                                            channel?: number;
+                                            /** @description Is this bio measurement harmful */
+                                            harmful?: boolean;
+                                            /** @description Dose Time */
+                                            doseTime?: number;
+                                            /** @description Amount of dose */
+                                            dose: number;
+                                            /** @description The confidence of the measurement from the sensor as a percentage */
+                                            confidence?: number;
+                                            /** @description Confirmation level */
+                                            confirmationLevel?: string;
+                                            /** @description Concentration */
+                                            concentration?: number;
+                                            /** @description Sample ID of this measurement */
+                                            sampleId?: string;
+                                            /** @description Persistency */
+                                            persistency?: string;
+                                            level?: {
+                                                /** @description The name of this measurement level */
+                                                levelName: string;
+                                                /** @description The value of this measurement level */
+                                                levelValue: string;
+                                            }[];
+                                        }[];
+                                    };
+                                    spatial?: {
+                                        version?: number;
+                                        attitude: {
+                                            /** @description Roll of entity in degrees. Positive indicates listing to the right. */
+                                            roll: number;
+                                            /** @description Pitch of entity in degrees. Positive indicates nose point up. */
+                                            pitch: number;
+                                            /** @description Yaw of entity in degrees. Positive indicates turned to the right. */
+                                            yaw?: number;
+                                            /** @description 1-sigma error of roll with respect to a zero mean normal Gaussian distribution. */
+                                            eRoll?: number;
+                                            /** @description 1-sigma error of pitch with respect to a zero mean normal Gaussian distribution. */
+                                            ePitch?: number;
+                                            /** @description 1-sigma error of yaw with respect to a zero mean normal Gaussian distribution. */
+                                            eYaw?: number;
+                                        };
+                                        spin: {
+                                            /** @description Degrees per second with positive indicating to the pilots right */
+                                            roll: number;
+                                            /** @description Degrees per second with positive indicating nose up. */
+                                            pitch: number;
+                                            /** @description Degrees per second with positive indicating right. */
+                                            yaw?: number;
+                                            /** @description 1-sigma error of roll with respect to a zero mean normal Gaussian distribution. */
+                                            eRoll?: number;
+                                            /** @description 1-sigma error of pitch with respect to a zero mean normal Gaussian distribution. */
+                                            ePitch?: number;
+                                            /** @description 1-sigma error of yaw with respect to a zero mean normal Gaussian distribution. */
+                                            eYaw?: number;
+                                        };
+                                    };
+                                };
+                                path?: string;
+                                geometry: {
+                                    /** @constant */
+                                    type: "Point";
+                                    coordinates: number[];
+                                } | {
+                                    /** @constant */
+                                    type: "LineString";
+                                    coordinates: number[][];
+                                } | {
+                                    /** @constant */
+                                    type: "Polygon";
+                                    coordinates: number[][][];
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/search/route/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Propose up to two alternative routes between the start and the end of a route */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        provider?: string;
+                        travelMode: string;
+                        waypoints: number[][];
+                        coordinates: number[][];
+                        /** @description Cross-country route options, as stored in the route plan */
+                        options?: {
+                            avoid_wetland?: boolean;
+                            avoid_streams?: boolean;
+                            max_slope_deg?: number;
+                            exposure?: "allow" | "medium" | "avoid";
+                            avoid_observation?: boolean;
+                            /** @description All modes: do not avoid danger zones from the map */
+                            ignore_danger_zones?: boolean;
+                        };
+                        /** @description Hostile observation posts and closed areas taken from the map */
+                        threats?: {
+                            observers?: number[][];
+                            closed_areas?: number[][][];
+                        };
+                        count?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Successful Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @constant */
+                            type: "FeatureCollection";
+                            features: {
+                                id: string;
+                                /** @constant */
+                                type: "Feature";
+                                properties: {
+                                    /** @default UNKNOWN */
+                                    callsign: string;
+                                    /** @default a-f-G */
+                                    type: string;
+                                    how: string;
+                                    time: string;
+                                    start: string;
+                                    stale: string;
+                                    center: number[];
+                                    minzoom?: number;
+                                    maxzoom?: number;
+                                    rotate?: boolean;
+                                    range?: number;
+                                    bearing?: number;
+                                    creator?: {
+                                        /** @description The Unique ID of the creator of the CoT */
+                                        uid: string;
+                                        /** @description The Callsign of the creator of the CoT */
+                                        callsign?: string;
+                                        /** @description Time at which the CoT was created by the creator */
+                                        time?: string;
+                                        /** @description The Type of the creator - typically a- for things on the ground, b- for digital things, etc */
+                                        type: string;
+                                    };
+                                    course?: number;
+                                    slope?: number;
+                                    speed?: number;
+                                    labels?: boolean;
+                                    "marker-color"?: string;
+                                    "marker-opacity"?: number;
+                                    stroke?: string;
+                                    "stroke-opacity"?: number;
+                                    "stroke-width"?: number;
+                                    "stroke-style"?: string;
+                                    fill?: string;
+                                    "fill-opacity"?: number;
+                                    metadata?: {
+                                        [key: string]: unknown;
+                                    };
+                                    /** @description Presence of the detail.archive tag - instructs the TAK client to locally archive this feature */
+                                    archived?: boolean;
+                                    /** @description Presence of the detail.__forcedelete tag - on a t-x-d-d tasking, instructs the TAK client to remove the linked CoT immediately rather than marking it stale */
+                                    forcedelete?: boolean;
+                                    geofence?: {
+                                        elevationMonitored?: boolean;
+                                        minElevation?: string;
+                                        maxElevation?: string;
+                                        monitor?: string;
+                                        trigger?: string;
+                                        tracking?: boolean;
+                                        boundingSphere?: number;
+                                    };
+                                    contact?: {
+                                        phone?: string;
+                                        name?: string;
+                                        callsign?: string;
+                                        endpoint?: string;
+                                    };
+                                    shape?: {
+                                        ellipse?: {
+                                            /** @description The major axis of the ellipse in meters */
+                                            major: number;
+                                            /** @description The minor axis of the ellipse in meters */
+                                            minor: number;
+                                            /** @description The angle of the ellipse in degrees */
+                                            angle: number;
+                                            /** @description Whether the ellipse axes should be swapped when rendered by TAK clients */
+                                            swapAxis?: boolean;
+                                        };
+                                    };
+                                    remarks?: string;
+                                    milsym?: {
+                                        id: string;
+                                    };
+                                    milicon?: {
+                                        id: string;
+                                    };
+                                    mission?: {
+                                        type?: string;
+                                        tool?: string;
+                                        guid?: string;
+                                        name?: string;
+                                        authorUid?: string;
+                                        missionLayer?: {
+                                            name?: string;
+                                            parentUid?: string;
+                                            type?: string;
+                                            uid?: string;
+                                        };
+                                        missionChanges?: {
+                                            contentUid?: string;
+                                            creatorUid: string;
+                                            isFederatedChange: boolean;
+                                            missionName: string;
+                                            timestamp: string;
+                                            type: string;
+                                            contentResource?: {
+                                                expiration: string;
+                                                filename?: string;
+                                                hash: string;
+                                                name: string;
+                                                size: number;
+                                                submissionTime: string;
+                                                submitter: string;
+                                                tool?: string;
+                                                uid: string;
+                                            };
+                                            /** @description Mission Key/Value Property that was set (ADD_CONTENT) or removed (REMOVE_CONTENT) - TAK Server 5.9+ */
+                                            missionProperty?: {
+                                                key: string;
+                                                value: string;
+                                            };
+                                            details?: {
+                                                type: string;
+                                                callsign: string;
+                                                color: string;
+                                                lat: string;
+                                                lon: string;
+                                            };
+                                        }[];
+                                    };
+                                    fileshare?: {
+                                        filename: string;
+                                        name: string;
+                                        senderCallsign: string;
+                                        senderUid: string;
+                                        senderUrl: string;
+                                        sha256: string;
+                                        sizeInBytes: number;
+                                    };
+                                    ackrequest?: {
+                                        uid: string;
+                                        ackrequested: boolean;
+                                        tag: string;
+                                    };
+                                    attachments?: string[];
+                                    sensor?: {
+                                        elevation?: number;
+                                        vfov?: number;
+                                        fov?: number;
+                                        roll?: number;
+                                        range?: number;
+                                        azimuth?: number;
+                                        north?: number;
+                                        fovBlue?: number;
+                                        fovAlpha?: number;
+                                        fovGreen?: number;
+                                        fovRed?: number;
+                                        strokeWeight?: number;
+                                        strokeColor?: number;
+                                        rangeLines?: number;
+                                        rangeLineStrokeWeight?: number;
+                                        rangeLineStrokeColor?: number;
+                                        displayMagneticReference?: number;
+                                        hideFov?: boolean;
+                                        type?: string;
+                                        version?: string;
+                                        model?: string;
+                                    };
+                                    video?: {
+                                        uid?: string;
+                                        sensor?: string;
+                                        spi?: string;
+                                        url?: string;
+                                        connection?: {
+                                            uid: string;
+                                            address: string;
+                                            networkTimeout?: number;
+                                            path?: string;
+                                            protocol?: string;
+                                            bufferTime?: number;
+                                            port?: number;
+                                            roverPort?: number;
+                                            rtspReliable?: number;
+                                            ignoreEmbeddedKLV?: boolean;
+                                            alias?: string;
+                                        };
+                                    };
+                                    links?: {
+                                        uid?: string;
+                                        relation?: string;
+                                        type?: string;
+                                        point?: string;
+                                        callsign?: string;
+                                        mission?: string;
+                                        event?: string;
+                                        url?: string;
+                                        mime?: string;
+                                        remarks?: string;
+                                        production_time?: string;
+                                        parent_callsign?: string;
+                                    }[];
+                                    chat?: {
+                                        parent?: string;
+                                        groupOwner?: string;
+                                        messageId?: string;
+                                        chatroom: string;
+                                        id?: string;
+                                        senderCallsign: string;
+                                        chatgrp: unknown;
+                                    };
+                                    track?: {
+                                        speed?: string;
+                                        course?: string;
+                                        slope?: string;
+                                        eCourse?: string;
+                                        eSpeed?: string;
+                                        eSlope?: string;
+                                    };
+                                    dest?: {
+                                        uid?: string;
+                                        callsign?: string;
+                                        group?: string;
+                                        mission?: string;
+                                        "mission-guid"?: string;
+                                        after?: string;
+                                        path?: string;
+                                    } | {
+                                        uid?: string;
+                                        callsign?: string;
+                                        group?: string;
+                                        mission?: string;
+                                        "mission-guid"?: string;
+                                        after?: string;
+                                        path?: string;
+                                    }[];
+                                    /** @description Presence of marti._attributes.archive - instructs the TAK Server to archive this message */
+                                    marti_archive?: boolean;
+                                    icon?: string;
+                                    droid?: string;
+                                    takv?: {
+                                        device?: string;
+                                        platform?: string;
+                                        os?: string;
+                                        version?: string;
+                                    };
+                                    group?: {
+                                        name: string;
+                                        role: string;
+                                    };
+                                    status?: {
+                                        battery?: string;
+                                        readiness?: string;
+                                    };
+                                    precisionlocation?: {
+                                        geopointsrc?: string;
+                                        altsrc?: string;
+                                    };
+                                    flow?: {
+                                        [key: string]: string;
+                                    };
+                                    radsensordetail?: {
+                                        sensor_data: {
+                                            /** @description epoch time in Long format */
+                                            time: string;
+                                            /** @description The model of sensor (Micro Detective, IdentiFINDER 2, etc.) in string format */
+                                            model: string;
+                                            /** @description The neutron detector status (Full, Reduced or Unknown). Not available for most sensors, default to Unknown */
+                                            neutronstatus: string;
+                                            /** @description The gamma detector status (Full, Reduced or Unknown). Not available for most sensors, default to Unknown */
+                                            gammastatus: string;
+                                            /** @description The Manufacturer of the sensor (Ortec, Nucsafe, etc.) in string format */
+                                            manufacturer: string;
+                                            /** @description The name of the given sensor in string format */
+                                            callsign?: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The ID algorithm used to ID isotopes (ex. GADRAS) */
+                                            id_algorithm?: string;
+                                            /** @description The search algorithm used (ex. RDAK, SAMBA) */
+                                            search_algorithm?: string;
+                                            /** @description The alarm algorithm used (ex. RDAK, SAMBA) */
+                                            alarm_algorithm?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description Identifier of this subchannel, if this event is a report from a subchannel of a master sensor */
+                                            subchannel?: string;
+                                            /** @description Used to align subchannels */
+                                            measurement_ref?: number;
+                                            /** @description Name of the master sensor, if this event is a report from a subchannel */
+                                            master_sensor_manufacturer?: string;
+                                            /** @description Serial number of the master sensor, if this event is a report from a subchannel */
+                                            master_sensor_serial?: string;
+                                            /** @description A bearing in positive degrees if the sensor reports back a direction for the detected source, -1 otherwise */
+                                            source_bearing?: number;
+                                            /** @description A scale from 0 - 0.5 giving the magnitude of the source strength in the direction of source_bearing */
+                                            source_strength?: number;
+                                            /** @description Used for sensors that can relay data from other sensors, or that can be relayed in that way */
+                                            relay_type?: string;
+                                            /** @description The location of the sensor where it's being worn on the vest */
+                                            module_location?: string;
+                                            /** @description The number from the sensor needed in order to retrieve any specific algorithm calculated data */
+                                            detector_number?: number;
+                                            /** @description The total mR configured for the sensor's current mission */
+                                            mission_total_mR?: number;
+                                            /** @description The total seconds remaining of mission time based on current configuration of sensor and acquired dose */
+                                            mission_stay_time_sec?: number;
+                                            /** @description The total uR acquired by the sensor for the current mission */
+                                            mission_acquired_uR?: number;
+                                            /** @description The temperature of the sensor in degrees celsius */
+                                            sensor_temp_deg_c?: number;
+                                            /** @description The current directional heading of the sensor */
+                                            heading?: number;
+                                            source_distance?: "MOVE_MUCH_CLOSER" | "MOVE_CLOSER" | "OPTIMAL" | "MOVE_AWAY" | "MOVE_FAR_AWAY";
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        radmeasurement?: {
+                                            /** @description Defines the alarm level, could be standard deviations above background. Will default to 0 (no alarm) */
+                                            nalarmstddev: number;
+                                            /** @description Alarm flag for the measurement. 1 = alarmed, 0 = not alarmed */
+                                            alarm: number;
+                                            /** @description The measurement value as a float. A/B/G/N will be interpreted as CPS. Dose Rate will be interpreted as mR/Hr */
+                                            measurement: number;
+                                            name: "alpha" | "beta" | "gamma" | "neutron" | "doserate";
+                                        }[];
+                                        physical_module?: {
+                                            location: "FRONT_LEFT" | "FRONT_RIGHT" | "REAR_LEFT" | "REAR_RIGHT" | "CAB";
+                                            /** @description Gamma counts per second */
+                                            gamma_cps: number;
+                                            /** @description Alarm level for the measurement. 0 = not alarmed, > 0 = alarm level */
+                                            gamma_alarm: number;
+                                            /** @description The gamma dose rate. Will be interpreted as uR/Hr */
+                                            gamma_dose_rate: number;
+                                        }[];
+                                        search_algorithm?: {
+                                            /** @description The Neutron localization value */
+                                            neutron_loc: number;
+                                            /** @description The Gamma localization value */
+                                            gamma_loc: number;
+                                            /** @description The Neutron localization alarm level */
+                                            neutron_loc_alarm_value: number;
+                                            /** @description The Gamma localization alarm level */
+                                            gamma_loc_alarm_value: number;
+                                            /** @description Alarm flag for the neutron localization value. 1 = alarmed, 0 = not alarmed */
+                                            neutron_loc_alarm: number;
+                                            /** @description Alarm flag for the gamma localization value. 1 = alarmed, 0 = not alarmed */
+                                            gamma_loc_alarm: number;
+                                        };
+                                        spectrum?: {
+                                            /** @description Flag for zero compression. 1 = zero compressed, 0 = not compressed */
+                                            zerocompression: number;
+                                            /** @description FOREGROUND or BACKGROUND */
+                                            type: string;
+                                            /** @description Spectrum live time in epoch time (ms) */
+                                            livetime_ms: string;
+                                            /** @description Spectrum real time in epoch time (ms) */
+                                            realtime_ms: string;
+                                            /** @description The spectral channel data */
+                                            channeldata: string;
+                                            /** @description The ID of the crystal reporting the channel data */
+                                            crystal_id?: string;
+                                        }[];
+                                        isotope?: {
+                                            /** @description The confidence value as a float representation of a percentage (88.5 NOT 0.885) */
+                                            confidence: number;
+                                            /** @description The name of the isotope */
+                                            name: string;
+                                            /** @description The type of the isotope */
+                                            type: string;
+                                        }[];
+                                        data_permissions?: {
+                                            /** @description All is true if all users should have access/permission */
+                                            all: boolean;
+                                            /** @description The list of ATAK UIDs that should have access/permission */
+                                            contact_list: string;
+                                        };
+                                        command_permissions?: {
+                                            /** @description All is true if all users should have access/permission */
+                                            all: boolean;
+                                            /** @description The list of ATAK UIDs that should have access/permission */
+                                            contact_list: string;
+                                        };
+                                    };
+                                    chemsensordetail?: {
+                                        sensor_data: {
+                                            /** @description The Manufacturer of the sensor in string format */
+                                            manufacturer: string;
+                                            /** @description The model of sensor in string format */
+                                            model: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The name of the given sensor in string format. Default name is Manufacturer+SerialNum */
+                                            callsign?: string;
+                                            /** @description The revision of the ChemCoT format, at writing this is "7" */
+                                            revision?: number;
+                                            /** @description General sensor health status */
+                                            status?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        detection?: {
+                                            /** @description Timestamp for the detection, epoch time (ms) */
+                                            time: string;
+                                            /** @description Chemical Name in string format */
+                                            agent: string;
+                                            /** @description Amount of chemical detected as a float. Could be mass, density, bars etc. */
+                                            quantity: number;
+                                            /** @description The units used to describe the quantity */
+                                            quantityunits: string;
+                                            /** @description Concentration of chemical in Kg/m^3 */
+                                            concentration?: number;
+                                            /** @description Alarm state of the sensor. 1 = alarm, 0 = no alarm */
+                                            alarm: number;
+                                            /** @description The confidence of the detection from the sensor as a percentage */
+                                            confidence?: number;
+                                            /** @description The mass fraction of the detection from the sensor in ppm */
+                                            massfraction?: number;
+                                            /** @description The percentage of the detection from the sensor in percent from 0-100 */
+                                            percent?: number;
+                                            /** @description The class of chemical detected. Nerve, Blood, TIC, etc. */
+                                            class?: string;
+                                            /** @description The ID number of the detection */
+                                            id?: number;
+                                        }[];
+                                    };
+                                    biosensordetail?: {
+                                        sensor_data: {
+                                            /** @description The Manufacturer of the sensor in string format */
+                                            manufacturer: string;
+                                            /** @description The model of sensor in string format */
+                                            model: string;
+                                            /** @description The Serial Number of the Sensor in string format */
+                                            serialnumber: string;
+                                            /** @description The battery level as a percentage, float value */
+                                            batterylevel?: number;
+                                            /** @description The name of the given sensor in string format. Default name is Manufacturer+SerialNum */
+                                            callsign?: string;
+                                            /** @description The revision of the BioCoT format */
+                                            revision?: number;
+                                            /** @description General sensor health status */
+                                            status?: string;
+                                            /** @description Used internally by the CBRN plugin */
+                                            ordinal?: number;
+                                            /** @description The UID of the TAK marker that this sensor is attached to */
+                                            attachedUid?: string;
+                                            /** @description Is the data in this element representative of a simulated sensor */
+                                            simulated?: boolean;
+                                        };
+                                        measurement?: {
+                                            /** @description Timestamp for the measurement, epoch time (ms) */
+                                            time: string;
+                                            /** @description Biological class */
+                                            bioClass?: string;
+                                            /** @description Biological type */
+                                            type?: string;
+                                            /** @description Channel identifier */
+                                            channel?: number;
+                                            /** @description Is this bio measurement harmful */
+                                            harmful?: boolean;
+                                            /** @description Dose Time */
+                                            doseTime?: number;
+                                            /** @description Amount of dose */
+                                            dose: number;
+                                            /** @description The confidence of the measurement from the sensor as a percentage */
+                                            confidence?: number;
+                                            /** @description Confirmation level */
+                                            confirmationLevel?: string;
+                                            /** @description Concentration */
+                                            concentration?: number;
+                                            /** @description Sample ID of this measurement */
+                                            sampleId?: string;
+                                            /** @description Persistency */
+                                            persistency?: string;
+                                            level?: {
+                                                /** @description The name of this measurement level */
+                                                levelName: string;
+                                                /** @description The value of this measurement level */
+                                                levelValue: string;
+                                            }[];
+                                        }[];
+                                    };
+                                    spatial?: {
+                                        version?: number;
+                                        attitude: {
+                                            /** @description Roll of entity in degrees. Positive indicates listing to the right. */
+                                            roll: number;
+                                            /** @description Pitch of entity in degrees. Positive indicates nose point up. */
+                                            pitch: number;
+                                            /** @description Yaw of entity in degrees. Positive indicates turned to the right. */
+                                            yaw?: number;
+                                            /** @description 1-sigma error of roll with respect to a zero mean normal Gaussian distribution. */
+                                            eRoll?: number;
+                                            /** @description 1-sigma error of pitch with respect to a zero mean normal Gaussian distribution. */
+                                            ePitch?: number;
+                                            /** @description 1-sigma error of yaw with respect to a zero mean normal Gaussian distribution. */
+                                            eYaw?: number;
+                                        };
+                                        spin: {
+                                            /** @description Degrees per second with positive indicating to the pilots right */
+                                            roll: number;
+                                            /** @description Degrees per second with positive indicating nose up. */
+                                            pitch: number;
+                                            /** @description Degrees per second with positive indicating right. */
+                                            yaw?: number;
+                                            /** @description 1-sigma error of roll with respect to a zero mean normal Gaussian distribution. */
+                                            eRoll?: number;
+                                            /** @description 1-sigma error of pitch with respect to a zero mean normal Gaussian distribution. */
+                                            ePitch?: number;
+                                            /** @description 1-sigma error of yaw with respect to a zero mean normal Gaussian distribution. */
+                                            eYaw?: number;
+                                        };
+                                    };
+                                };
+                                path?: string;
+                                geometry: {
+                                    /** @constant */
+                                    type: "Point";
+                                    coordinates: number[];
+                                } | {
+                                    /** @constant */
+                                    type: "LineString";
+                                    coordinates: number[][];
+                                } | {
+                                    /** @constant */
+                                    type: "Polygon";
+                                    coordinates: number[][][];
+                                };
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+                /** @description Error Response */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            status: number;
+                            message: string;
+                            /** @description Extended error details (ie: TAK Server exception trace) */
+                            details?: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -64190,6 +67137,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description Human readable name */
                         name?: string;
                         data?: string;
                         type2525b?: null | string;

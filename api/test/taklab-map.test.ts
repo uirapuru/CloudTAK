@@ -208,7 +208,7 @@ test('taklab_map: rejects an unsafe sender UID from the connection', () => {
 
 test('taklab_map: browser and server escape the JSON identically', async () => {
     // Imported by path so the API type-check does not pull in the web sources
-    const webModule = '../web/src/base/taklab-map-escape.ts';
+    const webModule = '../../app/src/base/taklab-map-escape.ts';
     const web = await import(webModule) as { xmlSafeJSON: (value: unknown) => string };
 
     for (const value of [

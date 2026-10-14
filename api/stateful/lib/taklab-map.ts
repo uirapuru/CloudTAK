@@ -34,7 +34,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
  * JSON with XML markup and characters outside XML 1.0 written as \u escapes,
  * so the text node needs no XML escaping and parses back to the same value.
  *
- * Keep identical to api/web/src/base/taklab-map-escape.ts (tested in test/taklab-map.test.ts)
+ * Keep identical to app/src/base/taklab-map-escape.ts (tested in test/taklab-map.test.ts)
  */
 export function xmlSafeJSON(value: unknown): string {
     return JSON.stringify(value).replace(XML_UNSAFE_JSON, (char) => {

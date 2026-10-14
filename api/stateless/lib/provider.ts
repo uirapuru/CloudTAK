@@ -1,13 +1,14 @@
-import Config from '../../common/config.js';
+import type ConfigStateless from '../config.js';
 import { InferSelectModel } from 'drizzle-orm';
 import Err from '@openaddresses/batch-error';
 import type { Profile } from '../../common/schema.js';
 import { X509Certificate } from 'crypto';
 import type { Static } from '@sinclair/typebox';
 import type { CertificateResponse } from '../../common/types.js';
-import { TAKAPI, APIAuthPassword, APIAuthCertificate } from '@tak-ps/node-tak';
+import { TAKAPI, APIAuthPassword } from '@tak-ps/node-tak';
 import type { CertificateValidation } from '@tak-ps/node-tak/lib/api/certificate';
 import UserControl from './control/user.js';
+import TAKServerControl from '../../common/control/takserver.js';
 
 /**
  * Certificates expiring within this window are treated as requiring renewal
@@ -21,10 +22,10 @@ export enum AuthProviderAccess {
 }
 
 export default class AuthProvider {
-    config: Config;
+    config: ConfigStateless;
     userControl: UserControl;
 
-    constructor(config: Config) {
+    constructor(config: ConfigStateless) {
         this.config = config;
         this.userControl = new UserControl(config);
     }
@@ -59,6 +60,19 @@ export default class AuthProvider {
      */
     static certificateRenewalRequired(cert: unknown, now = Date.now()): boolean {
         return AuthProvider.certificateExpired(cert, now + CERT_RENEWAL_WINDOW_MS);
+    }
+
+    /**
+     * The hub's pooled connection reconnects with the certificate it was built with -
+     * drop it so the next WebSocket rebuilds from the regenerated credentials.
+     * Best effort: an unreachable hub must not fail the login
+     */
+    async profileSync(username: string): Promise<void> {
+        try {
+            await this.config.hub.profileSync(username);
+        } catch (err) {
+            console.error(`Error: ProfileSync: ${username}: ${err instanceof Error ? err.message : String(err)}`);
+        }
     }
 
     async login(username: string, password: string): Promise<string> {
@@ -103,6 +117,7 @@ export default class AuthProvider {
                 const api = await TAKAPI.init(new URL(this.config.server.webtak), new APIAuthPassword(profile.username, password));
                 auth = await api.Credentials.generate();
                 profile = await this.config.models.Profile.commit(profile.username, { auth });
+                await this.profileSync(profile.username);
             } else if (auth) {
                 throw new Err(401, null, 'Certificate is expired');
             } else {
@@ -110,7 +125,7 @@ export default class AuthProvider {
             }
         }
 
-        const cert_api = await TAKAPI.init(new URL(String(this.config.server.api)), new APIAuthCertificate(auth.cert, auth.key));
+        const cert_api = await new TAKServerControl(this.config).withAuth(auth);
 
         // The TAK Server X509 filter runs on every request so a GET of the anonymous, DB-free
         // version endpoint is the cheapest authoritative check that the certificate is still
@@ -125,6 +140,7 @@ export default class AuthProvider {
                 profile = await this.config.models.Profile.commit(profile.username, {
                     auth: await api.Credentials.generate(),
                 });
+                await this.profileSync(profile.username);
             } else {
                 let message = 'Certificate was rejected by the TAK Server';
 
@@ -157,10 +173,7 @@ export default class AuthProvider {
     async status(cert: string): Promise<Static<typeof CertificateValidation> | undefined> {
         if (!this.config.server.auth.cert || !this.config.server.auth.key) return undefined;
 
-        const api = await TAKAPI.init(
-            new URL(String(this.config.server.api)),
-            new APIAuthCertificate(this.config.server.auth.cert, this.config.server.auth.key),
-        );
+        const api = await new TAKServerControl(this.config).asServer();
 
         return await api.Certificate.validate(cert);
     }
