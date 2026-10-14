@@ -12,6 +12,7 @@ import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia'
 import { markRaw } from 'vue';
 import DrawTool, { DrawToolMode } from './modules/draw.ts';
+import { attachShapeMover, consumeShapeMoveClick } from './modules/shape-move.ts';
 import IconManager from './modules/icons.ts';
 import MenuManager from './modules/menu.ts';
 import BottomBarManager from './modules/bottombar.ts';
@@ -1414,6 +1415,8 @@ export const useMapStore = defineStore('cloudtak', {
 
             map.on('click', async (e: MapMouseEvent) => {
                 if (this.draw.mode !== DrawToolMode.STATIC) return;
+                // Kliknięcie po upuszczeniu przesuwanej figury nie otwiera jej widoku
+                if (consumeShapeMoveClick()) return;
 
                 if (this.radial.mode) {
                     this.radial.mode = undefined;
@@ -1484,6 +1487,9 @@ export const useMapStore = defineStore('cloudtak', {
                     this.select.feats = feats as any;
                 }
             });
+
+            // taklab: przytrzymanie figury przez 2 s przesuwa ją po mapie
+            attachShapeMover(this, map);
 
             map.on('contextmenu', (e) => {
                 if (this.draw.editing) return;
