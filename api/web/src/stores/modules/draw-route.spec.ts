@@ -112,6 +112,29 @@ describe('DrawTool i edytor trasy', () => {
         expect(options.flags.linestring.feature.draggable).toBe(false);
     });
 
+    it('edycja figury ustawia opcje zaznaczania dopiero po uruchomieniu terra-draw', async () => {
+        // Prawdziwy TerraDraw rzuca „Terra Draw is not enabled” przed start()
+        let started = false;
+        terra.start.mockImplementation(() => { started = true; });
+        terra.stop.mockImplementation(() => { started = false; });
+        terra.updateModeOptions.mockImplementation(() => {
+            if (!started) throw new Error('Terra Draw is not enabled');
+        });
+        try {
+            const tool = new DrawTool(mapStore() as never);
+            const rectangle = {
+                ...cot({ type: 'u-d-r' }, false),
+                as_feature: () => ({ id: 'route-1', type: 'Feature', path: '/', properties: { callsign: 'Prostokąt', type: 'u-d-r' }, geometry: { type: 'Polygon', coordinates: [[[21, 52], [21.1, 52], [21.1, 52.1], [21, 52.1], [21, 52]]] } }),
+            };
+            await expect(tool.edit(rectangle as never)).resolves.toBeUndefined();
+            expect(terra.selectFeature).toHaveBeenCalledWith('route-1');
+        } finally {
+            terra.start.mockReset();
+            terra.stop.mockReset();
+            terra.updateModeOptions.mockReset();
+        }
+    });
+
     it('zwykłą linię dalej można przenieść', async () => {
         const tool = new DrawTool(mapStore() as never);
         await tool.edit(cot({ type: 'u-d-f' }, false) as never);

@@ -879,7 +879,9 @@ export default class DrawTool {
 
         this.editing = cot;
 
-        this.start(DrawToolMode.SELECT);
+        // start() uruchamia terra-draw dopiero po await; bez czekania updateModeOptions
+        // trafia w wyłączony TerraDraw („Terra Draw is not enabled”)
+        await this.start(DrawToolMode.SELECT);
 
         // Trasy nie da się przenieść w całości; zwykłą linię tak
         this.draw.updateModeOptions(DrawToolMode.SELECT, { flags: selectFlags(!cot.is_route) });
