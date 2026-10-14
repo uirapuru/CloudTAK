@@ -71,7 +71,7 @@ describe('ShapeMover', () => {
         await vi.advanceTimersByTimeAsync(HOLD_MS);
     }
 
-    it('po przytrzymaniu 2 s przesuwa figurę i zapisuje ją tam, gdzie ją upuszczono', async () => {
+    it('po przytrzymaniu 1 s przesuwa figurę i zapisuje ją tam, gdzie ją upuszczono', async () => {
         await hold();
         expect(onStart).toHaveBeenCalled();
         expect(map.dragPan.disable).toHaveBeenCalled();
@@ -97,7 +97,7 @@ describe('ShapeMover', () => {
         expect(mover.consumeClick()).toBe(false);
     });
 
-    it('puszczenie przed 2 s nic nie robi', async () => {
+    it('puszczenie przed 1 s nic nie robi', async () => {
         map.fire('mousedown', at(100, 100, 21.005, 52.005));
         await vi.advanceTimersByTimeAsync(HOLD_MS - 500);
         map.fire('mouseup', at(100, 100, 21.005, 52.005));
@@ -107,7 +107,7 @@ describe('ShapeMover', () => {
         expect(mover.consumeClick()).toBe(false);
     });
 
-    it('ruch przed upływem 2 s to zwykłe przesuwanie mapy', async () => {
+    it('ruch przed upływem 1 s to zwykłe przesuwanie mapy', async () => {
         map.fire('mousedown', at(100, 100, 21.005, 52.005));
         map.fire('mousemove', at(130, 100, 21.02, 52.005));
         await vi.advanceTimersByTimeAsync(HOLD_MS);

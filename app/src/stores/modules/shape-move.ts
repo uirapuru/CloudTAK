@@ -115,7 +115,7 @@ export function attachShapeMover(store: Store, map: mapgl.Map): ShapeMover {
             return null;
         },
         onStart: () => {
-            // Na telefonie przytrzymanie najpierw otwiera menu radialne
+            // Na telefonie przytrzymanie (ok. 0,5 s) najpierw otwiera menu radialne
             store.radial.mode = undefined;
             store.radial.cot = undefined;
         },

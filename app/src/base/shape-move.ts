@@ -5,7 +5,7 @@
  * upływem czasu oddaje gest zwykłemu przesuwaniu mapy. Escape przerywa bez zapisu.
  */
 
-export const HOLD_MS = 2000;
+export const HOLD_MS = 1000;
 export const MOVE_TOLERANCE_PX = 8;
 
 const SOURCE = 'shape-move';
