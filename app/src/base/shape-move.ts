@@ -44,8 +44,8 @@ export type ShapeMoverOptions = {
     pick(point: { x: number; y: number }): Promise<MovableFeature | null>;
     /** Zapis przesuniętej figury */
     commit(id: string, feature: MovableFeature): Promise<void>;
-    /** Początek przesuwania (np. zamknięcie menu radialnego otwartego przytrzymaniem) */
-    onStart?(): void;
+    /** Początek przesuwania (np. zamknięcie menu radialnego, otwarcie widoku figury) */
+    onStart?(feature: MovableFeature): void;
     /** Czy przytrzymanie wolno w ogóle zacząć (np. tylko poza trybem rysowania) */
     enabled?(): boolean;
 };
@@ -135,7 +135,7 @@ export default class ShapeMover {
         // Puszczenie poza mapą (np. nad panelem) też kończy przesuwanie
         document.addEventListener('mouseup', this.onUp);
         document.addEventListener('touchend', this.onUp);
-        this.opts.onStart?.();
+        this.opts.onStart?.(feature);
     }
 
     private handleMove(e: MapEvent): void {

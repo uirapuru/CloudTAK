@@ -49,7 +49,7 @@ describe('ShapeMover', () => {
     let map: ReturnType<typeof fakeMap>;
     let pick: ReturnType<typeof vi.fn<(point: { x: number; y: number }) => Promise<MovableFeature | null>>>;
     let commit: ReturnType<typeof vi.fn<(id: string, feature: MovableFeature) => Promise<void>>>;
-    let onStart: ReturnType<typeof vi.fn<() => void>>;
+    let onStart: ReturnType<typeof vi.fn<(feature: MovableFeature) => void>>;
     let mover: ShapeMover;
 
     beforeEach(() => {
@@ -73,7 +73,7 @@ describe('ShapeMover', () => {
 
     it('po przytrzymaniu 1 s przesuwa figurę i zapisuje ją tam, gdzie ją upuszczono', async () => {
         await hold();
-        expect(onStart).toHaveBeenCalled();
+        expect(onStart).toHaveBeenCalledWith(expect.objectContaining({ id: 'sq' }));
         expect(map.dragPan.disable).toHaveBeenCalled();
         expect(map.sources.has('shape-move')).toBe(true);
 

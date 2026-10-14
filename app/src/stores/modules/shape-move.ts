@@ -18,6 +18,7 @@ import { OriginMode } from '../../base/cot.ts';
 import type COT from '../../base/cot.ts';
 import { DrawToolMode } from './draw.ts';
 import { std } from '../../std.ts';
+import router from '../../router.ts';
 import type { Feature } from '../../types.ts';
 
 const ROUTE_FILTER = 'properties.type = "b-m-r" and geometry.type = "LineString"';
@@ -114,10 +115,14 @@ export function attachShapeMover(store: Store, map: mapgl.Map): ShapeMover {
             }
             return null;
         },
-        onStart: () => {
+        onStart: (feature) => {
             // Na telefonie przytrzymanie (ok. 0,5 s) najpierw otwiera menu radialne
             store.radial.mode = undefined;
             store.radial.cot = undefined;
+            // Widok przesuwanej figury: otwiera się albo przełącza z innego obiektu
+            if (router.currentRoute.value.path !== `/cot/${feature.id}`) {
+                router.push(`/cot/${feature.id}`).catch((err) => console.error('Failed to open feature view', err));
+            }
         },
         commit: async (id, feature) => {
             try {
