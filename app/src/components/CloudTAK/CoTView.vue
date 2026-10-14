@@ -1168,7 +1168,8 @@ function updatePropertyAttachment(hashes: string[]) {
 async function deleteCOT() {
     if (!cot.value) return;
     await mapStore.worker.db.remove(cot.value.id, {
-        mission: !!subscription.value
+        mission: !!subscription.value,
+        authored: true
     });
     bufferCotId.value = null;
     router.push('/');

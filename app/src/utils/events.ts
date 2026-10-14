@@ -37,6 +37,8 @@ export enum WorkerMessageType {
     Channel_Change = 'channel:change',
 
     Feature_Update = 'cloudtak:feature:update',
+    // taklab: strefa niebezpieczna zmieniona przez usera, body { id, before, after }
+    Danger_Zone_Changed = 'taklab:danger-zone:changed',
     Profile_Update = 'cloudtak:profile:update',
 
     Sync_Start = 'cloudtak:sync:start',

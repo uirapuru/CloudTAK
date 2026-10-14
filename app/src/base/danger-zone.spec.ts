@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import jsonata from 'jsonata';
-import { isDangerZone, setDangerZone, DANGER_ZONE_FILTER } from './danger-zone.ts';
+import { isDangerZone, setDangerZone, DANGER_ZONE_FILTER, dangerZoneGeometry, dangerZoneChanged } from './danger-zone.ts';
 
 const polygon = (properties: Record<string, unknown>) => ({
     type: 'Feature',
@@ -63,5 +63,27 @@ describe('DANGER_ZONE_FILTER', () => {
         expect(await matches(polygon({}))).toBe(false);
         expect(await matches(polygon({ callsign: 'B', geofence: { trigger: 'Exit' } }))).toBe(false);
         expect(await matches({ properties: { geofence: { trigger: 'Entry' } }, geometry: { type: 'Point', coordinates: [21, 52] } })).toBe(false);
+    });
+});
+
+describe('dangerZoneGeometry i dangerZoneChanged', () => {
+    const ring = [[[21, 52], [21.01, 52], [21.01, 52.01], [21, 52]]];
+    const zone = { properties: { geofence: { trigger: 'Entry' } }, geometry: { type: 'Polygon', coordinates: ring } };
+
+    it('zwraca geometrię tylko dla strefy', () => {
+        expect(dangerZoneGeometry(zone)?.coordinates).toEqual(ring);
+        expect(dangerZoneGeometry({ ...zone, properties: { callsign: 'Las' } })).toBeNull();
+        expect(dangerZoneGeometry({ properties: { geofence: { trigger: 'Entry' } }, geometry: { type: 'Point', coordinates: [21, 52] } })).toBeNull();
+        expect(dangerZoneGeometry(undefined)).toBeNull();
+    });
+
+    it('zmiana kształtu, włączenie i wyłączenie strefy to zmiana; sama nazwa nie', () => {
+        const a = dangerZoneGeometry(zone);
+        const moved = dangerZoneGeometry({ ...zone, geometry: { type: 'Polygon', coordinates: [[[21, 52], [21.02, 52], [21.02, 52.01], [21, 52]]] } });
+        expect(dangerZoneChanged(a, moved)).toBe(true);
+        expect(dangerZoneChanged(null, a)).toBe(true);
+        expect(dangerZoneChanged(a, null)).toBe(true);
+        expect(dangerZoneChanged(a, dangerZoneGeometry({ ...zone, properties: { ...zone.properties, callsign: 'Nowa' } }))).toBe(false);
+        expect(dangerZoneChanged(null, null)).toBe(false);
     });
 });

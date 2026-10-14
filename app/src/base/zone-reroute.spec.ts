@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { lineCrossesPolygon, routesToReroute, rerouteRoutes } from './zone-reroute.ts';
+import { lineCrossesPolygon, routesToReroute, routesNearZones, rerouteRoutes } from './zone-reroute.ts';
 import type { RouteFeature } from './zone-reroute.ts';
 
 const zone = [[[21, 52], [21.01, 52], [21.01, 52.01], [21, 52.01], [21, 52]]] as Array<Array<[number, number]>>;
@@ -47,6 +47,22 @@ describe('routesToReroute', () => {
         const ignoring = route('c', [[20.99, 52.005], [21.02, 52.005]], { ignore_danger_zones: true });
         const noPlan = { ...route('d', [[20.99, 52.005], [21.02, 52.005]]), properties: { id: 'd', type: 'b-m-r' } };
         expect(routesToReroute([through, aside, ignoring, noPlan], zone).map((r) => r.id)).toEqual(['a']);
+    });
+});
+
+describe('routesNearZones', () => {
+    // ok. 0,0045° szerokości = 500 m
+    it('bierze trasy do 500 m od starego albo nowego położenia strefy', () => {
+        const moved = [[[21.1, 52.1], [21.11, 52.1], [21.11, 52.11], [21.1, 52.11], [21.1, 52.1]]] as Array<Array<[number, number]>>;
+        const detour = route('old', [[20.99, 52.013], [21.02, 52.013]]);
+        const throughNew = route('new', [[21.09, 52.105], [21.12, 52.105]]);
+        const far = route('far', [[20.99, 52.03], [21.02, 52.03]]);
+        const ignoring = route('ign', [[20.99, 52.005], [21.02, 52.005]], { ignore_danger_zones: true });
+        expect(routesNearZones([detour, throughNew, far, ignoring], [zone, moved]).map((r) => r.id)).toEqual(['old', 'new']);
+    });
+
+    it('bez stref nic', () => {
+        expect(routesNearZones([route('a', [[20.99, 52.005], [21.02, 52.005]])], [])).toEqual([]);
     });
 });
 

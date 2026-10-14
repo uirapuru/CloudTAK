@@ -42,3 +42,18 @@ export function setDangerZone(geofence: Geofence | undefined, on: boolean): Geof
     if (geofence?.trigger === 'Both') return { ...geofence, trigger: 'Exit' };
     return undefined;
 }
+
+type ZoneSource = { geometry?: { type: string; coordinates?: unknown } | null; properties?: Record<string, unknown> };
+
+/** Geometria wielokąta, gdy obiekt jest strefą niebezpieczną; inaczej null. */
+export function dangerZoneGeometry(feature: ZoneSource | null | undefined): { type: 'Polygon'; coordinates: number[][][] } | null {
+    if (!feature?.geometry || feature.geometry.type !== 'Polygon' || !feature.properties) return null;
+    if (!isDangerZone(feature.properties as { geofence?: Geofence; callsign?: unknown })) return null;
+    return { type: 'Polygon', coordinates: structuredClone(feature.geometry.coordinates) as number[][][] };
+}
+
+/** Czy zmiana dotyczy trasy: strefa powstała, zniknęła albo zmieniła kształt lub położenie. */
+export function dangerZoneChanged(before: ReturnType<typeof dangerZoneGeometry>, after: ReturnType<typeof dangerZoneGeometry>): boolean {
+    if (!before && !after) return false;
+    return JSON.stringify(before?.coordinates ?? null) !== JSON.stringify(after?.coordinates ?? null);
+}

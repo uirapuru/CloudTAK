@@ -72,6 +72,36 @@ export function routesToReroute(routes: RouteFeature[], rings: number[][][]): Ro
     });
 }
 
+export const NEAR_ZONE_M = 500;
+
+/** Zewnętrzny pierścień prostokąta obejmującego strefę, poszerzonego o marginM. */
+function expandedBox(rings: number[][][], marginM: number): number[][][] {
+    const ring = rings[0] ?? [];
+    const lons = ring.map((p) => p[0]);
+    const lats = ring.map((p) => p[1]);
+    const mid = (Math.min(...lats) + Math.max(...lats)) / 2;
+    const dLat = marginM / 111320;
+    const dLon = marginM / (111320 * Math.cos(mid * Math.PI / 180));
+    const [w, e, s, n] = [Math.min(...lons) - dLon, Math.max(...lons) + dLon, Math.min(...lats) - dLat, Math.max(...lats) + dLat];
+    return [[[w, s], [e, s], [e, n], [w, n], [w, s]]];
+}
+
+/**
+ * Trasy do przeliczenia po zmianie strefy: z planem, bez ignore_danger_zones,
+ * przechodzące do marginM od któregokolwiek położenia strefy (stare i nowe), czyli
+ * także te, które dotąd ją omijały. Margines liczony od prostokąta obejmującego strefę.
+ */
+export function routesNearZones(routes: RouteFeature[], zones: number[][][][], marginM = NEAR_ZONE_M): RouteFeature[] {
+    const boxes = zones.filter((rings) => (rings[0]?.length ?? 0) >= 4).map((rings) => expandedBox(rings, marginM));
+    if (!boxes.length) return [];
+    return routes.filter((route) => {
+        if (route.geometry?.type !== 'LineString') return false;
+        const plan = readRoutePlan(route);
+        if (!plan || plan.options?.ignore_danger_zones) return false;
+        return boxes.some((box) => lineCrossesPolygon(route.geometry.coordinates, box));
+    });
+}
+
 export async function rerouteRoutes(routes: RouteFeature[], deps: RerouteDeps): Promise<RerouteResult> {
     const result: RerouteResult = { rerouted: [], failed: [] };
 

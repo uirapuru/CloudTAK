@@ -5,10 +5,9 @@
 import type * as mapgl from 'maplibre-gl';
 import ShapeMover from '../../base/shape-move.ts';
 import type { MovableFeature } from '../../base/shape-move.ts';
-import { isDangerZone } from '../../base/danger-zone.ts';
 import { collectThreats } from '../../base/route-threats.ts';
 import type { ThreatSource } from '../../base/route-threats.ts';
-import { routesToReroute, rerouteRoutes } from '../../base/zone-reroute.ts';
+import { routesNearZones, rerouteRoutes } from '../../base/zone-reroute.ts';
 import type { RouteFeature, RerouteResult } from '../../base/zone-reroute.ts';
 import OverlayManager from '../../base/overlay.ts';
 import Subscription from '../../base/subscription.ts';
@@ -58,7 +57,7 @@ async function save(store: Store, cot: COT | undefined, feature: Feature): Promi
     }
 }
 
-async function rerouteThrough(store: Store, zone: MovableFeature): Promise<RerouteResult> {
+async function rerouteNear(store: Store, zones: number[][][][]): Promise<RerouteResult> {
     const db = store.worker.db;
     const routes: RouteFeature[] = [];
     const cots = new Map<string, COT>();
@@ -68,7 +67,7 @@ async function rerouteThrough(store: Store, zone: MovableFeature): Promise<Rerou
         routes.push(cot.as_feature({ clone: true }) as unknown as RouteFeature);
     }
 
-    return await rerouteRoutes(routesToReroute(routes, zone.geometry.coordinates as number[][][]), {
+    return await rerouteRoutes(routesNearZones(routes, zones), {
         plan: async (body) => {
             const fc = await std('/api/search/route/plan', {
                 method: 'POST',
@@ -93,7 +92,7 @@ async function report(result: RerouteResult): Promise<void> {
         ...(result.rerouted.length ? [`Przeliczone: ${result.rerouted.join(', ')}.`] : []),
         ...result.failed.map((f) => `Nie udało się przeliczyć „${f.name}”: ${f.error}`),
     ];
-    await TAKNotification.create(NotificationType.Alert, 'Strefa przesunięta: trasy', lines.join('\n'), '', true);
+    await TAKNotification.create(NotificationType.Alert, 'Strefa zmieniona: trasy', lines.join('\n'), '', true);
 }
 
 export function attachShapeMover(store: Store, map: mapgl.Map): ShapeMover {
@@ -127,8 +126,8 @@ export function attachShapeMover(store: Store, map: mapgl.Map): ShapeMover {
         commit: async (id, feature) => {
             try {
                 const cot = await store.worker.db.get(id, { mission: true });
+                // Przeliczenie tras przy strefie odpala baza mapy (Danger_Zone_Changed)
                 await save(store, cot, feature as unknown as Feature);
-                if (isDangerZone(feature.properties)) await report(await rerouteThrough(store, feature));
             } catch (err) {
                 console.error('Failed to move feature', err);
             }
@@ -136,6 +135,33 @@ export function attachShapeMover(store: Store, map: mapgl.Map): ShapeMover {
     });
 
     return mover;
+}
+
+type ZoneGeometry = { type: 'Polygon'; coordinates: number[][][] } | null;
+
+// Kilka zmian jednej strefy w krótkim odstępie (np. kolejne poprawki kształtu)
+// daje jedno przeliczenie: najstarsze położenie przed zmianą i najnowsze po niej
+const ZONE_SETTLE_MS = 800;
+const pendingZones = new Map<string, { before: ZoneGeometry; after: ZoneGeometry; timer: ReturnType<typeof setTimeout> }>();
+let rerouting: Promise<void> = Promise.resolve();
+
+/** Komunikat Danger_Zone_Changed z bazy mapy: przelicza trasy w pobliżu strefy. */
+export function onDangerZoneChanged(store: Store, body: { id: string; before: ZoneGeometry; after: ZoneGeometry }): void {
+    const pending = pendingZones.get(body.id);
+    if (pending) clearTimeout(pending.timer);
+    const entry = {
+        before: pending ? pending.before : body.before,
+        after: body.after,
+        timer: setTimeout(() => {
+            pendingZones.delete(body.id);
+            const zones = [entry.before, entry.after].filter((g): g is NonNullable<ZoneGeometry> => !!g).map((g) => g.coordinates);
+            // Po kolei, żeby dwie strefy nie przeliczały tej samej trasy naraz
+            rerouting = rerouting
+                .then(async () => await report(await rerouteNear(store, zones)))
+                .catch((err) => console.error('Failed to reroute near danger zone', err));
+        }, ZONE_SETTLE_MS),
+    };
+    pendingZones.set(body.id, entry);
 }
 
 /** true raz, dla kliknięcia wysłanego przez przeglądarkę po upuszczeniu figury */

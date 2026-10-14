@@ -210,7 +210,8 @@ async function deleteCOT() {
         isDeleting.value = true;
 
         await mapStore.worker.db.remove(props.feature.id, {
-            mission: true
+            mission: true,
+            authored: true
         });
 
         isDeleting.value = false;

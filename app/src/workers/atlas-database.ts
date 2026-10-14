@@ -22,6 +22,7 @@ import { isEqual } from '@ver0/deep-equal';
 import type { Polygon } from 'geojson';
 import { mapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import { preserveRoutePlan } from '../base/route-plan.ts';
+import { dangerZoneGeometry, dangerZoneChanged } from '../base/danger-zone.ts';
 import type { MapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import type { InputFeature, Feature, APIList, Contact } from '../types.ts';
 import type {
@@ -672,7 +673,9 @@ export default class AtlasDatabase {
         id: string,
         opts: {
             mission?: boolean,
-            skipNetwork?: boolean
+            skipNetwork?: boolean,
+            /** taklab: usunięcie przez usera (nie echo z serwera) - strefa przelicza trasy */
+            authored?: boolean
         } = {
             mission: false,
             skipNetwork: false
@@ -681,6 +684,8 @@ export default class AtlasDatabase {
         const cot = await this.get(id, {
             mission: opts.mission
         });
+
+        if (cot && opts.authored) this.notifyDangerZone(id, dangerZoneGeometry(cot), null);
 
         // TODO Throw an error?
         if (!cot) {
@@ -895,7 +900,39 @@ export default class AtlasDatabase {
      * @param opts.skipDatabase - Don't persist a newly created COT back to the Dexie feature table. Used when the feature already originates from that table (eg. startup hydrate) so we avoid a redundant IndexedDB write per feature.
      * @param opts.skipMissionLookup - Don't scan subscribed mission stores when checking for an existing COT. Used when the caller knows the feature is a CONNECTION-origin profile feature (eg. startup hydrate) so we avoid an IndexedDB mission scan per feature.
      */
+    /**
+     * taklab: zmiana strefy niebezpiecznej przez usera (powstała, zniknęła, zmieniła
+     * kształt lub położenie) idzie do głównego wątku, który przelicza pobliskie trasy.
+     */
+    private notifyDangerZone(id: string, before: ReturnType<typeof dangerZoneGeometry>, after: ReturnType<typeof dangerZoneGeometry>): void {
+        if (!dangerZoneChanged(before, after)) return;
+        this.atlas.postMessage({
+            type: WorkerMessageType.Danger_Zone_Changed,
+            body: { id, before, after },
+        });
+    }
+
     async add(
+        feature: InputFeature,
+        opts?: {
+            skipSave?: boolean;
+            skipBroadcast?: boolean;
+            authored?: boolean,
+            render?: boolean,
+            skipDatabase?: boolean,
+            skipMissionLookup?: boolean,
+        }
+    ): Promise<COT | void> {
+        if (!opts?.authored) return await this.addFeature(feature, opts);
+
+        const previous = await this.get(String(feature.id), { mission: opts.skipMissionLookup !== true });
+        const before = dangerZoneGeometry(previous);
+        const result = await this.addFeature(feature, opts);
+        this.notifyDangerZone(String(feature.id), before, dangerZoneGeometry(result || (feature as Feature)));
+        return result;
+    }
+
+    private async addFeature(
         feature: InputFeature,
         opts?: {
             skipSave?: boolean;

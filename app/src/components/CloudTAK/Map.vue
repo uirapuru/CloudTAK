@@ -856,7 +856,8 @@ async function handleRadial(event: string): Promise<void> {
         }
 
         await mapStore.worker.db.remove(String(cot.properties.id || cot.id), {
-            mission: true
+            mission: true,
+            authored: true
         })
 
         await mapStore.refresh();

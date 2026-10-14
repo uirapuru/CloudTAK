@@ -12,7 +12,7 @@ import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia'
 import { markRaw } from 'vue';
 import DrawTool, { DrawToolMode } from './modules/draw.ts';
-import { attachShapeMover, consumeShapeMoveClick } from './modules/shape-move.ts';
+import { attachShapeMover, consumeShapeMoveClick, onDangerZoneChanged } from './modules/shape-move.ts';
 import IconManager from './modules/icons.ts';
 import MenuManager from './modules/menu.ts';
 import BottomBarManager from './modules/bottombar.ts';
@@ -1151,6 +1151,8 @@ export const useMapStore = defineStore('cloudtak', {
                     this.hasNoChannels = false;
                 } else if (msg.type === WorkerMessageType.Channel_Change) {
                     this.channelChange = true;
+                } else if (msg.type === WorkerMessageType.Danger_Zone_Changed) {
+                    onDangerZoneChanged(this, msg.body);
                 } else if (msg.type === WorkerMessageType.Mission_Change_Feature) {
                     // A failed render stays dirty - the sweep repaints it
                     await this.loadMission(msg.body.guid).catch((err: unknown) => {
