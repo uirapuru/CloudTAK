@@ -24,7 +24,7 @@
                         </div>
 
                         <div
-                            v-if='geofence.trigger === "Both" || geofence.trigger === "Enter"'
+                            v-if='geofence.trigger === "Both" || geofence.trigger === "Entry"'
                             class='col-6 py-2 d-flex align-items-center'
                         >
                             <IconDoorEnter

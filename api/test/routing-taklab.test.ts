@@ -669,7 +669,7 @@ test('zagrożenia z mapy idą do usługi terenu i do opisu', async () => {
     assert.equal(terrainBodies[0].avoid_observation, true);
     const remarks = String(fc.features[0].properties.remarks);
     assert.match(remarks, /Opcje: unika widoczności ze wzgórz/);
-    assert.match(remarks, /Z mapy: 1 posterunek przeciwnika, 1 teren zamknięty\./);
+    assert.match(remarks, /Z mapy: 1 posterunek przeciwnika, 1 strefa niebezpieczna\./);
     const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
     assert.deepEqual(plan.threats, { observers: 1, closed_areas: 1 });
 });
@@ -685,6 +685,58 @@ test('teren zamknięty w trasie drogowej to obszar w custom_model', async () => 
         ],
         areas: { type: 'FeatureCollection', features: [{ type: 'Feature', id: 'closed0', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } }] },
     });
+});
+
+test('strefa niebezpieczna w trasie pieszej to obszar w custom_model i wzmianka w opisie', async () => {
+    ghBodies.length = 0;
+    const ring: Array<[number, number]> = [[21, 52], [21.01, 52], [21.01, 52.01], [21, 52]];
+    const fc = await new TaklabRoute(config, base, '').route([[21, 52], [21.1, 52.1]], 'foot', undefined, { closed_areas: [ring] });
+    assert.deepEqual((ghBodies[0].custom_model as { priority: unknown }).priority, [{ if: 'in_closed0', multiply_by: '0' }]);
+    assert.match(String(fc.features[0].properties.remarks), /Z mapy: 1 strefa niebezpieczna\./);
+});
+
+test('ignore_danger_zones: trasa piesza bez obszarów, opcja zostaje w planie i opisie', async () => {
+    ghBodies.length = 0;
+    const ring: Array<[number, number]> = [[21, 52], [21.01, 52], [21.01, 52.01], [21, 52]];
+    const fc = await new TaklabRoute(config, base, '').route([[21, 52], [21.1, 52.1]], 'foot', { ignore_danger_zones: true }, { closed_areas: [ring] });
+    assert.equal(ghBodies[0].custom_model, undefined);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.deepEqual(plan.options, { ignore_danger_zones: true });
+    assert.equal(plan.threats, undefined);
+    const remarks = String(fc.features[0].properties.remarks);
+    assert.match(remarks, /Opcje: nie omija stref niebezpiecznych/);
+    assert.doesNotMatch(remarks, /Z mapy:/);
+});
+
+test('ignore_danger_zones na przełaju: posterunki idą do usługi, strefy i sama opcja nie', async () => {
+    terrainBodies.length = 0;
+    const ring: Array<[number, number]> = [[20.5, 52.3], [20.51, 52.3], [20.51, 52.29], [20.5, 52.3]];
+    const fc = await new TaklabRoute(config, base, base + '/terrain').route([[20.5, 52.3], [20.52, 52.31]], 'foot_cross_country',
+        { avoid_wetland: true, ignore_danger_zones: true }, { observers: [[20.51, 52.31]], closed_areas: [ring] });
+    assert.deepEqual(terrainBodies[0].observers, [[20.51, 52.31]]);
+    assert.equal(terrainBodies[0].closed_areas, undefined);
+    assert.equal(terrainBodies[0].ignore_danger_zones, undefined);
+    assert.equal(terrainBodies[0].avoid_wetland, true);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.deepEqual(plan.options, { avoid_wetland: true, ignore_danger_zones: true });
+    assert.deepEqual(plan.threats, { observers: 1, closed_areas: 0 });
+});
+
+test('ignore_danger_zones w reroute trasy pieszej zostaje w planie', async () => {
+    ghBodies.length = 0;
+    const ring: Array<[number, number]> = [[21, 52], [21.01, 52], [21.01, 52.01], [21, 52]];
+    const fc = await new TaklabRoute(config, base, '').reroute({
+        travelMode: 'foot',
+        waypoints: [[21, 52], [21.2, 52.2]],
+        coordinates: [[21, 52], [21.1, 52.1]],
+        legs: [{ start: 0, end: 1, distance_m: 1000, duration_s: 600 }],
+        first: 0, count: 1, added: 0,
+        options: { ignore_danger_zones: true },
+        threats: { closed_areas: [ring] },
+    });
+    assert.equal(ghBodies[0].custom_model, undefined);
+    const plan = (fc.features[0].properties.metadata as { taklab_route: RoutePlan }).taklab_route;
+    assert.deepEqual(plan.options, { ignore_danger_zones: true });
 });
 
 test('posterunki w trasie drogowej są pomijane, bez zagrożeń brak custom_model', async () => {
@@ -710,7 +762,7 @@ test('odmiana liczebników w opisie zagrożeń', async () => {
         observers: Array.from({ length: 5 }, () => [20.51, 52.31] as [number, number]),
         closed_areas: [ring, ring],
     });
-    assert.match(String(fc.features[0].properties.remarks), /Z mapy: 5 posterunków przeciwnika, 2 tereny zamknięte\./);
+    assert.match(String(fc.features[0].properties.remarks), /Z mapy: 5 posterunków przeciwnika, 2 strefy niebezpieczne\./);
 });
 
 test('variants przełaju: start i cel trasy, linia trasy jako avoid_lines, dwa warianty z analizą', async () => {

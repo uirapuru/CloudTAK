@@ -37,6 +37,8 @@ export type RouteOptions = {
     max_slope_deg?: number;
     exposure?: Exposure;
     avoid_observation?: boolean;
+    /** Wszystkie tryby: nie omijaj stref niebezpiecznych z mapy (domyślnie omijane). Do usługi terenu nie idzie. */
+    ignore_danger_zones?: boolean;
 };
 
 /** Wejście warianty trasy: stan trasy z planu plus liczba propozycji (1–2, domyślnie 2). */
@@ -360,12 +362,12 @@ export function composeRemarks(plan: RoutePlan): string {
     }
 
     const options = describeOptions(plan.options);
-    if (terrain && options) lines.push(`Opcje: ${options}`);
+    if (options) lines.push(`Opcje: ${options}`);
 
     if (plan.threats) {
         const parts: string[] = [];
         if (plan.threats.observers) parts.push(`${plan.threats.observers} ${plural(plan.threats.observers, 'posterunek', 'posterunki', 'posterunków')} przeciwnika`);
-        if (plan.threats.closed_areas) parts.push(`${plan.threats.closed_areas} ${plural(plan.threats.closed_areas, 'teren zamknięty', 'tereny zamknięte', 'terenów zamkniętych')}`);
+        if (plan.threats.closed_areas) parts.push(`${plan.threats.closed_areas} ${plural(plan.threats.closed_areas, 'strefa niebezpieczna', 'strefy niebezpieczne', 'stref niebezpiecznych')}`);
         lines.push(`Z mapy: ${parts.join(', ')}.`);
     }
 
@@ -440,6 +442,30 @@ export function normalizeThreats(threats?: RouteThreats): RouteThreats | undefin
     return Object.keys(result).length ? result : undefined;
 }
 
+/**
+ * Opcje i zagrożenia jednego liczenia: opcje dla usługi terenu (tylko przełaj), opcje
+ * do planu (przełaj plus ignore_danger_zones we wszystkich trybach) i zagrożenia bez
+ * stref niebezpiecznych, gdy user ich nie omija.
+ */
+export function prepareRequest(mode: { terrain?: boolean }, options?: RouteOptions, threats?: RouteThreats): {
+    terrainOptions?: RouteOptions;
+    planOptions?: RouteOptions;
+    threats?: RouteThreats;
+} {
+    const terrainOptions = mode.terrain ? normalizeOptions(options) : undefined;
+    const ignore = options?.ignore_danger_zones === true;
+    const planOptions = ignore ? { ...terrainOptions, ignore_danger_zones: true } : terrainOptions;
+
+    let mapThreats = normalizeThreats(threats);
+    if (ignore && mapThreats?.closed_areas) {
+        const { closed_areas: _closed, ...rest } = mapThreats;
+        void _closed;
+        mapThreats = Object.keys(rest).length ? rest : undefined;
+    }
+
+    return { terrainOptions, planOptions, threats: mapThreats };
+}
+
 function plural(n: number, one: string, few: string, many: string): string {
     const tens = n % 100;
     const units = n % 10;
@@ -457,6 +483,7 @@ function describeOptions(options?: RouteOptions): string {
     if (options.exposure === 'medium') parts.push('ogranicza teren odsłonięty');
     if (options.exposure === 'avoid') parts.push('unika terenu odsłoniętego');
     if (options.avoid_observation) parts.push('unika widoczności ze wzgórz');
+    if (options.ignore_danger_zones) parts.push('nie omija stref niebezpiecznych');
     return parts.join(', ');
 }
 
@@ -643,12 +670,11 @@ export default class TaklabRoute implements RouteInterface {
         if (stops.length - 2 > MAX_VIA_POINTS) throw new Err(400, null, `Najwyżej ${MAX_VIA_POINTS} punktów pośrednich.`);
 
         const mode = await this.resolveMode(travelMode);
-        const terrainOptions = mode.terrain ? normalizeOptions(options) : undefined;
-        const mapThreats = normalizeThreats(threats);
+        const { terrainOptions, planOptions, threats: mapThreats } = prepareRequest(mode, options, threats);
         const waypoints = stops.map(s => [s[0], s[1]] as [number, number]);
         const slices = await this.computeLegs(waypoints, mode, 0, terrainOptions, mapThreats);
 
-        return await this.feature(mode, waypoints, slices, terrainOptions, mapThreats);
+        return await this.feature(mode, waypoints, slices, planOptions, mapThreats);
     }
 
     /**
@@ -658,8 +684,7 @@ export default class TaklabRoute implements RouteInterface {
     async reroute(input: RerouteInput): Promise<Static<typeof Feature.FeatureCollection>> {
         const { waypoints, coordinates, legs, first, count, added } = input;
         const mode = await this.resolveMode(input.travelMode);
-        const terrainOptions = mode.terrain ? normalizeOptions(input.options) : undefined;
-        const mapThreats = normalizeThreats(input.threats);
+        const { terrainOptions, planOptions, threats: mapThreats } = prepareRequest(mode, input.options, input.threats);
 
         const oldPlan = { version: 1, mode: mode.id, mode_name: mode.name, waypoints: Array.from({ length: legs.length + 1 }, () => [0, 0]), legs };
         if (!validPlan(oldPlan, coordinates.length)) throw new Err(400, null, 'Plan trasy nie pasuje do jej linii.');
@@ -684,7 +709,7 @@ export default class TaklabRoute implements RouteInterface {
 
         const slices = [...old.slice(0, first), ...fresh, ...old.slice(first + count)];
 
-        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices, terrainOptions, mapThreats);
+        return await this.feature(mode, waypoints.map(w => [w[0], w[1]] as [number, number]), slices, planOptions, mapThreats);
     }
 
     /** Liczy odcinki między kolejnymi punktami; offset służy tylko numeracji w komunikacie błędu. */
@@ -926,8 +951,7 @@ export default class TaklabRoute implements RouteInterface {
         if (input.waypoints.length < 2) throw new Err(400, null, 'Trasa wymaga co najmniej dwóch punktów.');
 
         const mode = await this.resolveMode(input.travelMode);
-        const options = mode.terrain ? normalizeOptions(input.options) : undefined;
-        const threats = normalizeThreats(input.threats);
+        const { terrainOptions: options, planOptions, threats } = prepareRequest(mode, input.options, input.threats);
         const first = input.waypoints[0];
         const last = input.waypoints[input.waypoints.length - 1];
         const start: [number, number] = [first[0], first[1]];
@@ -939,7 +963,7 @@ export default class TaklabRoute implements RouteInterface {
 
         const features: Static<typeof Feature.FeatureCollection>['features'] = [];
         for (const slice of slices) {
-            features.push(...(await this.feature(mode, [start, end], [slice], options, threats)).features);
+            features.push(...(await this.feature(mode, [start, end], [slice], planOptions, threats)).features);
         }
 
         return { type: 'FeatureCollection', features };

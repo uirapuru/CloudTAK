@@ -108,6 +108,8 @@ function change(patch: RouteOptions): void {
     if (merged.max_slope_deg !== undefined && merged.max_slope_deg < MAX_SLOPE_DEG) options.max_slope_deg = merged.max_slope_deg;
     if (merged.exposure && merged.exposure !== 'allow') options.exposure = merged.exposure;
     if (merged.avoid_observation) options.avoid_observation = true;
+    // Opcja wszystkich trybów, ustawiana przełącznikiem stref niebezpiecznych
+    if (merged.ignore_danger_zones) options.ignore_danger_zones = true;
     emit('update:modelValue', Object.keys(options).length ? options : undefined);
 }
 </script>

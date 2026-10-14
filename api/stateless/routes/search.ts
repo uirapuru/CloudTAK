@@ -438,6 +438,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         max_slope_deg: Type.Optional(Type.Number({ minimum: 5, maximum: 35 })),
         exposure: Type.Optional(Type.Union([Type.Literal('allow'), Type.Literal('medium'), Type.Literal('avoid')])),
         avoid_observation: Type.Optional(Type.Boolean()),
+        ignore_danger_zones: Type.Optional(Type.Boolean({ description: 'All modes: do not avoid danger zones from the map' })),
     }, { description: 'Cross-country route options, as stored in the route plan' });
 
     const RouteThreatsBody = Type.Object({

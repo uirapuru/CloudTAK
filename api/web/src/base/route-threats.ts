@@ -1,15 +1,16 @@
 /**
  * Zagrożenia z mapy dla liczenia trasy: wrogie znaczniki (typ CoT a-h-*) jako
- * posterunki obserwacyjne i wielokąty z nazwą zawierającą „zamknięt” jako teren
- * zamknięty. Tylko obiekty do 5 km od prostokąta punktów trasy.
+ * posterunki obserwacyjne i strefy niebezpieczne (base/danger-zone.ts) jako tereny
+ * zamknięte. Tylko obiekty do 5 km od prostokąta punktów trasy.
  *
  * Znane ograniczenie: wielokąt, który całkiem obejmuje prostokąt bez wierzchołka
  * w jego wnętrzu, zostanie pominięty.
  */
 import type { LngLat, RouteThreats } from './route-plan.ts';
+import { DANGER_ZONE_FILTER } from './danger-zone.ts';
 
 export const OBSERVER_FILTER = '$substring(properties.type, 0, 4) = "a-h-" and geometry.type = "Point"';
-export const CLOSED_FILTER = 'geometry.type = "Polygon" and $contains($lowercase(properties.callsign), "zamknięt")';
+export const CLOSED_FILTER = DANGER_ZONE_FILTER;
 
 export const THREAT_RADIUS_M = 5000;
 export const MAX_THREATS = 50;

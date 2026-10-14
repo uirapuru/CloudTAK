@@ -608,6 +608,19 @@
                     </SlideDownHeader>
                 </div>
 
+                <div
+                    v-if='cot.geometry.type === "Polygon" && (is_editable || isDangerZone(cot.properties))'
+                    class='col-12 px-3 py-2 danger-zone'
+                >
+                    <TablerToggle
+                        label='Strefa niebezpieczna'
+                        description='Trasy taklab omijają tę figurę. W ATAK to geofence z alarmem przy wejściu; alarm włącza się na telefonie.'
+                        :disabled='!is_editable'
+                        :model-value='isDangerZone(cot.properties)'
+                        @update:model-value='updateDangerZone($event)'
+                    />
+                </div>
+
                 <PropertyAttachments
                     v-if='!cot.properties.contact'
                     :key='cot.properties.id'
@@ -742,7 +755,10 @@ import {
     TablerIconButton,
     TablerPillGroup,
     TablerInlineAlert,
+    TablerToggle,
 } from '@tak-ps/vue-tabler';
+import { isDangerZone, setDangerZone } from '../../base/danger-zone.ts';
+import type { Geofence } from '../../base/danger-zone.ts';
 
 import CopyField from './util/CopyField.vue';
 import Share from './util/Share.vue';
@@ -1101,6 +1117,16 @@ function updateProperty(key: string, event: any) {
         cot.value.properties[key] = event;
         cot.value.update({})
     }
+}
+
+// Strefa niebezpieczna = geofence z alarmem przy wejściu (base/danger-zone.ts)
+function updateDangerZone(on: boolean): void {
+    if (!cot.value) return;
+    const geofence = setDangerZone(cot.value.properties.geofence as Geofence | undefined, on);
+    if (geofence === cot.value.properties.geofence) return;
+    if (geofence) cot.value.properties.geofence = geofence;
+    else delete cot.value.properties.geofence;
+    cot.value.update({});
 }
 
 function updatePropertyType(type: string): void {

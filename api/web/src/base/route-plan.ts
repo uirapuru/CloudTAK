@@ -21,13 +21,15 @@ export type RouteLeg = {
     steps?: string[];
 };
 
-/** Opcje trasy na przełaj (API: RouteOptions w stateless/lib/routing/taklab.ts). */
+/** Opcje trasy (API: RouteOptions w stateless/lib/routing/taklab.ts). */
 export type RouteOptions = {
     avoid_wetland?: boolean;
     avoid_streams?: boolean;
     max_slope_deg?: number;
     exposure?: 'allow' | 'medium' | 'avoid';
     avoid_observation?: boolean;
+    /** Wszystkie tryby: nie omijaj stref niebezpiecznych z mapy (domyślnie omijane). */
+    ignore_danger_zones?: boolean;
 };
 
 /** Zagrożenia z mapy dla liczenia trasy (API: threats w POST /api/search/route/plan i /legs). */

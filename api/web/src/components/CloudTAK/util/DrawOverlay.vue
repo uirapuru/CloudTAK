@@ -437,6 +437,12 @@
                                 :disabled='mapStore.draw.routeBusy'
                             />
                         </div>
+                        <div class='mt-2 route-danger-zones'>
+                            <RouteDangerZones
+                                v-model='routeEditOptions'
+                                :disabled='mapStore.draw.routeBusy'
+                            />
+                        </div>
                     </div>
                 </template>
                 <div
@@ -515,6 +521,7 @@ import { waypointLabel } from '../../../base/route-plan.ts';
 import type { RouteOptions } from '../../../base/route-plan.ts';
 import { server } from '../../../std.ts';
 import RouteCrossCountryOptions from './RouteCrossCountryOptions.vue';
+import RouteDangerZones from './RouteDangerZones.vue';
 
 const mapStore = useMapStore();
 const appStore = useAppStore();

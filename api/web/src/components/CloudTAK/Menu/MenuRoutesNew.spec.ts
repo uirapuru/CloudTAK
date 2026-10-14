@@ -374,6 +374,34 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
             expect(call![1].body.options).toBeUndefined();
         });
 
+        it('przełącznik stref jest w trybie pieszym, domyślnie włączony, a wyłączenie trafia do zapytania', async () => {
+            location.mockResolvedValue({ source: LocationState.Live, coordinates: [20.94, 52.29] });
+            const wrapper = mountMenu();
+            await flushPromises();
+            const zones = wrapper.find('.route-danger-zones .avoid-danger-zones input');
+            expect((zones.element as HTMLInputElement).checked).toBe(true);
+
+            await zones.setValue(false);
+            await box(wrapper, 'End Location').find('.pick').trigger('click');
+            await wrapper.find('button.btn-primary').trigger('click');
+            await flushPromises();
+
+            const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+            expect(call![1].body.travelMode).toBe('foot');
+            expect(call![1].body.options).toEqual({ ignore_danger_zones: true });
+        });
+
+        it('na przełaju wyłączenie stref idzie razem z opcjami przełaju', async () => {
+            const wrapper = await crossCountry();
+            await wetland(wrapper).setValue(true);
+            await wrapper.find('.route-danger-zones .avoid-danger-zones input').setValue(false);
+            for (const b of wrapper.findAll('.search-box').map((x) => x.find('.pick'))) await b.trigger('click');
+            await wrapper.find('button.btn-primary').trigger('click');
+            await flushPromises();
+            const call = std.mock.calls.find(c => c[0] === '/api/search/route/plan');
+            expect(call![1].body.options).toEqual({ avoid_wetland: true, ignore_danger_zones: true });
+        });
+
         it('przełącznik widoczności ze wzgórz trafia do opcji', async () => {
             const wrapper = await crossCountry();
             await wrapper.find('.route-options .avoid-observation input').setValue(true);

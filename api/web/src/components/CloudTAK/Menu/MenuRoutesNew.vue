@@ -154,9 +154,15 @@
                 </div>
                 <div
                     v-if='selectedProviderId() === "taklab"'
-                    class='text-secondary small my-2 route-threats-hint'
+                    class='my-2 route-danger-zones'
                 >
-                    Trasa omija tereny zamknięte z mapy (wielokąt z nazwą „teren zamknięty”), a na przełaju także pole widzenia wrogich znaczników do 3 km.
+                    <RouteDangerZones
+                        v-model='crossCountry'
+                        :disabled='building && mapStore.draw.routeBusy'
+                    />
+                    <div class='text-secondary small route-threats-hint'>
+                        Na przełaju trasa omija też pole widzenia wrogich znaczników do 3 km.
+                    </div>
                 </div>
                 <div class='my-3'>
                     <button
@@ -177,6 +183,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import SearchBox from '../util/SearchBox.vue';
 import RouteCrossCountryOptions from '../util/RouteCrossCountryOptions.vue';
+import RouteDangerZones from '../util/RouteDangerZones.vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import {
     TablerEnum,
@@ -238,13 +245,15 @@ let viaKey = 0;
 
 // Tryb przełaju dostawcy taklab; tylko on ma opcje trasy
 const CROSS_COUNTRY = 'foot_cross_country';
-// Opcje przełaju w formacie planu trasy (undefined = bez opcji)
+// Opcje trasy w formacie planu (undefined = bez opcji): przełaju i ignore_danger_zones
 const crossCountry = ref<RouteOptions | undefined>();
 
 const isCrossCountry = computed(() => selectedModeId() === CROSS_COUNTRY);
 
-function routeOptions(): RouteOptions | undefined {
-    return crossCountry.value;
+// Opcje przełaju idą tylko z przełajem; omijanie stref dotyczy każdego trybu
+function routeOptions(modeId = selectedModeId()): RouteOptions | undefined {
+    if (modeId === CROSS_COUNTRY) return crossCountry.value;
+    return crossCountry.value?.ignore_danger_zones ? { ignore_danger_zones: true } : undefined;
 }
 
 // Budowanie trasy kliknięciami: start wskazany na mapie, kolejne kliknięcia
@@ -323,7 +332,7 @@ watch(() => routePlan.value.travelMode, async (name, previous) => {
 // (komponent opcji emituje nowy obiekt, więc poprzednia wartość jest osobną kopią)
 watch(crossCountry, async (current, previous) => {
     if (!building.value) return;
-    if (!await mapStore.draw.setRouteOptions(current)) {
+    if (!await mapStore.draw.setRouteOptions(routeOptions())) {
         crossCountry.value = previous;
     }
 });
@@ -483,7 +492,7 @@ async function generateRoute(): Promise<void> {
                 callsign: routePlan.value.start.name + ' to ' + routePlan.value.end.name,
                 travelMode: travelMode ?? 'car',
                 waypoints,
-                options: travelMode === CROSS_COUNTRY ? routeOptions() : undefined,
+                options: provider === 'taklab' ? routeOptions(travelMode) : undefined,
                 threats: await collectThreats(mapStore.worker.db as unknown as ThreatSource, waypoints),
             },
         }) as { features: Array<Record<string, unknown>> };

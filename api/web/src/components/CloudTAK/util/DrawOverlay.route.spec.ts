@@ -122,6 +122,17 @@ describe('DrawOverlay - edytor trasy', () => {
             expect((wrapper.find('.route-travel-mode select').element as HTMLSelectElement).value).toBe('Samochód');
         });
 
+        it('w trybie pieszym pokazuje stan stref z planu i wysyła zmianę do edytora', async () => {
+            draw.routeOptions = { ignore_danger_zones: true };
+            const wrapper = await settings();
+            const zones = () => wrapper.find('.route-danger-zones .avoid-danger-zones input');
+            expect((zones().element as HTMLInputElement).checked).toBe(false);
+
+            await zones().setValue(true);
+            await flushPromises();
+            expect(draw.setRouteOptions).toHaveBeenCalledWith(undefined);
+        });
+
         it('przy przełaju pokazuje opcje z planu i wysyła zmiany do edytora', async () => {
             draw.routeTravelMode = 'foot_cross_country';
             draw.routeOptions = { avoid_wetland: true };
