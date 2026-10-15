@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import AtlasDatabase from '../workers/atlas-database.ts';
+import AtlasDatabase, { dropRemovedKeys } from '../workers/atlas-database.ts';
 import type Atlas from '../workers/atlas.ts';
 import type { Feature } from '../types.ts';
 import { WorkerMessageType } from '../utils/events.ts';
@@ -66,5 +66,20 @@ describe('AtlasDatabase: zmiana strefy niebezpiecznej', () => {
         const echo = setup(zone());
         await echo.database.remove('zone-1', { skipNetwork: true }).catch(() => undefined);
         expect(echo.zoneMessages()).toEqual([]);
+    });
+});
+
+describe('dropRemovedKeys: wyłączenie strefy zdejmuje geofence', () => {
+    it('zapis usera bez geofence usuwa go z zapisanej figury (Object.assign klucza nie usuwa)', () => {
+        const existing = zone();
+        dropRemovedKeys(existing.properties, zone(ring, {}).properties);
+        expect('geofence' in existing.properties).toBe(false);
+    });
+
+    it('geofence obecny w nowej wersji zostaje, inne pola nietknięte', () => {
+        const existing = zone(ring, { geofence: { trigger: 'Entry' }, remarks: 'x' });
+        dropRemovedKeys(existing.properties, zone(ring, { geofence: { trigger: 'Both' } }).properties);
+        expect(existing.properties.geofence).toEqual({ trigger: 'Entry' });
+        expect(existing.properties.remarks).toBe('x');
     });
 });

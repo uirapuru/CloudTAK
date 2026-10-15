@@ -23,6 +23,17 @@ import type { Polygon } from 'geojson';
 import { mapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import { preserveRoutePlan } from '../base/route-plan.ts';
 import { dangerZoneGeometry, dangerZoneChanged } from '../base/danger-zone.ts';
+
+// taklab: pola, które user może zdjąć z obiektu (wyłączenie strefy niebezpiecznej
+// usuwa geofence). Scalanie właściwości w COT.update (Object.assign) klucza nie usuwa.
+const REMOVABLE_PROPERTIES = ['geofence'];
+
+/** Usuwa z zapisanych właściwości pola zdejmowalne, których nie ma w nowej wersji od usera. */
+export function dropRemovedKeys(existing: Record<string, unknown>, incoming: Record<string, unknown>): void {
+    for (const key of REMOVABLE_PROPERTIES) {
+        if (key in existing && !(key in incoming)) delete existing[key];
+    }
+}
 import type { MapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import type { InputFeature, Feature, APIList, Contact } from '../types.ts';
 import type {
@@ -955,6 +966,10 @@ export default class AtlasDatabase {
 
         if (opts.authored && !exists) {
             feat.properties.creator = await this.atlas.profile.creator();
+        }
+
+        if (opts.authored && exists) {
+            dropRemovedKeys(exists.properties as Record<string, unknown>, feat.properties as Record<string, unknown>);
         }
 
         if (
