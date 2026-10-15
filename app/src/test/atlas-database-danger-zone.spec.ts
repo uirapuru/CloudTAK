@@ -11,7 +11,7 @@ function zone(coordinates = ring, properties: Record<string, unknown> = { geofen
     return {
         id: 'zone-1',
         origin: { mode: 'Connection' },
-        properties: { id: 'zone-1', type: 'u-d-r', callsign: 'Strefa', ...properties },
+        properties: { id: 'zone-1', type: 'u-d-r', callsign: 'Strefa', ...properties } as Record<string, unknown>,
         geometry: { type: 'Polygon', coordinates },
         as_feature() { return { id: 'zone-1', type: 'Feature', path: '/', properties: this.properties, geometry: this.geometry }; },
     };
