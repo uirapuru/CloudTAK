@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { createHash } from 'node:crypto';
 import { CoTParser } from '@tak-ps/node-cot';
-import { attachRoutePlan, readRoutePlan, readRouteActor, applyRouteActor, routeFingerprint, setMartiDestinations, MAX_PLAN_BYTES } from '../common/taklab-route-cot.js';
+import { attachRoutePlan, readRoutePlan, readRouteActor, applyRouteActor, routeFingerprint, MAX_PLAN_BYTES } from '../common/taklab-route-cot.js';
 
 const coords = [[17.03, 51.11], [17.05, 51.1], [17.07, 51.09]];
 const plan = {
@@ -88,14 +88,6 @@ test('read: zły JSON, zła wersja, brak elementu = null', async () => {
         const back = await CoTParser.from_xml(mutate(CoTParser.to_xml(cot)));
         assert.strictEqual(readRoutePlan(back, coords), null);
     }
-});
-
-test('setMartiDestinations: jeden <marti>, bez duplikatów', async () => {
-    const cot = await CoTParser.from_geojson(feature());
-    setMartiDestinations(cot, ['A', 'B', 'A']);
-    const xml = CoTParser.to_xml(cot);
-    assert.strictEqual((xml.match(/<marti>/g) || []).length, 1);
-    assert.ok(xml.includes('<dest uid="A"/><dest uid="B"/>'));
 });
 
 test('round-trip: znaki specjalne i polskie litery w krokach', async () => {

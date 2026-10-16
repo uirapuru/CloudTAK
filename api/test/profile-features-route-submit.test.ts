@@ -71,7 +71,8 @@ test('PUT submit znacznika a-f-G: bez planu i bez adresata', async () => {
     assert.strictEqual(sent.length, 1);
     const text = xml(sent[0][0]);
     assert.doesNotMatch(text, /__taklab_route/);
-    assert.doesNotMatch(text, /ANDROID-1/);
+    assert.doesNotMatch(text, /<marti/);
+    assert.doesNotMatch(text, /<dest /);
 });
 
 test('PUT submit bez archiwizacji też dopisuje plan, bez adresata', async () => {

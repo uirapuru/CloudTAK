@@ -395,7 +395,7 @@ export default class COT {
     /**
      * Attempt to save the CoT to the database if necessary
      *
-     * @param opts.submit - taklab: serwer publikuje trasę z planem jako CoT na urządzenia autora
+     * @param opts.submit - taklab: serwer publikuje trasę z planem jako CoT do wszystkich (bez adresata)
      */
     async save(opts?: { submit?: boolean }): Promise<void> {
         if (

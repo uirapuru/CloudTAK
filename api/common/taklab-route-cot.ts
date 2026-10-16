@@ -85,13 +85,6 @@ export function readRoutePlan(cot: CoT, coordinates: number[][]): Record<string,
     return validPlan(plan, coordinates.length) ? plan as unknown as Record<string, unknown> : null;
 }
 
-/** Zastępuje `<marti>` jednym elementem z `<dest uid>` dla każdego uid, bez duplikatów. */
-export function setMartiDestinations(cot: CoT, uids: string[]): void {
-    const unique = [...new Set(uids)];
-    const detail = cot.raw.event.detail as Record<string, unknown>;
-    detail.marti = { dest: unique.map(uid => ({ _attributes: { uid } })) };
-}
-
 /**
  * Przenosi plan z `<detail>` do `properties.metadata.taklab_route` cechy wysyłanej do przeglądarki.
  * Brak, zła wersja albo inna geometria = `taklab_route` znika z metadata (inne klucze zostają).

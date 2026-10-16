@@ -28,13 +28,16 @@ import { dangerZoneGeometry, dangerZoneChanged } from '../base/danger-zone.ts';
 // usuwa geofence). Scalanie właściwości w COT.update (Object.assign) klucza nie usuwa.
 const REMOVABLE_PROPERTIES = ['geofence'];
 
+/** Wpis ADD_CONTENT czekający na CoT o tym uid; po tym czasie CoT już nie przyjdzie */
+export const SUBSCRIPTION_PENDING_TTL_MS = 10 * 60 * 1000;
+
 /** Usuwa z zapisanych właściwości pola zdejmowalne, których nie ma w nowej wersji od usera. */
 export function dropRemovedKeys(existing: Record<string, unknown>, incoming: Record<string, unknown>): void {
     for (const key of REMOVABLE_PROPERTIES) {
         if (key in existing && !(key in incoming)) delete existing[key];
     }
 }
-/** Trasa z poprawnym planem - serwer publikuje ją jako CoT na urządzenia autora. */
+/** Trasa z poprawnym planem - serwer publikuje ją jako CoT do wszystkich (bez adresata). */
 function isPublishedRoute(cot: COT): boolean {
     return cot.properties.type === 'b-m-r' && readRoutePlan(cot.as_feature()) !== null;
 }
@@ -84,7 +87,10 @@ export default class AtlasDatabase {
     pendingUnhide: Set<string>;
     pendingDelete: Set<string>;
 
-    subscriptionPending: Map<string, string>;
+    subscriptionPending: Map<string, { guid: string, added: number }>;
+
+    // taklab: obiekty przeniesione z warstwy połączenia do misji - zdjęcie z mapy przy następnym diff()
+    pendingMoved: Set<string>;
 
     breadcrumb: AtlasBreadcrumb & Comlink.ProxyMarked;
 
@@ -100,7 +106,8 @@ export default class AtlasDatabase {
         this.pendingHidden = new Set();
         this.pendingDelete = new Set();
 
-        this.subscriptionPending = new Map(); // UID, Mission Guid
+        this.subscriptionPending = new Map(); // UID -> Mission Guid + czas wpisu
+        this.pendingMoved = new Set();
 
         this.breadcrumb = Comlink.proxy(new AtlasBreadcrumb(this));
     }
@@ -268,6 +275,14 @@ export default class AtlasDatabase {
         }
 
         this.pendingDelete.clear();
+
+        // Przeniesione do misji: już nie w this.cots, rysuje je warstwa misji
+        for (const id of this.pendingMoved) {
+            diff.remove.push(COT.vectorId(id));
+            removed.add(id);
+        }
+
+        this.pendingMoved.clear();
 
         for (const id of removed) this.cots.delete(id);
         this.persistRemoval(removed);
@@ -730,7 +745,7 @@ export default class AtlasDatabase {
 
             if (cot.properties.archived) {
                 if (!opts.skipNetwork) {
-                    // taklab: usunięcie trasy przez usera zdejmuje ją też z urządzeń autora
+                    // taklab: usunięcie trasy przez usera wysyła t-x-d-d do wszystkich (bez adresata)
                     const submit = opts.authored === true && cot.properties.type === 'b-m-r';
                     await std(`/api/profile/feature/${id}${submit ? '?submit=true' : ''}`, {
                         token: this.atlas.token,
@@ -785,11 +800,71 @@ export default class AtlasDatabase {
     }
 
     /**
+     * Drop ADD_CONTENT entries whose CoT never arrived (e.g. the content was
+     * already held by a mission store or the CoT was filtered upstream)
+     */
+    prunePendingSubscriptions(now = Date.now()): void {
+        for (const [uid, pending] of this.subscriptionPending) {
+            if (now - pending.added > SUBSCRIPTION_PENDING_TTL_MS) this.subscriptionPending.delete(uid);
+        }
+    }
+
+    /**
+     * taklab: a Mission ADD_CONTENT for a uid already held as someone else's
+     * Connection feature (it arrived broadcast before the server filed it into the
+     * mission) moves it into that mission's store - drawn once, edits follow the mission.
+     * The user's own features stay where they are.
+     */
+    async moveToMission(uid: string, guid: string): Promise<boolean> {
+        const cot = this.cots.get(uid);
+        if (!cot || cot.origin.mode !== OriginMode.CONNECTION) return false;
+        if (cot.is_self || uid === this.atlas.profile.uid()) return false;
+
+        const creator = cot.properties.creator as { uid?: string } | undefined;
+        if (creator && creator.uid === this.atlas.profile.uid()) return false;
+
+        const sub = await Subscription.from(guid, {
+            subscribed: true
+        });
+
+        // Misja niewczytana: obiekt zostaje w warstwie połączenia
+        if (!sub) return false;
+
+        const moved = await COT.load(cot.as_feature(), {
+            mode: OriginMode.MISSION,
+            mode_id: guid
+        }, {
+            skipSave: true
+        });
+
+        await sub.feature.update(this.atlas, moved, {
+            skipNetwork: true
+        });
+
+        this.cots.delete(uid);
+        this.pendingCreate.delete(uid);
+        this.pendingUpdate.delete(uid);
+        this.pendingMoved.add(uid);
+        this.subscriptionPending.delete(uid);
+
+        this.atlas.postMessage({
+            type: WorkerMessageType.Mission_Change_Feature,
+            body: {
+                guid
+            }
+        });
+
+        return true;
+    }
+
+    /**
      * Called everytime a Mission Task message is received
      *
      * @param task - GeoJSON Feature representing the Mission Task
      */
     async subChange(task: Feature): Promise<void> {
+        this.prunePendingSubscriptions();
+
         if (task.properties.type === 't-x-m-c' && task.properties.mission && task.properties.mission.missionChanges) {
             let updateGuid;
             let doMissionRefresh = false;
@@ -811,7 +886,14 @@ export default class AtlasDatabase {
                 }
 
                 if (change.type === 'ADD_CONTENT') {
-                    if (change.contentUid) this.subscriptionPending.set(change.contentUid, task.properties.mission.guid);
+                    if (change.contentUid) {
+                        this.subscriptionPending.set(change.contentUid, {
+                            guid: task.properties.mission.guid,
+                            added: Date.now()
+                        });
+
+                        await this.moveToMission(change.contentUid, task.properties.mission.guid);
+                    }
                 } else if (change.type === 'REMOVE_CONTENT') {
                     const sub = await Subscription.from(task.properties.mission.guid, {
                         subscribed: true
@@ -1003,7 +1085,7 @@ export default class AtlasDatabase {
                 && exists.origin.mode_id
             )
         ) {
-            const pendingGuid = this.subscriptionPending.get(feat.id);
+            const pendingGuid = this.subscriptionPending.get(feat.id)?.guid;
             this.subscriptionPending.delete(feat.id);
 
             // The feature's own mission must win over the Active Mission -
