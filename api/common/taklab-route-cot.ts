@@ -91,3 +91,25 @@ export function setMartiDestinations(cot: CoT, uids: string[]): void {
     const detail = cot.raw.event.detail as Record<string, unknown>;
     detail.marti = { dest: unique.map(uid => ({ _attributes: { uid } })) };
 }
+
+/**
+ * Przenosi plan z `<detail>` do `properties.metadata.taklab_route` cechy wysyłanej do przeglądarki.
+ * Brak, zła wersja albo inna geometria = `taklab_route` znika z metadata (inne klucze zostają).
+ */
+export function applyRoutePlan(
+    cot: CoT,
+    feat: { geometry: { type: string; coordinates: unknown }; properties: Record<string, unknown> },
+): void {
+    if (feat.properties.type !== 'b-m-r' || feat.geometry.type !== 'LineString') return;
+
+    const existing = feat.properties.metadata as Record<string, unknown> | undefined;
+    const plan = readRoutePlan(cot, feat.geometry.coordinates as number[][]);
+
+    if (plan) {
+        feat.properties.metadata = { ...existing, taklab_route: plan };
+    } else if (existing && typeof existing === 'object' && 'taklab_route' in existing) {
+        const rest = { ...existing };
+        delete rest.taklab_route;
+        feat.properties.metadata = rest;
+    }
+}
