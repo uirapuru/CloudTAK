@@ -175,4 +175,33 @@ describe('AtlasDatabase: publikacja trasy z planem tylko przy zmianie usera', ()
         await atlas.add(route({ metadata: {} }), { skipSave: true });
         expect(created && (created.properties.metadata as Record<string, unknown>).taklab_route).toBeUndefined();
     });
+
+    it('edycja trasy bota przez usera usuwa taklab_actor (nowa i istniejąca); echo go zachowuje', async () => {
+        const actor = { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' };
+        const withActor = (g?: number[][]) => route({ geometry: g, metadata: { taklab_route: g ? movedPlan : plan, taklab_actor: actor } });
+        const body = () => {
+            const put = calls().filter(([, o]) => o?.method === 'PUT').at(-1)![1] as { body?: unknown };
+            return JSON.stringify(put.body);
+        };
+
+        const echo = database();
+        const kept = await echo.add(withActor());
+        expect((kept as { properties: { metadata: Record<string, unknown> } }).properties.metadata.taklab_actor).toEqual(actor);
+
+        await db.feature.clear();
+        std.mockClear();
+        const atlas = database();
+        const created = await atlas.add(withActor(), { authored: true });
+        const meta = (created as { properties: { metadata: Record<string, unknown> } }).properties.metadata;
+        expect('taklab_actor' in meta).toBe(false);
+        expect('taklab_route' in meta).toBe(true);
+        expect(body()).not.toContain('taklab_actor');
+
+        std.mockClear();
+        const updated = await atlas.add(withActor(moved), { authored: true });
+        expect('taklab_actor' in (updated as { properties: { metadata: Record<string, unknown> } }).properties.metadata).toBe(false);
+        expect(body()).not.toContain('taklab_actor');
+        const stored = await db.feature.get('route-1');
+        expect(JSON.stringify(stored)).not.toContain('taklab_actor');
+    });
 });

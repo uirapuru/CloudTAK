@@ -905,7 +905,7 @@ const variantsOpen = ref(false);
 
 const routeActor = computed(() => {
     const actor = (cot.value?.properties.metadata as Record<string, unknown> | undefined)?.taklab_actor;
-    return actor && typeof actor === 'object' ? actor as { uid: string; on_behalf: string; log: string } : undefined;
+    return actor && typeof actor === 'object' && typeof (actor as { on_behalf?: unknown }).on_behalf === 'string' && (actor as { on_behalf: string }).on_behalf !== '' ? actor as { uid: string; on_behalf: string; log: string } : undefined;
 });
 
 const hasRoutePlan = computed(() => !!cot.value && cot.value.is_route && !!readRoutePlan(cot.value.as_feature({ clone: true })));

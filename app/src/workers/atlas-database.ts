@@ -971,6 +971,16 @@ export default class AtlasDatabase {
             mission: opts.skipMissionLookup !== true
         });
 
+        // Ręczna edycja trasy kasuje znacznik bota: trasa nie jest już jego dziełem
+        if (opts.authored && feat.properties.type === 'b-m-r') {
+            const metadata = feat.properties.metadata as Record<string, unknown> | undefined;
+            if (metadata && typeof metadata === 'object' && 'taklab_actor' in metadata) {
+                const rest = { ...metadata };
+                delete rest.taklab_actor;
+                feat.properties.metadata = rest;
+            }
+        }
+
         if (opts.authored && !exists) {
             feat.properties.creator = await this.atlas.profile.creator();
         }
