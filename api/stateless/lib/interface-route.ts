@@ -40,7 +40,7 @@ export class RouteManager extends ProviderManager<RouteInterface> {
     label = 'Routing';
 
     settingKeys: ProviderSettingKey[] = [
-        'taklab::routing::enabled', 'taklab::routing::graphhopper_url', 'taklab::routing::terrain_url',
+        'taklab::routing::enabled', 'taklab::routing::planner_url',
         ...arcgisSettingKeys('routing'),
     ];
 

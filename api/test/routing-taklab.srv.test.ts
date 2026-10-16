@@ -11,27 +11,25 @@ flight.init({ takserver: true });
 flight.takeoff();
 flight.user();
 
-const profiles: unknown[] = [];
-const points: unknown[] = [];
+const requests: Array<{ url: string; body: Record<string, unknown> }> = [];
 
-// Atrapa GraphHoppera
-const graphhopper = http.createServer((req, res) => {
+// Atrapa usługi taklab-nav-planner: liczy prostą linię przez punkty zapytania
+const planner = http.createServer((req, res) => {
     let raw = '';
     req.on('data', chunk => raw += chunk);
     req.on('end', () => {
+        res.setHeader('Content-Type', 'application/json');
         if (req.method === 'GET') {
-            // GET /info: atrapa nie zna profili, więc tryb Szlaki jest ukryty
-            res.statusCode = 404;
-            res.end('{}');
+            res.end(JSON.stringify({ id: 'taklab', name: 'taklab', modes: [{ id: 'car', name: 'Samochód' }] }));
             return;
         }
-        profiles.push(JSON.parse(raw).profile);
-        points.push(JSON.parse(raw).points);
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify({ paths: [{
-            distance: 1000,
-            time: 60000,
-            points: { type: 'LineString', coordinates: JSON.parse(raw).points },
+        const body = JSON.parse(raw);
+        requests.push({ url: String(req.url), body });
+        const coordinates = req.url === '/legs' ? body.coordinates : body.waypoints;
+        res.end(JSON.stringify({ type: 'FeatureCollection', features: [{
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates },
+            properties: { type: 'b-m-r', how: 'm-g', callsign: 'Trasa', archived: true, remarks: '', metadata: { taklab_route: { waypoints: body.waypoints, legs: [] } } },
         }] }));
     });
 });
@@ -40,9 +38,9 @@ async function setting(key: string, value: string): Promise<void> {
     await flight.config!.models.Setting.generate({ key, value }, { upsert: GenerateUpsert.UPDATE });
 }
 
-test('Setup: dostawca taklab z atrapą GraphHoppera', async () => {
-    await new Promise<void>(resolve => graphhopper.listen(0, '127.0.0.1', resolve));
-    await setting('taklab::routing::graphhopper_url', `http://127.0.0.1:${(graphhopper.address() as AddressInfo).port}`);
+test('Setup: dostawca taklab z atrapą planera', async () => {
+    await new Promise<void>(resolve => planner.listen(0, '127.0.0.1', resolve));
+    await setting('taklab::routing::planner_url', `http://127.0.0.1:${(planner.address() as AddressInfo).port}`);
     await setting('taklab::routing::enabled', 'true');
 });
 
@@ -56,31 +54,20 @@ test('GET /api/search/route - bez travelMode dostawca taklab jedzie samochodem',
     assert.equal(res.body.features.length, 1);
     assert.equal(res.body.features[0].properties.type, 'b-m-r');
     assert.equal(res.body.features[0].properties.callsign, 'Test');
-    assert.equal(profiles[0], 'car');
+    assert.equal(requests[0].url, '/plan');
+    assert.equal(requests[0].body.travelMode, 'car');
 });
 
-test('GET /api/search/route - pusty travelMode też daje samochód', async () => {
-    const res = await flight.fetch('/api/search/route?start=21,52&end=21.01,52.01&callsign=Test&travelMode=', {
-        method: 'GET',
-        auth: { bearer: flight.token.admin },
-    }, true);
-
-    assert.equal(res.status, 200);
-    assert.equal(res.body.features.length, 1);
-});
-
-test('GET /api/search/route - via = punkty pośrednie, odcinek na zapytanie', async () => {
-    points.length = 0;
+test('GET /api/search/route - via = punkty pośrednie przekazane planerowi', async () => {
+    requests.length = 0;
     const res = await flight.fetch('/api/search/route?start=21,52&via=21.005,52.005&end=21.01,52.01&callsign=Test&travelMode=foot', {
         method: 'GET',
         auth: { bearer: flight.token.admin },
     }, true);
 
     assert.equal(res.status, 200);
-    assert.deepEqual(points, [[[21, 52], [21.005, 52.005]], [[21.005, 52.005], [21.01, 52.01]]]);
-    const plan = res.body.features[0].properties.metadata.taklab_route;
-    assert.equal(plan.waypoints.length, 3);
-    assert.equal(plan.legs.length, 2);
+    assert.deepEqual(requests[0].body.waypoints, [[21, 52], [21.005, 52.005], [21.01, 52.01]]);
+    assert.equal(res.body.features[0].properties.metadata.taklab_route.waypoints.length, 3);
 });
 
 test('GET /api/search/route - zły via = 400', async () => {
@@ -112,32 +99,25 @@ test('GET /api/search/route - opcje przełaju w zapytaniu: dobre przechodzą, z�
     assert.equal(badExposure.status, 400);
 });
 
-test('POST /api/search/route/legs - przesunięcie celu przelicza jeden odcinek', async () => {
-    const created = await flight.fetch('/api/search/route?start=21,52&via=21.005,52.005&end=21.01,52.01&callsign=Test&travelMode=foot', {
-        method: 'GET',
-        auth: { bearer: flight.token.admin },
-    }, true);
-    const feature = created.body.features[0];
-    const plan = feature.properties.metadata.taklab_route;
-
-    points.length = 0;
+test('POST /api/search/route/legs - przekazuje RerouteInput planerowi', async () => {
+    requests.length = 0;
     const res = await flight.fetch('/api/search/route/legs', {
         method: 'POST',
         auth: { bearer: flight.token.admin },
         body: {
             travelMode: 'foot',
-            waypoints: [[21, 52], [21.005, 52.005], [21.02, 52.02]],
-            coordinates: feature.geometry.coordinates,
-            legs: plan.legs,
-            first: 1,
+            waypoints: [[21, 52], [21.02, 52.02]],
+            coordinates: [[21, 52], [21.02, 52.02]],
+            legs: [{ start: 0, end: 1, distance_m: 1, duration_s: 1 }],
+            first: 0,
             count: 1,
             added: 0,
         },
     }, true);
 
     assert.equal(res.status, 200);
-    assert.deepEqual(points, [[[21.005, 52.005], [21.02, 52.02]]]);
-    assert.deepEqual(res.body.features[0].geometry.coordinates.at(-1).slice(0, 2), [21.02, 52.02]);
+    assert.equal(requests[0].url, '/legs');
+    assert.deepEqual(requests[0].body.waypoints, [[21, 52], [21.02, 52.02]]);
 });
 
 test('POST /api/search/route/legs - dostawca bez przeliczania odcinków = 400', async () => {
@@ -178,7 +158,7 @@ test('POST /api/search/route/variants zwraca FeatureCollection', async () => {
 });
 
 test('Teardown', async () => {
-    await new Promise<void>(resolve => graphhopper.close(() => resolve()));
+    await new Promise<void>(resolve => planner.close(() => resolve()));
 });
 
 flight.landing();
