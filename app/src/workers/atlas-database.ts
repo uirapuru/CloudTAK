@@ -1130,8 +1130,14 @@ export default class AtlasDatabase {
                 }
 
                 // taklab: nowa cecha od usera - jeden zapis, trasa z planem z submit
+                // Błąd zapisu (offline, 5xx) nie może przerwać dodania - wcześniej
+                // konstruktor zapisywał bez await, więc add() kończył się zawsze
                 if (opts.authored && opts.skipSave !== true) {
-                    await created.save({ submit: isPublishedRoute(created) });
+                    try {
+                        await created.save({ submit: isPublishedRoute(created) });
+                    } catch (err) {
+                        console.warn(`Failed to save authored feature ${created.id}:`, err);
+                    }
                 }
 
                 if (opts.skipBroadcast !== true && exists.properties.archived) {

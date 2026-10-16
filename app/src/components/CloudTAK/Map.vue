@@ -996,7 +996,7 @@ async function handleRadial(event: string): Promise<void> {
         };
 
         closeRadial();
-        await mapStore.worker.db.remove(String(cotFeat.id), { mission: true });
+        await mapStore.worker.db.remove(String(cotFeat.id), { mission: true, authored: true });
         await mapStore.worker.db.add(featA, { authored: true });
         await mapStore.worker.db.add(featB, { authored: true });
         await mapStore.refresh();

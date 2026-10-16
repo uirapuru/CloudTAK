@@ -15,6 +15,7 @@ import { db } from '../database.ts';
 import AtlasDatabase from '../workers/atlas-database.ts';
 import type Atlas from '../workers/atlas.ts';
 import type { Feature } from '../types.ts';
+import { WorkerMessageType } from '../utils/events.ts';
 
 const coordinates = [[21, 52], [21.1, 52.1]];
 const moved = [[21, 52], [21.2, 52.2]];
@@ -136,6 +137,21 @@ describe('AtlasDatabase: publikacja trasy z planem tylko przy zmianie usera', ()
         std.mockClear();
         await echo.remove('route-1');
         expect(deletes()).toEqual(['/api/profile/feature/route-1']);
+    });
+
+    it('nieudany zapis nowej trasy od usera nie przerywa dodania', async () => {
+        const postMessage = vi.fn();
+        const atlas = database();
+        (atlas as unknown as { atlas: { postMessage: typeof postMessage } }).atlas.postMessage = postMessage;
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        std.mockRejectedValueOnce(new Error('offline'));
+
+        const created = await atlas.add(route(), { authored: true });
+
+        expect(created && created.id).toBe('route-1');
+        expect(await atlas.get('route-1')).toBeTruthy();
+        expect(postMessage).toHaveBeenCalledWith({ type: WorkerMessageType.Feature_Archived_Added });
+        warn.mockRestore();
     });
 
     it('echo trasy bez planu po trasie z planem: plan znika', async () => {
