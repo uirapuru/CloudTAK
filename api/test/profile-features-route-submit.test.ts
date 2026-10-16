@@ -130,6 +130,22 @@ test('DELETE submit nieistniejącej cechy: 404 jak dotąd i bez wysyłki', async
     assert.strictEqual(sent.length, 0);
 });
 
+test('DELETE submit trasy: błąd wysyłki nie psuje odpowiedzi po usunięciu w bazie', async () => {
+    await put(route('route-4'));
+    const submit = flight.config!.hub.submitCots;
+    flight.config!.hub.submitCots = async () => {
+        throw new Error('hub down');
+    };
+    try {
+        const res = await flight.fetch('/api/profile/feature/route-4?submit=true', {
+            method: 'DELETE', auth: { bearer: flight.token.admin },
+        }, true);
+        assert.strictEqual(res.status, 200);
+    } finally {
+        flight.config!.hub.submitCots = submit;
+    }
+});
+
 test('sprzątanie', () => {
     deps.fetchEndpoints = original;
 });

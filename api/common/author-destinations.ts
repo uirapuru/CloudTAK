@@ -2,13 +2,26 @@ import type Config from './config.js';
 import TAKServerControl, { profileUid } from './control/takserver.js';
 
 export type Endpoint = { uid: string; username: string };
+export type RawApi = {
+    url: URL;
+    fetch(url: URL, opts: object, raw: boolean): Promise<{ status: number; text(): Promise<string>; json(): Promise<unknown> }>;
+};
 export type FetchEndpoints = (username: string, config: Config) => Promise<Endpoint[]>;
 
 /** Domyślne pobranie: GET /Marti/api/clientEndPoints jako autor, czyta `data[]` */
-export async function defaultFetchEndpoints(username: string, config: Config): Promise<Endpoint[]> {
-    const api = await new TAKServerControl(config).asUser(username);
-    const res = await api.fetch(new URL('/Marti/api/clientEndPoints', api.url), { method: 'GET' }, true) as Response;
-    if (!res.ok) throw new Error(`clientEndPoints: status ${res.status}`);
+export async function defaultFetchEndpoints(
+    username: string,
+    config: Config,
+    // wstrzykiwane w testach; domyślnie klient TAK jako autor
+    getApi: () => Promise<RawApi> = async () => await new TAKServerControl(config).asUser(username),
+): Promise<Endpoint[]> {
+    const api = await getApi();
+    // raw=true zwraca obiekt {status, text, json} z APIAuthCertificate, bez pola `ok`
+    const res = await api.fetch(new URL('/Marti/api/clientEndPoints', api.url), { method: 'GET' }, true);
+    if (res.status < 200 || res.status >= 300) {
+        await res.text().catch(() => '');
+        throw new Error(`clientEndPoints: status ${res.status}`);
+    }
 
     const body = await res.json() as { data?: Array<{ uid?: unknown; username?: unknown }> };
     return (body.data || [])

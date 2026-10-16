@@ -369,14 +369,20 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 cot.uid(randomUUID());
                 const detail = cot.raw.event.detail as { link: { _attributes: Record<string, string> } };
                 detail.link._attributes = { uid: req.params.id, relation: 'p-p', type: 'b-m-r' };
-                setMartiDestinations(cot, await authorDestinations(config, user.email));
 
-                await config.hub.submitCots({
-                    connection: user.email,
-                    write: true,
-                    ensureProfile: true,
-                    cots: [cot],
-                });
+                // baza już usunęła cechę, więc błąd wysyłki nie może zepsuć odpowiedzi
+                try {
+                    setMartiDestinations(cot, await authorDestinations(config, user.email));
+
+                    await config.hub.submitCots({
+                        connection: user.email,
+                        write: true,
+                        ensureProfile: true,
+                        cots: [cot],
+                    });
+                } catch (err) {
+                    console.warn('Warning: could not send route force delete to author devices', err);
+                }
             }
 
             ConnectionEvents.user(config, user, ConnectionEventDataType.FEATURE, ConnectionEventAction.DELETE, req.params.id);

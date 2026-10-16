@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { authorDestinations, deps } from '../common/author-destinations.js';
+import { authorDestinations, defaultFetchEndpoints, deps } from '../common/author-destinations.js';
 import { profileUid } from '../common/control/takserver.js';
 import type Config from '../common/config.js';
 
@@ -37,4 +37,39 @@ test('deps.fetchEndpoints podmienia domyślne pobieranie, argument ma pierwszeń
     } finally {
         deps.fetchEndpoints = original;
     }
+});
+
+function stubApi(status: number, payload: unknown) {
+    let drained = false;
+    const api = {
+        url: new URL('https://tak.example.com:8443'),
+        // dokładny kształt z APIAuthCertificate.fetch(raw): status + text + json, bez `ok`
+        fetch: async () => ({
+            status,
+            text: async () => {
+                drained = true;
+                return JSON.stringify(payload);
+            },
+            json: async () => payload,
+        }),
+    };
+    return { api, drained: () => drained };
+}
+
+test('defaultFetchEndpoints czyta data[] z odpowiedzi w kształcie APIAuthCertificate', async () => {
+    const { api } = stubApi(200, { data: [
+        { callsign: 'A', uid: 'ANDROID-1', username: 'jan', lastEventTime: 1, lastStatus: 'Connected' },
+        { callsign: 'B', uid: 'ANDROID-2', username: 'ola' },
+    ] });
+    const endpoints = await defaultFetchEndpoints('jan', config, async () => api);
+    assert.deepStrictEqual(endpoints, [
+        { uid: 'ANDROID-1', username: 'jan' },
+        { uid: 'ANDROID-2', username: 'ola' },
+    ]);
+});
+
+test('defaultFetchEndpoints: status 500 kończy się błędem i zużywa ciało', async () => {
+    const stub = stubApi(500, { error: 'x' });
+    await assert.rejects(defaultFetchEndpoints('jan', config, async () => stub.api), /status 500/);
+    assert.strictEqual(stub.drained(), true);
 });
