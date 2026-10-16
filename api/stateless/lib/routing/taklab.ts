@@ -138,7 +138,9 @@ function field(body: unknown, key: string): unknown {
     return body && typeof body === 'object' ? (body as Record<string, unknown>)[key] : undefined;
 }
 
-export const DEFAULT_TIMEOUTS = { planner: 90000, modes: 3000 };
+// Budżet planera to 540 s, limit nginx (proxy_read_timeout) to 600 s;
+// klient czeka 570 s, czyli dłużej niż planer, ale krócej niż proxy.
+export const DEFAULT_TIMEOUTS = { planner: 570000, modes: 5000 };
 
 export default class TaklabRoute implements RouteInterface {
     _id = 'taklab';
