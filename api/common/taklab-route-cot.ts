@@ -116,20 +116,27 @@ export function applyRoutePlan(
 
 export const ROUTE_ACTOR_ELEMENT = '__taklab_actor';
 
-/** Odczytuje znacznik autora zmiany (bota) z `<detail>`; null, gdy brak albo którykolwiek atrybut jest pusty. */
-export function readRouteActor(cot: CoT): { uid: string; on_behalf: string; log: string } | null {
+/**
+ * Odczytuje znacznik autora zmiany (bota) z `<detail>`; null, gdy brak albo którykolwiek
+ * atrybut jest pusty. `fp` to odcisk geometrii, którą bot wysłał (ten sam co w planie).
+ */
+export function readRouteActor(cot: CoT): { uid: string; on_behalf: string; log: string; fp: string } | null {
     const detail = cot.raw.event.detail as Record<string, { _attributes?: Record<string, unknown> }> | undefined;
     const attrs = detail?.[ROUTE_ACTOR_ELEMENT]?._attributes;
     if (!attrs) return null;
 
-    const { uid, on_behalf, log } = attrs;
-    for (const v of [uid, on_behalf, log]) {
+    const { uid, on_behalf, log, fp } = attrs;
+    for (const v of [uid, on_behalf, log, fp]) {
         if (typeof v !== 'string' || v === '') return null;
     }
-    return { uid: uid as string, on_behalf: on_behalf as string, log: log as string };
+    return { uid: uid as string, on_behalf: on_behalf as string, log: log as string, fp: fp as string };
 }
 
-/** Ustawia `metadata.taklab_actor` przy każdym odbiorze; brak elementu usuwa klucz. */
+/**
+ * Ustawia `metadata.taklab_actor` przy każdym odbiorze; brak elementu albo inna geometria
+ * usuwa klucz. Trasa zmieniona potem w ATAK niesie stary `<__taklab_actor>` (ATAK przepisuje
+ * nieznane elementy), więc znak bota pokazujemy tylko, gdy `fp` pasuje do linii - jak plan.
+ */
 export function applyRouteActor(
     cot: CoT,
     feat: { geometry: { type: string; coordinates: unknown }; properties: Record<string, unknown> },
@@ -138,9 +145,13 @@ export function applyRouteActor(
 
     const existing = feat.properties.metadata as Record<string, unknown> | undefined;
     const actor = readRouteActor(cot);
+    const matches = actor !== null
+        && feat.geometry.type === 'LineString'
+        && actor.fp === routeFingerprint(feat.geometry.coordinates as number[][]);
 
-    if (actor) {
-        feat.properties.metadata = { ...existing, taklab_actor: actor };
+    if (actor && matches) {
+        const { uid, on_behalf, log } = actor;
+        feat.properties.metadata = { ...existing, taklab_actor: { uid, on_behalf, log } };
     } else if (existing && typeof existing === 'object' && 'taklab_actor' in existing) {
         const rest = { ...existing };
         delete rest.taklab_actor;

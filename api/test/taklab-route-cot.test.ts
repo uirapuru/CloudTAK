@@ -136,19 +136,22 @@ async function withActor(attrs: Record<string, string> | null) {
     return CoTParser.from_xml(CoTParser.to_xml(cot));
 }
 
-test('readRouteActor: czyta uid, on_behalf i log po przejściu przez XML', async () => {
-    const back = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' });
-    assert.deepStrictEqual(readRouteActor(back), { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' });
+test('readRouteActor: czyta uid, on_behalf, log i fp po przejściu przez XML', async () => {
+    const fp = routeFingerprint(coords);
+    const back = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1', fp });
+    assert.deepStrictEqual(readRouteActor(back), { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1', fp });
 });
 
 test('readRouteActor: brak elementu albo pusty atrybut = null', async () => {
     assert.strictEqual(readRouteActor(await withActor(null)), null);
     assert.strictEqual(readRouteActor(await withActor({ uid: 'ai_buddy', on_behalf: '', log: 'a1' })), null);
     assert.strictEqual(readRouteActor(await withActor({ uid: 'ai_buddy', on_behalf: 'X' })), null);
+    // Bez fp (starszy bot) nie wiadomo, czy linia jest ta, którą bot wysłał
+    assert.strictEqual(readRouteActor(await withActor({ uid: 'ai_buddy', on_behalf: 'X', log: 'a1' })), null);
 });
 
 test('applyRouteActor: ustawia i usuwa metadata.taklab_actor, nie tworzy metadata bez potrzeby', async () => {
-    const withIt = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' });
+    const withIt = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1', fp: routeFingerprint(coords) });
     const without = await withActor(null);
     const geometry = { type: 'LineString', coordinates: coords };
     const a = { geometry, properties: { type: 'b-m-r', metadata: { keep: 1 } } as Record<string, unknown> };
@@ -162,4 +165,16 @@ test('applyRouteActor: ustawia i usuwa metadata.taklab_actor, nie tworzy metadat
     const marker = { geometry: { type: 'Point', coordinates: [1, 2] }, properties: { type: 'a-f-G' } as Record<string, unknown> };
     applyRouteActor(withIt, marker);
     assert.strictEqual('metadata' in marker.properties, false);
+});
+
+test('applyRouteActor: fp innej geometrii (trasa zmieniona w ATAK) usuwa taklab_actor', async () => {
+    const stale = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1', fp: routeFingerprint(coords) });
+    const moved = [[17.03, 51.11], [17.06, 51.1], [17.07, 51.09]];
+    const f = { geometry: { type: 'LineString', coordinates: moved }, properties: { type: 'b-m-r', metadata: { keep: 1, taklab_actor: { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a0' } } } as Record<string, unknown> };
+    applyRouteActor(stale, f);
+    assert.deepStrictEqual(f.properties.metadata, { keep: 1 });
+
+    const fresh = { geometry: { type: 'LineString', coordinates: moved }, properties: { type: 'b-m-r' } as Record<string, unknown> };
+    applyRouteActor(stale, fresh);
+    assert.strictEqual('metadata' in fresh.properties, false);
 });
