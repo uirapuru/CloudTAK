@@ -402,6 +402,7 @@ import { lineString as turfLineString, point as turfPoint } from '@turf/helpers'
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import lineSplit from '@turf/line-split';
 import COT from '../../base/cot.ts';
+import { splitLineFeatures } from '../../base/line-split.ts';
 import MapLoading from './MapLoading.vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import RadialMenu from './RadialMenu/RadialMenu.vue';
@@ -961,39 +962,8 @@ async function handleRadial(event: string): Promise<void> {
         const coordsA = split.features[0].geometry.coordinates as [number, number][];
         const coordsB = split.features[1].geometry.coordinates as [number, number][];
 
-        const now = new Date();
-        const idA = randomUUID();
-        const idB = randomUUID();
-
-        const baseProps = { ...cotFeat.properties };
-
-        const featA: Feature = {
-            id: idA,
-            type: 'Feature',
-            path: cotFeat.path || '/',
-            properties: {
-                ...baseProps,
-                id: idA,
-                callsign: `${cotFeat.properties.callsign} (1)`,
-                time: now.toISOString(),
-                start: now.toISOString(),
-            },
-            geometry: { type: 'LineString', coordinates: coordsA }
-        };
-
-        const featB: Feature = {
-            id: idB,
-            type: 'Feature',
-            path: cotFeat.path || '/',
-            properties: {
-                ...baseProps,
-                id: idB,
-                callsign: `${cotFeat.properties.callsign} (2)`,
-                time: now.toISOString(),
-                start: now.toISOString(),
-            },
-            geometry: { type: 'LineString', coordinates: coordsB }
-        };
+        // taklab: każda połówka dostaje własne metadata, bez planu trasy całej linii
+        const [featA, featB] = splitLineFeatures(cotFeat, { id: randomUUID(), coordinates: coordsA }, { id: randomUUID(), coordinates: coordsB });
 
         closeRadial();
         await mapStore.worker.db.remove(String(cotFeat.id), { mission: true, authored: true });
