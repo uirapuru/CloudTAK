@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import ShapeMover, { translateGeometry, HOLD_MS } from './shape-move.ts';
+import ShapeMover, { translateGeometry, translateFeature, HOLD_MS } from './shape-move.ts';
 import type { MovableFeature } from './shape-move.ts';
 
 type Handler = (e: Record<string, unknown>) => void;
@@ -42,6 +42,64 @@ const at = (x: number, y: number, lng: number, lat: number) => ({
 describe('translateGeometry', () => {
     it('przesuwa każdy punkt wielokąta o różnicę długości i szerokości', () => {
         expect(translateGeometry(square.geometry, 0.1, -0.2).coordinates[0][0]).toEqual([21.1, 51.8]);
+    });
+});
+
+describe('translateFeature', () => {
+    const plan = {
+        version: 1, mode: 'foot', mode_name: 'Pieszo',
+        waypoints: [[21, 52], [21.02, 52.02]],
+        legs: [{ start: 0, end: 2, distance_m: 1, duration_s: 1 }],
+        analysis: { elevation: [1, 2, 3] },
+    };
+    const route: MovableFeature = {
+        id: 'r', type: 'Feature',
+        properties: { id: 'r', type: 'b-m-r', metadata: { other: 1, taklab_route: plan } },
+        geometry: { type: 'LineString', coordinates: [[21, 52, 5], [21.01, 52.01, 5], [21.02, 52.02, 5]] },
+    };
+
+    it('przesuwa punkty planu o to samo co wierzchołki, zostawia odcinki i zdejmuje analizę', () => {
+        const moved = translateFeature(route, 0.1, -0.2);
+        const movedPlan = (moved.properties.metadata as { taklab_route: Record<string, unknown> }).taklab_route;
+        const geometry = translateGeometry(route.geometry, 0.1, -0.2);
+        expect(moved.geometry).toEqual(geometry);
+        expect(movedPlan.waypoints).toEqual([geometry.coordinates[0].slice(0, 2), geometry.coordinates[2].slice(0, 2)]);
+        expect(movedPlan.legs).toEqual(plan.legs);
+        expect(movedPlan).not.toHaveProperty('analysis');
+        expect((moved.properties.metadata as Record<string, unknown>).other).toBe(1);
+    });
+
+    it('nie zmienia figury wejściowej', () => {
+        translateFeature(route, 0.1, -0.2);
+        expect(plan.waypoints).toEqual([[21, 52], [21.02, 52.02]]);
+        expect(plan).toHaveProperty('analysis');
+    });
+
+    it('figura bez planu: tylko geometria', () => {
+        const moved = translateFeature(square, 0.1, 0.1);
+        expect(moved.properties).toBe(square.properties);
+    });
+
+    it('ShapeMover zapisuje trasę z przesuniętym planem', async () => {
+        vi.useFakeTimers();
+        const map = fakeMap();
+        const commit = vi.fn<(id: string, feature: MovableFeature) => Promise<void>>(async () => undefined);
+        const mover = new ShapeMover(map as never, { pick: async () => structuredClone(route), commit });
+        try {
+            map.fire('mousedown', at(100, 100, 21.005, 52.005));
+            await vi.advanceTimersByTimeAsync(HOLD_MS);
+            map.fire('mousemove', at(150, 80, 21.105, 52.105));
+            map.fire('mouseup', at(150, 80, 21.105, 52.105));
+            await vi.runAllTimersAsync();
+            const moved = commit.mock.calls[0][1];
+            const waypoints = (moved.properties.metadata as { taklab_route: { waypoints: number[][] } }).taklab_route.waypoints;
+            expect(waypoints[0][0]).toBeCloseTo(21.1);
+            expect(waypoints[0][1]).toBeCloseTo(52.1);
+            expect(waypoints[1][0]).toBeCloseTo(21.12);
+        } finally {
+            mover.destroy();
+            vi.useRealTimers();
+        }
     });
 });
 

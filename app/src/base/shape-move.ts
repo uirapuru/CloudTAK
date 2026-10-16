@@ -62,6 +62,31 @@ export function translateGeometry<G extends { type: string; coordinates: unknown
     return { ...geometry, coordinates: shift(geometry.coordinates) };
 }
 
+/**
+ * Przesunięcie figury: geometria i punkty planu trasy (metadata.taklab_route.waypoints)
+ * o to samo dLng, dLat. Odcinki planu zostają (indeksy się nie zmieniają), a analiza
+ * odpada, bo opisuje teren w starym miejscu. Wejściowa figura zostaje nietknięta.
+ */
+export function translateFeature<F extends MovableFeature>(feature: F, dLng: number, dLat: number): F {
+    const moved = { ...feature, geometry: translateGeometry(feature.geometry, dLng, dLat) };
+    const metadata = feature.properties.metadata as Record<string, unknown> | undefined;
+    const plan = metadata?.taklab_route as Record<string, unknown> | undefined;
+    if (!plan || typeof plan !== 'object') return moved;
+
+    const rest = { ...plan };
+    delete rest.analysis;
+    const waypoints = Array.isArray(plan.waypoints)
+        ? translateGeometry({ type: 'MultiPoint', coordinates: plan.waypoints }, dLng, dLat).coordinates
+        : plan.waypoints;
+    return {
+        ...moved,
+        properties: {
+            ...feature.properties,
+            metadata: { ...metadata, taklab_route: { ...rest, waypoints } },
+        },
+    };
+}
+
 export default class ShapeMover {
     private map: MoveMap;
     private opts: ShapeMoverOptions;
@@ -144,10 +169,7 @@ export default class ShapeMover {
             e.originalEvent?.preventDefault?.();
             const dLng = e.lngLat.lng - this.down.lngLat.lng;
             const dLat = e.lngLat.lat - this.down.lngLat.lat;
-            this.moving.moved = {
-                ...this.moving.feature,
-                geometry: translateGeometry(this.moving.feature.geometry, dLng, dLat),
-            };
+            this.moving.moved = translateFeature(this.moving.feature, dLng, dLat);
             this.map.getSource(SOURCE)?.setData(this.moving.moved);
             return;
         }
