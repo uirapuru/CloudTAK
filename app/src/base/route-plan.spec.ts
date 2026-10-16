@@ -7,7 +7,6 @@ import {
     appendChange,
     removeChange,
     waypointLabel,
-    preserveRoutePlan,
 } from './route-plan.ts';
 import type { RoutePlan } from './route-plan.ts';
 
@@ -125,38 +124,5 @@ describe('waypointLabel', () => {
     it('A, numery, B', () => {
         expect([0, 1, 2, 3].map(i => waypointLabel(i, 4))).toEqual(['A', '1', '2', 'B']);
         expect(waypointLabel(0, 1)).toBe('A');
-    });
-});
-
-describe('preserveRoutePlan', () => {
-    it('zostawia plan, gdy echo trasy ma tę samą geometrię i puste metadata', () => {
-        const incoming = { properties: { type: 'b-m-r', metadata: {} } as Record<string, unknown>, geometry: { type: 'LineString', coordinates: coordinates.map(c => [...c]) } };
-        preserveRoutePlan(route(), incoming);
-        expect((incoming.properties.metadata as { taklab_route: RoutePlan }).taklab_route).toEqual(plan);
-    });
-
-    it('zostawia plan, gdy echo nie niesie metadata wcale', () => {
-        const incoming = { properties: { type: 'b-m-r' } as Record<string, unknown>, geometry: { type: 'LineString', coordinates } };
-        preserveRoutePlan(route(), incoming);
-        expect(incoming.properties.metadata).toEqual({ taklab_route: plan });
-    });
-
-    it('nie zostawia planu, gdy geometria się zmieniła', () => {
-        const incoming = { properties: { type: 'b-m-r', metadata: {} } as Record<string, unknown>, geometry: { type: 'LineString', coordinates: [[21, 52], [22, 53]] } };
-        preserveRoutePlan(route(), incoming);
-        expect(incoming.properties.metadata).toEqual({});
-    });
-
-    it('nie nadpisuje planu, który przyszedł z wejściem', () => {
-        const other = { ...plan, mode: 'car' };
-        const incoming = { properties: { type: 'b-m-r', metadata: { taklab_route: other } } as Record<string, unknown>, geometry: { type: 'LineString', coordinates } };
-        preserveRoutePlan(route(), incoming);
-        expect((incoming.properties.metadata as { taklab_route: RoutePlan }).taklab_route.mode).toBe('car');
-    });
-
-    it('nie rusza obiektów, które nie są trasą', () => {
-        const incoming = { properties: { type: 'u-d-f', metadata: {} } as Record<string, unknown>, geometry: { type: 'LineString', coordinates } };
-        preserveRoutePlan({ properties: { type: 'u-d-f', metadata: { taklab_route: plan } }, geometry: { type: 'LineString', coordinates } }, incoming);
-        expect(incoming.properties.metadata).toEqual({});
     });
 });

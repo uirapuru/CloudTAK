@@ -21,7 +21,7 @@ import { booleanWithin } from '@turf/boolean-within';
 import { isEqual } from '@ver0/deep-equal';
 import type { Polygon } from 'geojson';
 import { mapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
-import { preserveRoutePlan } from '../base/route-plan.ts';
+import { readRoutePlan } from '../base/route-plan.ts';
 import { dangerZoneGeometry, dangerZoneChanged } from '../base/danger-zone.ts';
 
 // taklab: pola, które user może zdjąć z obiektu (wyłączenie strefy niebezpiecznej
@@ -34,6 +34,11 @@ export function dropRemovedKeys(existing: Record<string, unknown>, incoming: Rec
         if (key in existing && !(key in incoming)) delete existing[key];
     }
 }
+/** Trasa z poprawnym planem - serwer publikuje ją jako CoT na urządzenia autora. */
+function isPublishedRoute(cot: COT): boolean {
+    return cot.properties.type === 'b-m-r' && readRoutePlan(cot.as_feature()) !== null;
+}
+
 import type { MapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
 import type { InputFeature, Feature, APIList, Contact } from '../types.ts';
 import type {
@@ -725,7 +730,9 @@ export default class AtlasDatabase {
 
             if (cot.properties.archived) {
                 if (!opts.skipNetwork) {
-                    await std(`/api/profile/feature/${id}`, {
+                    // taklab: usunięcie trasy przez usera zdejmuje ją też z urządzeń autora
+                    const submit = opts.authored === true && cot.properties.type === 'b-m-r';
+                    await std(`/api/profile/feature/${id}${submit ? '?submit=true' : ''}`, {
                         token: this.atlas.token,
                         method: 'DELETE'
                     });
@@ -1047,12 +1054,6 @@ export default class AtlasDatabase {
             if (exists) {
                 const existing = exists;
 
-                // Trasa z serwera TAK ma pusty metadata (CoT nie niesie planu trasy),
-                // a update() scala właściwości: bez tego echo skasowałoby plan
-                if (!opts.authored) {
-                    preserveRoutePlan(existing.as_feature(), feat);
-                }
-
                 const geometryMoved = opts.authored === true
                     && !!feat.geometry
                     && !isEqual(existing.geometry, feat.geometry);
@@ -1062,7 +1063,8 @@ export default class AtlasDatabase {
                     properties: feat.properties,
                     geometry: feat.geometry
                 }, {
-                    skipSave: opts.skipSave,
+                    // taklab: zmiana usera zapisuje się niżej jednym save() (z submit dla trasy)
+                    skipSave: opts.authored ? true : opts.skipSave,
                     // Queue the render as soon as memory is current rather than
                     // after the IndexedDB write, which can lag by seconds after
                     // a resume. Skip a not-yet-flushed pending-create COT
@@ -1073,6 +1075,10 @@ export default class AtlasDatabase {
                         }
                     }
                 });
+
+                if (opts.authored && opts.skipSave !== true) {
+                    await existing.save({ submit: isPublishedRoute(existing) });
+                }
 
                 if (geometryMoved) {
                     await this.syncCoreEntityGeometry(exists);
@@ -1103,7 +1109,7 @@ export default class AtlasDatabase {
 
                 exists = await COT.load(feat, {
                     mode: OriginMode.CONNECTION
-                }, opts);
+                }, opts.authored ? { ...opts, skipSave: true } : opts);
 
                 this.pendingCreate.set(exists.id, exists);
                 this.cots.set(exists.id, exists);
@@ -1121,6 +1127,11 @@ export default class AtlasDatabase {
                             geometry: created.geometry
                         }));
                     }
+                }
+
+                // taklab: nowa cecha od usera - jeden zapis, trasa z planem z submit
+                if (opts.authored && opts.skipSave !== true) {
+                    await created.save({ submit: isPublishedRoute(created) });
                 }
 
                 if (opts.skipBroadcast !== true && exists.properties.archived) {

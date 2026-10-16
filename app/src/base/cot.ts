@@ -394,8 +394,10 @@ export default class COT {
 
     /**
      * Attempt to save the CoT to the database if necessary
+     *
+     * @param opts.submit - taklab: serwer publikuje trasę z planem jako CoT na urządzenia autora
      */
-    async save(): Promise<void> {
+    async save(opts?: { submit?: boolean }): Promise<void> {
         if (
             !this._remote
             && !this.is_self
@@ -406,7 +408,7 @@ export default class COT {
             const tokenEntry = await db.config.get('token');
             if (!tokenEntry) return;
 
-            await std('/api/profile/feature', {
+            await std(opts?.submit ? '/api/profile/feature?submit=true' : '/api/profile/feature', {
                 method: 'PUT',
                 token: tokenEntry.value as string,
                 body: this.as_feature()

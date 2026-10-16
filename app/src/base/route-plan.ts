@@ -6,7 +6,6 @@
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import { distance } from '@turf/distance';
 import { lineString, point } from '@turf/helpers';
-import { isEqual } from '@ver0/deep-equal';
 
 export type LngLat = [number, number];
 
@@ -187,29 +186,4 @@ export function waypointLabel(index: number, count: number): string {
     if (index === 0) return 'A';
     if (index === count - 1) return 'B';
     return String(index);
-}
-
-/**
- * Obiekt z serwera TAK ma metadata = {} (CoT nie niesie planu), a AtlasDatabase
- * scala właściwości przez Object.assign. Gdy przychodzi trasa o niezmienionej
- * geometrii bez planu, przenosi plan z obiektu w bazie do obiektu wejściowego.
- */
-export function preserveRoutePlan(existing: FeatureLike, incoming: FeatureLike): void {
-    if (existing.properties.type !== 'b-m-r') return;
-    if (incoming.properties.type !== undefined && incoming.properties.type !== 'b-m-r') return;
-
-    const plan = readRoutePlan(existing);
-    if (!plan) return;
-
-    const metadata = incoming.properties.metadata;
-    if (metadata && typeof metadata === 'object' && (metadata as Record<string, unknown>).taklab_route) return;
-
-    if (!incoming.geometry || !isEqual(stripElevation(incoming.geometry.coordinates), stripElevation(existing.geometry?.coordinates))) return;
-
-    incoming.properties.metadata = { ...(metadata && typeof metadata === 'object' ? metadata : {}), taklab_route: plan };
-}
-
-function stripElevation(coordinates: unknown): unknown {
-    if (!Array.isArray(coordinates)) return coordinates;
-    return coordinates.map((c) => (Array.isArray(c) ? [c[0], c[1]] : c));
 }
