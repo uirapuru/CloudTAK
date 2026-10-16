@@ -8,25 +8,47 @@ export type RawApi = {
 };
 export type FetchEndpoints = (username: string, config: Config) => Promise<Endpoint[]>;
 
+/** Limit czasu na clientEndPoints: wiszący TAK nie może blokować zapisu */
+export const FETCH_ENDPOINTS_TIMEOUT_MS = 5000;
+
 /** Domyślne pobranie: GET /Marti/api/clientEndPoints jako autor, czyta `data[]` */
 export async function defaultFetchEndpoints(
     username: string,
     config: Config,
     // wstrzykiwane w testach; domyślnie klient TAK jako autor
     getApi: () => Promise<RawApi> = async () => await new TAKServerControl(config).asUser(username),
+    timeoutMs: number = FETCH_ENDPOINTS_TIMEOUT_MS,
 ): Promise<Endpoint[]> {
-    const api = await getApi();
-    // raw=true zwraca obiekt {status, text, json} z APIAuthCertificate, bez pola `ok`
-    const res = await api.fetch(new URL('/Marti/api/clientEndPoints', api.url), { method: 'GET' }, true);
-    if (res.status < 200 || res.status >= 300) {
-        await res.text().catch(() => '');
-        throw new Error(`clientEndPoints: status ${res.status}`);
-    }
+    // signal przerywa żądanie undici (auth.js przekazuje opts do client.request),
+    // a wyścig z zegarem pilnuje też etapów, które sygnału nie znają
+    const signal = AbortSignal.timeout(timeoutMs);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(`clientEndPoints: timeout after ${timeoutMs} ms`)), timeoutMs);
+    });
 
-    const body = await res.json() as { data?: Array<{ uid?: unknown; username?: unknown }> };
-    return (body.data || [])
-        .filter(e => typeof e.uid === 'string' && typeof e.username === 'string')
-        .map(e => ({ uid: e.uid as string, username: e.username as string }));
+    const request = (async (): Promise<Endpoint[]> => {
+        const api = await getApi();
+        // raw=true zwraca obiekt {status, text, json} z APIAuthCertificate, bez pola `ok`
+        const res = await api.fetch(new URL('/Marti/api/clientEndPoints', api.url), { method: 'GET', signal }, true);
+        if (res.status < 200 || res.status >= 300) {
+            await res.text().catch(() => '');
+            throw new Error(`clientEndPoints: status ${res.status}`);
+        }
+
+        const body = await res.json() as { data?: Array<{ uid?: unknown; username?: unknown }> };
+        return (body.data || [])
+            .filter(e => typeof e.uid === 'string' && typeof e.username === 'string')
+            .map(e => ({ uid: e.uid as string, username: e.username as string }));
+    })();
+    // przegrany wyścig nie może zostawić nieobsłużonego odrzucenia
+    request.catch(() => undefined);
+
+    try {
+        return await Promise.race([request, timeout]);
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 /** Podmieniane w testach */

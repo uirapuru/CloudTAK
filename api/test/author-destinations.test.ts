@@ -73,3 +73,20 @@ test('defaultFetchEndpoints: status 500 kończy się błędem i zużywa ciało',
     await assert.rejects(defaultFetchEndpoints('jan', config, async () => stub.api), /status 500/);
     assert.strictEqual(stub.drained(), true);
 });
+
+test('defaultFetchEndpoints: wiszący TAK po limicie czasu daje sam uid połączenia CloudTAK', async () => {
+    let signal: AbortSignal | undefined;
+    const hanging = {
+        url: new URL('https://tak.example.com:8443'),
+        fetch: (_url: URL, opts: object) => {
+            signal = (opts as { signal?: AbortSignal }).signal;
+            return new Promise<never>(() => undefined);
+        },
+    };
+    const started = Date.now();
+    const uids = await authorDestinations(config, me, u => defaultFetchEndpoints(u, config, async () => hanging, 50));
+    assert.deepStrictEqual(uids, [profileUid('jan')]);
+    assert.ok(Date.now() - started < 2000);
+    // sygnał trafia do klienta TAK, żeby undici zerwało żądanie
+    assert.ok(signal instanceof AbortSignal);
+});
