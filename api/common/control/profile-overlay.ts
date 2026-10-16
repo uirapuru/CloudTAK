@@ -435,6 +435,37 @@ export default class ProfileOverlayControl {
         }
     }
 
+    /**
+     * taklab: subscribe the user to the environment's shared Data Sync (`taklab::shared_mission`)
+     *
+     * Idempotent - when the user already has a mission overlay for it nothing changes, so a user
+     * who deactivated the shared mission keeps it inactive. The overlay is created active only
+     * on the first subscription.
+     */
+    async ensureSharedMission(username: string): Promise<void> {
+        const name = (await this.config.models.Setting.typed('taklab::shared_mission', '')).value;
+        if (!name) return;
+
+        const api = await new TAKServerControl(this.config).asUser(username);
+        const mission = await api.Mission.get(name, {});
+
+        if (await this.mission(username, mission.guid)) return;
+
+        try {
+            await this.upsert(username, {
+                name: mission.name,
+                mode: 'mission',
+                mode_id: mission.guid,
+                type: 'geojson',
+                url: `/mission/${encodeURIComponent(mission.guid)}`,
+                active: true,
+            });
+        } catch (err) {
+            // Równoległe logowanie mogło już założyć nakładkę - (username, url) jest unikalne
+            if (!String(err).includes(DUPLICATE_CONSTRAINT)) throw err;
+        }
+    }
+
     /** Remove every overlay owned by a user - part of the user erase cascade */
     async eraseUser(username: string, db: Db = this.config.pg): Promise<void> {
         await db.delete(ProfileOverlay).where(eq(ProfileOverlay.username, username));

@@ -841,6 +841,7 @@ export const FullConfig = Type.Object({
     'taklab::routing::graphhopper_url': Type.String({ description: 'taklab GraphHopper Base URL' }),
     'taklab::routing::terrain_url': Type.String({ description: 'taklab cross-country routing Base URL' }),
     'taklab::routing::planner_url': Type.String({ description: 'taklab route planner service Base URL' }),
+    'taklab::shared_mission': Type.String({ description: 'taklab shared environment Data Sync name - every user is subscribed on login' }),
     'media::url': Type.String({ description: 'Base URL for Media Service' }),
     'media::proxy::allow': Type.Array(Type.String({ description: 'Trusted video proxy source hostname or origin (scheme + host + optional port) that is added to the SSRF allow-list' })),
     'coturn::url': Type.String({ description: 'COTURN Server URL' }),

@@ -2444,6 +2444,8 @@ export interface paths {
                             "taklab::routing::terrain_url"?: string;
                             /** @description taklab route planner service Base URL */
                             "taklab::routing::planner_url"?: string;
+                            /** @description taklab shared environment Data Sync name - every user is subscribed on login */
+                            "taklab::shared_mission"?: string;
                             /** @description Base URL for Media Service */
                             "media::url"?: string;
                             "media::proxy::allow"?: string[];
@@ -2748,6 +2750,8 @@ export interface paths {
                         "taklab::routing::terrain_url"?: string;
                         /** @description taklab route planner service Base URL */
                         "taklab::routing::planner_url"?: string;
+                        /** @description taklab shared environment Data Sync name - every user is subscribed on login */
+                        "taklab::shared_mission"?: string;
                         /** @description Base URL for Media Service */
                         "media::url"?: string;
                         "media::proxy::allow"?: string[];
@@ -2977,6 +2981,8 @@ export interface paths {
                             "taklab::routing::terrain_url"?: string;
                             /** @description taklab route planner service Base URL */
                             "taklab::routing::planner_url"?: string;
+                            /** @description taklab shared environment Data Sync name - every user is subscribed on login */
+                            "taklab::shared_mission"?: string;
                             /** @description Base URL for Media Service */
                             "media::url"?: string;
                             "media::proxy::allow"?: string[];
