@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert';
+import { authorDestinations, deps } from '../common/author-destinations.js';
+import { profileUid } from '../common/control/takserver.js';
+import type Config from '../common/config.js';
+
+const config = {} as Config;
+const me = 'jan';
+
+test('urządzenia autora bez połączenia CloudTAK', async () => {
+    const uids = await authorDestinations(config, me, async () => [
+        { uid: 'ANDROID-1', username: 'jan' },
+        { uid: profileUid('jan'), username: 'jan' },
+        { uid: 'ANDROID-2', username: 'ola' },
+        { uid: 'ANDROID-3', username: 'jan' },
+    ]);
+    assert.deepStrictEqual(uids, ['ANDROID-1', 'ANDROID-3']);
+});
+
+test('brak urządzeń = sam uid połączenia CloudTAK', async () => {
+    assert.deepStrictEqual(await authorDestinations(config, me, async () => []), [profileUid('jan')]);
+});
+
+test('błąd clientEndPoints = sam uid połączenia CloudTAK', async () => {
+    const failing = async () => {
+        throw new Error('500');
+    };
+    assert.deepStrictEqual(await authorDestinations(config, me, failing), [profileUid('jan')]);
+});
+
+test('deps.fetchEndpoints podmienia domyślne pobieranie, argument ma pierwszeństwo', async () => {
+    const original = deps.fetchEndpoints;
+    deps.fetchEndpoints = async () => [{ uid: 'DEP-1', username: 'jan' }];
+    try {
+        assert.deepStrictEqual(await authorDestinations(config, me), ['DEP-1']);
+        assert.deepStrictEqual(await authorDestinations(config, me, async () => [{ uid: 'ARG-1', username: 'jan' }]), ['ARG-1']);
+    } finally {
+        deps.fetchEndpoints = original;
+    }
+});

@@ -59,3 +59,15 @@ test('applyRoutePlan: nie-trasa bez zmian', async () => {
     applyRoutePlan(cot, feat);
     assert.deepStrictEqual(feat.properties.metadata, { taklab_route: plan });
 });
+
+test('round trip: geojson -> CoT -> XML -> CoT -> geojson zachowuje plan (7+ miejsc, z wysokością)', async () => {
+    const c = [[17.0300001234, 51.1100004321, 123.4], [17.0500009876, 51.1000001111, 124.5], [17.0700005555, 51.0900007777, 125.6]];
+    const f = feature('b-m-r', c);
+    const cot = await CoTParser.from_geojson(f);
+    attachRoutePlan(cot, f);
+    const back = await CoTParser.from_xml(CoTParser.to_xml(cot));
+    const geo = await CoTParser.to_geojson(back) as unknown as { geometry: { type: string; coordinates: number[][] }; properties: Record<string, unknown> };
+    applyRoutePlan(back, geo);
+    const meta = geo.properties.metadata as Record<string, unknown> | undefined;
+    assert.ok(meta && meta.taklab_route, 'taklab_route musi przeżyć konwersję geometrii: ' + JSON.stringify(geo.geometry.coordinates));
+});
