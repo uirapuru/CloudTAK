@@ -63,7 +63,7 @@ describe('mapSnapshotFeature', () => {
             id: 'r1',
             properties: { callsign: 'Trasa', type: 'b-m-r', remarks: 'x', center: [17.01, 51.1, 120] },
             geometry: { type: 'LineString', coordinates: [[17, 51.1], [17.02, 51.1]] },
-        })).toEqual({ id: 'r1', callsign: 'Trasa', type: 'b-m-r', remarks: 'x', geometry: 'LineString', point: [17.01, 51.1] });
+        })).toEqual({ id: 'r1', callsign: 'Trasa', type: 'b-m-r', remarks: 'x', geometry: 'LineString', point: [17.01, 51.1], start: [17, 51.1], end: [17.02, 51.1] });
     });
 
     it('falls back to the point geometry', () => {
@@ -91,6 +91,31 @@ describe('mapSnapshotFeature', () => {
             properties: { type: 'b-m-r' },
             geometry: { type: 'LineString', coordinates: [] },
         })).toBeUndefined();
+    });
+
+    it('keeps the first and last vertex of a line', () => {
+        const feat = mapSnapshotFeature({
+            id: 'r3',
+            properties: { type: 'b-m-r', center: [16.7, 50.85] },
+            geometry: { type: 'LineString', coordinates: [[16.68628, 50.89482, 300], [16.7, 50.85], [16.71698, 50.80909, 250]] },
+        });
+
+        expect(feat?.start).toEqual([16.68628, 50.89482]);
+        expect(feat?.end).toEqual([16.71698, 50.80909]);
+    });
+
+    it('has no ends for a point or a one-vertex line', () => {
+        expect(mapSnapshotFeature({
+            id: 'p2',
+            properties: { type: 'a-f-G' },
+            geometry: { type: 'Point', coordinates: [17.02, 51.105] },
+        })?.start).toBeUndefined();
+
+        expect(mapSnapshotFeature({
+            id: 'r4',
+            properties: { type: 'b-m-r' },
+            geometry: { type: 'LineString', coordinates: [[17, 51.1]] },
+        })?.end).toBeUndefined();
     });
 });
 
@@ -147,6 +172,25 @@ describe('buildMapSnapshot', () => {
         });
         expect(snap.items[1].kind).toBe('route');
         expect(snap.outside).toEqual({ marker: 2, route: 1 });
+    });
+
+    it('describes a route by its ends, but not a shape', () => {
+        const snap = buildMapSnapshot(source({
+            features: [
+                feature('route', 17.05, 51.1, {
+                    type: 'b-m-r', geometry: 'LineString', start: [16.686284, 50.894821], end: [196.716981, 50.809094],
+                }),
+                feature('shape', 17.04, 51.1, {
+                    type: 'u-d-f', geometry: 'LineString', start: [17, 51], end: [17.1, 51.2],
+                }),
+            ],
+        }));
+
+        const route = snap.items.find(i => i.name === 'route');
+        expect(route?.start).toEqual({ lat: 50.894821, lon: 16.686284 });
+        // Longitude wrapped like every other longitude in the snapshot
+        expect(route?.end).toEqual({ lat: 50.809094, lon: -163.283019 });
+        expect(snap.items.find(i => i.name === 'shape')).not.toHaveProperty('start');
     });
 
     it('skips the user own marker', () => {

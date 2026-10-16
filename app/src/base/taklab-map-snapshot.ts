@@ -27,6 +27,10 @@ export interface MapSnapshotFeature {
     remarks?: string;
     geometry: string;
     point: [number, number];
+    // First and last vertex of a LineString ([lon, lat]), so a route can be
+    // described by where it starts and ends, not only by one point on it
+    start?: [number, number];
+    end?: [number, number];
 }
 
 export interface MapSnapshotSource {
@@ -54,6 +58,10 @@ export interface MapSnapshotItem {
     lon: number;
     remarks?: string;
     dist_m: number;
+    // Routes only: where the line starts and ends. The bot turns these into
+    // place names ("trasa od A do B"); a single point on the route cannot
+    start?: { lat: number; lon: number };
+    end?: { lat: number; lon: number };
 }
 
 export interface MapSnapshot {
@@ -120,7 +128,7 @@ export function mapSnapshotFeature(feat: {
 
     if (!isCoordinate(point)) return;
 
-    return {
+    const feature: MapSnapshotFeature = {
         id: feat.id,
         callsign: feat.properties.callsign,
         type: feat.properties.type,
@@ -128,6 +136,21 @@ export function mapSnapshotFeature(feat: {
         geometry: feat.geometry.type,
         point: [point[0], point[1]],
     };
+
+    if (feat.geometry.type === 'LineString' && feat.geometry.coordinates.length >= 2) {
+        const first = feat.geometry.coordinates[0];
+        const last = feat.geometry.coordinates[feat.geometry.coordinates.length - 1];
+        if (isCoordinate(first) && isCoordinate(last)) {
+            feature.start = [first[0], first[1]];
+            feature.end = [last[0], last[1]];
+        }
+    }
+
+    return feature;
+}
+
+function snapshotEnd(end: [number, number]): { lat: number; lon: number } {
+    return { lat: round(end[1], 6), lon: round(wrapLon(end[0]), 6) };
 }
 
 function round(value: number, digits: number): number {
@@ -188,6 +211,13 @@ export function buildMapSnapshot(source: MapSnapshotSource): MapSnapshot {
         };
 
         if (feat.remarks) item.remarks = feat.remarks;
+
+        // Only routes get their ends: for a shape the first and last vertex
+        // say nothing useful, and every extra byte counts against the 30 KB
+        if (kind === 'route' && feat.start && feat.end) {
+            item.start = snapshotEnd(feat.start);
+            item.end = snapshotEnd(feat.end);
+        }
 
         inside.push(item);
     }
