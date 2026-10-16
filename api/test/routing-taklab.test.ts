@@ -177,3 +177,15 @@ test('Teardown', async () => {
     server.closeAllConnections();
     await new Promise<void>(resolve => server.close(() => resolve()));
 });
+
+test('PATCH /api/config: ciało z trzema kluczami tras przechodzi walidację', async () => {
+    const { Type } = await import('@sinclair/typebox');
+    const { Value } = await import('@sinclair/typebox/value');
+    const { FullConfig } = await import('../common/types.js');
+    const body = {
+        'taklab::routing::graphhopper_url': 'http://gh:8989',
+        'taklab::routing::terrain_url': 'http://terrain:8000',
+        'taklab::routing::planner_url': 'http://planner:8000',
+    };
+    assert.ok(Value.Check(Type.Partial(FullConfig), body));
+});

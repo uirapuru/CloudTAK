@@ -37,6 +37,8 @@ export const FullConfigDefaults: Partial<Static<typeof FullConfig>> = {
     'osm::enabled': false,
     'osm::url': 'https://photon.komoot.io',
     'taklab::routing::enabled': false,
+    'taklab::routing::graphhopper_url': '',
+    'taklab::routing::terrain_url': '',
     'taklab::routing::planner_url': '',
     'login::name': 'CloudTAK',
     'login::logo': `data:image/svg+xml;base64,${fs.readFileSync(new URL('../branding/CloudTAKLogo.svg', import.meta.url)).toString('base64')}`,

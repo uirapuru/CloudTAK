@@ -44,7 +44,7 @@ test('Setup: dostawca taklab z atrapą planera', async () => {
     await setting('taklab::routing::enabled', 'true');
 });
 
-test('GET /api/search/route - bez travelMode dostawca taklab jedzie samochodem', async () => {
+test('GET /api/search/route - bez travelMode idzie domyślny tryb schematu, planer mapuje go na samochód', async () => {
     const res = await flight.fetch('/api/search/route?start=21,52&end=21.01,52.01&callsign=Test', {
         method: 'GET',
         auth: { bearer: flight.token.admin },
@@ -55,7 +55,7 @@ test('GET /api/search/route - bez travelMode dostawca taklab jedzie samochodem',
     assert.equal(res.body.features[0].properties.type, 'b-m-r');
     assert.equal(res.body.features[0].properties.callsign, 'Test');
     assert.equal(requests[0].url, '/plan');
-    assert.equal(requests[0].body.travelMode, 'car');
+    assert.equal(requests[0].body.travelMode, 'Driving Time');
 });
 
 test('GET /api/search/route - via = punkty pośrednie przekazane planerowi', async () => {

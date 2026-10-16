@@ -837,6 +837,9 @@ export const FullConfig = Type.Object({
     'osm::enabled': Type.Boolean({ description: 'Enable OpenStreetMap (Photon) Search Provider' }),
     'osm::url': Type.String({ description: 'Photon Base URL' }),
     'taklab::routing::enabled': Type.Boolean({ description: 'Enable taklab Routing Provider (taklab-nav-planner)' }),
+    // Nieużywane od czasu planera tras, zostają na jedno wydanie (wycofanie samego obrazu CloudTAK)
+    'taklab::routing::graphhopper_url': Type.String({ description: 'taklab GraphHopper Base URL' }),
+    'taklab::routing::terrain_url': Type.String({ description: 'taklab cross-country routing Base URL' }),
     'taklab::routing::planner_url': Type.String({ description: 'taklab route planner service Base URL' }),
     'media::url': Type.String({ description: 'Base URL for Media Service' }),
     'media::proxy::allow': Type.Array(Type.String({ description: 'Trusted video proxy source hostname or origin (scheme + host + optional port) that is added to the SSRF allow-list' })),
