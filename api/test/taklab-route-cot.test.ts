@@ -58,7 +58,20 @@ test('attach: nie trasa, brak planu albo zły plan = false', async () => {
 test('attach: plan ponad 16 KB nie jest dopisywany', async () => {
     const big = feature({ ...plan, legs: [{ ...plan.legs[0], steps: ['x'.repeat(MAX_PLAN_BYTES)] }] });
     const cot = await CoTParser.from_geojson(big);
-    assert.strictEqual(attachRoutePlan(cot, big), false);
+    const calls: unknown[][] = [];
+    const original = console.warn;
+    console.warn = (...args: unknown[]) => {
+        calls.push(args);
+    };
+    try {
+        assert.strictEqual(attachRoutePlan(cot, big), false);
+    } finally {
+        console.warn = original;
+    }
+    assert.strictEqual(calls.length, 1);
+    assert.strictEqual(calls[0][0], 'taklab route plan too large');
+    assert.strictEqual(calls[0][1], 'route-1');
+    assert.ok(typeof calls[0][2] === 'number' && calls[0][2] > MAX_PLAN_BYTES);
     assert.strictEqual(CoTParser.to_xml(cot).includes('__taklab_route'), false);
 });
 
@@ -83,4 +96,35 @@ test('setMartiDestinations: jeden <marti>, bez duplikatów', async () => {
     const xml = CoTParser.to_xml(cot);
     assert.strictEqual((xml.match(/<marti>/g) || []).length, 1);
     assert.ok(xml.includes('<dest uid="A"/><dest uid="B"/>'));
+});
+
+test('round-trip: znaki specjalne i polskie litery w krokach', async () => {
+    const expected = {
+        version: 1, mode: 'foot', mode_name: 'Pieszo',
+        waypoints: plan.waypoints,
+        legs: [{ ...plan.legs[0], steps: ['1. Skręć w lewo <A&B> "przez" most', '2. It\'s > 5 & < 9 żółć'] }],
+    };
+    const f = feature({ ...expected, analysis: { length_m: 1 } });
+    const cot = await CoTParser.from_geojson(f);
+    assert.strictEqual(attachRoutePlan(cot, f), true);
+    const back = await CoTParser.from_xml(CoTParser.to_xml(cot));
+    assert.deepStrictEqual(readRoutePlan(back, coords), expected);
+});
+
+test('attach: nie zmienia planu w cesze wejściowej', async () => {
+    const f = feature();
+    const cot = await CoTParser.from_geojson(f);
+    attachRoutePlan(cot, f);
+    assert.deepStrictEqual(f.properties.metadata.taklab_route, plan);
+    assert.ok('analysis' in plan);
+});
+
+test('read: dwa elementy w detail = null bez wyjątku', async () => {
+    const f = feature();
+    const cot = await CoTParser.from_geojson(f);
+    attachRoutePlan(cot, f);
+    const xml = CoTParser.to_xml(cot);
+    const element = xml.match(/<__taklab_route[^>]*>[^<]*<\/__taklab_route>/)![0];
+    const back = await CoTParser.from_xml(xml.replace(element, element + element));
+    assert.strictEqual(readRoutePlan(back, coords), null);
 });

@@ -41,7 +41,7 @@ function validPlan(plan: unknown, vertexCount: number): plan is RoutePlan {
 /** Dopisuje plan trasy do `<detail>`; zwraca true, gdy dopisał. */
 export function attachRoutePlan(
     cot: CoT,
-    feature: { geometry: { type: string; coordinates: unknown }; properties: Record<string, unknown> },
+    feature: { id?: string; geometry: { type: string; coordinates: unknown }; properties: Record<string, unknown> },
 ): boolean {
     if (feature.properties.type !== 'b-m-r' || feature.geometry.type !== 'LineString') return false;
 
@@ -56,8 +56,9 @@ export function attachRoutePlan(
     const json = JSON.stringify(copy);
 
     const escaped = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    if (Buffer.byteLength(escaped) > MAX_PLAN_BYTES) {
-        console.warn(`taklab-route-cot: plan trasy ponad ${MAX_PLAN_BYTES} B, pomijam`);
+    const bytes = Buffer.byteLength(escaped);
+    if (bytes > MAX_PLAN_BYTES) {
+        console.warn('taklab route plan too large', feature.id, bytes);
         return false;
     }
 
