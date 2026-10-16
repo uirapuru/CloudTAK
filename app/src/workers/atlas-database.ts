@@ -1076,8 +1076,13 @@ export default class AtlasDatabase {
                     }
                 });
 
+                // Błąd zapisu (offline, 5xx) nie może przerwać zmiany - jak przy tworzeniu
                 if (opts.authored && opts.skipSave !== true) {
-                    await existing.save({ submit: isPublishedRoute(existing) });
+                    try {
+                        await existing.save({ submit: isPublishedRoute(existing) });
+                    } catch (err) {
+                        console.warn(`Failed to save authored feature ${existing.id}:`, err);
+                    }
                 }
 
                 if (geometryMoved) {

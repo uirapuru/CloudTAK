@@ -299,10 +299,15 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             } as Static<typeof FeatureResponse>;
 
             if (req.query.submit || req.query.broadcast) {
-                await config.hub.submitCots({
-                    ...hubOpts,
-                    cots: [await buildCot(feat, user.email, req.query.submit)],
-                });
+                // baza już zapisała cechę, więc błąd wysyłki do TAK nie może zepsuć odpowiedzi ani zdarzenia
+                try {
+                    await config.hub.submitCots({
+                        ...hubOpts,
+                        cots: [await buildCot(feat, user.email, req.query.submit)],
+                    });
+                } catch (err) {
+                    console.warn('Warning: could not submit saved feature to TAK', err);
+                }
             }
 
             ConnectionEvents.user(config, user, ConnectionEventDataType.FEATURE, ConnectionEventAction.UPDATE, feat.id, feat);

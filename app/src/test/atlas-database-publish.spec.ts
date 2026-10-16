@@ -154,6 +154,20 @@ describe('AtlasDatabase: publikacja trasy z planem tylko przy zmianie usera', ()
         warn.mockRestore();
     });
 
+    it('nieudany zapis zmiany trasy od usera nie przerywa dodania', async () => {
+        const atlas = database();
+        await atlas.add(route(), { authored: true });
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        std.mockRejectedValueOnce(new Error('offline'));
+
+        const updated = await atlas.add(route({ geometry: moved, metadata: { taklab_route: movedPlan } }), { authored: true });
+
+        expect(updated && updated.id).toBe('route-1');
+        expect(updated && updated.geometry).toEqual({ type: 'LineString', coordinates: moved });
+        expect(warn).toHaveBeenCalled();
+        warn.mockRestore();
+    });
+
     it('echo trasy bez planu po trasie z planem: plan znika', async () => {
         const atlas = database();
         const created = await atlas.add(route(), { authored: true });

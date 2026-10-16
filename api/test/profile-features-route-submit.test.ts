@@ -146,6 +146,52 @@ test('DELETE submit trasy: błąd wysyłki nie psuje odpowiedzi po usunięciu w 
     }
 });
 
+test('PUT submit trasy z archiwizacją: błąd wysyłki nie psuje odpowiedzi, cecha zapisana, zdarzenie wysłane', async () => {
+    const submit = flight.config!.hub.submitCots;
+    const notify = flight.config!.hub.wsNotify;
+    const events: unknown[] = [];
+    flight.config!.hub.submitCots = async () => {
+        throw new Error('Profile auth certificate not configured');
+    };
+    flight.config!.hub.wsNotify = async (_username, event) => {
+        events.push(event);
+    };
+    try {
+        const res = await put(route('route-5'), '?submit=true');
+        assert.strictEqual(res.status, 200);
+        assert.strictEqual(res.body.id, 'route-5');
+        assert.deepStrictEqual(res.body.properties.metadata.taklab_route.waypoints, plan.waypoints);
+
+        const saved = await flight.fetch('/api/profile/feature/route-5', {
+            method: 'GET', auth: { bearer: flight.token.admin },
+        }, true);
+        assert.strictEqual(saved.body.id, 'route-5');
+
+        assert.ok(events.some((e) => {
+            const data = (e as { data: { type: string; action: string; id: string } }).data;
+            return data.type === 'feature' && data.action === 'update' && data.id === 'route-5';
+        }));
+    } finally {
+        flight.config!.hub.submitCots = submit;
+        flight.config!.hub.wsNotify = notify;
+    }
+});
+
+test('PUT submit bez archiwizacji: błąd wysyłki nadal zwraca błąd', async () => {
+    const submit = flight.config!.hub.submitCots;
+    flight.config!.hub.submitCots = async () => {
+        throw new Error('hub down');
+    };
+    try {
+        const res = await flight.fetch('/api/profile/feature?submit=true&archive=false', {
+            method: 'PUT', auth: { bearer: flight.token.admin }, body: route('route-6'),
+        }, false);
+        assert.notStrictEqual(res.status, 200);
+    } finally {
+        flight.config!.hub.submitCots = submit;
+    }
+});
+
 test('sprzątanie', () => {
     deps.fetchEndpoints = original;
 });
