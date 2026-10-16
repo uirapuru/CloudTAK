@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { createHash } from 'node:crypto';
 import { CoTParser } from '@tak-ps/node-cot';
-import { attachRoutePlan, readRoutePlan, routeFingerprint, setMartiDestinations, MAX_PLAN_BYTES } from '../common/taklab-route-cot.js';
+import { attachRoutePlan, readRoutePlan, readRouteActor, applyRouteActor, routeFingerprint, setMartiDestinations, MAX_PLAN_BYTES } from '../common/taklab-route-cot.js';
 
 const coords = [[17.03, 51.11], [17.05, 51.1], [17.07, 51.09]];
 const plan = {
@@ -127,4 +127,39 @@ test('read: dwa elementy w detail = null bez wyjątku', async () => {
     const element = xml.match(/<__taklab_route[^>]*>[^<]*<\/__taklab_route>/)![0];
     const back = await CoTParser.from_xml(xml.replace(element, element + element));
     assert.strictEqual(readRoutePlan(back, coords), null);
+});
+
+async function withActor(attrs: Record<string, string> | null) {
+    const f = feature();
+    const cot = await CoTParser.from_geojson(f);
+    if (attrs) (cot.raw.event.detail as Record<string, unknown>).__taklab_actor = { _attributes: attrs };
+    return CoTParser.from_xml(CoTParser.to_xml(cot));
+}
+
+test('readRouteActor: czyta uid, on_behalf i log po przejściu przez XML', async () => {
+    const back = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' });
+    assert.deepStrictEqual(readRouteActor(back), { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' });
+});
+
+test('readRouteActor: brak elementu albo pusty atrybut = null', async () => {
+    assert.strictEqual(readRouteActor(await withActor(null)), null);
+    assert.strictEqual(readRouteActor(await withActor({ uid: 'ai_buddy', on_behalf: '', log: 'a1' })), null);
+    assert.strictEqual(readRouteActor(await withActor({ uid: 'ai_buddy', on_behalf: 'X' })), null);
+});
+
+test('applyRouteActor: ustawia i usuwa metadata.taklab_actor, nie tworzy metadata bez potrzeby', async () => {
+    const withIt = await withActor({ uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' });
+    const without = await withActor(null);
+    const geometry = { type: 'LineString', coordinates: coords };
+    const a = { geometry, properties: { type: 'b-m-r', metadata: { keep: 1 } } as Record<string, unknown> };
+    applyRouteActor(withIt, a);
+    assert.deepStrictEqual(a.properties.metadata, { keep: 1, taklab_actor: { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' } });
+    applyRouteActor(without, a);
+    assert.deepStrictEqual(a.properties.metadata, { keep: 1 });
+    const b = { geometry, properties: { type: 'b-m-r' } as Record<string, unknown> };
+    applyRouteActor(without, b);
+    assert.strictEqual('metadata' in b.properties, false);
+    const marker = { geometry: { type: 'Point', coordinates: [1, 2] }, properties: { type: 'a-f-G' } as Record<string, unknown> };
+    applyRouteActor(withIt, marker);
+    assert.strictEqual('metadata' in marker.properties, false);
 });

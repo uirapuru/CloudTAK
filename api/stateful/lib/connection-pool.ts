@@ -1,4 +1,4 @@
-import { applyRoutePlan } from '../../common/taklab-route-cot.js';
+import { applyRouteMeta } from '../../common/taklab-route-cot.js';
 import Err from '@openaddresses/batch-error';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -300,7 +300,7 @@ export default class ConnectionPool extends Map<number | string, ConnectionClien
                         normalize2525: true,
                     });
 
-                    if (cot.type() === 'b-m-r') applyRoutePlan(cot, feat);
+                    if (cot.type() === 'b-m-r') applyRouteMeta(cot, feat);
 
                     const receiptStatus: ProfileChatStatus | undefined = feat.properties && feat.properties.chat
                         ? ChatReceiptTypes[feat.properties.type]
