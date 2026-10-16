@@ -3,7 +3,6 @@ import assert from 'node:assert';
 import { CoTParser } from '@tak-ps/node-cot';
 import type CoT from '@tak-ps/node-cot';
 import Flight from './flight.js';
-import { deps } from '../common/author-destinations.js';
 
 const flight = new Flight();
 
@@ -20,11 +19,8 @@ const plan = {
 };
 
 const sent: CoT[][] = [];
-let original: typeof deps.fetchEndpoints;
 
-test('podmiana wysyłki i urządzeń autora', () => {
-    original = deps.fetchEndpoints;
-    deps.fetchEndpoints = async () => [{ uid: 'ANDROID-1', username: 'admin@example.com' }];
+test('podmiana wysyłki', () => {
     flight.config!.hub.submitCots = async (opts) => {
         sent.push(opts.cots as CoT[]);
     };
@@ -48,14 +44,15 @@ function xml(cot: CoT): string {
     return CoTParser.to_xml(cot);
 }
 
-test('PUT submit trasy z planem: jeden CoT z __taklab_route i adresatem', async () => {
+test('PUT submit trasy z planem: jeden CoT z __taklab_route i bez adresata (do wszystkich)', async () => {
     sent.length = 0;
     await put(route(), '?submit=true');
     assert.strictEqual(sent.length, 1);
     assert.strictEqual(sent[0].length, 1);
     const text = xml(sent[0][0]);
     assert.match(text, /<__taklab_route /);
-    assert.match(text, /<marti><dest uid="ANDROID-1"\/><\/marti>/);
+    assert.doesNotMatch(text, /<marti/);
+    assert.doesNotMatch(text, /<dest /);
 });
 
 test('PUT bez submit: nic nie wysłane', async () => {
@@ -64,7 +61,7 @@ test('PUT bez submit: nic nie wysłane', async () => {
     assert.strictEqual(sent.length, 0);
 });
 
-test('PUT submit znacznika a-f-G: bez planu i bez zmiany adresatów', async () => {
+test('PUT submit znacznika a-f-G: bez planu i bez adresata', async () => {
     sent.length = 0;
     await put({
         id: 'marker-1', type: 'Feature', path: '/',
@@ -77,13 +74,14 @@ test('PUT submit znacznika a-f-G: bez planu i bez zmiany adresatów', async () =
     assert.doesNotMatch(text, /ANDROID-1/);
 });
 
-test('PUT submit bez archiwizacji też dopisuje plan i adresatów', async () => {
+test('PUT submit bez archiwizacji też dopisuje plan, bez adresata', async () => {
     sent.length = 0;
     await put(route('route-3'), '?submit=true&archive=false');
     assert.strictEqual(sent.length, 1);
     const text = xml(sent[0][0]);
     assert.match(text, /<__taklab_route /);
-    assert.match(text, /<dest uid="ANDROID-1"\/>/);
+    assert.doesNotMatch(text, /<marti/);
+    assert.doesNotMatch(text, /<dest /);
 });
 
 test('DELETE submit trasy: t-x-d-d z link jako pierwszym dzieckiem detail', async () => {
@@ -100,7 +98,9 @@ test('DELETE submit trasy: t-x-d-d z link jako pierwszym dzieckiem detail', asyn
     assert.match(link, /relation="p-p"/);
     assert.match(link, /type="b-m-r"/);
     assert.match(text, /<__forcedelete\/>/);
-    assert.match(text, /<marti><dest uid="ANDROID-1"\/><\/marti>/);
+    // do wszystkich: bez adresata
+    assert.doesNotMatch(text, /<marti/);
+    assert.doesNotMatch(text, /<dest /);
     // zdarzenie usuwające ma własny uid, nie uid trasy
     assert.doesNotMatch(text, /<event [^>]*uid="route-1"/);
 });
@@ -190,10 +190,6 @@ test('PUT submit bez archiwizacji: błąd wysyłki nadal zwraca błąd', async (
     } finally {
         flight.config!.hub.submitCots = submit;
     }
-});
-
-test('sprzątanie', () => {
-    deps.fetchEndpoints = original;
 });
 
 flight.landing();

@@ -26,6 +26,7 @@ import {
     TAKList,
 } from '@tak-ps/node-tak/lib/api/types';
 import TAKServerControl, { profileUid } from '../../common/control/takserver.js';
+import { attachRoutePlan } from '../../common/taklab-route-cot.js';
 import MissionControl from '../lib/control/mission.js';
 
 const MISSION_COT_SUBMIT_MAX = 100;
@@ -142,7 +143,14 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         try {
             const { user, api, opts } = await missionControl.context(req, req.params.guid);
 
-            const missionPkg = await MissionPackage.from(await resolveFeatures(req.body.features), {
+            const resolved = await resolveFeatures(req.body.features);
+            // trasa z planem niesie <__taklab_route> także w misji (kolejność cots = kolejność features)
+            resolved.cots.forEach((cot, i) => {
+                const feat = req.body.features[i];
+                attachRoutePlan(cot, { id: feat.id, geometry: feat.geometry, properties: feat.properties as Record<string, unknown> });
+            });
+
+            const missionPkg = await MissionPackage.from(resolved, {
                 username: user.email,
             });
 

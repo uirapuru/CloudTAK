@@ -16,17 +16,15 @@ import { enabledGeofence, isUserPuck } from '../lib/control/feature.js';
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
 import { sql } from 'drizzle-orm';
 import * as Default from '../lib/limits.js';
-import { attachRoutePlan, setMartiDestinations } from '../../common/taklab-route-cot.js';
-import { authorDestinations } from '../../common/author-destinations.js';
+import { attachRoutePlan } from '../../common/taklab-route-cot.js';
 
 export default async function router(schema: Schema, config: ConfigStateless) {
-    // CoT cechy do wysyłki; trasa z `submit` dostaje plan i trafia tylko do urządzeń autora
-    const buildCot = async (feature: Static<typeof FeatureResponse>, username: string, submit: boolean): Promise<CoT> => {
+    // CoT cechy do wysyłki; trasa z `submit` dostaje plan i idzie do wszystkich (bez <marti>/<dest>)
+    const buildCot = async (feature: Static<typeof FeatureResponse>, submit: boolean): Promise<CoT> => {
         const cot = await CoTParser.from_geojson(feature);
 
         if (submit && feature.properties.type === 'b-m-r') {
             attachRoutePlan(cot, feature);
-            setMartiDestinations(cot, await authorDestinations(config, username));
         }
 
         return cot;
@@ -268,7 +266,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
                 await config.hub.submitCots({
                     ...hubOpts,
-                    cots: [await buildCot(req.body, user.email, req.query.submit)],
+                    cots: [await buildCot(req.body, req.query.submit)],
                 });
 
                 res.json(req.body);
@@ -303,7 +301,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 try {
                     await config.hub.submitCots({
                         ...hubOpts,
-                        cots: [await buildCot(feat, user.email, req.query.submit)],
+                        cots: [await buildCot(feat, req.query.submit)],
                     });
                 } catch (err) {
                     console.warn('Warning: could not submit saved feature to TAK', err);
@@ -377,8 +375,6 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
                 // baza już usunęła cechę, więc błąd wysyłki nie może zepsuć odpowiedzi
                 try {
-                    setMartiDestinations(cot, await authorDestinations(config, user.email));
-
                     await config.hub.submitCots({
                         connection: user.email,
                         write: true,
@@ -386,7 +382,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                         cots: [cot],
                     });
                 } catch (err) {
-                    console.warn('Warning: could not send route force delete to author devices', err);
+                    console.warn('Warning: could not send route force delete to everyone', err);
                 }
             }
 
