@@ -407,7 +407,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
             // taklab: ponowienie zapisu na misję wspólną - przy pierwszym logowaniu OTS mógł
             // jeszcze nie znać urządzenia (400 Invalid UID), przy ładowaniu mapy połączenie już jest
-            await subscribeSharedMission(config, user.email);
+            await subscribeSharedMission(config, user.email, { exclude: user.session });
 
             const [overlays, terrain, snapping] = await Promise.all([
                 config.models.ProfileOverlay.list({
