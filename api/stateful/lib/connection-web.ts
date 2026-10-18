@@ -6,6 +6,7 @@ import WebSocket from 'ws';
 import { ConnectionClient } from './connection-pool.js';
 import { ProfileChatStatus, WebSocket_Event } from '../../common/enums.js';
 import { buildTaklabMapCoT } from './taklab-map.js';
+import { attachRoutePlan } from '../../common/taklab-route-cot.js';
 
 export class ConnectionWebSocket {
     ws: WebSocket;
@@ -112,6 +113,7 @@ export class ConnectionWebSocket {
                         const feat = msg.data as Static<typeof Feature.Feature>;
 
                         const cot = await CoTParser.from_geojson(feat);
+                        attachRoutePlan(cot, feat);
 
                         client.tak.write([cot], { stripFlow: true });
                     }

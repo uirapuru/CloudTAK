@@ -22,6 +22,10 @@
                     :hover='is_editable'
                     @submit='updateProperty("callsign", $event)'
                 />
+                <RouteActorNote
+                    v-if='routeActor'
+                    :actor='routeActor'
+                />
             </div>
         </template>
 
@@ -619,6 +623,7 @@ import { useRoute, useRouter } from 'vue-router'
 import FeatureIcon from './util/FeatureIcon.vue';
 import BufferInput from './Inputs/BufferInput.vue';
 import RouteVariants from './util/RouteVariants.vue';
+import RouteActorNote from './util/RouteActorNote.vue';
 import { readRoutePlan } from '../../base/route-plan.ts';
 import { isDangerZone, setDangerZone } from '../../base/danger-zone.ts';
 import type { Geofence } from '../../base/danger-zone.ts';
@@ -897,6 +902,11 @@ const canChat = computed(() => {
 });
 
 const variantsOpen = ref(false);
+
+const routeActor = computed(() => {
+    const actor = (cot.value?.properties.metadata as Record<string, unknown> | undefined)?.taklab_actor;
+    return actor && typeof actor === 'object' && typeof (actor as { on_behalf?: unknown }).on_behalf === 'string' && (actor as { on_behalf: string }).on_behalf !== '' ? actor as { uid: string; on_behalf: string; log: string } : undefined;
+});
 
 const hasRoutePlan = computed(() => !!cot.value && cot.value.is_route && !!readRoutePlan(cot.value.as_feature({ clone: true })));
 

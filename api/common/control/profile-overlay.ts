@@ -46,6 +46,11 @@ export type ResolvedOverlay = {
 
 export const DUPLICATE_CONSTRAINT = 'duplicate key value violates unique constraint';
 
+/** taklab: per-user settings (profile_settings) for the shared Data Sync */
+export const SHARED_MISSION_NAME = 'taklab::shared_mission::name';
+export const SHARED_MISSION_GUID = 'taklab::shared_mission::guid';
+export const SHARED_MISSION_OPTOUT = 'taklab::shared_mission::optout';
+
 /**
  * Profile Overlays are the per-user layer list: basemaps, hosted assets, data layers & mission subscriptions.
  *
@@ -227,6 +232,10 @@ export default class ProfileOverlayControl {
         if (input.url) input.url = ProfileOverlayControl.normalizeUrl(overlay.mode, input.url);
         if (input.active) await this.activate(username, overlay.mode, overlay.id);
 
+        // taklab: rezygnacja z misji wspólnej tylko przy wyłączeniu aktywnej, ponowne włączenie ją kasuje
+        if (input.active === false && overlay.active) await this.sharedMissionOptOut(username, overlay, true);
+        if (input.active === true) await this.sharedMissionOptOut(username, overlay, false);
+
         return await this.config.models.ProfileOverlay.commit(id, {
             ...input,
             opacity: input.opacity !== undefined ? String(input.opacity) : undefined,
@@ -237,6 +246,8 @@ export default class ProfileOverlayControl {
     async delete(username: string, id: number): Promise<ProfileOverlayRow> {
         const overlay = await this.from(username, id);
 
+        // Rezygnacja przed usunięciem wiersza: błąd zapisu nie zostawi nakładki bez rezygnacji
+        await this.sharedMissionOptOut(username, overlay, true);
         await this.config.models.ProfileOverlay.delete(overlay.id);
 
         if (overlay.mode === 'mission' && overlay.mode_id) {
@@ -268,6 +279,9 @@ export default class ProfileOverlayControl {
             ? await new TAKServerControl(this.config).asUser(username)
             : null;
 
+        // taklab: misji wspólnej nie usuwamy po nieudanym sprawdzeniu dostępu (błąd sieci to też false)
+        const sharedGuid = api ? await this.sharedMissionGuid(username) : undefined;
+
         const results = await Promise.all(overlays.map(async (overlay): Promise<ResolvedOverlay | null> => {
             if (overlay.mode === 'profile') {
                 const exists = await S3.exists(`profile/${overlay.username}/${ProfileOverlayControl.assetName(overlay)}.pmtiles`);
@@ -283,6 +297,8 @@ export default class ProfileOverlayControl {
                     console.error('Could not find basemap', err);
                     return null;
                 }
+            } else if (overlay.mode === 'mission' && overlay.mode_id && overlay.mode_id === sharedGuid) {
+                return { overlay };
             } else if (overlay.mode === 'mission' && overlay.mode_id && api) {
                 const subscription = await this.subscription(username, overlay.mode_id);
                 return (await api.Mission.access(overlay.mode_id, subscription)) ? { overlay } : null;
@@ -432,6 +448,93 @@ export default class ProfileOverlayControl {
             });
         } catch (err) {
             if (!String(err).includes(DUPLICATE_CONSTRAINT)) throw err;
+        }
+    }
+
+    /** guid of the shared Data Sync this user was subscribed to, if any */
+    async sharedMissionGuid(username: string): Promise<string | undefined> {
+        const settings = await this.config.models.ProfileConfig.from(username);
+        const guid = settings[SHARED_MISSION_GUID];
+        return typeof guid === 'string' && guid ? guid : undefined;
+    }
+
+    /**
+     * Record (or clear) that the user turned the shared Data Sync off - while recorded,
+     * ensureSharedMission leaves the user alone. No-op for any other overlay.
+     */
+    private async sharedMissionOptOut(username: string, overlay: ProfileOverlayRow, optOut: boolean): Promise<void> {
+        if (overlay.mode !== 'mission' || !overlay.mode_id) return;
+
+        const settings = await this.config.models.ProfileConfig.from(username);
+        if (overlay.mode_id !== settings[SHARED_MISSION_GUID]) return;
+
+        if (optOut) {
+            await this.config.models.ProfileConfig.commit(username, { [SHARED_MISSION_OPTOUT]: overlay.mode_id });
+        } else if (settings[SHARED_MISSION_OPTOUT]) {
+            await this.config.models.ProfileConfig.commit(username, { [SHARED_MISSION_OPTOUT]: '' });
+        }
+    }
+
+    /**
+     * taklab: subscribe the user to the environment's shared Data Sync (`taklab::shared_mission`)
+     *
+     * Idempotent - nothing changes when the user already has a mission overlay for it or opted
+     * out (deactivated or deleted it). A new overlay is active only when the user has no other
+     * active overlay, so an existing user's active mission is never switched silently.
+     *
+     * The TAK Server is only asked for the mission when the local state (stored name & guid,
+     * opt-out, overlay) cannot answer - every map load calls this.
+     *
+     * @returns the overlay when one was created, otherwise null
+     */
+    async ensureSharedMission(username: string): Promise<ProfileOverlayRow | null> {
+        const name = (await this.config.models.Setting.typed('taklab::shared_mission', '')).value;
+        if (!name) return null;
+
+        const settings = await this.config.models.ProfileConfig.from(username);
+        const storedGuid = settings[SHARED_MISSION_NAME] === name ? settings[SHARED_MISSION_GUID] : undefined;
+
+        if (typeof storedGuid === 'string' && storedGuid) {
+            if (settings[SHARED_MISSION_OPTOUT] === storedGuid) return null;
+            if (await this.mission(username, storedGuid)) return null;
+        }
+
+        const api = await new TAKServerControl(this.config).asUser(username);
+        const mission = await api.Mission.get(name, {});
+
+        // Zapis nazwy i guid przed subskrypcją: prune i rezygnacja rozpoznają misję wspólną
+        if (settings[SHARED_MISSION_NAME] !== name || settings[SHARED_MISSION_GUID] !== mission.guid) {
+            await this.config.models.ProfileConfig.commit(username, {
+                [SHARED_MISSION_NAME]: name,
+                [SHARED_MISSION_GUID]: mission.guid,
+            });
+        }
+
+        if (settings[SHARED_MISSION_OPTOUT] === mission.guid) return null;
+        if (await this.mission(username, mission.guid)) return null;
+
+        const active = await this.config.models.ProfileOverlay.count({
+            where: sql`
+                username = ${username}
+                AND active
+            `,
+        });
+
+        try {
+            const { overlay } = await this.upsert(username, {
+                name: mission.name,
+                mode: 'mission',
+                mode_id: mission.guid,
+                type: 'geojson',
+                url: `/mission/${encodeURIComponent(mission.guid)}`,
+                active: active === 0,
+            });
+
+            return overlay;
+        } catch (err) {
+            // Równoległe logowanie mogło już założyć nakładkę - (username, url) jest unikalne
+            if (!String(err).includes(DUPLICATE_CONSTRAINT)) throw err;
+            return null;
         }
     }
 

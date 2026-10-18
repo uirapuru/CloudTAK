@@ -153,7 +153,7 @@ async function settings() {
 }
 
 async function deleteRoute(id: string): Promise<void> {
-    await mapStore.worker.db.remove(id);
+    await mapStore.worker.db.remove(id, { authored: true });
     await refresh();
 }
 

@@ -39,6 +39,8 @@ export const FullConfigDefaults: Partial<Static<typeof FullConfig>> = {
     'taklab::routing::enabled': false,
     'taklab::routing::graphhopper_url': '',
     'taklab::routing::terrain_url': '',
+    'taklab::routing::planner_url': '',
+    'taklab::shared_mission': '',
     'login::name': 'CloudTAK',
     'login::logo': `data:image/svg+xml;base64,${fs.readFileSync(new URL('../branding/CloudTAKLogo.svg', import.meta.url)).toString('base64')}`,
     'login::signup': '',

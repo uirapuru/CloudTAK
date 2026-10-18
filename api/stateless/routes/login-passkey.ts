@@ -4,6 +4,7 @@ import type ConfigStateless from '../config.js';
 import Schema from '@openaddresses/batch-schema';
 import { Type } from '@sinclair/typebox';
 import { LoginResponse, issueSession, certificateStatus } from '../lib/user/session.js';
+import { subscribeSharedMission } from '../lib/user/shared-mission.js';
 import {
     generateRegistrationOptions,
     verifyRegistrationResponse,
@@ -349,6 +350,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             await config.models.Profile.commit(profile.username, {
                 last_login: new Date().toISOString(),
             });
+
+            // taklab: misja wspólna środowiska - przy wygasłym certyfikacie zapis się nie uda
+            // i zostanie ponowiony przy logowaniu hasłem
+            await subscribeSharedMission(config, profile.username);
 
             // A passkey login has no password so the certificate cannot be regenerated here,
             // instead the client is told to collect a password and call POST /login

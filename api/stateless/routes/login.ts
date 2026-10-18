@@ -5,6 +5,7 @@ import Schema from '@openaddresses/batch-schema';
 import { Type } from '@sinclair/typebox';
 import Provider from '../lib/provider.js';
 import { LoginResponse, issueSession, refreshSession } from '../lib/user/session.js';
+import { subscribeSharedMission } from '../lib/user/shared-mission.js';
 
 export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.post('/login', {
@@ -64,6 +65,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 }
 
                 profile = await config.models.Profile.from(email);
+
+                // taklab: misja wspólna środowiska - certyfikat użytkownika jest już świeży
+                await subscribeSharedMission(config, profile.username);
             } else {
                 throw new Err(400, null, 'Server has not been configured');
             }

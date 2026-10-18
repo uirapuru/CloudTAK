@@ -1,0 +1,7699 @@
+[
+ {
+  "name": "config-all",
+  "call": "config",
+  "input": {},
+  "status": 200,
+  "output": {
+   "id": "taklab",
+   "name": "taklab",
+   "modes": [
+    {
+     "id": "car",
+     "name": "Samochód"
+    },
+    {
+     "id": "car_no_motorway",
+     "name": "Samochód bez autostrad"
+    },
+    {
+     "id": "offroad",
+     "name": "Drogi gruntowe"
+    },
+    {
+     "id": "foot",
+     "name": "Pieszo"
+    },
+    {
+     "id": "hike",
+     "name": "Szlaki"
+    },
+    {
+     "id": "foot_cross_country",
+     "name": "Pieszo na przełaj"
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "config-no-hike",
+  "call": "config",
+  "input": {
+   "infoProfiles": [
+    "car",
+    "offroad",
+    "foot"
+   ]
+  },
+  "status": 200,
+  "output": {
+   "id": "taklab",
+   "name": "taklab",
+   "modes": [
+    {
+     "id": "car",
+     "name": "Samochód"
+    },
+    {
+     "id": "car_no_motorway",
+     "name": "Samochód bez autostrad"
+    },
+    {
+     "id": "offroad",
+     "name": "Drogi gruntowe"
+    },
+    {
+     "id": "foot",
+     "name": "Pieszo"
+    },
+    {
+     "id": "foot_cross_country",
+     "name": "Pieszo na przełaj"
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "config-no-terrain",
+  "call": "config",
+  "input": {
+   "terrain": false
+  },
+  "status": 200,
+  "output": {
+   "id": "taklab",
+   "name": "taklab",
+   "modes": [
+    {
+     "id": "car",
+     "name": "Samochód"
+    },
+    {
+     "id": "car_no_motorway",
+     "name": "Samochód bez autostrad"
+    },
+    {
+     "id": "offroad",
+     "name": "Drogi gruntowe"
+    },
+    {
+     "id": "foot",
+     "name": "Pieszo"
+    },
+    {
+     "id": "hike",
+     "name": "Szlaki"
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "car-two-points",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "car"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "default-mode",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ]
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "agol-default-mode",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "Driving Time"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "car-no-motorway",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "car_no_motorway"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód bez autostrad",
+      "archived": true,
+      "remarks": "Tryb: Samochód bez autostrad\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car_no_motorway",
+        "mode_name": "Samochód bez autostrad",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl",
+     "custom_model": {
+      "priority": [
+       {
+        "if": "road_class == MOTORWAY",
+        "multiply_by": "0"
+       }
+      ]
+     }
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "foot-three-points",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.05,
+        51.1
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 24,7 km\nCzas: 36 min\nPodejścia: 240 m, zejścia: 160 m\n\nOdcinek 1: 12,3 km, 18 min\n1. Kieruj się na północ (12,0 km)\n\nOdcinek 2: 12,3 km, 18 min\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.05,
+          51.1
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         },
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 1,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "dense-car",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     3,
+     52
+    ],
+    [
+     3.5,
+     52
+    ]
+   ],
+   "travelMode": "car"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        21,
+        52
+       ],
+       [
+        21.4999,
+        52.0003
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 1 m\nCzas: 0 min\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          3,
+          52
+         ],
+         [
+          3.5,
+          52
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 1,
+          "duration_s": 1,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       3,
+       52
+      ],
+      [
+       3.5,
+       52
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       21,
+       52
+      ],
+      [
+       21.4999,
+       52.0003
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "gh-error-message",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "travelMode": "car"
+  },
+  "status": 400,
+  "output": {
+   "message": "Punkt poza siecią dróg albo poza obszarem mapy."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   }
+  ]
+ },
+ {
+  "name": "gh-error-no-message",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     1,
+     52
+    ],
+    [
+     2,
+     52
+    ]
+   ],
+   "travelMode": "car"
+  },
+  "status": 400,
+  "output": {
+   "message": "Nie udało się wyznaczyć trasy."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       1,
+       52
+      ],
+      [
+       2,
+       52
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   }
+  ]
+ },
+ {
+  "name": "second-leg-error",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17,
+     51
+    ],
+    [
+     7,
+     52
+    ],
+    [
+     17.1,
+     51.1
+    ]
+   ],
+   "travelMode": "car"
+  },
+  "status": 400,
+  "output": {
+   "message": "Odcinek 2: Punkt poza siecią dróg albo poza obszarem mapy."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17,
+       51
+      ],
+      [
+       7,
+       52
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       7,
+       52
+      ],
+      [
+       17.1,
+       51.1
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   }
+  ]
+ },
+ {
+  "name": "unknown-mode",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "nope"
+  },
+  "status": 400,
+  "output": {
+   "message": "Nieznany tryb trasy"
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "terrain-plain",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,3 km\nCzas marszu: 45 min\nPodejścia: 15 m, zejścia: 3 m\nPoza drogami: 63%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-options",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "options": {
+    "avoid_wetland": true,
+    "avoid_streams": true,
+    "max_slope_deg": 20,
+    "exposure": "avoid",
+    "avoid_observation": true
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,3 km\nCzas marszu: 45 min\nPodejścia: 15 m, zejścia: 3 m\nOpcje: omija bagna, omija strumienie i rowy, nachylenie do 20°, unika terenu odsłoniętego, unika widoczności ze wzgórz\nPoza drogami: 63%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "options": {
+         "avoid_wetland": true,
+         "avoid_streams": true,
+         "avoid_observation": true,
+         "max_slope_deg": 20,
+         "exposure": "avoid"
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ],
+     "avoid_wetland": true,
+     "avoid_streams": true,
+     "avoid_observation": true,
+     "max_slope_deg": 20,
+     "exposure": "avoid"
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-exposure-medium",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "options": {
+    "exposure": "medium"
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,3 km\nCzas marszu: 45 min\nPodejścia: 15 m, zejścia: 3 m\nOpcje: ogranicza teren odsłonięty\nPoza drogami: 63%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "options": {
+         "exposure": "medium"
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ],
+     "exposure": "medium"
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-exposure-allow",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "options": {
+    "exposure": "allow",
+    "max_slope_deg": 35
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,3 km\nCzas marszu: 45 min\nPodejścia: 15 m, zejścia: 3 m\nPoza drogami: 63%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-exposure-bad",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "options": {
+    "exposure": "x"
+   }
+  },
+  "status": 400,
+  "output": {
+   "message": "Nieznany poziom ekspozycji."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "terrain-slope-bad",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "options": {
+    "max_slope_deg": 40
+   }
+  },
+  "status": 400,
+  "output": {
+   "message": "Limit nachylenia musi mieścić się w 5–35°."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "terrain-no-path",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     0,
+     51
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country"
+  },
+  "status": 400,
+  "output": {
+   "message": "Brak przejścia między punktami."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      0,
+      51
+     ],
+     "end": [
+      17.07,
+      51.09
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-fastapi-422",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     1,
+     51
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country"
+  },
+  "status": 400,
+  "output": {
+   "message": "Nie udało się wyznaczyć trasy na przełaj."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      1,
+      51
+     ],
+     "end": [
+      17.07,
+      51.09
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-html",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     2,
+     51
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country"
+  },
+  "status": 400,
+  "output": {
+   "message": "Nie udało się wyznaczyć trasy na przełaj."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      2,
+      51
+     ],
+     "end": [
+      17.07,
+      51.09
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "terrain-three-points",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.05,
+        51.1
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 4,6 km\nCzas marszu: 1 h 30 min\nPodejścia: 30 m, zejścia: 6 m\nPoza drogami: 63%\n\nOdcinek 1: 2,3 km, 45 min\n\nOdcinek 2: 2,3 km, 45 min\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.05,
+          51.1
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         },
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 1,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.05,
+      51.1
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.05,
+      51.1
+     ],
+     "end": [
+      17.07,
+      51.09
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "analysis-failed",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     4,
+     52
+    ],
+    [
+     4.1,
+     52
+    ]
+   ],
+   "travelMode": "car"
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        4,
+        52
+       ],
+       [
+        4.1,
+        52
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu: niedostępna.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          4,
+          52
+         ],
+         [
+          4.1,
+          52
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis_failed": true
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       4,
+       52
+      ],
+      [
+       4.1,
+       52
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       4,
+       52
+      ],
+      [
+       4.1,
+       52
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "threats-terrain",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "threats": {
+    "observers": [
+     [
+      17.05,
+      51.1
+     ],
+     [
+      17.06,
+      51.1
+     ]
+    ],
+    "closed_areas": [
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ]
+    ]
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,3 km\nCzas marszu: 45 min\nPodejścia: 15 m, zejścia: 3 m\nZ mapy: 2 posterunki przeciwnika, 1 strefa niebezpieczna.\nPoza drogami: 63%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "threats": {
+         "observers": 2,
+         "closed_areas": 1
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ],
+     "observers": [
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.06,
+       51.1
+      ]
+     ],
+     "closed_areas": [
+      [
+       [
+        17,
+        51
+       ],
+       [
+        17.01,
+        51
+       ],
+       [
+        17.01,
+        51.01
+       ],
+       [
+        17,
+        51
+       ]
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "threats-foot",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot",
+   "threats": {
+    "observers": [
+     [
+      17.05,
+      51.1
+     ],
+     [
+      17.06,
+      51.1
+     ]
+    ],
+    "closed_areas": [
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ]
+    ]
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\nZ mapy: 1 strefa niebezpieczna.\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "threats": {
+         "observers": 0,
+         "closed_areas": 1
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl",
+     "custom_model": {
+      "priority": [
+       {
+        "if": "in_closed0",
+        "multiply_by": "0"
+       }
+      ],
+      "areas": {
+       "type": "FeatureCollection",
+       "features": [
+        {
+         "type": "Feature",
+         "id": "closed0",
+         "properties": {},
+         "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+           [
+            [
+             17,
+             51
+            ],
+            [
+             17.01,
+             51
+            ],
+            [
+             17.01,
+             51.01
+            ],
+            [
+             17,
+             51
+            ]
+           ]
+          ]
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "threats-car-observers-only",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "car",
+   "threats": {
+    "observers": [
+     [
+      17.05,
+      51.1
+     ]
+    ]
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "ignore-zones-foot",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot",
+   "threats": {
+    "observers": [
+     [
+      17.05,
+      51.1
+     ],
+     [
+      17.06,
+      51.1
+     ]
+    ],
+    "closed_areas": [
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ]
+    ]
+   },
+   "options": {
+    "ignore_danger_zones": true
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\nOpcje: nie omija stref niebezpiecznych\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "options": {
+         "ignore_danger_zones": true
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "ignore-zones-terrain",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot_cross_country",
+   "threats": {
+    "observers": [
+     [
+      17.05,
+      51.1
+     ],
+     [
+      17.06,
+      51.1
+     ]
+    ],
+    "closed_areas": [
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ]
+    ]
+   },
+   "options": {
+    "ignore_danger_zones": true
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,3 km\nCzas marszu: 45 min\nPodejścia: 15 m, zejścia: 3 m\nOpcje: nie omija stref niebezpiecznych\nZ mapy: 2 posterunki przeciwnika.\nPoza drogami: 63%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "options": {
+         "ignore_danger_zones": true
+        },
+        "threats": {
+         "observers": 2,
+         "closed_areas": 0
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ],
+     "observers": [
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.06,
+       51.1
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "threats-bad-ring",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot",
+   "threats": {
+    "closed_areas": [
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ]
+     ]
+    ]
+   }
+  },
+  "status": 400,
+  "output": {
+   "message": "Teren zamknięty musi być wielokątem z 4–1000 punktów."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "threats-plural-5",
+  "call": "route",
+  "input": {
+   "stops": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "travelMode": "foot",
+   "threats": {
+    "closed_areas": [
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ],
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ],
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ],
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ],
+     [
+      [
+       17,
+       51
+      ],
+      [
+       17.01,
+       51
+      ],
+      [
+       17.01,
+       51.01
+      ],
+      [
+       17,
+       51
+      ]
+     ]
+    ]
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\nZ mapy: 5 stref niebezpiecznych.\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "threats": {
+         "observers": 0,
+         "closed_areas": 5
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl",
+     "custom_model": {
+      "priority": [
+       {
+        "if": "in_closed0",
+        "multiply_by": "0"
+       },
+       {
+        "if": "in_closed1",
+        "multiply_by": "0"
+       },
+       {
+        "if": "in_closed2",
+        "multiply_by": "0"
+       },
+       {
+        "if": "in_closed3",
+        "multiply_by": "0"
+       },
+       {
+        "if": "in_closed4",
+        "multiply_by": "0"
+       }
+      ],
+      "areas": {
+       "type": "FeatureCollection",
+       "features": [
+        {
+         "type": "Feature",
+         "id": "closed0",
+         "properties": {},
+         "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+           [
+            [
+             17,
+             51
+            ],
+            [
+             17.01,
+             51
+            ],
+            [
+             17.01,
+             51.01
+            ],
+            [
+             17,
+             51
+            ]
+           ]
+          ]
+         }
+        },
+        {
+         "type": "Feature",
+         "id": "closed1",
+         "properties": {},
+         "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+           [
+            [
+             17,
+             51
+            ],
+            [
+             17.01,
+             51
+            ],
+            [
+             17.01,
+             51.01
+            ],
+            [
+             17,
+             51
+            ]
+           ]
+          ]
+         }
+        },
+        {
+         "type": "Feature",
+         "id": "closed2",
+         "properties": {},
+         "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+           [
+            [
+             17,
+             51
+            ],
+            [
+             17.01,
+             51
+            ],
+            [
+             17.01,
+             51.01
+            ],
+            [
+             17,
+             51
+            ]
+           ]
+          ]
+         }
+        },
+        {
+         "type": "Feature",
+         "id": "closed3",
+         "properties": {},
+         "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+           [
+            [
+             17,
+             51
+            ],
+            [
+             17.01,
+             51
+            ],
+            [
+             17.01,
+             51.01
+            ],
+            [
+             17,
+             51
+            ]
+           ]
+          ]
+         }
+        },
+        {
+         "type": "Feature",
+         "id": "closed4",
+         "properties": {},
+         "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+           [
+            [
+             17,
+             51
+            ],
+            [
+             17.01,
+             51
+            ],
+            [
+             17.01,
+             51.01
+            ],
+            [
+             17,
+             51
+            ]
+           ]
+          ]
+         }
+        }
+       ]
+      }
+     }
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "reroute-move-end",
+  "call": "reroute",
+  "input": {
+   "travelMode": "foot",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.08,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "legs": [
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 0,
+     "end": 1
+    },
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 1,
+     "end": 2
+    }
+   ],
+   "first": 1,
+   "count": 1,
+   "added": 0
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.05,
+        51.1
+       ],
+       [
+        17.08,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 24,7 km\nCzas: 36 min\nPodejścia: 240 m, zejścia: 160 m\n\nOdcinek 1: 12,3 km, 18 min\n1. Kieruj się na północ (12,0 km)\n\nOdcinek 2: 12,3 km, 18 min\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.05,
+          51.1
+         ],
+         [
+          17.08,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         },
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 1,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.08,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.08,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "reroute-insert",
+  "call": "reroute",
+  "input": {
+   "travelMode": "car",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "legs": [
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 0,
+     "end": 1
+    }
+   ],
+   "first": 0,
+   "count": 1,
+   "added": 1
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.05,
+        51.1
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 24,7 km\nCzas: 36 min\nPodejścia: 240 m, zejścia: 160 m\n\nOdcinek 1: 12,3 km, 18 min\n1. Kieruj się na północ (12,0 km)\n\nOdcinek 2: 12,3 km, 18 min\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.05,
+          51.1
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         },
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 1,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "reroute-remove-via",
+  "call": "reroute",
+  "input": {
+   "travelMode": "foot",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "legs": [
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 0,
+     "end": 1
+    },
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 1,
+     "end": 2
+    }
+   ],
+   "first": 0,
+   "count": 2,
+   "added": -1
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "foot",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl"
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "reroute-remove-start",
+  "call": "reroute",
+  "input": {
+   "travelMode": "foot",
+   "waypoints": [
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "legs": [
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 0,
+     "end": 1
+    },
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 1,
+     "end": 2
+    }
+   ],
+   "first": 0,
+   "count": 1,
+   "added": -1
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.05,
+        51.1
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo",
+      "archived": true,
+      "remarks": "Tryb: Pieszo\nDługość: 12,3 km\nCzas: 18 min\nPodejścia: 120 m, zejścia: 80 m\n\n1. Kieruj się na północ (12,0 km)\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot",
+        "mode_name": "Pieszo",
+        "waypoints": [
+         [
+          17.05,
+          51.1
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 12345,
+          "duration_s": 1080,
+          "ascent_m": 120,
+          "descent_m": 80,
+          "steps": [
+           "1. Kieruj się na północ (12,0 km)"
+          ],
+          "start": 0,
+          "end": 1
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "reroute-bad-plan",
+  "call": "reroute",
+  "input": {
+   "travelMode": "car",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ],
+    [
+     17.1,
+     51,
+     120
+    ]
+   ],
+   "legs": [
+    {
+     "distance_m": 12345,
+     "duration_s": 1080,
+     "ascent_m": 120,
+     "descent_m": 80,
+     "steps": [
+      "1. Kieruj się na północ (12,0 km)"
+     ],
+     "start": 0,
+     "end": 1
+    }
+   ],
+   "first": 0,
+   "count": 1,
+   "added": 0
+  },
+  "status": 400,
+  "output": {
+   "message": "Plan trasy nie pasuje do jej linii."
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   }
+  ]
+ },
+ {
+  "name": "reroute-terrain-options",
+  "call": "reroute",
+  "input": {
+   "travelMode": "foot_cross_country",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.08,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.05,
+     51.1
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "legs": [
+    {
+     "distance_m": 2300,
+     "duration_s": 2700,
+     "ascent_m": 15,
+     "descent_m": 3,
+     "offpath_ratio": 0.63,
+     "start": 0,
+     "end": 1
+    },
+    {
+     "distance_m": 2300,
+     "duration_s": 2700,
+     "ascent_m": 15,
+     "descent_m": 3,
+     "offpath_ratio": 0.63,
+     "start": 1,
+     "end": 2
+    }
+   ],
+   "first": 1,
+   "count": 1,
+   "added": 0,
+   "options": {
+    "avoid_wetland": true,
+    "avoid_streams": true,
+    "max_slope_deg": 20,
+    "exposure": "avoid",
+    "avoid_observation": true
+   }
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.05,
+        51.1
+       ],
+       [
+        17.08,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 4,6 km\nCzas marszu: 1 h 30 min\nPodejścia: 30 m, zejścia: 6 m\nOpcje: omija bagna, omija strumienie i rowy, nachylenie do 20°, unika terenu odsłoniętego, unika widoczności ze wzgórz\nPoza drogami: 63%\n\nOdcinek 1: 2,3 km, 45 min\n\nOdcinek 2: 2,3 km, 45 min\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.05,
+          51.1
+         ],
+         [
+          17.08,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 0,
+          "end": 1
+         },
+         {
+          "distance_m": 2300,
+          "duration_s": 2700,
+          "ascent_m": 15,
+          "descent_m": 3,
+          "offpath_ratio": 0.63,
+          "start": 1,
+          "end": 2
+         }
+        ],
+        "options": {
+         "avoid_wetland": true,
+         "avoid_streams": true,
+         "avoid_observation": true,
+         "max_slope_deg": 20,
+         "exposure": "avoid"
+        },
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.05,
+       51.1
+      ],
+      [
+       17.08,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/route",
+    "body": {
+     "start": [
+      17.05,
+      51.1
+     ],
+     "end": [
+      17.08,
+      51.09
+     ],
+     "avoid_wetland": true,
+     "avoid_streams": true,
+     "avoid_observation": true,
+     "max_slope_deg": 20,
+     "exposure": "avoid"
+    }
+   }
+  ]
+ },
+ {
+  "name": "variants-terrain",
+  "call": "variants",
+  "input": {
+   "travelMode": "foot_cross_country",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "count": 2
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.03,
+        51.12
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,6 km\nCzas marszu: 50 min\nPodejścia: 10 m, zejścia: 5 m\nPoza drogami: 80%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2600,
+          "duration_s": 3000,
+          "ascent_m": 10,
+          "descent_m": 5,
+          "offpath_ratio": 0.8,
+          "start": 0,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.03,
+        51.1
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Pieszo na przełaj",
+      "archived": true,
+      "remarks": "Tryb: Pieszo na przełaj\nDługość: 2,6 km\nCzas marszu: 50 min\nPodejścia: 10 m, zejścia: 5 m\nPoza drogami: 80%\n\nTrasa z OSM i DTED2 (siatka 30 m). Płotów, nieoznaczonych mokradeł i drobnych uskoków model nie widzi. Sprawdź trasę na mapie przed wyjściem.\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "foot_cross_country",
+        "mode_name": "Pieszo na przełaj",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 2600,
+          "duration_s": 3000,
+          "ascent_m": 10,
+          "descent_m": 5,
+          "offpath_ratio": 0.8,
+          "start": 0,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.03,
+       51.12
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.03,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/variants",
+    "body": {
+     "start": [
+      17.03,
+      51.11
+     ],
+     "end": [
+      17.07,
+      51.09
+     ],
+     "avoid_lines": [
+      [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     ],
+     "count": 2
+    }
+   }
+  ]
+ },
+ {
+  "name": "variants-road",
+  "call": "variants",
+  "input": {
+   "travelMode": "car",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "count": 2
+  },
+  "status": 200,
+  "output": {
+   "type": "FeatureCollection",
+   "features": [
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.03,
+        51.12
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 13,0 km\nCzas: 17 min\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 13000,
+          "duration_s": 1000,
+          "start": 0,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "type": "Feature",
+     "geometry": {
+      "type": "LineString",
+      "coordinates": [
+       [
+        17.03,
+        51.11
+       ],
+       [
+        17.03,
+        51.1
+       ],
+       [
+        17.07,
+        51.09
+       ]
+      ]
+     },
+     "properties": {
+      "type": "b-m-r",
+      "how": "m-g",
+      "callsign": "Samochód",
+      "archived": true,
+      "remarks": "Tryb: Samochód\nDługość: 11,0 km\nCzas: 17 min\n\nAnaliza terenu (OCOKA)\nCharakterystyka: 9,2 km, wysokość 320–503 m n.p.m. Drogi i ścieżki 52%, las 28%, teren otwarty 11%, cieki 7%, zabudowa 1%, zarośla 1%.\nUkrycie: osłona lasu lub zarośli 28% trasy, teren odsłonięty 13%, drogi 52% (osłona zależy od otoczenia drogi). Najdłuższy odsłonięty odcinek: km 2,1–2,6 (500 m).\nNachylenie: największe 27°. Do 5°: 72%, 5–15°: 16%, 15–25°: 11%, ponad 25°: 1%.\nPrzeszkody: stromo (ponad 25°) km 0,3–0,4; ciek km 0,8; bagno km 3,0–3,2; woda przy trasie km 5,4–6,0.\nStrefy niebezpieczne: zabudowa km 0,5–1,6; przejście przez drogę km 1,4; teren otwarty km 2,1–2,6; teren otwarty km 4,0–4,3; grzbiet, sylwetka na tle nieba km 7,1–7,4.\nTeren kluczowy i obserwacja:\n- przeprawa (most) km 5,1\n- wzgórze 517 m n.p.m. (89 m nad trasą), 1,4 km na płn.-zach. od km 9,2 (50.35886, 16.66483): widzi 35% trasy, km 6,1–6,8, km 8,0–9,2\n- wzgórze 601 m n.p.m. (99 m nad trasą), 0,4 km na płd. od km 0,0 (50.29000, 16.59000): trasy nie widzi\nZałożenia: osłona i przeszkody z OSM, wysokości z DTED2 (kratka 30 m), korony drzew przyjęte jako 15 m, obserwacja do 3 km. Model nie zna gęstości lasu, płotów, drobnych uskoków ani dróg podejścia przeciwnika.",
+      "metadata": {
+       "taklab_route": {
+        "version": 1,
+        "mode": "car",
+        "mode_name": "Samochód",
+        "waypoints": [
+         [
+          17.03,
+          51.11
+         ],
+         [
+          17.07,
+          51.09
+         ]
+        ],
+        "legs": [
+         {
+          "distance_m": 11000,
+          "duration_s": 1000,
+          "start": 0,
+          "end": 2
+         }
+        ],
+        "analysis": {
+         "length_m": 9179,
+         "elevation_min_m": 320,
+         "elevation_max_m": 503,
+         "ascent_m": 210,
+         "descent_m": 180,
+         "land": {
+          "path": 0.52,
+          "open": 0.11,
+          "forest": 0.28,
+          "scrub": 0.008,
+          "built_up": 0.01,
+          "wetland": 0,
+          "stream": 0.07,
+          "water": 0
+         },
+         "cover": {
+          "concealed": 0.284,
+          "exposed": 0.125,
+          "unknown": 0.52
+         },
+         "slope": {
+          "max_deg": 27,
+          "buckets": {
+           "0-5": 0.716,
+           "5-15": 0.162,
+           "15-25": 0.11,
+           "25+": 0.012
+          }
+         },
+         "obstacles": [
+          {
+           "kind": "steep",
+           "from_m": 267,
+           "to_m": 351
+          },
+          {
+           "kind": "stream",
+           "from_m": 815,
+           "to_m": 839
+          },
+          {
+           "kind": "wetland",
+           "from_m": 3000,
+           "to_m": 3200
+          },
+          {
+           "kind": "water_near",
+           "from_m": 5431,
+           "to_m": 5966
+          }
+         ],
+         "danger": [
+          {
+           "kind": "built_up",
+           "from_m": 486,
+           "to_m": 1573
+          },
+          {
+           "kind": "road_crossing",
+           "from_m": 1435,
+           "to_m": 1521
+          },
+          {
+           "kind": "open",
+           "from_m": 2100,
+           "to_m": 2600
+          },
+          {
+           "kind": "open",
+           "from_m": 4000,
+           "to_m": 4250
+          },
+          {
+           "kind": "skyline",
+           "from_m": 7100,
+           "to_m": 7400
+          }
+         ],
+         "key_terrain": [
+          {
+           "kind": "crossing",
+           "from_m": 5103,
+           "to_m": 5163
+          },
+          {
+           "kind": "height",
+           "lon": 16.66483,
+           "lat": 50.35886,
+           "elevation_m": 517,
+           "above_route_m": 89,
+           "nearest_m": 9179,
+           "distance_m": 1434,
+           "bearing_deg": 308,
+           "visible_ratio": 0.35,
+           "visible": [
+            {
+             "from_m": 6100,
+             "to_m": 6800
+            },
+            {
+             "from_m": 8000,
+             "to_m": 9179
+            }
+           ]
+          },
+          {
+           "kind": "height",
+           "lon": 16.59,
+           "lat": 50.29,
+           "elevation_m": 601,
+           "above_route_m": 99,
+           "nearest_m": 0,
+           "distance_m": 400,
+           "bearing_deg": 195,
+           "visible_ratio": 0,
+           "visible": []
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "upstream": [
+   {
+    "path": "/info",
+    "body": null
+   },
+   {
+    "path": "/route",
+    "body": {
+     "profile": "car",
+     "points": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ],
+     "way_point_max_distance": 20,
+     "points_encoded": false,
+     "instructions": true,
+     "locale": "pl",
+     "algorithm": "alternative_route",
+     "alternative_route.max_paths": 3
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.03,
+       51.12
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   },
+   {
+    "path": "/terrain/analyze",
+    "body": {
+     "coordinates": [
+      [
+       17.03,
+       51.11
+      ],
+      [
+       17.03,
+       51.1
+      ],
+      [
+       17.07,
+       51.09
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "name": "variants-bad-count",
+  "call": "variants",
+  "input": {
+   "travelMode": "car",
+   "waypoints": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "coordinates": [
+    [
+     17.03,
+     51.11
+    ],
+    [
+     17.07,
+     51.09
+    ]
+   ],
+   "count": 3
+  },
+  "status": 400,
+  "output": {
+   "message": "Liczba wariantów: 1 albo 2."
+  },
+  "upstream": []
+ }
+]

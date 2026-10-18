@@ -166,7 +166,8 @@ async function deleteFeatures() {
 
     for (const id of props.selected.keys()) {
         await mapStore.worker.db.remove(id, {
-            mission: true
+            mission: true,
+            authored: true
         });
     }
 

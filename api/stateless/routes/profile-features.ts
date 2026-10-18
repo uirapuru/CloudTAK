@@ -1,5 +1,7 @@
 import { Type, Static } from '@sinclair/typebox';
-import { CoTParser } from '@tak-ps/node-cot';
+import { randomUUID } from 'node:crypto';
+import { CoTParser, ForceDelete } from '@tak-ps/node-cot';
+import type CoT from '@tak-ps/node-cot';
 import tokml from 'tokml';
 import { coordEach } from '@turf/meta';
 import { GenerateUpsert } from '@openaddresses/batch-generic';
@@ -14,8 +16,20 @@ import { enabledGeofence, isUserPuck } from '../lib/control/feature.js';
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
 import { sql } from 'drizzle-orm';
 import * as Default from '../lib/limits.js';
+import { attachRoutePlan } from '../../common/taklab-route-cot.js';
 
 export default async function router(schema: Schema, config: ConfigStateless) {
+    // CoT cechy do wysyłki; trasa z `submit` dostaje plan i idzie do wszystkich (bez <marti>/<dest>)
+    const buildCot = async (feature: Static<typeof FeatureResponse>, submit: boolean): Promise<CoT> => {
+        const cot = await CoTParser.from_geojson(feature);
+
+        if (submit && feature.properties.type === 'b-m-r') {
+            attachRoutePlan(cot, feature);
+        }
+
+        return cot;
+    };
+
     await schema.get('/profile/feature', {
         name: 'Get Features',
         group: 'ProfileFeature',
@@ -252,7 +266,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
                 await config.hub.submitCots({
                     ...hubOpts,
-                    cots: [await CoTParser.from_geojson(req.body)],
+                    cots: [await buildCot(req.body, req.query.submit)],
                 });
 
                 res.json(req.body);
@@ -283,10 +297,15 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             } as Static<typeof FeatureResponse>;
 
             if (req.query.submit || req.query.broadcast) {
-                await config.hub.submitCots({
-                    ...hubOpts,
-                    cots: [await CoTParser.from_geojson(feat)],
-                });
+                // baza już zapisała cechę, więc błąd wysyłki do TAK nie może zepsuć odpowiedzi ani zdarzenia
+                try {
+                    await config.hub.submitCots({
+                        ...hubOpts,
+                        cots: [await buildCot(feat, req.query.submit)],
+                    });
+                } catch (err) {
+                    console.warn('Warning: could not submit saved feature to TAK', err);
+                }
             }
 
             ConnectionEvents.user(config, user, ConnectionEventDataType.FEATURE, ConnectionEventAction.UPDATE, feat.id, feat);
@@ -308,6 +327,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 default: false,
                 description: 'Permanently delete features instead of archiving them',
             }),
+            submit: Type.Boolean({
+                default: false,
+                description: 'Send a force delete of a route to the author\'s devices',
+            }),
         }),
         params: Type.Object({
             id: Type.String(),
@@ -316,6 +339,19 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     }, async (req, res) => {
         try {
             const user = await Auth.as_user(config, req);
+
+            let wasRoute = false;
+            if (req.query.submit) {
+                try {
+                    const existing = await config.models.ProfileFeature.from(sql`
+                        id = ${req.params.id} AND username = ${user.email}
+                    `);
+                    wasRoute = existing.properties.type === 'b-m-r';
+                } catch (err) {
+                    // brak cechy: nie ma czego wysyłać, usunięcie przebiega jak dotąd
+                    if (!(err instanceof Err) || err.status !== 404) throw err;
+                }
+            }
 
             if (req.query.permanent) {
                 await config.models.ProfileFeature.delete(sql`
@@ -328,6 +364,26 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                     deleted: true,
                     properties: sql`jsonb_set(${ProfileFeature.properties}, '{time}', to_jsonb(${new Date().toISOString()}::text))`,
                 });
+            }
+
+            if (wasRoute) {
+                // ATAK (CotDeleteImporter) wymaga <link uid relation type> jako pierwszego dziecka <detail> i <__forcedelete/>
+                const cot = new ForceDelete(req.params.id);
+                cot.uid(randomUUID());
+                const detail = cot.raw.event.detail as { link: { _attributes: Record<string, string> } };
+                detail.link._attributes = { uid: req.params.id, relation: 'p-p', type: 'b-m-r' };
+
+                // baza już usunęła cechę, więc błąd wysyłki nie może zepsuć odpowiedzi
+                try {
+                    await config.hub.submitCots({
+                        connection: user.email,
+                        write: true,
+                        ensureProfile: true,
+                        cots: [cot],
+                    });
+                } catch (err) {
+                    console.warn('Warning: could not send route force delete to everyone', err);
+                }
             }
 
             ConnectionEvents.user(config, user, ConnectionEventDataType.FEATURE, ConnectionEventAction.DELETE, req.params.id);

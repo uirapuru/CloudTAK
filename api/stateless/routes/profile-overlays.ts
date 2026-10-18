@@ -14,6 +14,7 @@ import { StandardResponse, ProfileOverlayResponse, ProfileOverlayGroupResponse, 
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
 import { sql, and, eq, asc } from 'drizzle-orm';
 import * as Default from '../lib/limits.js';
+import { subscribeSharedMission } from '../lib/user/shared-mission.js';
 
 // Upstream documents vary in shape: only `tiles` is required. Response validation strips unlisted keys.
 const OverlayTileJSON = Type.Object({
@@ -403,6 +404,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             const user = await Auth.as_user(config, req);
 
             await overlayControl.ensureDefaultTerrain(user.email);
+
+            // taklab: ponowienie zapisu na misję wspólną - przy pierwszym logowaniu OTS mógł
+            // jeszcze nie znać urządzenia (400 Invalid UID), przy ładowaniu mapy połączenie już jest
+            await subscribeSharedMission(config, user.email, { exclude: user.session });
 
             const [overlays, terrain, snapping] = await Promise.all([
                 config.models.ProfileOverlay.list({
