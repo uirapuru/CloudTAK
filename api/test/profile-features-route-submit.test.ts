@@ -26,10 +26,15 @@ test('podmiana wysyłki', () => {
     };
 });
 
-function route(id = 'route-1') {
+const ME = 'ANDROID-CloudTAK-admin@example.com';
+
+function route(id = 'route-1', creator: string = ME) {
     return {
         id, type: 'Feature', path: '/',
-        properties: { type: 'b-m-r', how: 'm-g', time, start: time, stale: time, callsign: 'Trasa', archived: true, center: [17.05, 51.1], metadata: { taklab_route: plan } },
+        properties: {
+            type: 'b-m-r', how: 'm-g', time, start: time, stale: time, callsign: 'Trasa', archived: true, center: [17.05, 51.1], metadata: { taklab_route: plan },
+            creator: { uid: creator, type: 'a-f-G-E-V-C', callsign: 'X', time },
+        },
         geometry: { type: 'LineString', coordinates: coords },
     };
 }
@@ -104,6 +109,16 @@ test('DELETE submit trasy: t-x-d-d z link jako pierwszym dzieckiem detail', asyn
     assert.doesNotMatch(text, /<dest /);
     // zdarzenie usuwające ma własny uid, nie uid trasy
     assert.doesNotMatch(text, /<event [^>]*uid="route-1"/);
+});
+
+test('DELETE submit cudzej trasy (od ai_buddy): nic nie wysłane', async () => {
+    await put(route('route-bot', 'ai_buddy'));
+    sent.length = 0;
+    const res = await flight.fetch('/api/profile/feature/route-bot?submit=true', {
+        method: 'DELETE', auth: { bearer: flight.token.admin },
+    }, true);
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(sent.length, 0);
 });
 
 test('DELETE bez submit: nic nie wysłane', async () => {
@@ -206,7 +221,7 @@ function shape(id: string, creator?: string) {
 }
 
 test('DELETE submit własnego obiektu: t-x-d-d z typem obiektu, do wszystkich', async () => {
-    await put(shape('own-shape', 'ANDROID-CloudTAK-admin@example.com'));
+    await put(shape('own-shape', ME));
     sent.length = 0;
     await flight.fetch('/api/profile/feature/own-shape?submit=true', {
         method: 'DELETE', auth: { bearer: flight.token.admin },

@@ -761,9 +761,8 @@ export default class AtlasDatabase {
 
             if (cot.properties.archived) {
                 if (!opts.skipNetwork) {
-                    // trasa usera albo jego własny obiekt: serwer wysyła t-x-d-d do wszystkich (bez adresata)
-                    const submit = opts.authored === true && (cot.properties.type === 'b-m-r' || own);
-                    await std(`/api/profile/feature/${id}${submit ? '?submit=true' : ''}`, {
+                    // własny obiekt usera (także trasa): serwer wysyła t-x-d-d do wszystkich (bez adresata)
+                    await std(`/api/profile/feature/${id}${own ? '?submit=true' : ''}`, {
                         token: this.atlas.token,
                         method: 'DELETE'
                     });

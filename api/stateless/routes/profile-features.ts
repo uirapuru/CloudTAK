@@ -330,7 +330,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             }),
             submit: Type.Boolean({
                 default: false,
-                description: 'Send a force delete to everyone when the feature is a route or was created by the user',
+                description: 'Send a force delete to everyone when the feature was created by the user',
             }),
         }),
         params: Type.Object({
@@ -341,17 +341,16 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         try {
             const user = await Auth.as_user(config, req);
 
-            let wasRoute = false;
-            // taklab: obiekt utworzony przez tego usera (creator.uid = jego uid w CloudTAK) kasuje się u wszystkich
+            // taklab: tylko obiekt utworzony przez tego usera (creator.uid = jego uid w CloudTAK),
+            // także trasa, kasuje się u wszystkich; cudzy (np. trasa ai-buddy) tylko w jego profilu
             let ownType: string | undefined;
             if (req.query.submit) {
                 try {
                     const existing = await config.models.ProfileFeature.from(sql`
                         id = ${req.params.id} AND username = ${user.email}
                     `);
-                    wasRoute = existing.properties.type === 'b-m-r';
-                    if (!wasRoute && existing.properties.creator?.uid === profileUid(user.email)) {
-                        ownType = existing.properties.type;
+                    if (existing.properties.creator?.uid === profileUid(user.email)) {
+                        ownType = existing.properties.type || 'none';
                     }
                 } catch (err) {
                     // brak cechy: nie ma czego wysyłać, usunięcie przebiega jak dotąd
@@ -372,14 +371,15 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 });
             }
 
-            if (wasRoute || ownType) {
+            if (ownType) {
+                const wasRoute = ownType === 'b-m-r';
                 // ATAK (CotDeleteImporter) wymaga <link> z niepustymi uid, relation i type oraz <__forcedelete/>
                 const cot = new ForceDelete(req.params.id);
                 cot.uid(randomUUID());
                 const detail = cot.raw.event.detail as { link: { _attributes: Record<string, string> } };
                 detail.link._attributes = wasRoute
                     ? { uid: req.params.id, relation: 'p-p', type: 'b-m-r' }
-                    : { uid: req.params.id, relation: 'none', type: ownType || 'none' };
+                    : { uid: req.params.id, relation: 'none', type: ownType };
                 if (!wasRoute) cot.raw.event._attributes.how = 'h-g-i-g-o';
 
                 // baza już usunęła cechę, więc błąd wysyłki nie może zepsuć odpowiedzi

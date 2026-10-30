@@ -139,6 +139,16 @@ describe('AtlasDatabase: publikacja trasy z planem tylko przy zmianie usera', ()
         expect(deletes()).toEqual(['/api/profile/feature/route-1']);
     });
 
+    it('usunięcie cudzej trasy (od ai_buddy) przez usera: DELETE bez submit', async () => {
+        const atlas = database();
+        const foreign = route();
+        (foreign.properties as Record<string, unknown>).creator = { uid: 'ai_buddy', type: 'a-f-G', callsign: 'Bot', time: '2026-10-16T00:00:00Z' };
+        await atlas.add(foreign);
+        std.mockClear();
+        await atlas.remove('route-1', { authored: true });
+        expect(deletes()).toEqual(['/api/profile/feature/route-1']);
+    });
+
     it('nieudany zapis nowej trasy od usera nie przerywa dodania', async () => {
         const postMessage = vi.fn();
         const atlas = database();
