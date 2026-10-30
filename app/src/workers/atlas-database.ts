@@ -50,6 +50,7 @@ import type {
 } from 'geojson';
 import * as Comlink from 'comlink';
 import AtlasBreadcrumb from './atlas-breadcrumb.ts';
+import { isOwnFeature, forceDeleteFeature } from '../base/delete-for-all.ts';
 
 type NestedArray = {
     path: string;
@@ -693,6 +694,17 @@ export default class AtlasDatabase {
     }
 
     /**
+     * UID of the current CloudTAK user, undefined before the profile loads
+     */
+    selfUid(): string | undefined {
+        try {
+            return this.atlas.profile.uid();
+        } catch {
+            return undefined;
+        }
+    }
+
+    /**
      * Remove a given CoT from the store
      *
      * @param id - UID of the CoT to remove
@@ -743,10 +755,14 @@ export default class AtlasDatabase {
         if (cot.origin.mode === OriginMode.CONNECTION) {
             this.pendingDelete.add(id);
 
+            // taklab: usunięcie przez usera obiektu, który sam utworzył, idzie do wszystkich (t-x-d-d);
+            // cudzy obiekt znika tylko lokalnie
+            const own = opts.authored === true && !opts.skipNetwork && isOwnFeature(cot, this.selfUid());
+
             if (cot.properties.archived) {
                 if (!opts.skipNetwork) {
-                    // taklab: usunięcie trasy przez usera wysyła t-x-d-d do wszystkich (bez adresata)
-                    const submit = opts.authored === true && cot.properties.type === 'b-m-r';
+                    // trasa usera albo jego własny obiekt: serwer wysyła t-x-d-d do wszystkich (bez adresata)
+                    const submit = opts.authored === true && (cot.properties.type === 'b-m-r' || own);
                     await std(`/api/profile/feature/${id}${submit ? '?submit=true' : ''}`, {
                         token: this.atlas.token,
                         method: 'DELETE'
@@ -756,6 +772,11 @@ export default class AtlasDatabase {
                 this.atlas.postMessage({
                     type: WorkerMessageType.Feature_Archived_Removed
                 });
+            } else if (own) {
+                // obiekt niezapisany na serwerze: t-x-d-d prosto na strumień
+                if (!this.atlas.conn.sendCOT(forceDeleteFeature(id, cot.properties.type))) {
+                    console.warn(`Could not send delete of ${id} to everyone: connection closed`);
+                }
             }
         } else if (cot.origin.mode === OriginMode.MISSION && cot.origin.mode_id) {
             const subscription = await Subscription.from(cot.origin.mode_id, {

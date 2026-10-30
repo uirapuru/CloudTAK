@@ -14,6 +14,7 @@ import { StandardResponse, FeatureResponse, GeoJSONFeatureCollection, GeoJSONFea
 import { ExportFeatureFormat } from '../../common/enums.js';
 import { enabledGeofence, isUserPuck } from '../lib/control/feature.js';
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
+import { profileUid } from '../../common/control/takserver.js';
 import { sql } from 'drizzle-orm';
 import * as Default from '../lib/limits.js';
 import { attachRoutePlan } from '../../common/taklab-route-cot.js';
@@ -329,7 +330,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             }),
             submit: Type.Boolean({
                 default: false,
-                description: 'Send a force delete of a route to the author\'s devices',
+                description: 'Send a force delete to everyone when the feature is a route or was created by the user',
             }),
         }),
         params: Type.Object({
@@ -341,12 +342,17 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             const user = await Auth.as_user(config, req);
 
             let wasRoute = false;
+            // taklab: obiekt utworzony przez tego usera (creator.uid = jego uid w CloudTAK) kasuje się u wszystkich
+            let ownType: string | undefined;
             if (req.query.submit) {
                 try {
                     const existing = await config.models.ProfileFeature.from(sql`
                         id = ${req.params.id} AND username = ${user.email}
                     `);
                     wasRoute = existing.properties.type === 'b-m-r';
+                    if (!wasRoute && existing.properties.creator?.uid === profileUid(user.email)) {
+                        ownType = existing.properties.type;
+                    }
                 } catch (err) {
                     // brak cechy: nie ma czego wysyłać, usunięcie przebiega jak dotąd
                     if (!(err instanceof Err) || err.status !== 404) throw err;
@@ -366,12 +372,15 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 });
             }
 
-            if (wasRoute) {
-                // ATAK (CotDeleteImporter) wymaga <link uid relation type> jako pierwszego dziecka <detail> i <__forcedelete/>
+            if (wasRoute || ownType) {
+                // ATAK (CotDeleteImporter) wymaga <link> z niepustymi uid, relation i type oraz <__forcedelete/>
                 const cot = new ForceDelete(req.params.id);
                 cot.uid(randomUUID());
                 const detail = cot.raw.event.detail as { link: { _attributes: Record<string, string> } };
-                detail.link._attributes = { uid: req.params.id, relation: 'p-p', type: 'b-m-r' };
+                detail.link._attributes = wasRoute
+                    ? { uid: req.params.id, relation: 'p-p', type: 'b-m-r' }
+                    : { uid: req.params.id, relation: 'none', type: ownType || 'none' };
+                if (!wasRoute) cot.raw.event._attributes.how = 'h-g-i-g-o';
 
                 // baza już usunęła cechę, więc błąd wysyłki nie może zepsuć odpowiedzi
                 try {
@@ -382,7 +391,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                         cots: [cot],
                     });
                 } catch (err) {
-                    console.warn('Warning: could not send route force delete to everyone', err);
+                    console.warn('Warning: could not send force delete to everyone', err);
                 }
             }
 

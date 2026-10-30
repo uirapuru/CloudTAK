@@ -314,9 +314,13 @@ export default class AtlasConnection {
                     await this.atlas.db.subChange(task);
                 } else if (task.properties.type === 't-x-d-d') {
                     const forcedelete = task.properties.forcedelete === true;
+                    const selfUid = this.atlas.db.selfUid();
 
                     for (const link of task.properties.links || []) {
                         if (!link.uid) continue;
+
+                        // taklab: własna pozycja nie znika na cudze żądanie
+                        if (link.uid === selfUid) continue;
 
                         const cot = await this.atlas.db.get(link.uid);
 

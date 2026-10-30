@@ -193,4 +193,49 @@ test('PUT submit bez archiwizacji: błąd wysyłki nadal zwraca błąd', async (
     }
 });
 
+// taklab: obiekt utworzony przez usera kasuje się u wszystkich, cudzy tylko w jego profilu
+function shape(id: string, creator?: string) {
+    return {
+        id, type: 'Feature', path: '/',
+        properties: {
+            type: 'u-d-f', how: 'h-e', time, start: time, stale: time, callsign: 'Wielokąt', archived: true, center: [17.05, 51.1],
+            ...(creator ? { creator: { uid: creator, type: 'a-f-G-E-V-C', callsign: 'X', time } } : {}),
+        },
+        geometry: { type: 'Polygon', coordinates: [[[17.03, 51.11, 0], [17.05, 51.1, 0], [17.07, 51.09, 0], [17.03, 51.11, 0]]] },
+    };
+}
+
+test('DELETE submit własnego obiektu: t-x-d-d z typem obiektu, do wszystkich', async () => {
+    await put(shape('own-shape', 'ANDROID-CloudTAK-admin@example.com'));
+    sent.length = 0;
+    await flight.fetch('/api/profile/feature/own-shape?submit=true', {
+        method: 'DELETE', auth: { bearer: flight.token.admin },
+    }, true);
+    assert.strictEqual(sent.length, 1);
+    const text = xml(sent[0][0]);
+    assert.match(text, /<event [^>]*type="t-x-d-d"/);
+    assert.match(text, /<event [^>]*how="h-g-i-g-o"/);
+    assert.doesNotMatch(text, /<event [^>]*uid="own-shape"/);
+    const link = text.match(/<link ([^>]*)\/>/)![1];
+    assert.match(link, /uid="own-shape"/);
+    assert.match(link, /relation="none"/);
+    assert.match(link, /type="u-d-f"/);
+    assert.match(text, /<__forcedelete\/>/);
+    assert.doesNotMatch(text, /<marti/);
+    assert.doesNotMatch(text, /<dest /);
+});
+
+test('DELETE submit cudzego obiektu i obiektu bez twórcy: nic nie wysłane', async () => {
+    await put(shape('foreign-shape', 'ANDROID-someone-else'));
+    await put(shape('anon-shape'));
+    sent.length = 0;
+    for (const id of ['foreign-shape', 'anon-shape']) {
+        const res = await flight.fetch(`/api/profile/feature/${id}?submit=true`, {
+            method: 'DELETE', auth: { bearer: flight.token.admin },
+        }, true);
+        assert.strictEqual(res.status, 200);
+    }
+    assert.strictEqual(sent.length, 0);
+});
+
 flight.landing();
