@@ -10,6 +10,38 @@ import { VideoLease_SourceType } from '../../../common/enums.js';
 import { fetch, isSafeUrl } from '@tak-ps/node-safeurl';
 import TAKServerControl from '../../../common/control/takserver.js';
 
+/**
+ * taklab: management address of the Media Server API.
+ *
+ * Upstream reaches the media-infra API on port 9997 of the media::url host,
+ * the same host browsers use for HLS. When MEDIA_API_URL is set (e.g. an
+ * in-cluster service), management calls go there instead and keep their
+ * own port, so the API does not have to be reachable from the internet.
+ */
+export function mediaApiUrl(
+    path: string,
+    mediaUrl: string,
+    internal: string | undefined = process.env.MEDIA_API_URL,
+): URL {
+    if (internal) return new URL(path, internal);
+
+    const url = new URL(path, mediaUrl);
+    url.port = '9997';
+    return url;
+}
+
+/**
+ * taklab: hostnames trusted by the SSRF guard for Media Server API calls
+ */
+export function mediaApiAllow(
+    mediaUrl: string,
+    internal: string | undefined = process.env.MEDIA_API_URL,
+): string[] {
+    const allow = [new URL(mediaUrl).hostname];
+    if (internal) allow.push(new URL(internal).hostname);
+    return allow;
+}
+
 export enum ProtocolPopulation {
     TEMPLATE,
     WRITE,
@@ -211,12 +243,11 @@ export default class VideoServiceControl {
 
         const headers = this.headers(video.token);
 
-        const url = new URL('/v3/config/global/get', video.url);
-        url.port = '9997';
+        const url = mediaApiUrl('/v3/config/global/get', video.url!);
 
         const res = await fetch(url, {
             headers: Object.fromEntries(headers.entries()),
-            safeUrlAllow: [new URL(video.url!).hostname],
+            safeUrlAllow: mediaApiAllow(video.url!),
         });
         if (!res.ok) throw new Err(500, null, await res.text());
         const body = await res.typed(VideoConfig);
@@ -248,12 +279,11 @@ export default class VideoServiceControl {
         const headers = this.headers(video.token);
 
         // TODO support paging
-        const url = new URL('/path', video.url);
-        url.port = '9997';
+        const url = mediaApiUrl('/path', video.url!);
 
         const res = await fetch(url, {
             headers: Object.fromEntries(headers.entries()),
-            safeUrlAllow: [new URL(video.url!).hostname],
+            safeUrlAllow: mediaApiAllow(video.url!),
         });
         if (!res.ok) throw new Err(500, null, await res.text());
 
@@ -364,7 +394,9 @@ export default class VideoServiceControl {
         if (c.config && c.config.hls) {
             // Format: http://localhost:9997/mystream/index.m3u8 - Proxied
             const url = new URL(`/stream/${lease.path}/index.m3u8`, c.external);
-            url.port = '9997';
+            // taklab: with a separate management address the public media::url
+            // is a reverse proxy serving /stream/ on its own port (Traefik 443)
+            if (!process.env.MEDIA_API_URL) url.port = '9997';
 
             if (lease.stream_user && lease.read_user) {
                 if (populated === ProtocolPopulation.READ && lease.read_user && lease.read_pass) {
@@ -537,8 +569,7 @@ export default class VideoServiceControl {
 
         await this.updateSecure(lease, opts.secure);
 
-        const url = new URL(`/path`, video.url);
-        url.port = '9997';
+        const url = mediaApiUrl(`/path`, video.url!);
 
         headers.append('Content-Type', 'application/json');
 
@@ -597,7 +628,7 @@ export default class VideoServiceControl {
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: Object.fromEntries(headers.entries()),
-                        safeUrlAllow: [new URL(video.url!).hostname],
+                        safeUrlAllow: mediaApiAllow(video.url!),
                         body: JSON.stringify({
                             name: lease.path,
                             source: lease.proxy,
@@ -621,7 +652,7 @@ export default class VideoServiceControl {
             const res = await fetch(url, {
                 method: 'POST',
                 headers: Object.fromEntries(headers.entries()),
-                safeUrlAllow: [new URL(video.url!).hostname],
+                safeUrlAllow: mediaApiAllow(video.url!),
                 body: JSON.stringify({
                     name: lease.path,
                     record: lease.recording,
@@ -775,8 +806,7 @@ export default class VideoServiceControl {
         try {
             await this.path(lease.path);
 
-            const url = new URL(`/path/${lease.path}`, video.url);
-            url.port = '9997';
+            const url = mediaApiUrl(`/path/${lease.path}`, video.url!);
 
             const headers = this.headers(video.token);
             headers.append('Content-Type', 'application/json');
@@ -784,7 +814,7 @@ export default class VideoServiceControl {
             const res = await fetch(url, {
                 method: 'PATCH',
                 headers: Object.fromEntries(headers.entries()),
-                safeUrlAllow: [new URL(video.url!).hostname],
+                safeUrlAllow: mediaApiAllow(video.url!),
                 body: JSON.stringify({
                     name: lease.path,
                     source: lease.proxy,
@@ -795,8 +825,7 @@ export default class VideoServiceControl {
             if (!res.ok) throw new Err(500, null, await res.text());
         } catch (err) {
             if (err instanceof Err && err.status === 404) {
-                const url = new URL(`/path`, video.url);
-                url.port = '9997';
+                const url = mediaApiUrl(`/path`, video.url!);
 
                 const headers = this.headers(video.token);
                 headers.append('Content-Type', 'application/json');
@@ -804,7 +833,7 @@ export default class VideoServiceControl {
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: Object.fromEntries(headers.entries()),
-                    safeUrlAllow: [new URL(video.url!).hostname],
+                    safeUrlAllow: mediaApiAllow(video.url!),
                     body: JSON.stringify({
                         name: lease.path,
                         source: lease.proxy,
@@ -830,13 +859,12 @@ export default class VideoServiceControl {
 
         const headers = this.headers(video.token);
 
-        const url = new URL(`/path/${pathid}`, video.url);
-        url.port = '9997';
+        const url = mediaApiUrl(`/path/${pathid}`, video.url!);
 
         const res = await fetch(url, {
             method: 'GET',
             headers: Object.fromEntries(headers.entries()),
-            safeUrlAllow: [new URL(video.url!).hostname],
+            safeUrlAllow: mediaApiAllow(video.url!),
         });
 
         if (res.ok) {
@@ -852,13 +880,12 @@ export default class VideoServiceControl {
 
         const headers = this.headers(video.token);
 
-        const url = new URL(`/v3/recordings/get/${path}`, video.url);
-        url.port = '9997';
+        const url = mediaApiUrl(`/v3/recordings/get/${path}`, video.url!);
 
         const res = await fetch(url, {
             method: 'GET',
             headers: Object.fromEntries(headers.entries()),
-            safeUrlAllow: [new URL(video.url!).hostname],
+            safeUrlAllow: mediaApiAllow(video.url!),
         });
 
         if (res.ok) {
@@ -900,13 +927,12 @@ export default class VideoServiceControl {
 
         await this.config.models.VideoLease.delete(leaseid);
 
-        const url = new URL(`/path/${lease.path}`, video.url);
-        url.port = '9997';
+        const url = mediaApiUrl(`/path/${lease.path}`, video.url!);
 
         await fetch(url, {
             method: 'DELETE',
             headers: Object.fromEntries(headers.entries()),
-            safeUrlAllow: [new URL(video.url!).hostname],
+            safeUrlAllow: mediaApiAllow(video.url!),
         });
 
         try {
