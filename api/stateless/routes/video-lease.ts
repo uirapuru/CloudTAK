@@ -238,7 +238,13 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 resources: [{ access: AuthResourceAccess.LEASE, id: undefined }],
             });
 
-            const ephemeral = AllBooleanCast(req.query.ephemeral);
+            // taklab: the Media Server (resource token) syncs its paths from this
+            // list and deletes every path that is missing from it. media-infra
+            // v9.10.0 asks with ephemeral=false, so the path of an ephemeral
+            // proxy lease (the Video Player creates one for every raw RTSP
+            // stream URL) was removed within 10 seconds of creation and
+            // playback stopped. Resource tokens always see ephemeral leases.
+            const ephemeral = auth instanceof AuthResource ? null : AllBooleanCast(req.query.ephemeral);
             const expired = AllBooleanCast(req.query.expired);
 
             if (req.query.impersonate && (auth instanceof AuthResource || (auth instanceof AuthUser && (auth as AuthUser).is_admin()))) {
