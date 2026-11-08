@@ -71,6 +71,7 @@ test('nginx.conf: https subdomain produces full CSP with wildcard parent domain'
         csp[0],
         `add_header 'Content-Security-Policy' "`
         + `default-src 'self' map.example.com:* *.example.com:*; `
+        + `frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com; `
         + `script-src 'self' 'wasm-unsafe-eval' map.example.com:* *.example.com:*; `
         + `img-src 'self' data: blob: https://assets.ion.cesium.com https://t.plnspttrs.net https://maps.googleapis.com map.example.com:* *.example.com:*; `
         + `media-src 'self' blob: map.example.com:* *.example.com:*; `

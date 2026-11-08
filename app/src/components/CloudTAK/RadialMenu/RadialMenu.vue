@@ -212,6 +212,7 @@ import './RadialMenu.css';
 import { useMapStore } from '../../../stores/map.ts';
 import * as mapgl from 'maplibre-gl';
 import { canCutOverlayFeature } from '../util/featureCut.ts';
+import { markerVideoLink } from '../../../base/video-link.ts';
 import { clipboardReadAccess, readFeatureFromClipboard } from '../../../stores/device/clipboard.ts';
 
 interface RadialMenuItem {
@@ -367,7 +368,7 @@ async function genMenuItems(
                 }
             }
 
-            if (cot.value.properties.video) {
+            if (cot.value.properties.video || markerVideoLink(cot.value.properties)) {
                 menuItems.value.push({ id: 'play', icon: '#radial-play' })
             }
 

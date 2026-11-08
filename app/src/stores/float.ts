@@ -7,9 +7,15 @@ import { markRaw, defineAsyncComponent } from 'vue';
 import type { Component } from 'vue';
 import { useMapStore } from './map.ts';
 import type { VideoConnection, VideoLease, Attachment, InputFeature } from '../types.ts';
+import { markerVideoLink } from '../base/video-link.ts';
 
 const FloatingVideo = defineAsyncComponent(() => import('../components/CloudTAK/util/FloatingVideo.vue'));
 const FloatingAttachment = defineAsyncComponent(() => import('../components/CloudTAK/util/FloatingAttachment.vue'));
+const FloatingWebVideo = defineAsyncComponent(() => import('../components/CloudTAK/util/FloatingWebVideo.vue'));
+
+// Phone videos (Shorts) are portrait, so the web player opens taller than wide
+const WEB_VIDEO_WIDTH = 360;
+const WEB_VIDEO_HEIGHT = 560;
 
 export enum VideoStoreType {
     COT = 'cot',
@@ -187,7 +193,10 @@ export const useFloatStore = defineStore('float', {
                 mission: true
             });
 
-            if (!cot || !cot.properties || !cot.properties.video || !cot.properties.video.url) {
+            if (!cot || !cot.properties) return;
+
+            if (!cot.properties.video || !cot.properties.video.url) {
+                this.addWebVideo(uid, cot.properties.callsign, markerVideoLink(cot.properties));
                 return;
             }
 
@@ -202,6 +211,20 @@ export const useFloatStore = defineStore('float', {
                 height: PANE_DEFAULT_HEIGHT,
                 width: PANE_DEFAULT_WIDTH,
                 ...defaultPosition(),
+            })
+        },
+        /** Player for a video page link (YouTube) attached to a marker; no-op without a link. */
+        addWebVideo(uid: string, name: string | undefined, url: string | null): void {
+            if (!url) return;
+
+            this.panes.set(uid, {
+                uid,
+                name,
+                component: markRaw(FloatingWebVideo),
+                config: { url },
+                height: WEB_VIDEO_HEIGHT,
+                width: WEB_VIDEO_WIDTH,
+                ...defaultPosition('top-left', WEB_VIDEO_WIDTH),
             })
         }
     }

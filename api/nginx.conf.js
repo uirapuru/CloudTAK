@@ -15,8 +15,13 @@ const ION_TILES = ['https://assets.ion.cesium.com', 'https://tile.googleapis.com
 // maps.googleapis.com serves Street View Static thumbnails
 const PLANESPOTTERS_IMAGES = ['https://t.plnspttrs.net', 'https://maps.googleapis.com'];
 
+// Video links on markers (YouTube) play in an embedded player pane; the
+// privacy-enhanced host is the one the app uses, youtube.com is its fallback
+const VIDEO_FRAMES = ['https://www.youtube-nocookie.com', 'https://www.youtube.com'];
+
 const csp = {
     'default-src': [`'self'`],
+    'frame-src': [`'self'`, ...VIDEO_FRAMES],
     'script-src': [`'self'`, `'wasm-unsafe-eval'`],
     'img-src': [`'self'`, 'data:', 'blob:', 'https://assets.ion.cesium.com', ...PLANESPOTTERS_IMAGES],
     'media-src': [`'self'`, 'blob:'],
