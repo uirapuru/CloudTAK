@@ -43,7 +43,7 @@ export class ConnectionWebSocket {
                         // non-existent user named after the feed and nobody received it
                         if (!msg.data.mission && msg.data.chatroom) {
                             const sub = (await client.config.subscriptions())
-                                .find((s) => s.name === msg.data.chatroom);
+                                .find(s => s.name === msg.data.chatroom);
 
                             if (sub) {
                                 msg.data.mission = sub.name;
