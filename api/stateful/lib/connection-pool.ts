@@ -325,7 +325,10 @@ export default class ConnectionPool extends Map<number | string, ConnectionClien
                             const myUid = profileUid(conn.id);
                             const senderUid = feat.properties.chat.chatgrp?._attributes?.uid0;
                             const isOutgoing = senderUid === myUid;
-                            const chatroom = isOutgoing
+                            // Data Sync (feed) chat belongs to one conversation named after the
+                            // feed, not to a private conversation with whoever wrote it
+                            const isMissionChat = feat.properties.chat.parent === 'DataSyncMissionsList';
+                            const chatroom = isOutgoing || isMissionChat
                                 ? feat.properties.chat.chatroom
                                 : feat.properties.chat.senderCallsign;
 
@@ -376,7 +379,9 @@ export default class ConnectionPool extends Map<number | string, ConnectionClien
                                         chatroom: feat.properties.chat.chatroom,
                                     },
                                 }));
-                            } else if (feat.properties && feat.properties.chat && feat.properties.chat.parent !== 'DataSyncMissionsList') {
+                            } else if (feat.properties && feat.properties.chat) {
+                                // Feed chat goes to the feed conversation in Chats AND (as a CoT)
+                                // to the Data Sync chat tab, so it must not stop here
                                 client.ws.send(JSON.stringify({
                                     type: 'chat',
                                     connection: conn.id,
@@ -391,6 +396,10 @@ export default class ConnectionPool extends Map<number | string, ConnectionClien
                                         time: storedCreated || feat.properties.time || new Date().toISOString(),
                                     },
                                 }));
+
+                                if (feat.properties.chat.parent === 'DataSyncMissionsList') {
+                                    client.ws.send(JSON.stringify({ type: 'cot', connection: conn.id, data: feat }));
+                                }
                             } else if (feat.properties.type.startsWith('t-x')) {
                                 client.ws.send(JSON.stringify({ type: 'task', connection: conn.id, data: feat }));
                             } else if (feat.properties.type.startsWith('b-f-t')) {

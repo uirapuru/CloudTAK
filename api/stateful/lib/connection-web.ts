@@ -38,6 +38,20 @@ export class ConnectionWebSocket {
                     } else if (msg.type === 'chat') {
                         let chat: DirectChat | MissionChat;
 
+                        // A message written in Chats to a conversation named after a subscribed
+                        // feed is a feed chat; without this it went out as a private message to a
+                        // non-existent user named after the feed and nobody received it
+                        if (!msg.data.mission && msg.data.chatroom) {
+                            const sub = (await client.config.subscriptions())
+                                .find((s) => s.name === msg.data.chatroom);
+
+                            if (sub) {
+                                msg.data.mission = sub.name;
+                                msg.data.guid = sub.guid;
+                                msg.data.parent = 'DataSyncMissionsList';
+                            }
+                        }
+
                         if (msg.data.mission) {
                             const serverUrl = new URL(client.config.config.server.url);
                             const apiUrl = new URL(String(client.config.config.server.api));
