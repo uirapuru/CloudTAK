@@ -8,6 +8,8 @@ import { attachWebsocket, startHubRpc } from './stateful/lib/server/hub.js';
 import type { ServerMode } from './common/config.js';
 import ConfigStateful from './stateful/config.js';
 import ConfigStateless from './stateless/config.js';
+import { attachVoiceWebsocket } from './stateless/lib/control/voice-ws.js';
+import { isVoiceUpgrade } from './common/voice-path.js';
 import ServerManager from './common/server.js';
 import process from 'node:process';
 
@@ -160,11 +162,15 @@ export default async function server(configs: ServerConfigs): Promise<ServerMana
             return resolve(sm);
         });
 
+        // taklab: live listening and PTT of the voice log, before the connection socket
+        if (stateless) attachVoiceWebsocket(srv, stateless);
+
         let wss: WebSocketServer | undefined;
         if (stateful) {
             wss = attachWebsocket(srv, stateful);
         } else {
             srv.on('upgrade', (request, socket) => {
+                if (isVoiceUpgrade(request.url)) return;
                 socket.on('error', () => socket.destroy());
                 socket.write('HTTP/1.1 426 Upgrade Required\r\nConnection: close\r\n\r\n');
                 socket.destroy();

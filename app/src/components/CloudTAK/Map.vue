@@ -93,6 +93,8 @@
                 @to-location='toLocation'
             />
             <PluginPane v-if='mode === "Default" && !isDrawing' />
+            <!-- taklab: przycisk PTT i odsłuch kanału głosowego (rejestr głosu) -->
+            <PttButton v-if='mapStore.isMapLoaded && mode === "Default" && !isDrawing' />
             <div
                 v-if='mapStore.selected.size'
                 class='position-absolute'
@@ -363,6 +365,7 @@ import BufferInput from './Inputs/BufferInput.vue';
 import { ref, watch, computed, toRaw, nextTick, onMounted, onBeforeUnmount, useTemplateRef } from 'vue';
 import GPSPanel from './GPSPanel/GPSPanel.vue';
 import PluginPane from './PluginPane.vue';
+import PttButton from './PttButton.vue';
 import {useRoute, useRouter } from 'vue-router';
 import Navigating from './Navigating.vue';
 import TopBar from './TopBar.vue';

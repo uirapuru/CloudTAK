@@ -13,6 +13,7 @@ import { setTimeout } from 'node:timers/promises';
 import Auth, { tokenParser, AuthUser, AuthResource, AuthResourceAccess } from '../../../common/auth.js';
 import { WebSocket_Event } from '../../../common/enums.js';
 import type ConfigStateful from '../../config.js';
+import { isVoiceUpgrade } from '../../../common/voice-path.js';
 
 export function attachWebsocket(srv: Server, config: ConfigStateful): ws.WebSocketServer {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -190,6 +191,8 @@ export function attachWebsocket(srv: Server, config: ConfigStateful): ws.WebSock
     });
 
     srv.on('upgrade', async (request, socket, head) => {
+        // taklab: the voice log socket has its own handler (stateless/lib/control/voice-ws.ts)
+        if (isVoiceUpgrade(request.url)) return;
         socket.on('error', () => socket.destroy());
 
         try {
