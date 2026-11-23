@@ -24,7 +24,7 @@ const csp = {
     'frame-src': [`'self'`, ...VIDEO_FRAMES],
     'script-src': [`'self'`, `'wasm-unsafe-eval'`],
     'img-src': [`'self'`, 'data:', 'blob:', 'https://assets.ion.cesium.com', ...PLANESPOTTERS_IMAGES],
-    'media-src': [`'self'`, 'blob:'],
+    'media-src': [`'self'`, 'data:', 'blob:'],
     'font-src': [`'self'`, 'data:'],
     'worker-src': [`'self'`, 'blob:'],
     'style-src-elem': [`'self'`, `'unsafe-inline'`],
@@ -211,9 +211,20 @@ http {
                 return 302 /$1;
             }
 
-             alias /home/etl/app/dist/;
-             try_files $uri $uri.html $uri/ /index.html;
-         }
+            add_header 'X-Content-Type-Options' 'nosniff' always;
+            add_header 'X-Frame-Options' 'DENY' always;
+            add_header 'Referrer-Policy' 'strict-origin-when-cross-origin' always;
+            add_header 'Permissions-Policy' 'fullscreen=(self), geolocation=(self), clipboard-read=(self), clipboard-write=(self)' always;
+            ${cspstr}
+            ${sts}
+
+            add_header 'Cache-Control' 'no-store, no-cache, must-revalidate' always;
+            add_header 'Expires' 0 always;
+            add_header 'Pragma' 'no-cache' always;
+
+            alias /home/etl/app/dist/;
+            try_files $uri $uri.html $uri/ /index.html;
+        }
 
         location /icons/ {
             alias /home/etl/api/icons/;

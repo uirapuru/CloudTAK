@@ -240,8 +240,7 @@ import { useMapStore } from '../../../stores/map.ts';
 import type { LngLatLike, MapGeoJSONFeature } from 'maplibre-gl';
 import type { Feature } from 'geojson';
 import pointOnFeature from '@turf/point-on-feature';
-import Handlebars from 'handlebars';
-import { server, getRuntimeToken } from '../../../std.ts';
+import { getRuntimeToken } from '../../../std.ts';
 import { liveFeatureTitle, visibleProperties } from '../../../base/live.ts';
 import { fetchDetail, liveFeatureRef, RouteToggle, routeToggleLabel, safeHttpUrl, type LiveDetail } from '../../../base/live-detail.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
@@ -257,6 +256,7 @@ import PropertyElevation from '../Property/PropertyElevation.vue';
 import PropertyRemarks from '../Property/PropertyRemarks.vue';
 import { cutOverlayFeature, getFeatureOverlay } from '../util/featureCut.ts';
 import { featureHtmlDescription, proxyHtmlImages } from '../util/proxyImages.ts';
+import { fetchTitleTemplate, featureTitle as resolveFeatureTitle } from '../util/titleTemplate.ts';
 import {
     TablerIconButton,
     TablerLoading
@@ -301,36 +301,16 @@ const titleTemplate = ref<string | null>(null);
 
 watch(overlay, async (ov) => {
     titleTemplate.value = null;
-    if (!ov || !ov.mode_id || !['basemap', 'overlay'].includes(ov.mode)) return;
-
-    const { data } = await server.GET('/api/basemap/{:basemapid}', {
-        params: { path: { ':basemapid': Number(ov.mode_id) } }
-    });
-
-    if (data && typeof data === 'object' && 'title' in data && data.title) {
-        titleTemplate.value = data.title;
-    }
+    const template = await fetchTitleTemplate(ov);
+    if (overlay.value === ov) titleTemplate.value = template;
 }, { immediate: true });
 
 const featureTitle = computed(() => {
     if (!feature.value) return t('menu.featView.noName');
     const props = feature.value.properties || {};
-
-    if (titleTemplate.value) {
-        try {
-            let tmpl = titleTemplate.value;
-            // Bare property name (e.g. "callsign") => wrap as handlebars expression
-            if (/^[a-zA-Z0-9_]+$/.test(tmpl)) {
-                tmpl = `{{${tmpl}}}`;
-            }
-            const result = Handlebars.compile(tmpl)(props);
-            if (result && result.trim().length > 0) return result;
-        } catch {
-            // Fall through to default
-        }
-    }
-
-    return props.name || props.callsign || liveFeatureTitle(props) || t('menu.featView.noName');
+    // taklab: obiekty warstw na żywo mają tytuł z własnych pól
+    const fallback = liveFeatureTitle(props) || t('menu.featView.noName');
+    return resolveFeatureTitle(props, titleTemplate.value, fallback);
 });
 
 const featureKey = computed(() => String(feature.value?.id ?? featureTitle.value));

@@ -14,13 +14,31 @@ const router = VueRouter.createRouter({
                 name: 'home-menu-query',
                 component: () => import('./components/CloudTAK/QueryView.vue'),
             },{
-                path: 'cot/:uid',
+                path: 'cot/:uid/:tab?',
                 name: 'home-menu-cot',
                 component: () => import('./components/CloudTAK/CoTView.vue'),
             },{
-                path: 'event/:event',
+                path: 'cot/:uid/appearance',
+                name: 'home-menu-cot-appearance',
+                component: () => import('./components/CloudTAK/CoTAppearance.vue'),
+            },{
+                path: 'event/:event/:tab?',
                 name: 'home-menu-core-entity',
                 component: () => import('./components/CloudTAK/CoreEntityView.vue'),
+            },{
+                path: 'event/:event/appearance',
+                name: 'home-menu-core-entity-appearance',
+                component: () => import('./components/CloudTAK/CoreEntityAppearance.vue'),
+                props: { kind: 'event' },
+            },{
+                path: 'device/:device/:tab?',
+                name: 'home-menu-core-device',
+                component: () => import('./components/CloudTAK/CoreDeviceView.vue'),
+            },{
+                path: 'device/:device/appearance',
+                name: 'home-menu-core-device-appearance',
+                component: () => import('./components/CloudTAK/CoreEntityAppearance.vue'),
+                props: { kind: 'device' },
             },{
                 path: 'menu',
                 name: 'home-menu',
@@ -44,6 +62,10 @@ const router = VueRouter.createRouter({
                     path: 'settings/sessions',
                     name: 'home-menu-settings-sessions',
                     component: () => import('./components/CloudTAK/Menu/MenuSettingsSessions.vue')
+                },{
+                    path: 'settings/notifications',
+                    name: 'home-menu-settings-notifications',
+                    component: () => import('./components/CloudTAK/Menu/MenuSettingsNotifications.vue')
                 },{
                     path: 'settings/paging',
                     name: 'home-menu-settings-paging',
@@ -117,6 +139,14 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-features',
                     component: () => import('./components/CloudTAK/Menu/MenuFeatures.vue')
                 },{
+                    path: 'features/events',
+                    name: 'home-menu-features-events',
+                    component: () => import('./components/CloudTAK/Menu/MenuFeaturesEvents.vue')
+                },{
+                    path: 'features/devices',
+                    name: 'home-menu-features-devices',
+                    component: () => import('./components/CloudTAK/Menu/MenuFeaturesDevices.vue')
+                },{
                     path: 'features/deleted',
                     name: 'home-menu-features-deleted',
                     component: () => import('./components/CloudTAK/Menu/MenuFeaturesDeleted.vue')
@@ -137,9 +167,16 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-contacts',
                     component: () => import('./components/CloudTAK/Menu/MenuContacts.vue')
                 },{
+                    path: 'devices',
+                    redirect: { name: 'home-menu-features-devices' }
+                },{
                     path: 'missions',
                     name: 'home-menu-missions',
                     component: () => import('./components/CloudTAK/Menu/MenuMissions.vue')
+                },{
+                    path: 'missions/new',
+                    name: 'home-menu-missions-new',
+                    component: () => import('./components/CloudTAK/Menu/MenuMissionNew.vue')
                 },{
                     path: 'missions/:mission',
                     name: 'home-menu-mission',

@@ -1,3 +1,4 @@
+import { t } from '../i18n.ts';
 import type { Observable } from 'dexie';
 import { shallowReactive } from 'vue';
 import { db, type DBOverlay, liveQuery } from '../database.ts';
@@ -5,6 +6,7 @@ import type { paths } from '@cloudtak/api-types';
 import { server } from '../std.ts';
 import BaseInterface from './interface.ts';
 import Overlay from './overlay-class.ts';
+import { useMapStore } from '../stores/map.ts';
 import { syncOverlays, OVERLAY_LIST_CACHE_KEY } from './overlay-sync.ts';
 import type {
     BaseInterface_ListOptions,
@@ -31,14 +33,12 @@ export type Overlay_Page = {
     items: DBOverlay[];
 };
 
-export type Overlay_CreateLoadedOptions = NonNullable<Parameters<typeof Overlay.create>[1]> & {
-    position?: 'default' | 'prepend';
-};
-
 const loadedOverlays = shallowReactive<Overlay[]>([]) as Overlay[];
 
 export default class OverlayManager extends BaseInterface {
     static readonly listCacheKey = OVERLAY_LIST_CACHE_KEY;
+
+    /** Loaded overlay instances - unordered, use stack() for map order */
     static readonly loaded = loadedOverlays;
 
     static clearLoaded(): void {
@@ -59,129 +59,73 @@ export default class OverlayManager extends BaseInterface {
         return this.loaded.find((overlay) => overlay.mode === mode && overlay.mode_id === modeId);
     }
 
-    private static loadedBeforeId(): string | undefined {
-        return this.loadedAnchorFrom(1);
-    }
-
     static appendLoaded(...overlays: Overlay[]): void {
         this.loaded.push(...overlays);
     }
 
-    /**
-     * Create an overlay and load it. An ordinary overlay goes to the top of
-     * the ungrouped overlays - in the Overlays menu (top = top of the map
-     * stack) it is the first row below the groups. The positions of the
-     * ordinary overlays are then renumbered and saved so the place survives
-     * a reload. Basemaps and internal overlays keep their pinned place.
-     */
+    /** Loaded overlays in stack order, bottom first */
+    static stack(): Overlay[] {
+        return [...this.loaded].sort(OverlayManager.compareStack);
+    }
+
+    /** Create the overlay record and wait for the map to reconcile it */
     static async createLoaded(
-        body: Parameters<typeof Overlay.create>[0],
-        opts: Overlay_CreateLoadedOptions = {}
+        body: Parameters<typeof OverlayManager.generate>[0]
     ): Promise<Overlay> {
-        const { position = 'default', ...createOpts } = opts;
+        const record = await this.generate(body);
 
-        if (position === 'prepend') {
-            const overlay = await Overlay.create(body, { ...createOpts, before: createOpts.before ?? this.loadedBeforeId() });
-            this.loaded.unshift(overlay);
-            return overlay;
+        await useMapStore().reconcileOverlays();
+
+        const overlay = this.loadedFrom(record.id);
+        if (!overlay) throw new Error(t('messages.overlay.createdNotLoaded'));
+
+        if (overlay.mode === 'mission' && overlay._load && !await overlay._load) {
+            await this.deleteLoaded(overlay).catch(() => undefined);
+            throw new Error(t('messages.overlay.dataSyncLoadFailed'));
         }
 
-        const ordinary = this.loaded.filter((current) => !this.isPinned(current));
-        const grouped = ordinary.filter((current) => current.group_id !== null && current.group_id !== undefined);
-        const ungrouped = ordinary.filter((current) => !grouped.includes(current));
-        // Layers go below the lowest grouped overlay, or below "Map Features"
-        const above = grouped[0] ?? this.loaded.find((current) => this.isPinnedTop(current));
+        // taklab: a new overlay goes to the top of the ungrouped overlays,
+        // below every grouped one - the place the Overlays menu shows it
+        if (!this.isPinned(overlay)) {
+            const ordinary = this.stack().filter((current) => !this.isPinned(current) && current !== overlay);
+            const grouped = ordinary.filter((current) => current.group_id !== null && current.group_id !== undefined);
 
-        const overlay = await Overlay.create(body, {
-            ...createOpts,
-            before: createOpts.before ?? (above ? this.loadedAnchorFrom(this.loaded.indexOf(above)) : undefined)
-        });
+            if (grouped.length) {
+                const ungrouped = ordinary.filter((current) => !grouped.includes(current));
 
-        if (this.isPinned(overlay)) {
-            this.loaded.push(overlay);
-            this.loaded.sort(OverlayManager.compareStack);
-            return overlay;
-        }
-
-        this.loaded.push(overlay);
-
-        try {
-            // Bottom first: the ungrouped overlays, the new one on top of
-            // them, then the grouped ones - the order the menu shows
-            await this.restackLoaded([...ungrouped, overlay, ...grouped].map((current) => current.id));
-        } catch (err) {
-            // The overlay exists - a failed position save must not undo that
-            console.error('Failed to save overlay positions', err);
+                try {
+                    await this.reorderLoaded([...ungrouped, overlay, ...grouped].map((current) => current.id));
+                } catch (err) {
+                    // The overlay exists - a failed position save must not undo that
+                    console.error('Failed to save overlay positions', err);
+                }
+            }
         }
 
         return overlay;
     }
 
-    private static isPinnedTop(overlay: { mode: string; _internal?: boolean }): boolean {
-        return this.stackRank(overlay) === 1;
-    }
-
     /**
-     * Apply a drag order to the loaded overlays. `orderedIds` is the order of
-     * the ordinary (not pinned) overlays, bottom of the stack first. With
-     * `opts.groupId` the moved overlay also joins that group (null: ungrouped).
-     *
-     * Every ordinary overlay takes its index in `orderedIds` as `pos`, so a
-     * stack where several overlays share one `pos` is repaired by any drop.
-     */
-    static async reorderLoaded(
-        orderedIds: number[],
-        movedId: string | number,
-        opts: { groupId?: number | null } = {}
-    ): Promise<void> {
-        const overlayId = this.overlayId(movedId);
-        const overlay = this.loadedFrom(overlayId);
-        if (!overlay) throw new Error('Could not find Overlay');
-
-        if (this.isPinned(overlay)) throw new Error('Overlay position is fixed');
-        if (!orderedIds.includes(overlayId)) throw new Error('Could not find Overlay in order');
-
-        const regrouped = opts.groupId !== undefined && opts.groupId !== overlay.group_id;
-        if (regrouped) overlay.group_id = opts.groupId ?? null;
-
-        const others = (): number[] => this.loaded.filter((current) => current !== overlay).map((current) => current.id);
-        const othersBefore = others();
-
-        const changed = this.assignPositions(orderedIds);
-
-        if (others().join() === othersBefore.join()) {
-            // Anchor against the resolved stack rather than the dragged list so a
-            // drop beyond a pinned overlay cannot leave the map out of step
-            overlay.moveBefore(this.loadedAnchorOverlayFrom(this.loaded.indexOf(overlay) + 1));
-        } else {
-            // Positions were stale (e.g. all equal) - more than the dragged
-            // overlay changed place, so restack the whole map
-            this.applyLoadedOrder();
-        }
-
-        if (regrouped && !changed.includes(overlay)) changed.push(overlay);
-
-        await this.saveAll(changed, (current) => ({ group: regrouped && current === overlay }));
-    }
-
-    /**
-     * Apply a new stack order to every ordinary loaded overlay at once, e.g.
-     * after a group was dragged to another place. `orderedIds` is bottom first.
+     * taklab: apply a new stack order after a group was dragged to another
+     * place. `orderedIds` is bottom first.
      */
     static async restackLoaded(orderedIds: number[]): Promise<void> {
-        const changed = this.assignPositions(orderedIds);
-        this.applyLoadedOrder();
-        await this.saveAll(changed, () => ({ group: false }));
+        await this.reorderLoaded(orderedIds);
     }
 
     /**
-     * Move several overlays into groups at once (e.g. "Ułóż w kategorie") and
-     * apply the new stack order. `orderedIds` is bottom first; `groupIds`
-     * maps an overlay id to its new group (null: ungrouped). Pinned overlays
-     * are never regrouped. Only overlays whose group or `pos` changed are saved.
+     * taklab: move several overlays into groups at once (e.g. "Ułóż w
+     * kategorie") and apply the new stack order. `groupIds` maps an overlay
+     * id to its new group (null: ungrouped). Pinned overlays are never regrouped.
      */
     static async regroupLoaded(orderedIds: number[], groupIds: Map<number, number | null>): Promise<void> {
-        const regrouped: Overlay[] = [];
+        await this.saveGroups(groupIds);
+        await this.reorderLoaded(orderedIds);
+    }
+
+    /** taklab: persist group membership of the overlays whose group changed */
+    private static async saveGroups(groupIds: Map<number, number | null>): Promise<void> {
+        const changed: Overlay[] = [];
 
         for (const [id, groupId] of groupIds) {
             const overlay = this.loadedFrom(id);
@@ -189,41 +133,48 @@ export default class OverlayManager extends BaseInterface {
             if ((overlay.group_id ?? null) === groupId) continue;
 
             overlay.group_id = groupId;
-            regrouped.push(overlay);
+            changed.push(overlay);
         }
 
-        const changed = this.assignPositions(orderedIds);
-        this.applyLoadedOrder();
-
-        for (const overlay of regrouped) {
-            if (!changed.includes(overlay)) changed.push(overlay);
-        }
-
-        await this.saveAll(changed, (current) => ({ group: regrouped.includes(current) }));
-    }
-
-    /** Give every ordinary overlay its index in `orderedIds` as `pos` and resort the stack; returns the overlays whose `pos` changed */
-    private static assignPositions(orderedIds: number[]): Overlay[] {
-        // Pinned overlays keep their sentinel `pos` - only ordinary overlays
-        // take part in drag order bookkeeping
-        const changed = this.loaded.filter((current) => {
-            if (this.isPinned(current)) return false;
-
-            const pos = orderedIds.indexOf(current.id);
-            if (pos === -1 || pos === current.pos) return false;
-            current.pos = pos;
-            return true;
-        });
-
-        this.loaded.sort(OverlayManager.compareStack);
-
-        return changed;
-    }
-
-    private static async saveAll(overlays: Overlay[], opts: (overlay: Overlay) => { group: boolean }): Promise<void> {
-        const results = await Promise.allSettled(overlays.map((current) => current.save(opts(current))));
+        const results = await Promise.allSettled(changed.map((overlay) => overlay.save({ group: true })));
         const failed = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
         if (failed) throw failed.reason;
+    }
+
+    /**
+     * Persist a bottom-first order for the ordinary overlays and wait for the map to follow.
+     * taklab: with `opts.groupId` the moved overlay also joins that group (null: ungrouped).
+     */
+    static async reorderLoaded(
+        orderedIds: number[],
+        movedId?: string | number,
+        opts: { groupId?: number | null } = {}
+    ): Promise<void> {
+        if (movedId !== undefined && opts.groupId !== undefined) {
+            await this.saveGroups(new Map([[this.overlayId(movedId), opts.groupId]]));
+        }
+
+        const ids = orderedIds.filter((id) => {
+            const overlay = this.loadedFrom(id);
+            return overlay && !this.isPinned(overlay);
+        });
+
+        const res = await server.PATCH('/api/profile/overlay/order', {
+            body: { ids }
+        });
+
+        if (res.error) throw new Error(res.error.message);
+        if (!res.data) throw new Error('Failed to reorder overlays');
+
+        const items = res.data.items;
+
+        await db.transaction('rw', db.overlay, async () => {
+            for (const item of items) {
+                await db.overlay.update(item.id, { pos: item.pos });
+            }
+        });
+
+        await useMapStore().reconcileOverlays();
     }
 
     /**
@@ -241,12 +192,12 @@ export default class OverlayManager extends BaseInterface {
      */
     static compareStack(
         this: void,
-        a: { mode: string; pos: number; name: string; _internal?: boolean },
-        b: { mode: string; pos: number; name: string; _internal?: boolean }
+        a: { id: number; mode: string; pos: number; _internal?: boolean },
+        b: { id: number; mode: string; pos: number; _internal?: boolean }
     ): number {
         return OverlayManager.stackRank(a) - OverlayManager.stackRank(b)
             || a.pos - b.pos
-            || a.name.localeCompare(b.name);
+            || a.id - b.id;
     }
 
     private static stackRank(overlay: { mode: string; _internal?: boolean }): number {
@@ -256,59 +207,44 @@ export default class OverlayManager extends BaseInterface {
     }
 
     /**
-     * Move every loaded overlay's map layers so their stacking matches the
-     * `loaded` order (index 0 at the bottom)
+     * Move every loaded overlay's map layers so their stacking matches
+     * stack() - idempotent, so it runs after every reconcile
      */
-    static applyLoadedOrder(): void {
-        for (let i = this.loaded.length - 1; i >= 0; i--) {
-            this.loaded[i].moveBefore(this.loadedAnchorOverlayFrom(i + 1));
+    static applyOrder(): void {
+        const stack = this.stack();
+
+        // Moving a layer forces a full symbol re-placement even when it does
+        // not change position, so only touch the map when the order differs
+        const desired = stack.flatMap((overlay) => overlay.layerIds());
+        const managed = new Set(desired);
+        const current = useMapStore().map.getLayersOrder().filter((id) => managed.has(id));
+        if (current.length === desired.length && current.every((id, i) => id === desired[i])) return;
+
+        for (let i = stack.length - 1; i >= 0; i--) {
+            stack[i].moveBefore(this.anchorAbove(stack, i + 1));
         }
     }
 
     /**
-     * Nearest overlay at or above the given index that MapLibre layers can
-     * be moved before. An overlay without a layer on the map is skipped:
-     * 3D Tiles overlays are drawn by deck.gl, and raster-dem terrain or an
-     * overlay still loading or failed has no layers - anchoring against any
-     * of them would send the moved layers to the top of the map.
+     * Nearest overlay at or above the given index that has a renderable
+     * layer on the map - overlays with no layers (e.g. raster-dem terrain,
+     * failed or still initializing) cannot be anchored against and are skipped
      */
-    static loadedAnchorOverlayFrom(idx: number): Overlay | undefined {
-        for (let i = idx; i < this.loaded.length; i++) {
-            const overlay = this.loaded[i];
-            if (overlay.type !== '3dtiles' && overlay.anchorLayerId()) return overlay;
+    private static anchorAbove(stack: Overlay[], idx: number): Overlay | undefined {
+        for (let i = idx; i < stack.length; i++) {
+            if (stack[i].anchorLayerId()) return stack[i];
         }
 
         return undefined;
     }
 
-    /**
-     * First renderable layer id of the overlay stacked directly above the
-     * given one - used to re-insert its layers at the same position
-     */
-    static loadedBeforeOverlay(overlay: Overlay): string | undefined {
-        const idx = this.loaded.indexOf(overlay);
-        if (idx === -1) return undefined;
-
-        return this.loadedAnchorFrom(idx + 1);
-    }
-
-    /**
-     * First renderable layer id present on the map, searching `loaded`
-     * upward from the given index - overlays that failed to load or are
-     * still initializing have no layers and are skipped
-     */
-    static loadedAnchorFrom(idx: number): string | undefined {
-        return this.loadedAnchorOverlayFrom(idx)?.anchorLayerId();
-    }
-
+    /** Delete the overlay record and wait for the map to drop it */
     static async deleteLoaded(idOrOverlay: string | number | Overlay): Promise<void> {
-        const overlay = typeof idOrOverlay === 'object' ? idOrOverlay : this.loadedFrom(idOrOverlay);
-        if (!overlay) return;
+        const id = typeof idOrOverlay === 'object' ? idOrOverlay.id : this.overlayId(idOrOverlay);
 
-        const pos = this.loaded.indexOf(overlay);
-        if (pos !== -1) this.loaded.splice(pos, 1);
+        await this.delete(String(id));
 
-        await overlay.delete();
+        await useMapStore().reconcileOverlays();
     }
 
     static queryableOverlayNames(): string[] {
@@ -337,8 +273,12 @@ export default class OverlayManager extends BaseInterface {
         return this.loaded.filter((overlay) => overlay.mode === 'mission' && overlay.mode_id);
     }
 
-    static visibleBasemaps(): Overlay[] {
-        return this.loaded.filter((overlay) => overlay.mode === 'basemap' && overlay.mode_id && overlay.visible);
+    static visible(mode?: string): Overlay[] {
+        return this.loaded.filter((overlay) => {
+            if (!overlay.visible) return false;
+            if (mode === undefined) return true;
+            return overlay.mode === mode && !!overlay.mode_id;
+        });
     }
 
     static async count(opts: Omit<Overlay_ListOptions, 'limit' | 'page' | 'sync'> = {}): Promise<number> {

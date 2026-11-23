@@ -241,6 +241,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     });
 
     await schema.post('/login/passkey/authenticate/options', {
+        security: [],
         name: 'Passkey Authentication Options',
         group: 'Login',
         description: 'Generate WebAuthn authentication options',
@@ -276,6 +277,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     });
 
     await schema.post('/login/passkey/authenticate', {
+        security: [],
         name: 'Passkey Authentication Verify',
         group: 'Login',
         description: 'Verify WebAuthn authentication and return JWT',

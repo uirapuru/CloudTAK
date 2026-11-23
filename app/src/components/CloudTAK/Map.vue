@@ -25,7 +25,7 @@
                  omitted on iOS, where the status bar sits fully transparent
                  over the map -->
             <div
-                v-if='!isIOS'
+                v-if='!isIOSPlatform()'
                 class='position-absolute top-0 start-0 end-0'
                 style='
                     z-index: 5;
@@ -253,26 +253,17 @@
             <TablerModal
                 v-if='searchBoxShown'
                 :dismissable='true'
-                @close='searchBoxShown = false'
                 size='lg'
+                @close='searchBoxShown = false'
             >
-                <div class='modal-header'>
-                    <div class='modal-title'>
-                        {{ t('common.search') }}
-                    </div>
-                    <button
-                        type='button'
-                        class='btn-close'
-                        :aria-label='t("common.close")'
-                        @click='searchBoxShown = false'
-                    />
-                </div>
-                <div class='modal-body'>
-                    <SearchBox
-                        :autofocus='true'
-                        @select='searchBoxShown = false'
-                    />
-                </div>
+                <SearchBox
+                    variant='panel'
+                    :placeholder='t("map.map.searchPlaceholder")'
+                    :autofocus='true'
+                    :overlays='true'
+                    @select='searchBoxShown = false'
+                    @close='searchBoxShown = false'
+                />
             </TablerModal>
 
             <MainMenu
@@ -431,8 +422,6 @@ const deviceStore = useDeviceStore();
 const appStore = useAppStore();
 const floatStore = useFloatStore();
 
-const isIOS = isIOSPlatform();
-
 const hasTerrain = computed(() => OverlayManager.loaded.some((overlay) => overlay.type === 'raster-dem'));
 const router = useRouter();
 const route = useRoute();
@@ -565,7 +554,6 @@ const displayZoom = computed(() => {
         return mapStore.zoom === 'always' ? true : false;
     }
 })
-
 
 const humanBearing = computed(() => {
     if (mapStore.bearing < 0) {
@@ -768,7 +756,7 @@ async function toLocation() {
     const location = await mapStore.worker.profile.location;
 
     if ([LocationState.Preset, LocationState.Live].includes(location.source)) {
-        mapStore.map.flyTo({
+        mapStore.map.jumpTo({
             center: location.coordinates as LngLatLike,
             zoom: 14
         });
@@ -835,8 +823,6 @@ async function exitManualMode() {
     await mapStore.refresh();
 }
 
-
-
 function fileUpload(event: unknown) {
     upload.value.shown = false;
     const imp = event as { imports: Array<{ uid: string }> };
@@ -889,7 +875,9 @@ async function handleRadial(event: string): Promise<void> {
         const feat = toRaw(mapStore.radial.cot as Feature) as Feature;
 
         await mapStore.worker.db.add(feat, {
-            authored: true
+            authored: true,
+            // Fresh id from the contextmenu - it cannot already be in a Mission
+            skipMissionLookup: true
         });
 
         await mapStore.refresh();
@@ -933,7 +921,9 @@ async function handleRadial(event: string): Promise<void> {
         feat.properties.archived = true;
 
         await mapStore.worker.db.add(feat, {
-            authored: true
+            authored: true,
+            // Fresh id - it cannot already be in a Mission
+            skipMissionLookup: true
         });
 
         await mapStore.refresh();

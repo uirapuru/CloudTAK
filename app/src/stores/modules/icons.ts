@@ -11,25 +11,25 @@
  *  - `2525C:<sidc>` / `2525D:<sidc>` / `2525E:<sidc>`
  *                            - milsymbol-generated military symbols
  *  - `<base>-colored-<hex>`  - runtime-recolored variant of another image
- *  - `<iconsetUid>:<path>`   - iconset icons served from Dexie with a network
- *                              fallback for icons that haven't synced locally
+ *  - `<iconsetUid>:<path>`   - iconset icons served from Dexie; an icon that
+ *                              hasn't synced locally renders a placeholder
+ *                              immediately and is swapped in once fetched
  *
  * Bulk hydration of the Dexie icon cache is owned by the Atlas worker (see
  * workers/atlas-sync.ts) and primes the offline cache; only iconsets whose
  * content changed purge their MapLibre images, while first-time cached
  * iconsets merely retry fallback placeholders.
  */
-import { Preferences } from '@capacitor/preferences';
 import * as mapgl from 'maplibre-gl'
 import Icon from '../../base/icon.ts'
+import type { DBIcon } from '../../database.ts';
 import IconsetManager from '../../base/iconset.ts';
+import Sprite from '../../base/sprite.ts';
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { stdurl } from '../../std.ts';
-import { db, type DBSprite } from '../../database.ts';
 import { isMilsymIcon, symbolCanvas } from '../../utils/milsymbol.ts';
 
-/** Target render width (px) used when rasterizing SVG iconset icons; height preserves the source aspect ratio. */
-const SVG_RENDER_WIDTH = 32;
+/** Longest edge (px) of a rasterized SVG iconset icon; the source aspect ratio is preserved. */
+const SVG_RENDER_SIZE = 32;
 
 /**
  * Custom MapLibre protocol used to serve built-in spritesheets out of Dexie
@@ -40,9 +40,17 @@ const SVG_RENDER_WIDTH = 32;
 const SPRITE_PROTOCOL = 'cloudtak-sprite';
 let spriteProtocolRegistered = false;
 
+/** Atlas worker calls that rehydrate the Dexie icon cache and report what changed */
+export interface IconSync {
+    syncIcons(): Promise<void>;
+    syncIconset(uid: string): Promise<void>;
+}
+
 export default class IconManager {
     private map: MapLibreMap;
+    private sync?: IconSync;
     private inflight = new Map<string, Promise<void>>();
+    private remote = new Map<string, Promise<void>>();
     private loggedErrors = new Set<string>();
     private fallbackBitmap: ImageBitmap | null = null;
     /**
@@ -52,8 +60,9 @@ export default class IconManager {
      */
     private fallbackIds = new Set<string>();
 
-    constructor(map: MapLibreMap) {
+    constructor(map: MapLibreMap, sync?: IconSync) {
         this.map = map;
+        this.sync = sync;
 
         map.setMissingStyleImageResolver((id) => this.resolve(id));
     }
@@ -114,8 +123,7 @@ export default class IconManager {
 
             const [, id, ext] = match;
 
-            let row = await db.sprite.get(id);
-            if (!row) row = await fetchAndCacheSprite(id);
+            const row = await Sprite.get(id);
 
             if (ext === 'json') {
                 return { data: row.json };
@@ -128,7 +136,8 @@ export default class IconManager {
     /**
      * Missing style image resolver entry point. MapLibre awaits the returned
      * promise before rendering the requesting tile, so the image must be
-     * registered by the time it settles.
+     * registered by the time it settles - and the tile's other layers wait
+     * with it, so nothing here may wait on the network.
      *
      * Must never reject: a rejected resolver promise fails the whole image
      * batch for the tile, so failures are logged and the id is left
@@ -191,33 +200,84 @@ export default class IconManager {
     }
 
     /**
-     * Resolve an `<iconsetUid>:<path>` image id from Dexie, falling back to
-     * fetching the single icon from the API (for iconsets that haven't been
-     * hydrated locally) and finally to a generic point icon.
+     * Resolve an `<iconsetUid>:<path>` image id from Dexie. An icon that is
+     * not cached locally registers the generic point placeholder so the tile
+     * renders now, and the single icon is fetched from the API in the
+     * background and swapped in when it arrives.
      */
     private async loadIconsetImage(id: string): Promise<void> {
-        const row = await Icon.get(id);
-        const blob = row ? row.data : await Icon.fetchRemote(id);
+        let row: DBIcon | undefined;
 
-        if (blob) {
+        try {
+            row = await Icon.get(id);
+        } catch (error) {
+            this.logWarnOnce(`icon-cache:${id}`, 'Iconset icon cache read failed', { imageId: id, error });
+        }
+
+        if (row) {
             this.fallbackIds.delete(id);
-            this.addImage(id, await this.decodeIconBlob(blob));
+            this.addImage(id, await this.decodeIconBlob(row.data));
             return;
         }
 
-        this.logWarnOnce(
-            `missing-iconset-icon:${id}`,
-            'Iconset icon not found locally or remotely, using fallback',
-            { imageId: id }
-        );
-
         this.fallbackIds.add(id);
         this.addImage(id, await this.getFallbackBitmap());
+        this.fetchRemoteImage(id);
+    }
+
+    private fetchRemoteImage(id: string): void {
+        if (this.remote.has(id)) return;
+
+        const work = (async () => {
+            const blob = await Icon.fetchRemote(id);
+
+            if (!blob) {
+                this.logWarnOnce(
+                    `missing-iconset-icon:${id}`,
+                    'Iconset icon not found locally or remotely, using fallback',
+                    { imageId: id }
+                );
+                return;
+            }
+
+            // Already replaced by the real icon (eg. the iconset synced meanwhile)
+            if (!this.fallbackIds.has(id)) return;
+
+            this.replaceImage(id, await this.decodeIconBlob(blob));
+        })()
+            .catch((error: unknown) => {
+                this.logErrorOnce(`remote:${id}`, 'Failed to fetch iconset icon', error, { imageId: id });
+            })
+            .finally(() => {
+                this.remote.delete(id);
+            });
+
+        this.remote.set(id, work);
     }
 
     private addImage(id: string, image: ImageBitmap | ImageData): void {
         if (!this.map.hasImage(id)) {
             this.map.addImage(id, image);
+        }
+    }
+
+    /**
+     * Swap a placeholder for the real icon. MapLibre reloads the tiles that
+     * depend on a removed or added image, and recolored variants derived
+     * from the placeholder are dropped so they re-derive from the real icon.
+     */
+    private replaceImage(id: string, image: ImageBitmap): void {
+        this.fallbackIds.delete(id);
+
+        if (this.map.hasImage(id)) this.map.removeImage(id);
+        this.map.addImage(id, image);
+
+        const prefix = `${id}-colored-`;
+        for (const variant of [...this.fallbackIds]) {
+            if (!variant.startsWith(prefix)) continue;
+
+            this.fallbackIds.delete(variant);
+            if (this.map.hasImage(variant)) this.map.removeImage(variant);
         }
     }
 
@@ -257,6 +317,17 @@ export default class IconManager {
                 if (this.map.hasImage(id)) this.map.removeImage(id);
             }
         }
+    }
+
+    /**
+     * Resync one iconset (or all of them) from the server. The worker reports
+     * the changed iconsets back so their map images are purged and re-resolved.
+     */
+    async refresh(uid?: string): Promise<void> {
+        if (!this.sync) throw new Error('Icon sync is not available');
+
+        if (uid) await this.sync.syncIconset(uid);
+        else await this.sync.syncIcons();
     }
 
     async deleteIconset(uid: string): Promise<void> {
@@ -320,13 +391,12 @@ export default class IconManager {
         }
 
         if (!(width > 0) || !(height > 0)) {
-            width = SVG_RENDER_WIDTH;
-            height = SVG_RENDER_WIDTH;
+            width = SVG_RENDER_SIZE;
+            height = SVG_RENDER_SIZE;
         }
 
-        // Rasterize at a fixed 32px width so icons render consistently, while
-        // preserving the source aspect ratio.
-        const scale = SVG_RENDER_WIDTH / width;
+        // Fit the longest edge so tall icons match the footprint of raster icons
+        const scale = SVG_RENDER_SIZE / Math.max(width, height);
         const renderWidth = Math.max(1, Math.round(width * scale));
         const renderHeight = Math.max(1, Math.round(height * scale));
 
@@ -453,35 +523,4 @@ export default class IconManager {
             parseInt(result[3], 16)
         ] : [0, 255, 0]; // Default to green if parsing fails
     }
-}
-
-/**
- * Fallback path for the sprite protocol: when Dexie has no row for the
- * requested built-in sprite (typically only on a brand-new install where icon
- * hydration hasn't completed yet) fetch it from the API and persist it so the
- * next request is served from disk.
- */
-async function fetchAndCacheSprite(id: string): Promise<DBSprite> {
-    const token = await getToken();
-    const jsonUrl = stdurl(`/api/iconset/${id}/sprite.json`);
-    const pngUrl = stdurl(`/api/iconset/${id}/sprite.png`);
-    if (token) jsonUrl.searchParams.set('token', token);
-    if (token) pngUrl.searchParams.set('token', token);
-
-    const [jsonRes, pngRes] = await Promise.all([fetch(jsonUrl), fetch(pngUrl)]);
-    if (!jsonRes.ok) throw new Error(`Failed to load sprite '${id}' json (${jsonRes.status})`);
-    if (!pngRes.ok) throw new Error(`Failed to load sprite '${id}' png (${pngRes.status})`);
-
-    const json = await jsonRes.json() as Record<string, unknown>;
-    const image = await pngRes.blob();
-
-    const row: DBSprite = { id, updated: Date.now(), json, image };
-    await db.sprite.put(row);
-    return row;
-}
-
-async function getToken(): Promise<string> {
-    const { value } = await Preferences.get({ key: 'token' });
-    if (!value) throw new Error('No authentication token available');
-    return value;
 }

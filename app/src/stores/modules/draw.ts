@@ -23,7 +23,7 @@ import type COT from '../../base/cot.ts';
 import Filter, { EDIT_HIDE_PREFIX } from '../../base/filter.ts';
 import { OriginMode } from '../../base/cot.ts';
 import { createCircleEllipseShape } from '../../base/cot/ellipse.ts';
-import { std, stdurl, server } from '../../std.ts';
+import { std, server } from '../../std.ts';
 import type { Feature, FeatureCollection } from '../../types.ts';
 import type { paths } from '@cloudtak/api-types';
 import OverlayManager from '../../base/overlay.ts';
@@ -154,6 +154,9 @@ export default class DrawTool {
 
     public point: {
         type: string,
+        /** Iconset icon as `<iconset uid>:<path>`, empty to use the type symbol */
+        icon: string,
+        drop: 'single' | 'multiple',
     };
 
     public lasso: {
@@ -370,7 +373,8 @@ export default class DrawTool {
                     showCoordinatePoints: true
                 }),
                 new terraDraw.TerraDrawCircleMode({
-                    drawInteraction
+                    drawInteraction,
+                    snapping: { toCustom }
                 }),
                 new terraDraw.TerraDrawSelectMode({
                     flags: selectFlags(true)
@@ -413,14 +417,16 @@ export default class DrawTool {
                         this.lasso.loading = true;
 
                         try {
-                            const url = stdurl(`/api/basemap/${ov.mode_id}/feature`);
-
-                            const fc = await std(url, {
-                                method: 'POST',
+                            const res = await server.POST('/api/basemap/{:basemapid}/feature', {
+                                params: { path: { ':basemapid': Number(ov.mode_id) } },
                                 body: {
-                                    polygon: feat.geometry
+                                    polygon: feat.geometry as Polygon
                                 }
-                            }) as FeatureCollection;
+                            });
+
+                            if (res.error) throw new Error(res.error.message);
+
+                            const fc = res.data as FeatureCollection;
 
                             mapStore.toImport = fc.features.map((f) => {
                                 const id = randomUUID();
@@ -469,7 +475,7 @@ export default class DrawTool {
                             callsign: 'New Feature',
                             time: now.toISOString(),
                             start: now.toISOString(),
-                            stale: new Date(now.getTime() + 3600).toISOString(),
+                            stale: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
                             center: [0,0]
                         },
                         geometry: JSON.parse(JSON.stringify(storeFeat.geometry))
@@ -496,19 +502,24 @@ export default class DrawTool {
                         if (this.point.type === 'u-d-p') {
                             feat.properties["marker-color"] = '#00FF00';
                         }
+
+                        this.applyPointIcon(feat);
                     }
 
                     this.removeFeature(id);
 
-                    await this.stop();
+                    const keepDropping = this.mode === DrawToolMode.POINT && this.point.drop === 'multiple';
+                    if (!keepDropping) await this.stop();
 
                     await this.mapStore.worker.db.add(feat, {
-                        authored: true
+                        authored: true,
+                        // Newly drawn - its id cannot already be in a Mission
+                        skipMissionLookup: true
                     });
 
                     await this.mapStore.refresh();
 
-                    router.push(`/cot/${feat.properties.id}`);
+                    if (!keepDropping) router.push(`/cot/${feat.properties.id}`);
                 }
             }
         })
@@ -550,7 +561,9 @@ export default class DrawTool {
         this.editing = null;
 
         this.point = reactive({
-            type: this.mapStore.defaultPointType
+            type: this.mapStore.defaultPointType,
+            icon: '',
+            drop: 'single'
         })
 
         this.lasso = reactive({
@@ -732,12 +745,14 @@ export default class DrawTool {
     }
 
 
-    async start(mode: DrawToolMode): Promise<void> {
+    async start(mode: DrawToolMode, opts: { icon?: string } = {}): Promise<void> {
         if (mode !== DrawToolMode.SNAPPING) {
             await this.removeNetwork();
         }
 
         this.point.type = this.mapStore.defaultPointType;
+        this.point.icon = opts.icon ?? '';
+        this.point.drop = 'single';
 
         if (mode === DrawToolMode.LINESTRING && this.route.layer !== 'No Snapping') {
             this.route.layer = 'No Snapping';
@@ -761,10 +776,23 @@ export default class DrawTool {
             this.draw.start();
             this.draw.setMode(mode)
 
-            this.snapping = await this.mapStore.worker.db.snapping(
-                this.mapStore.map.getBounds().toArray()
-            );
+            await this.refreshSnapping();
         }
+    }
+
+    /**
+     * Reload the vertex snapping set for the current map bounds from
+     * Map Features and any visible Mission overlays
+     */
+    async refreshSnapping(): Promise<void> {
+        this.snapping = await this.mapStore.worker.db.snapping(
+            this.mapStore.map.getBounds().toArray(),
+            {
+                missions: OverlayManager.visible('mission')
+                    .map((overlay) => overlay.mode_id)
+                    .filter((guid): guid is string => !!guid)
+            }
+        );
     }
 
     async finish(): Promise<void> {
@@ -811,7 +839,7 @@ export default class DrawTool {
                         callsign: 'New Feature',
                         time: now.toISOString(),
                         start: now.toISOString(),
-                        stale: new Date(now.getTime() + 3600).toISOString(),
+                        stale: new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(),
                         center: [0, 0]
                     },
                     geometry: JSON.parse(JSON.stringify(drawn.geometry))
@@ -827,6 +855,7 @@ export default class DrawTool {
                     feat.properties.type = this.point.type;
                     feat.properties["marker-opacity"] = 1;
                     feat.properties["marker-color"] = this.point.type === 'u-d-p' ? '#00FF00' : '#FFFFFF';
+                    this.applyPointIcon(feat);
                 }
 
                 this.removeFeature(drawn.id as string);
@@ -838,6 +867,13 @@ export default class DrawTool {
                 await this.stop();
             }
         }
+    }
+
+    private applyPointIcon(feat: Feature): void {
+        if (!this.point.icon) return;
+
+        feat.properties.icon = this.point.icon;
+        feat.properties["marker-color"] = '#FFFFFF';
     }
 
     async stop(refresh = true): Promise<void> {

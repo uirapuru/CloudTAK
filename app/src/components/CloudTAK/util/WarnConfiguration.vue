@@ -1,215 +1,192 @@
 <template>
     <TablerModal size='lg'>
-        <div
-            class='modal-status'
-            :class='current === "disclosure" ? "bg-blue" : "bg-red"'
+        <LocationDisclosure
+            v-if='current === "disclosure"'
+            stage='location'
+            :settings='needsNativeSettings(deviceStore.permissions.location)'
+            :working='working === "location"'
+            @accept='acceptDisclosure'
+            @decline='current = "permissions"'
         />
-        <div class='modal-header'>
-            <div class='d-flex align-items-center'>
-                <IconMapPin
-                    v-if='current === "disclosure"'
-                    :size='28'
-                    stroke='1'
-                />
-                <IconInfoSquare
-                    v-else
-                    :size='28'
-                    stroke='1'
-                />
-                <span class='mx-2'>{{ title }}</span>
+        <LocationDisclosure
+            v-else-if='current === "background"'
+            stage='background'
+            :settings='deviceStore.permissions.backgroundLocation === "denied"'
+            :working='working === "backgroundLocation"'
+            @accept='acceptBackgroundDisclosure'
+            @decline='current = "permissions"'
+        />
+        <template v-else>
+            <div class='modal-status bg-red' />
+            <div class='modal-header'>
+                <div class='d-flex align-items-center'>
+                    <IconInfoSquare
+                        :size='28'
+                        stroke='1'
+                    />
+                    <span class='mx-2'>{{ title }}</span>
+                </div>
             </div>
-        </div>
-        <div class='modal-body'>
-            <template v-if='current === "details"'>
-                <TablerLoading v-if='loading' />
+            <div class='modal-body'>
+                <template v-if='current === "details"'>
+                    <TablerLoading v-if='loading' />
+                    <template v-else>
+                        <p class='text-secondary'>
+                            {{ t('util.warnConfiguration.detailsIntro') }}
+                        </p>
+
+                        <div class='row g-3'>
+                            <div class='col-12'>
+                                <TablerInput
+                                    v-model='form.tak_callsign'
+                                    :label='t("util.warnConfiguration.callsign")'
+                                    :description='t("util.warnConfiguration.callsignHelp")'
+                                    :placeholder='t("util.warnConfiguration.callsignPlaceholder")'
+                                    :autofocus='true'
+                                    :required='true'
+                                    :error='callsignError'
+                                    @keyup.enter='submitDetails'
+                                />
+                            </div>
+                            <div class='col-12 col-md-6'>
+                                <TablerEnum
+                                    v-model='form.tak_group'
+                                    :label='t("util.warnConfiguration.team")'
+                                    :options='groupOptions'
+                                />
+                            </div>
+                            <div class='col-12 col-md-6'>
+                                <TranslatedEnum
+                                    v-model='form.tak_role'
+                                    :label='t("util.warnConfiguration.role")'
+                                    :options='roleOptions'
+                                />
+                            </div>
+                            <div class='col-12'>
+                                <TablerInput
+                                    v-model='form.tak_phone'
+                                    :label='t("util.warnConfiguration.phone")'
+                                    :description='t("util.warnConfiguration.phoneHelp")'
+                                    type='tel'
+                                />
+                            </div>
+                        </div>
+                    </template>
+                </template>
                 <template v-else>
                     <p class='text-secondary'>
-                        {{ t('util.warnConfiguration.detailsIntro') }}
+                        {{ t('util.warnConfiguration.permissionsIntro') }}
                     </p>
 
-                    <div class='row g-3'>
-                        <div class='col-12'>
-                            <TablerInput
-                                v-model='form.tak_callsign'
-                                :label='t("util.warnConfiguration.callsign")'
-                                :description='t("util.warnConfiguration.callsignHelp")'
-                                :placeholder='t("util.warnConfiguration.callsignPlaceholder")'
-                                :autofocus='true'
-                                :required='true'
-                                :error='callsignError'
-                                @keyup.enter='submitDetails'
-                            />
-                        </div>
-                        <div class='col-12 col-md-6'>
-                            <TablerEnum
-                                v-model='form.tak_group'
-                                :label='t("util.warnConfiguration.team")'
-                                :options='groupOptions'
-                            />
-                        </div>
-                        <div class='col-12 col-md-6'>
-                            <TranslatedEnum
-                                v-model='form.tak_role'
-                                :label='t("util.warnConfiguration.role")'
-                                :options='roleOptions'
-                            />
-                        </div>
-                        <div class='col-12'>
-                            <TablerInput
-                                v-model='form.tak_phone'
-                                :label='t("util.warnConfiguration.phone")'
-                                :description='t("util.warnConfiguration.phoneHelp")'
-                                type='tel'
-                            />
-                        </div>
-                    </div>
-                </template>
-            </template>
-            <template v-else-if='current === "disclosure"'>
-                <p>{{ disclosureLead }}</p>
-
-                <div class='card mb-3'>
-                    <ul class='card-body list-unstyled d-flex flex-column gap-2 mb-0'>
-                        <li>{{ t('util.locationDisclosure.sentToServer') }}</li>
-                        <li>{{ t('util.locationDisclosure.adminControls') }}</li>
-                        <li>{{ t('util.locationDisclosure.noAdvertising') }}</li>
-                    </ul>
-                </div>
-
-                <p class='text-secondary mb-0'>
-                    {{ disclosureNext }}
-                </p>
-            </template>
-            <template v-else>
-                <p class='text-secondary'>
-                    {{ t('util.warnConfiguration.permissionsIntro') }}
-                </p>
-
-                <div
-                    v-if='error'
-                    class='alert alert-warning'
-                    role='alert'
-                >
-                    {{ error }}
-                </div>
-
-                <div class='d-flex flex-column gap-2'>
-                    <StandardItem
-                        v-for='item of permissionItems'
-                        :key='item.key'
-                        :hover='false'
+                    <div
+                        v-if='error'
+                        class='alert alert-warning'
+                        role='alert'
                     >
-                        <div class='d-flex flex-column gap-3 px-3 py-3'>
-                            <div class='d-flex align-items-start justify-content-between gap-3'>
-                                <div class='d-flex align-items-start gap-3 flex-grow-1'>
-                                    <component
-                                        :is='item.icon'
-                                        :size='30'
-                                        stroke='1.5'
-                                        class='flex-shrink-0 mt-1'
-                                    />
+                        {{ error }}
+                    </div>
 
-                                    <div class='flex-grow-1'>
-                                        <div class='fw-bold'>
-                                            {{ item.title }}
-                                        </div>
+                    <div class='d-flex flex-column gap-2'>
+                        <StandardItem
+                            v-for='item of permissionItems'
+                            :key='item.key'
+                            :hover='false'
+                        >
+                            <div class='d-flex flex-column gap-3 px-3 py-3'>
+                                <div class='d-flex align-items-start justify-content-between gap-3'>
+                                    <div class='d-flex align-items-start gap-3 flex-grow-1'>
+                                        <component
+                                            :is='item.icon'
+                                            :size='30'
+                                            stroke='1.5'
+                                            class='flex-shrink-0 mt-1'
+                                        />
 
-                                        <div class='text-secondary small mt-1'>
-                                            {{ item.description }}
+                                        <div class='flex-grow-1'>
+                                            <div class='fw-bold'>
+                                                {{ item.title }}
+                                            </div>
+
+                                            <div class='text-secondary small mt-1'>
+                                                {{ item.description }}
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <TablerBadge
+                                        text-color='var(--tblr-body-color)'
+                                        class='text-uppercase flex-shrink-0'
+                                        v-bind='badgeProps(item.status)'
+                                    >
+                                        {{ badgeLabel(item.status) }}
+                                    </TablerBadge>
                                 </div>
 
-                                <TablerBadge
-                                    class='text-uppercase flex-shrink-0'
-                                    v-bind='badgeProps(item.status)'
+                                <div
+                                    v-if='!item.satisfied'
+                                    class='d-flex justify-content-end'
                                 >
-                                    {{ badgeLabel(item.status) }}
-                                </TablerBadge>
+                                    <button
+                                        class='btn btn-primary'
+                                        :disabled='working === item.key'
+                                        @click='requestPermission(item.key)'
+                                    >
+                                        {{ actionLabel(item.key, item.status) }}
+                                    </button>
+                                </div>
                             </div>
-
-                            <div
-                                v-if='!item.satisfied'
-                                class='d-flex justify-content-end'
-                            >
-                                <button
-                                    class='btn btn-primary'
-                                    :disabled='working === item.key'
-                                    @click='requestPermission(item.key)'
-                                >
-                                    {{ actionLabel(item.key, item.status) }}
-                                </button>
-                            </div>
-                        </div>
-                    </StandardItem>
-                </div>
-            </template>
-        </div>
-        <div class='modal-footer'>
-            <template v-if='current === "details"'>
-                <div class='ms-auto'>
+                        </StandardItem>
+                    </div>
+                </template>
+            </div>
+            <div class='modal-footer'>
+                <template v-if='current === "details"'>
+                    <div class='ms-auto'>
+                        <button
+                            class='btn btn-primary'
+                            :disabled='loading || saving || !!callsignError'
+                            @click='submitDetails'
+                        >
+                            <TablerLoading
+                                v-if='saving'
+                                :inline='true'
+                            />
+                            <span v-else>{{ t('util.warnConfiguration.getStarted') }}</span>
+                        </button>
+                    </div>
+                </template>
+                <template v-else>
                     <button
-                        class='btn btn-primary'
-                        :disabled='loading || saving || !!callsignError'
-                        @click='submitDetails'
-                    >
-                        <TablerLoading
-                            v-if='saving'
-                            :inline='true'
-                        />
-                        <span v-else>{{ t('util.warnConfiguration.getStarted') }}</span>
-                    </button>
-                </div>
-            </template>
-            <template v-else-if='current === "disclosure"'>
-                <button
-                    class='btn btn-link text-secondary px-0'
-                    :disabled='Boolean(working)'
-                    @click='current = "permissions"'
-                >
-                    {{ t('util.locationDisclosure.notNow') }}
-                </button>
-                <div class='ms-auto'>
-                    <button
-                        class='btn btn-primary'
+                        class='btn btn-link text-secondary px-0'
                         :disabled='Boolean(working)'
-                        @click='acceptDisclosure'
+                        @click='dismissPermissions'
                     >
-                        {{ working ? t('util.locationDisclosure.requesting') : t('util.locationDisclosure.agree') }}
+                        {{ t('util.warnConfiguration.skip') }}
                     </button>
-                </div>
-            </template>
-            <template v-else>
-                <button
-                    class='btn btn-link text-secondary px-0'
-                    :disabled='Boolean(working)'
-                    @click='dismissPermissions'
-                >
-                    {{ t('util.warnConfiguration.skip') }}
-                </button>
-                <div class='ms-auto btn-list'>
-                    <button
-                        class='btn btn-secondary'
-                        :disabled='Boolean(working)'
-                        @click='refreshStatuses'
-                    >
-                        {{ t('util.warnConfiguration.refresh') }}
-                    </button>
-                    <button
-                        class='btn btn-primary'
-                        :disabled='!permissionsSatisfied'
-                        @click='emit("close")'
-                    >
-                        {{ t('util.common.done') }}
-                    </button>
-                </div>
-            </template>
-        </div>
+                    <div class='ms-auto btn-list'>
+                        <button
+                            class='btn btn-secondary'
+                            :disabled='Boolean(working)'
+                            @click='refreshStatuses'
+                        >
+                            {{ t('util.warnConfiguration.refresh') }}
+                        </button>
+                        <button
+                            class='btn btn-primary'
+                            :disabled='!permissionsSatisfied'
+                            @click='emit("close")'
+                        >
+                            {{ t('util.common.done') }}
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </template>
     </TablerModal>
 </template>
 
 <script lang='ts'>
-import { isNativePlatform, isAndroidPlatform, isIOSPlatform } from '../../../utils/capacitor.ts';
+import { isNativePlatform } from '../../../utils/capacitor.ts';
 
 export type WarnConfigurationPage = 'details' | 'permissions';
 
@@ -254,6 +231,7 @@ import {
     IconMapPin,
 } from '@tabler/icons-vue';
 import StandardItem from './StandardItem.vue';
+import LocationDisclosure from './LocationDisclosure.vue';
 import TranslatedEnum from './TranslatedEnum.vue';
 import type { Profile } from '../../../types.ts';
 import Config from '../../../base/config.ts';
@@ -278,16 +256,12 @@ const props = defineProps({
 
 const emit = defineEmits([ 'close' ]);
 
-type ModalPage = WarnConfigurationPage | 'disclosure';
+type ModalPage = WarnConfigurationPage | 'disclosure' | 'background';
 
 const current = ref<ModalPage>(props.page);
 
 const title = computed(() => {
-    switch (current.value) {
-        case 'details': return t('util.warnConfiguration.welcome');
-        case 'disclosure': return t('util.locationDisclosure.titleLocation');
-        default: return t('util.warnConfiguration.permissions');
-    }
+    return current.value === 'details' ? t('util.warnConfiguration.welcome') : t('util.warnConfiguration.permissions');
 });
 
 // --- User Details ---
@@ -427,26 +401,6 @@ const permissionItems = computed(() => {
 
 const permissionsSatisfied = computed(() => deviceStore.hasRequiredPermissions());
 
-const disclosureLead = computed(() => {
-    return isNativePlatform()
-        ? t('util.locationDisclosure.leadNative')
-        : t('util.locationDisclosure.leadBrowser');
-});
-
-const disclosureNext = computed(() => {
-    const always = isAndroidPlatform() ? t('util.locationDisclosure.alwaysAndroid') : t('util.locationDisclosure.alwaysIOS');
-
-    if (needsNativeSettings(deviceStore.permissions.location)) {
-        return t('util.locationDisclosure.nextBackgroundSettings', { always });
-    } else if (isAndroidPlatform()) {
-        return t('util.warnConfiguration.nextAndroid');
-    } else if (isIOSPlatform()) {
-        return t('util.warnConfiguration.nextIOS');
-    }
-
-    return t('util.locationDisclosure.nextBrowser');
-});
-
 function badgeLabel(status: BrowserPermissionState): string {
     switch (status) {
         case 'granted': return t('util.warnConfiguration.status.granted');
@@ -507,8 +461,9 @@ async function refreshStatuses(): Promise<void> {
     }
 }
 
-// Location consent is collected on the disclosure page before any system
-// prompt or settings hand-off (Play prominent disclosure requirement).
+// Location consent is collected on a disclosure page before any system
+// prompt or settings hand-off (Play prominent disclosure requirement). The
+// background escalation gets its own disclosure after the foreground grant.
 async function requestPermission(type: BrowserPermissionType): Promise<void> {
     if (type === 'location') {
         error.value = '';
@@ -519,8 +474,19 @@ async function requestPermission(type: BrowserPermissionType): Promise<void> {
     await runRequest(type);
 }
 
+function needsBackgroundRequest(): boolean {
+    return isNativePlatform()
+        && deviceStore.permissions.location === 'granted'
+        && ['prompt', 'when_in_use', 'denied'].includes(deviceStore.permissions.backgroundLocation);
+}
+
 async function acceptDisclosure(): Promise<void> {
     await runRequest('location');
+    current.value = needsBackgroundRequest() ? 'background' : 'permissions';
+}
+
+async function acceptBackgroundDisclosure(): Promise<void> {
+    await runRequest('backgroundLocation');
     current.value = 'permissions';
 }
 
@@ -535,6 +501,8 @@ async function runRequest(type: BrowserPermissionType): Promise<void> {
             await deviceStore.geolocation.request(() => {
                 void mapStore.startLocationWatch();
             });
+        } else if (type === 'backgroundLocation') {
+            await deviceStore.geolocation.requestBackground();
         } else if (type === 'notification') {
             await deviceStore.notification.request();
         }

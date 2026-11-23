@@ -222,6 +222,13 @@
                     @update:model-value='emit("update", { opacity: $event })'
                 />
             </div>
+            <SlopeClasses
+                v-if='isSlopeOverlay(card.overlay)'
+                :model-value='parseSlopeArgs(card.overlay.args)'
+                :debounce='500'
+                :hint='t("panels.overlays.slopeHint")'
+                @update:model-value='emit("update", { args: { ...card.overlay.args, ...slopeArgs($event) } })'
+            />
             <TreeVector
                 v-if='card.overlay.type === "vector"'
                 :overlay='card.overlay'
@@ -248,6 +255,8 @@ import {
 import StandardItem from '../../util/StandardItem.vue';
 import OfflineBadge from '../../util/OfflineBadge.vue';
 import TreeVector from './TreeVector.vue';
+import SlopeClasses from '../Basemaps/SlopeClasses.vue';
+import { isSlopeURL, parseSlopeArgs, slopeArgs } from '../Basemaps/slope.ts';
 import FavoriteStar from './FavoriteStar.vue';
 import OverlayManager from '../../../../base/overlay.ts';
 import type Overlay from '../../../../base/overlay-class.ts';
@@ -265,6 +274,10 @@ withDefaults(defineProps<{
     // An absent boolean prop would be cast to false - and show an empty star
     favorite: null
 });
+
+function isSlopeOverlay(overlay: Overlay): boolean {
+    return overlay.type === 'raster' && isSlopeURL(overlay.tilejson?.tiles?.[0]);
+}
 
 const emit = defineEmits<{
     toggle: [];

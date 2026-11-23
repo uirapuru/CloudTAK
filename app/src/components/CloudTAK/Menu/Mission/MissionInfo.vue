@@ -39,8 +39,13 @@
                                     {{ t('mission.info.mission') }}
                                 </p>
                                 <h2
-                                    class='h4 mb-0 text-truncate'
+                                    class='h4 mb-0 text-truncate mission-name'
                                     style='max-width: calc(100% - 48px);'
+                                    role='button'
+                                    tabindex='0'
+                                    :title='t("mission.info.zoom")'
+                                    @click='zoomToFeatures'
+                                    @keydown.enter.prevent='zoomToFeatures'
                                     v-text='props.subscription.name'
                                 />
                             </div>
@@ -119,6 +124,140 @@
                                     >{{ t('mission.info.noDescription') }}</span>
                                 </CopyField>
                             </div>
+                            <div class='col-12'>
+                                <label
+                                    class='subheader cursor-pointer d-flex align-items-center gap-1 mb-0'
+                                    @click='advanced = !advanced'
+                                >
+                                    <IconSquareChevronRight
+                                        v-if='!advanced'
+                                        :size='24'
+                                        stroke='1'
+                                    />
+                                    <IconChevronDown
+                                        v-else
+                                        :size='24'
+                                        stroke='1'
+                                    />
+                                    {{ t('mission.info.advanced') }}
+                                </label>
+                            </div>
+                            <template v-if='advanced'>
+                                <div class='col-12'>
+                                    <TablerBorder
+                                        :class='["cloudtak-accent", canSetRole ? "mission-editable-border" : ""]'
+                                        gap='sm'
+                                    >
+                                        <template #label>
+                                            <small class='text-uppercase text-secondary d-block mb-0'>{{ t('mission.info.defaultRole') }}</small>
+                                        </template>
+                                        <template
+                                            v-if='canSetRole && !editingRole'
+                                            #tools
+                                        >
+                                            <TablerIconButton
+                                                :title='t("mission.info.editDefaultRole")'
+                                                @click.stop.prevent='startEditingRole'
+                                            >
+                                                <IconPencil
+                                                    :size='24'
+                                                    stroke='1'
+                                                />
+                                            </TablerIconButton>
+                                        </template>
+                                        <template
+                                            v-else-if='editingRole'
+                                            #tools
+                                        >
+                                            <div class='d-flex gap-1'>
+                                                <TablerIconButton
+                                                    :disabled='savingRole'
+                                                    color='rgba(var(--tblr-primary-rgb), 0.14)'
+                                                    :title='savingRole ? t("mission.info.saving") : t("common.save")'
+                                                    @click.stop='saveRole'
+                                                >
+                                                    <IconDeviceFloppy
+                                                        color='rgb(var(--tblr-primary-rgb))'
+                                                        stroke='1'
+                                                    />
+                                                </TablerIconButton>
+                                                <TablerIconButton
+                                                    :disabled='savingRole'
+                                                    :title='t("common.cancel")'
+                                                    @click.stop='editingRole = false'
+                                                >
+                                                    <IconX stroke='1' />
+                                                </TablerIconButton>
+                                            </div>
+                                        </template>
+
+                                        <select
+                                            v-if='editingRole'
+                                            v-model='roleDraft'
+                                            class='form-select form-select-sm'
+                                            :disabled='savingRole'
+                                        >
+                                            <option
+                                                v-for='option of roleOptions'
+                                                :key='option.value'
+                                                :value='option.value'
+                                                v-text='option.label'
+                                            />
+                                        </select>
+                                        <p
+                                            v-else
+                                            class='fw-semibold mb-0'
+                                            v-text='roleLabel(defaultRole)'
+                                        />
+                                    </TablerBorder>
+                                </div>
+                                <div class='col-12'>
+                                    <TablerBorder
+                                        class='cloudtak-accent'
+                                        gap='sm'
+                                    >
+                                        <template #label>
+                                            <small class='text-uppercase text-secondary d-block mb-0'>{{ t('mission.info.password') }}</small>
+                                        </template>
+                                        <div class='d-flex align-items-center gap-2 flex-wrap'>
+                                            <IconLock
+                                                v-if='props.subscription.meta.passwordProtected'
+                                                :size='20'
+                                                stroke='1'
+                                            />
+                                            <IconLockOpen
+                                                v-else
+                                                :size='20'
+                                                stroke='1'
+                                            />
+                                            <span
+                                                class='fw-semibold flex-grow-1'
+                                                v-text='props.subscription.meta.passwordProtected ? t("mission.info.passwordProtected") : t("mission.info.noPassword")'
+                                            />
+                                            <template v-if='canSetPassword'>
+                                                <TablerLoading
+                                                    v-if='savingPassword'
+                                                    :inline='true'
+                                                />
+                                                <template v-else>
+                                                    <button
+                                                        class='btn btn-sm btn-secondary'
+                                                        @click='openPasswordModal'
+                                                        v-text='props.subscription.meta.passwordProtected ? t("mission.info.change") : t("mission.info.setPassword")'
+                                                    />
+                                                    <button
+                                                        v-if='props.subscription.meta.passwordProtected'
+                                                        class='btn btn-sm btn-outline-danger'
+                                                        @click='removePassword'
+                                                    >
+                                                        {{ t('mission.info.remove') }}
+                                                    </button>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </TablerBorder>
+                                </div>
+                            </template>
                         </div>
                     </TablerBorder>
                 </div>
@@ -189,7 +328,7 @@
 
                         <button
                             class='btn w-100 d-flex align-items-center justify-content-center gap-2 invite-qr-btn'
-                            @click='showQR = true'
+                            @click='openQR'
                         >
                             <IconQrcode
                                 :size='20'
@@ -226,7 +365,7 @@
             type='button'
             class='btn-close'
             :aria-label='t("common.close")'
-            @click='showQR = false'
+            @click='closeQR'
         />
         <div class='modal-header invite-qr-header'>
             <div class='d-flex align-items-center'>
@@ -241,7 +380,18 @@
             </div>
         </div>
         <div class='modal-body invite-qr-body'>
-            <div class='col-12 text-center'>
+            <TablerAlert
+                v-if='qrError'
+                :err='qrError'
+            />
+            <TablerLoading
+                v-else-if='!missionQRURL'
+                :desc='t("mission.info.loadingQr")'
+            />
+            <div
+                v-else
+                class='col-12 text-center'
+            >
                 <img
                     :src='missionQRURL'
                     class='invite-qr-image img-fluid'
@@ -250,14 +400,65 @@
             </div>
         </div>
     </TablerModal>
+
+    <TablerModal
+        v-if='showPassword'
+        size='sm'
+    >
+        <div class='modal-status bg-red' />
+        <button
+            type='button'
+            class='btn-close'
+            :aria-label='t("common.close")'
+            :disabled='savingPassword'
+            @click='showPassword = false'
+        />
+        <div class='modal-header'>
+            <div class='d-flex align-items-center'>
+                <IconLock
+                    :size='28'
+                    stroke='1'
+                />
+                <span
+                    class='mx-2'
+                    v-text='props.subscription.meta.passwordProtected ? t("mission.info.changePassword") : t("mission.info.setPassword")'
+                />
+            </div>
+        </div>
+        <form
+            class='modal-body'
+            @submit.prevent='savePassword'
+        >
+            <TablerInput
+                v-model='passwordDraft'
+                type='password'
+                autocomplete='new-password'
+                :label='t("mission.info.password")'
+                :disabled='savingPassword'
+                :autofocus='true'
+            />
+            <div class='d-flex mt-3'>
+                <button
+                    type='submit'
+                    class='btn btn-primary ms-auto'
+                    :disabled='savingPassword || !passwordDraft.length'
+                >
+                    <TablerLoading
+                        v-if='savingPassword'
+                        :inline='true'
+                    />
+                    <span v-else>{{ t('common.save') }}</span>
+                </button>
+            </div>
+        </form>
+    </TablerModal>
 </template>
 
 <script setup lang='ts'>
-import { ref, onMounted, computed } from 'vue';
-import { Preferences } from '@capacitor/preferences';
-import type { MissionSubscriptions } from '../../../../types.ts';
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import type { MissionRoleType, MissionSubscriptions } from '../../../../types.ts';
 import { useRoute, useRouter } from 'vue-router';
-import { stdurl } from '../../../../std.ts'
+import { std, stdurl } from '../../../../std.ts'
 import Subscription from '../../../../base/subscription.ts';
 import MissionTemplate from '../../../../base/mission-template.ts';
 import CopyField from '../../util/CopyField.vue';
@@ -270,10 +471,18 @@ import {
     IconMinus,
     IconCheck,
     IconX,
+    IconPencil,
+    IconDeviceFloppy,
+    IconLock,
+    IconLockOpen,
+    IconSquareChevronRight,
+    IconChevronDown,
 } from '@tabler/icons-vue';
 import {
     TablerAlert,
     TablerBorder,
+    TablerIconButton,
+    TablerInput,
     TablerLoading,
     TablerModal,
     TablerNone,
@@ -296,16 +505,48 @@ const emit = defineEmits(['subscribed']);
 const props = defineProps<{
     subscription: Subscription
 }>();
-const token = ref<string | null>(null);
 const error = ref<Error | undefined>(undefined);
 
 function fail(err: unknown): void {
     error.value = err instanceof Error ? err : new Error(String(err));
 }
 
-const missionQRURL = computed(() => {
-    return String(stdurl(`/api/marti/missions/${props.subscription.guid}/qr${token.value ? `?token=${encodeURIComponent(token.value)}` : ''}`));
-});
+const missionQRURL = ref<string | undefined>(undefined);
+const qrError = ref<Error | undefined>(undefined);
+
+let qrSeq = 0;
+
+async function openQR(): Promise<void> {
+    const seq = ++qrSeq;
+
+    qrError.value = undefined;
+    showQR.value = true;
+
+    try {
+        const res = await std(`/api/marti/missions/${encodeURIComponent(props.subscription.guid)}/qr`, {
+            headers: props.subscription.headers()
+        }) as Response;
+
+        const url = URL.createObjectURL(await res.blob());
+
+        if (seq === qrSeq) {
+            missionQRURL.value = url;
+        } else {
+            URL.revokeObjectURL(url);
+        }
+    } catch (err) {
+        if (seq === qrSeq) qrError.value = err instanceof Error ? err : new Error(String(err));
+    }
+}
+
+function closeQR(): void {
+    qrSeq++;
+    showQR.value = false;
+    if (missionQRURL.value) URL.revokeObjectURL(missionQRURL.value);
+    missionQRURL.value = undefined;
+}
+
+onBeforeUnmount(closeQR);
 
 const keywords = computed(() => {
     if (!Array.isArray(props.subscription.meta.keywords)) return [];
@@ -328,6 +569,92 @@ const groupList = computed<string[]>(() => {
     if (!groups) return [];
     return Array.isArray(groups) ? groups : [groups];
 });
+
+const roleOptions = computed<Array<{ value: MissionRoleType; label: string }>>(() => [
+    { value: 'MISSION_OWNER', label: t('mission.roles.owner') },
+    { value: 'MISSION_SUBSCRIBER', label: t('mission.roles.subscriber') },
+    { value: 'MISSION_READONLY_SUBSCRIBER', label: t('mission.roles.readOnly') },
+]);
+
+function roleLabel(role?: MissionRoleType): string {
+    const option = roleOptions.value.find((option) => option.value === role);
+    return option ? option.label : t('mission.roles.unknown');
+}
+
+const defaultRole = computed<MissionRoleType | undefined>(() => {
+    return props.subscription.meta.defaultRole?.type;
+});
+
+const canSetRole = computed(() => {
+    return props.subscription.subscribed && props.subscription.role.permissions.includes('MISSION_SET_ROLE');
+});
+
+const canSetPassword = computed(() => {
+    return props.subscription.subscribed && props.subscription.role.permissions.includes('MISSION_SET_PASSWORD');
+});
+
+const editingRole = ref(false);
+const savingRole = ref(false);
+const roleDraft = ref<MissionRoleType>(defaultRole.value || 'MISSION_SUBSCRIBER');
+
+function startEditingRole(): void {
+    if (!canSetRole.value) return;
+    roleDraft.value = defaultRole.value || 'MISSION_SUBSCRIBER';
+    editingRole.value = true;
+}
+
+async function saveRole(): Promise<void> {
+    try {
+        savingRole.value = true;
+        error.value = undefined;
+        if (roleDraft.value !== defaultRole.value) {
+            await props.subscription.update({ defaultRole: roleDraft.value });
+        }
+        editingRole.value = false;
+    } catch (err) {
+        fail(err);
+    } finally {
+        savingRole.value = false;
+    }
+}
+
+const advanced = ref(false);
+const showPassword = ref(false);
+const savingPassword = ref(false);
+const passwordDraft = ref('');
+
+function openPasswordModal(): void {
+    passwordDraft.value = '';
+    showPassword.value = true;
+}
+
+async function savePassword(): Promise<void> {
+    if (!passwordDraft.value.length) return;
+
+    try {
+        savingPassword.value = true;
+        error.value = undefined;
+        await props.subscription.update({ password: passwordDraft.value });
+        showPassword.value = false;
+    } catch (err) {
+        fail(err);
+    } finally {
+        passwordDraft.value = '';
+        savingPassword.value = false;
+    }
+}
+
+async function removePassword(): Promise<void> {
+    try {
+        savingPassword.value = true;
+        error.value = undefined;
+        await props.subscription.update({ password: null });
+    } catch (err) {
+        fail(err);
+    } finally {
+        savingPassword.value = false;
+    }
+}
 
 const editingKeywords = ref(false);
 const savingKeywords = ref(false);
@@ -399,8 +726,6 @@ const subscriptions = ref<MissionSubscriptions>([]);
 const missionTemplate = ref<MissionTemplate>();
 
 onMounted(async () => {
-    token.value = (await Preferences.get({ key: 'token' })).value;
-
     loading.value.users = true;
     await fetchSubscriptions();
     loading.value.users = false;
@@ -441,6 +766,16 @@ async function fetchSubscriptions() {
     }
 }
 
+async function zoomToFeatures(): Promise<void> {
+    error.value = undefined;
+
+    try {
+        await props.subscription.feature.zoomTo();
+    } catch (err) {
+        fail(err);
+    }
+}
+
 async function updateDescription(description: string) {
     error.value = undefined;
 
@@ -469,11 +804,6 @@ async function subscribe(next: boolean) {
             });
 
             try {
-                // loadMission returns null on most failures
-                if (!await mapStore.loadMission(props.subscription.guid)) {
-                    throw new Error(t('mission.info.loadOntoMapFailed'));
-                }
-
                 await props.subscription.update({ subscribed: true });
             } catch (err) {
                 await OverlayManager.deleteLoaded(created).catch(() => undefined);
@@ -504,6 +834,16 @@ async function subscribe(next: boolean) {
 </script>
 
 <style scoped>
+.mission-name {
+    cursor: pointer;
+}
+
+.mission-name:hover,
+.mission-name:focus-visible {
+    text-decoration: underline;
+    outline: none;
+}
+
 .mission-editable-border:deep(.tabler-border__tools) {
     opacity: 0;
     pointer-events: none;

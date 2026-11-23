@@ -23,7 +23,7 @@
             <TablerToggle
                 v-model='editing.sharing_enabled'
                 :label='t("basemaps.base.enableSharing")'
-                @change='emit("update:warnSharing", !editing.sharing_enabled)'
+                @change='warnSharing = !editing.sharing_enabled'
             />
         </TablerInput>
     </div>
@@ -54,34 +54,36 @@
             </template>
         </TablerPillGroup>
     </div>
-    <div class='col-md-12'>
-        <TablerInput
-            v-model='editing.url'
-            required
-            :label='t(`basemaps.types.${type}.urlLabel`)'
-            :description='t(`basemaps.types.${type}.urlDescription`)'
-            :placeholder='config.urlPlaceholder'
-            :error='errors.url'
-        >
-            <div
-                v-if='config.urlTokens.length'
-                class='btn-list'
+    <slot name='source'>
+        <div class='col-md-12'>
+            <TablerInput
+                v-model='editing.url'
+                required
+                :label='t(`basemaps.types.${type}.urlLabel`)'
+                :description='t(`basemaps.types.${type}.urlDescription`)'
+                :placeholder='config.urlPlaceholder'
+                :error='errors.url'
             >
-                <TablerBadge
-                    v-for='token in config.urlTokens'
-                    :key='token.value'
-                    :title='t(`basemaps.tokens.${token.value.replace(/[^a-zA-Z0-9]+/g, "")}`)'
-                    class='cursor-pointer'
-                    background-color='rgba(6, 182, 212, 0.15)'
-                    border-color='rgba(6, 182, 212, 0.4)'
-                    text-color='#0891b2'
-                    @click='editing.url = editing.url + token.value'
+                <div
+                    v-if='config.urlTokens.length'
+                    class='btn-list'
                 >
-                    {{ token.value }}
-                </TablerBadge>
-            </div>
-        </TablerInput>
-    </div>
+                    <TablerBadge
+                        v-for='token in config.urlTokens'
+                        :key='token.value'
+                        :title='t(`basemaps.tokens.${token.value.replace(/[^a-zA-Z0-9]+/g, "")}`)'
+                        class='cursor-pointer'
+                        background-color='rgba(6, 182, 212, 0.15)'
+                        border-color='rgba(6, 182, 212, 0.4)'
+                        text-color='#0891b2'
+                        @click='editing.url = editing.url + token.value'
+                    >
+                        {{ token.value }}
+                    </TablerBadge>
+                </div>
+            </TablerInput>
+        </div>
+    </slot>
 
     <label
         class='subheader mt-3 cursor-pointer'
@@ -131,14 +133,13 @@
                 class='col-12 mt-3'
             >
                 <TranslatedEnum
-                    :model-value='scope'
+                    v-model='scope'
                     required
                     :label='t("basemaps.base.accessScope")'
                     :options='[
                         { value: "user", label: t("basemaps.base.scopeUser") },
                         { value: "server", label: t("basemaps.base.scopeServer") }
                     ]'
-                    @update:model-value='emit("update:scope", $event as "user" | "server")'
                 />
             </div>
             <SelectBasemapCollection
@@ -174,7 +175,11 @@
                         :label='t("basemaps.base.hidden")'
                         :description='t("basemaps.base.hiddenDescription")'
                     >
-                        <TablerBadge>admin</TablerBadge>
+                        <TablerBadge
+                            text-color='var(--tblr-body-color)'
+                        >
+                            admin
+                        </TablerBadge>
                     </TablerToggle>
                 </div>
                 <div class='col-12'>
@@ -184,7 +189,11 @@
                         :label='t("basemaps.base.frequency")'
                         :description='t("basemaps.base.frequencyDescription")'
                     >
-                        <TablerBadge>admin</TablerBadge>
+                        <TablerBadge
+                            text-color='var(--tblr-body-color)'
+                        >
+                            admin
+                        </TablerBadge>
                         <TablerToggle
                             :model-value='true'
                             :label='t("basemaps.base.enabled")'
@@ -198,7 +207,11 @@
                             :description='t("basemaps.base.enableFrequencyDescription")'
                             @click='editing.frequency = 60'
                         >
-                            <TablerBadge>admin</TablerBadge>
+                            <TablerBadge
+                                text-color='var(--tblr-body-color)'
+                            >
+                                admin
+                            </TablerBadge>
                         </TablerToggle>
                     </div>
                 </div>
@@ -213,7 +226,11 @@
                                 :label='t("basemaps.base.enableSnapping")'
                                 :description='t("basemaps.base.enableSnappingDescription")'
                             >
-                                <TablerBadge>admin</TablerBadge>
+                                <TablerBadge
+                                    text-color='var(--tblr-body-color)'
+                                >
+                                    admin
+                                </TablerBadge>
                             </TablerToggle>
                         </div>
                         <div
@@ -257,36 +274,31 @@ import SelectBasemapCollection from '../../util/SelectBasemapCollection.vue';
 import TypeSelectorSelected from './TypeSelectorSelected.vue';
 import TranslatedEnum from '../../util/TranslatedEnum.vue';
 import { BasemapTypeConfig } from './types.ts';
+import type { BasemapErrors, BasemapScope } from './modes.ts';
 import type { BasemapSourceType, EditingBasemap, VectorLayerDescriptor } from './types.ts';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
 const editing = defineModel<EditingBasemap>('editing', { required: true });
+const scope = defineModel<BasemapScope>('scope', { required: true });
+const warnSharing = defineModel<boolean>('warnSharing', { required: true });
 
 const props = defineProps<{
+    type: BasemapSourceType;
     basemapId?: number;
     vectorLayers: VectorLayerDescriptor[];
-    errors: Record<'name' | 'url', string>;
-    type: BasemapSourceType;
-    scope: 'user' | 'server';
-    warnSharing: boolean;
+    errors: BasemapErrors;
     isSystemAdmin: boolean;
 }>();
 
 const emit = defineEmits<{
     'change-type': [];
-    'update:scope': [value: 'user' | 'server'];
-    'update:warnSharing': [value: boolean];
 }>();
 
 const config = BasemapTypeConfig[props.type];
 const showSelectedBanner = computed(() => !props.basemapId);
-const showTypeField = computed(() => {
-    return props.type !== 'featureserver'
-        && props.type !== 'mapserver'
-        && props.type !== 'imageserver';
-});
+const showTypeField = computed(() => !config.fixedType);
 const advanced = ref(false);
 
 const vectorTitleSchema = computed(() => {

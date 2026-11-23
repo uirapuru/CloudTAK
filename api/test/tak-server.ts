@@ -1,5 +1,6 @@
 import CP from 'node:child_process';
 import jwt from 'jsonwebtoken';
+import type net from 'node:net';
 import tls from 'node:tls';
 import https from 'node:https';
 import http from 'node:http';
@@ -36,6 +37,12 @@ export default class MockTAKServer {
 
     /** Only the TLS sockets connected to the TAK streaming port */
     streamingSockets: Set<tls.TLSSocket>;
+
+    /**
+     * Writes queued for streaming connections whose TLS 1.3 handshake has
+     * completed on the client but not yet on this server, keyed by client port
+     */
+    pendingStreaming: Map<number, Array<string>>;
 
     defaultMartiResponses: boolean;
     defaultWebtakResponses: boolean;
@@ -81,6 +88,7 @@ export default class MockTAKServer {
 
         this.sockets = new Set();
         this.streamingSockets = new Set();
+        this.pendingStreaming = new Map();
 
         if (opts.defaultMartiResponses) {
             this.mockMartiDefaultResponses();
@@ -123,6 +131,23 @@ export default class MockTAKServer {
                 this.sockets.delete(socket);
                 this.streamingSockets.delete(socket);
             });
+
+            const queued = socket.remotePort !== undefined ? this.pendingStreaming.get(socket.remotePort) : undefined;
+            if (socket.remotePort !== undefined) this.pendingStreaming.delete(socket.remotePort);
+            for (const xml of queued || []) {
+                socket.write(xml);
+            }
+        });
+
+        this.streaming.on('connection', (raw) => {
+            if (raw.remotePort === undefined) return;
+            const port = raw.remotePort;
+            this.pendingStreaming.set(port, []);
+            raw.on('close', () => this.pendingStreaming.delete(port));
+        });
+
+        this.streaming.on('tlsClientError', (err, socket) => {
+            if (socket && socket.remotePort !== undefined) this.pendingStreaming.delete(socket.remotePort);
         });
 
         this.streaming.on('error', (e) => {
@@ -216,9 +241,9 @@ export default class MockTAKServer {
     /**
      * Bind a server to an OS-assigned ephemeral port and return that port
      */
-    async listen(server: any, name: string): Promise<number> {
+    async listen(server: net.Server, name: string): Promise<number> {
         await new Promise<void>((resolve, reject) => {
-            const onError = (e: any) => {
+            const onError = (e: Error) => {
                 server.removeListener('listening', onListening);
                 reject(new Error(`Failed to bind ${name} server: ${e.message}`));
             };
@@ -232,7 +257,7 @@ export default class MockTAKServer {
             server.listen(0, '127.0.0.1');
         });
 
-        return server.address().port;
+        return (server.address() as net.AddressInfo).port;
     }
 
     mockWebtakDefaultResponses(): void {
@@ -351,9 +376,11 @@ export default class MockTAKServer {
     }
 
     write(cot: CoT): void {
+        const xml = CoTParser.to_xml(cot);
         for (const socket of this.sockets) {
-            socket.write(CoTParser.to_xml(cot));
+            socket.write(xml);
         }
+        this.queuePending(xml);
     }
 
     /**
@@ -364,6 +391,14 @@ export default class MockTAKServer {
     streamingWrite(xml: string): void {
         for (const socket of this.streamingSockets) {
             socket.write(xml);
+        }
+        this.queuePending(xml);
+    }
+
+    /** Hold a write for streaming connections still completing their handshake */
+    queuePending(xml: string): void {
+        for (const queue of this.pendingStreaming.values()) {
+            queue.push(xml);
         }
     }
 
@@ -384,22 +419,23 @@ export default class MockTAKServer {
             socket.destroy();
         }
         this.sockets.clear();
+        this.pendingStreaming.clear();
 
         await Promise.all([
             new Promise<void>((resolve) => {
-                if ('closeAllConnections' in this.streaming) (this.streaming as any).closeAllConnections();
+                if ('closeAllConnections' in this.streaming && typeof this.streaming.closeAllConnections === 'function') this.streaming.closeAllConnections();
                 this.streaming.close(() => {
                     return resolve();
                 });
             }),
             new Promise<void>((resolve) => {
-                if ('closeAllConnections' in this.webtak) (this.webtak as any).closeAllConnections();
+                this.webtak.closeAllConnections();
                 this.webtak.close(() => {
                     return resolve();
                 });
             }),
             new Promise<void>((resolve) => {
-                if ('closeAllConnections' in this.marti) (this.marti as any).closeAllConnections();
+                this.marti.closeAllConnections();
                 this.marti.close(() => {
                     return resolve();
                 });

@@ -7,7 +7,7 @@ import { CoreEntity, CoreEntityDevice } from '../schema.js';
 import { LayerMapping_Destination } from '../enums.js';
 import type { PgInsertValue } from 'drizzle-orm/pg-core';
 import { SQL, is, sql, eq, asc, desc } from 'drizzle-orm';
-import { EntityColumns, DeviceColumns, EXTERNAL_IDS, legacyExternalId, splitEntity, channelsSubquery } from './CoreEntity.js';
+import { EntityColumns, DeviceColumns, EXTERNAL_IDS, splitEntity, channelsSubquery } from './CoreEntity.js';
 import type { WithSQL, Writer } from './CoreEntity.js';
 
 const DEVICE_KEYS = new Set(Object.keys(DeviceColumns));
@@ -59,12 +59,12 @@ export default class CoreDeviceModel extends Modeler<typeof CoreEntity> {
         }
     }
 
-    async augmented_from(id: unknown | SQL<unknown>): Promise<Static<typeof CoreDeviceResponse>> {
+    async augmented_from(id: unknown): Promise<Static<typeof CoreDeviceResponse>> {
         const SubTable = channelsSubquery(this.pool);
 
         const pgres = await this.pool
             .select({
-                device: { ...EntityColumns, ...DeviceColumns },
+                device: { ...EntityColumns, ...DeviceColumns, stale: CoreEntity.stale },
                 external_ids: EXTERNAL_IDS.as('external_ids'),
                 channels: sql`COALESCE(${SubTable.channels}, '[]'::JSON)`.as('channels'),
             })
@@ -78,7 +78,6 @@ export default class CoreDeviceModel extends Modeler<typeof CoreEntity> {
 
         return {
             ...pgres[0].device,
-            external_id: legacyExternalId(pgres[0].external_ids as Record<string, string>),
             external_ids: pgres[0].external_ids as Record<string, string>,
             geometry: pgres[0].device.geometry as Static<typeof CoreDeviceResponse>['geometry'],
             channels: pgres[0].channels as number[],
@@ -94,7 +93,7 @@ export default class CoreDeviceModel extends Modeler<typeof CoreEntity> {
         const pgres = await this.pool
             .select({
                 count: sql<string>`count(*) OVER()`.as('count'),
-                device: { ...EntityColumns, ...DeviceColumns },
+                device: { ...EntityColumns, ...DeviceColumns, stale: CoreEntity.stale },
                 external_ids: EXTERNAL_IDS.as('external_ids'),
                 channels: sql`COALESCE(${SubTable.channels}, '[]'::JSON)`.as('channels'),
             })
@@ -114,7 +113,6 @@ export default class CoreDeviceModel extends Modeler<typeof CoreEntity> {
                 items: pgres.map((t) => {
                     return {
                         ...t.device,
-                        external_id: legacyExternalId(t.external_ids as Record<string, string>),
                         external_ids: t.external_ids as Record<string, string>,
                         geometry: t.device.geometry as Static<typeof CoreDeviceResponse>['geometry'],
                         channels: t.channels as number[],

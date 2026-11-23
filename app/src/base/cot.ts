@@ -1,7 +1,7 @@
 import { v4 as randomUUID } from 'uuid';
 import Type2525 from '@tak-ps/node-cot/2525';
-import { std } from '../std.ts';
-import { db, withDbRetry, isDatabaseSuspended, deferFeaturePersist, liveQuery } from '../database.ts';
+import { server } from '../std.ts';
+import { db, isDatabaseSuspended, deferFeaturePersist, liveQuery, type DBTaxonomy } from '../database.ts';
 import { bbox } from '@turf/bbox'
 import { length } from '@turf/length'
 import { isEqual } from '@ver0/deep-equal';
@@ -9,6 +9,10 @@ import { WorkerMessageType } from '../utils/events.ts'
 import { TEAM_COLORS, strokeColorFor } from '../utils/team-colors.ts';
 import pointOnFeature from '@turf/point-on-feature';
 import { applyEllipseMutation } from './cot/ellipse.ts';
+import FeatureOutbox from './feature-outbox.ts';
+import Icon from './icon.ts';
+import FeatureWriter from './feature-writer.ts';
+import { derivedFeatures, type DerivedFeature } from './cot/derived.ts';
 import type { COTMutation, COTUpdate } from './cot/types.ts';
 import type { Feature, FeaturePropertyCreator, Subscription } from '../types.ts'
 import type {
@@ -166,6 +170,8 @@ export default class COT {
 
     static selfUid: string | null = null;
 
+    static typeRequests = new Map<string, Promise<DBTaxonomy>>();
+
     _username?: string;
 
     origin: Origin
@@ -209,10 +215,6 @@ export default class COT {
         this.instance = this._remote ? `remote:${randomUUID()}` : `db:${randomUUID()}`
 
         this.origin = origin || { mode: OriginMode.CONNECTION };
-
-        if (!opts || (opts && opts.skipSave !== true)) {
-            this.save();
-        }
     }
 
     /**
@@ -337,7 +339,17 @@ export default class COT {
                         delete this._properties.icon;
                     }
 
+                    // The sensor cone is derived at render time from this block
+                    const sensorBefore = this._properties.sensor;
+                    if (sensorBefore && update.properties.sensor === undefined) {
+                        delete this._properties.sensor;
+                    }
+
                     Object.assign(this._properties, update.properties);
+
+                    if (!isEqual(sensorBefore, this._properties.sensor)) {
+                        visuallyChanged = true;
+                    }
 
                     if (this.is_skittle) this._properties.archived = false;
 
@@ -367,25 +379,22 @@ export default class COT {
             if (opts && opts.onApplied) opts.onApplied(visuallyChanged);
 
             if (this.origin.mode === OriginMode.CONNECTION) {
+                // skipSave: true is passed when applying server state locally
+                // (archive loads, sync events) - saving here would PUT the feature
+                // back to the API, which re-broadcasts a sync event to the user's
+                // other clients and creates a circular sync loop between them
+                const save = (!opts || opts.skipSave !== true) && this.savable;
+
                 // Backgrounded on native: keep the in-memory update, persist on resume
                 if (isDatabaseSuspended()) {
                     deferFeaturePersist(this.id);
+                    if (save) FeatureOutbox.deferQueue(this.id);
+                } else if (save) {
+                    await this.save();
                 } else {
-                    await withDbRetry(() => db.feature.put({
-                        id: this.id,
-                        path: this._path,
-                        properties: this._properties,
-                        geometry: this._geometry
-                    }));
+                    // Server state - coalesced into a batched write off the hot path
+                    FeatureWriter.queue(this);
                 }
-            }
-
-            // skipSave: true is passed when applying server state locally
-            // (archive loads, sync events) - saving here would PUT the feature
-            // back to the API, which re-broadcasts a sync event to the user's
-            // other clients and creates a circular sync loop between them
-            if (!this.is_self && (!opts || opts.skipSave !== true)) {
-                await this.save();
             }
 
             return visuallyChanged;
@@ -393,27 +402,26 @@ export default class COT {
     }
 
     /**
-     * Attempt to save the CoT to the database if necessary
+     * Whether the CoT is one of the user's archived Profile Features and so
+     * is persisted through the feature outbox
+     */
+    get savable(): boolean {
+        return !this._remote
+            && !this.is_self
+            && !this.is_skittle
+            && !!this.properties.archived
+            && this.origin.mode === OriginMode.CONNECTION;
+    }
+
+    /**
+     * Persist the CoT locally and queue it for submission to the API
      *
      * @param opts.submit - taklab: serwer publikuje trasę z planem jako CoT do wszystkich (bez adresata)
      */
     async save(opts?: { submit?: boolean }): Promise<void> {
-        if (
-            !this._remote
-            && !this.is_self
-            && !this.is_skittle
-            && this.properties.archived
-            && this.origin.mode === OriginMode.CONNECTION
-        ) {
-            const tokenEntry = await db.config.get('token');
-            if (!tokenEntry) return;
+        if (!this.savable) return;
 
-            await std(opts?.submit ? '/api/profile/feature?submit=true' : '/api/profile/feature', {
-                method: 'PUT',
-                token: tokenEntry.value as string,
-                body: this.as_feature()
-            })
-        }
+        await FeatureOutbox.queue(this.as_feature({ clone: true }), { submit: opts?.submit === true });
     }
 
     get is_skittle(): boolean {
@@ -495,9 +503,13 @@ export default class COT {
     async subscription(): Promise<Subscription> {
         if (!this.is_skittle) throw new Error('Username can only be obtained for Users');
 
-        return (await std(`/api/marti/subscription/${this.id}`, {
-            method: 'GET'
-        }) as Subscription);
+        const { data, error } = await server.GET('/api/marti/subscription/{:clientuid}', {
+            params: { path: { ':clientuid': this.id } }
+        });
+
+        if (error) throw new Error(error.message);
+
+        return data;
     }
 
     async username(): Promise<string> {
@@ -574,6 +586,18 @@ export default class COT {
     }
 
     /**
+     * Render-only companions of this CoT (ie the sensor cone), keyed by a
+     * vector id derived from the CoT id so they can be replaced or removed
+     */
+    as_derived(): DerivedFeature[] {
+        return COT.as_derived(this.as_feature());
+    }
+
+    static as_derived(input: Feature): DerivedFeature[] {
+        return derivedFeatures(input, COT.vectorId);
+    }
+
+    /**
      * The slimmer we can get the Features, the better
      * This returns the minium feature we need to actually style the COT in the vector tiles
      */
@@ -639,6 +663,79 @@ export default class COT {
 
     bounds(): GeoJSONBBox {
         return bbox(this._geometry);
+    }
+
+    /**
+     * Human readable name for this Feature's CoT type - see {@link COT.resolveType}
+     */
+    async resolveType(): Promise<DBTaxonomy> {
+        return await COT.resolveType(this.properties.type);
+    }
+
+    /**
+     * Resolve a CoT type or 2525 SIDC to its human readable name, served from
+     * the taxonomy table when cached and otherwise fetched and cached. Never
+     * throws: offline or unknown types resolve to the type itself
+     */
+    static async resolveType(type: string): Promise<DBTaxonomy> {
+        if (!type) return { type, name: type, desc: '' };
+
+        try {
+            const cached = await db.taxonomy.get(type);
+            if (cached) return cached;
+        } catch (err) {
+            console.warn('Taxonomy lookup failed:', err);
+        }
+
+        let request = this.typeRequests.get(type);
+
+        if (!request) {
+            request = this.fetchType(type).finally(() => {
+                this.typeRequests.delete(type);
+            });
+
+            this.typeRequests.set(type, request);
+        }
+
+        return await request;
+    }
+
+    private static async fetchType(type: string): Promise<DBTaxonomy> {
+        const fallback: DBTaxonomy = { type, name: type, desc: '' };
+
+        let entry: DBTaxonomy;
+
+        try {
+            if (Type2525.isNumericSIDCConvertable(type)) {
+                const { data, error } = await server.GET('/api/type/2525e/{:sidc}', {
+                    params: { path: { ':sidc': type } }
+                });
+
+                if (error) throw new Error(error.message);
+
+                entry = { type, name: data.name || type, desc: data.remarks || '' };
+            } else {
+                const { data, error } = await server.GET('/api/type/cot/{:type}', {
+                    params: { path: { ':type': type } }
+                });
+
+                if (error) throw new Error(error.message);
+                if (!data.full || data.full === type) return fallback;
+
+                entry = { type, name: data.full, desc: data.desc || '' };
+            }
+        } catch (err) {
+            console.warn(`Could not resolve type ${type}:`, err);
+            return fallback;
+        }
+
+        try {
+            await db.taxonomy.put(entry);
+        } catch (err) {
+            console.warn('Taxonomy cache write failed:', err);
+        }
+
+        return entry;
     }
 
     async flyTo(): Promise<void> {
@@ -750,14 +847,7 @@ export default class COT {
                 properties['marker-color'] = markerColor;
                 properties['marker-stroke-color'] = strokeColorFor(markerColor);
             } else if (properties.icon) {
-                // Format of icon needs to change for spritesheet
-                if (!properties.icon.includes(':')) {
-                    properties.icon = properties.icon.replace('/', ':')
-                }
-
-                if (properties.icon.endsWith('.png')) {
-                    properties.icon = properties.icon.replace(/.png$/, '');
-                }
+                properties.icon = Icon.key(properties.icon);
             } else if (!milsymSIDC(properties)) {
                 // A MIL-STD symbol needs no icon - renderedIcon derives its key
                 // from the milicon/type at render time

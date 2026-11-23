@@ -1,50 +1,77 @@
 <template>
     <div class='row row-cards'>
         <TypeSelectorSelected
-            type='tilejson'
+            :type='type'
             @change-type='emit("change-type")'
         />
 
-        <div class='col-md-12 mt-3'>
-            <TablerInput
-                :model-value='url'
-                :label='t("basemaps.types.tilejson.urlLabel")'
-                @update:model-value='emit("update:url", $event)'
-            />
-        </div>
-        <div class='col-md-12 mt-3'>
-            <div class='d-flex'>
-                <button
-                    class='cursor-pointer btn btn-secondary'
-                    @click='emit("change-type")'
-                >
-                    {{ t('common.cancel') }}
-                </button>
-                <div class='ms-auto'>
-                    <a
-                        class='cursor-pointer btn btn-primary'
-                        @click='emit("fetch")'
-                    >{{ t('basemaps.tilejson.fetch') }}</a>
+        <TablerLoading
+            v-if='loading'
+            :desc='t("basemaps.tilejson.fetching")'
+        />
+        <template v-else>
+            <div class='col-md-12 mt-3'>
+                <TablerInput
+                    v-model='url'
+                    :label='t(`basemaps.types.${type}.urlLabel`)'
+                    :description='t(`basemaps.types.${type}.urlDescription`)'
+                    :placeholder='config.urlPlaceholder'
+                />
+            </div>
+            <div class='col-md-12 mt-3'>
+                <div class='d-flex'>
+                    <TablerButton
+                        class='btn-secondary'
+                        @click='emit("change-type")'
+                    >
+                        {{ t('common.cancel') }}
+                    </TablerButton>
+                    <div class='ms-auto'>
+                        <TablerButton
+                            class='btn-primary'
+                            :disabled='!url'
+                            @click='fetchMetadata'
+                        >
+                            {{ t('basemaps.common.fetchMetadata') }}
+                        </TablerButton>
+                    </div>
                 </div>
             </div>
-        </div>
+        </template>
     </div>
 </template>
 
 <script setup lang='ts'>
+import { ref } from 'vue';
 import TypeSelectorSelected from './TypeSelectorSelected.vue';
-import { TablerInput } from '@tak-ps/vue-tabler';
+import { BasemapTypeConfig } from './types.ts';
+import { fromImport, importBasemap } from './modes.ts';
+import type { BasemapImported } from './modes.ts';
+import { TablerButton, TablerInput, TablerLoading } from '@tak-ps/vue-tabler';
+import type { BasemapSourceType } from './types.ts';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
-defineProps<{
-    url: string;
+const props = defineProps<{
+    type: BasemapSourceType;
 }>();
 
 const emit = defineEmits<{
     'change-type': [];
-    'fetch': [];
-    'update:url': [value: string];
+    imported: [value: BasemapImported];
 }>();
+
+const config = BasemapTypeConfig[props.type];
+const url = ref('');
+const loading = ref(false);
+
+async function fetchMetadata(): Promise<void> {
+    loading.value = true;
+    try {
+        emit('imported', fromImport(await importBasemap(url.value)));
+    } finally {
+        loading.value = false;
+    }
+}
 </script>

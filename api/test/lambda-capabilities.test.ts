@@ -1,11 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import Lambda from '../stateless/lib/aws/lambda.js';
-import { InvocationType } from '@tak-ps/etl';
+import { InvocationType, Capabilities } from '@tak-ps/etl';
+import { Static } from '@sinclair/typebox';
 
 const base = {
     name: 'Test Task',
     version: '1.0.0',
+};
+
+const normalize = (capabilities: unknown) => {
+    return Lambda.normalizeCapabilities(capabilities as Static<typeof Capabilities>);
 };
 
 const incoming = (schema: { input: unknown; output: unknown }) => ({
@@ -14,16 +19,13 @@ const incoming = (schema: { input: unknown; output: unknown }) => ({
     schema,
 });
 
-test('Lambda.normalizeCapabilities: single output schema is mapped to default', () => {
+test('Lambda.normalizeCapabilities: single output schema is rejected', () => {
     const output = { type: 'object', properties: { name: { type: 'string' } } };
 
-    const res = Lambda.normalizeCapabilities({
+    assert.throws(() => normalize({
         ...base,
         incoming: incoming({ input: { type: 'object' }, output }),
-    });
-
-    assert.deepEqual(res.incoming?.schema.input, { type: 'object' });
-    assert.deepEqual(res.incoming?.schema.output, [{ id: 'default', schema: output }]);
+    }), { status: 400, message: 'Task declares a single Output schema - Named Output schemas are required' });
 });
 
 test('Lambda.normalizeCapabilities: named output schemas pass through', () => {
@@ -32,7 +34,7 @@ test('Lambda.normalizeCapabilities: named output schemas pass through', () => {
         { id: 'unit', schema: { type: 'object', properties: {} } },
     ];
 
-    const res = Lambda.normalizeCapabilities({
+    const res = normalize({
         ...base,
         incoming: incoming({ input: {}, output }),
         outgoing: { schema: { input: {}, output } },
@@ -43,7 +45,7 @@ test('Lambda.normalizeCapabilities: named output schemas pass through', () => {
 });
 
 test('Lambda.normalizeCapabilities: malformed named entries are dropped', () => {
-    const res = Lambda.normalizeCapabilities({
+    const res = normalize({
         ...base,
         incoming: incoming({
             input: {},
@@ -63,7 +65,7 @@ test('Lambda.normalizeCapabilities: malformed named entries are dropped', () => 
 test('Lambda.normalizeCapabilities: missing or errored output becomes an empty list', () => {
     const outputError = { status: 400, message: 'Schema failed' };
 
-    const res = Lambda.normalizeCapabilities({
+    const res = normalize({
         ...base,
         incoming: incoming({ input: {}, output: null }),
         outgoing: { schema: { input: {}, output: undefined, outputError } },
@@ -75,7 +77,7 @@ test('Lambda.normalizeCapabilities: missing or errored output becomes an empty l
 });
 
 test('Lambda.normalizeCapabilities: flows without schemas are untouched', () => {
-    const res = Lambda.normalizeCapabilities({ ...base });
+    const res = normalize({ ...base });
 
     assert.deepEqual(res, base);
 });

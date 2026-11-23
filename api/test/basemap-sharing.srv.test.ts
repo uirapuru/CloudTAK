@@ -40,6 +40,8 @@ test('POST: api/basemap - Sharing Turned On Initially', async () => {
             actions: { feature: [] },
             url: 'https://test.com/test/{z}/{x}/{y}',
             overlay: false,
+            tilejson: null,
+            args: {},
             iconset: null,
             attribution: null,
             frequency: null,
@@ -63,49 +65,19 @@ test('POST: api/basemap - Sharing Turned On Initially', async () => {
     }
 });
 
-test('GET: api/basemap/1/tiles - Ensure Access Without Token Doesn\'t', async () => {
+test('GET: api/basemap/1 - Ensure Sharing Token Reads Basemap Config', async () => {
     try {
-        const res = await flight.fetch('/api/basemap/1/tiles', {
+        const res = await flight.fetch(`/api/basemap/1?token=${token}`, {
             method: 'GET',
-        }, false);
-
-        assert.deepEqual(res.body, {
-            status: 401,
-            message: 'No Auth Present',
-            messages: [],
-        });
-    } catch (err) {
-        assert.ifError(err);
-    }
-});
-
-test('GET: api/basemap/1/tiles - Ensure Token Works', async () => {
-    try {
-        const res = await flight.fetch('/api/basemap/1/tiles', {
-            method: 'GET',
-            auth: {
-                bearer: token,
-            },
         }, true);
 
-        delete res.body.created;
-        delete res.body.updated;
-
-        assert.deepEqual(res.body, {
-            tilejson: '3.0.0',
-            version: '1.0.0',
-            name: 'Test Basemap',
-            description: '',
-            scheme: 'xyz',
-            type: 'raster',
-            bounds: [-180, -90, 180, 90],
-            center: [0, 0, 8],
-            tileSize: 256,
-            minzoom: 0,
-            maxzoom: 16,
-            tiles: [`${flight.base}/api/basemap/1/tiles/{z}/{x}/{y}`],
-            actions: { feature: [] },
-        });
+        assert.equal(res.body.id, 1);
+        assert.equal(res.body.name, 'Test Basemap');
+        assert.equal(res.body.url, 'https://test.com/test/{z}/{x}/{y}');
+        assert.equal(res.body.protocol, 'zxy');
+        assert.equal(res.body.sharing_enabled, true);
+        assert.equal(res.body.sharing_token, token);
+        assert.deepEqual(res.body.children, []);
     } catch (err) {
         assert.ifError(err);
     }
@@ -134,6 +106,8 @@ test('PATCH: api/basemap/1 - Turn off Sharing', async () => {
             actions: { feature: [] },
             url: 'https://test.com/test/{z}/{x}/{y}',
             overlay: false,
+            tilejson: null,
+            args: {},
             iconset: null,
             attribution: null,
             frequency: null,
@@ -158,9 +132,9 @@ test('PATCH: api/basemap/1 - Turn off Sharing', async () => {
     }
 });
 
-test('GET: api/basemap/1/tiles - Ensure Token Is Now Disabled', async () => {
+test('GET: api/basemap/1 - Ensure Sharing Token Is Now Disabled', async () => {
     try {
-        const res = await flight.fetch('/api/basemap/1/tiles', {
+        const res = await flight.fetch('/api/basemap/1', {
             method: 'GET',
             auth: {
                 bearer: token,
@@ -203,6 +177,8 @@ test('PATCH: api/basemap/1 - Turn on Sharing', async () => {
             actions: { feature: [] },
             url: 'https://test.com/test/{z}/{x}/{y}',
             overlay: false,
+            tilejson: null,
+            args: {},
             iconset: null,
             attribution: null,
             frequency: null,
@@ -226,9 +202,9 @@ test('PATCH: api/basemap/1 - Turn on Sharing', async () => {
     }
 });
 
-test('GET: api/basemap/1/tiles - Ensure Old Token is unusable', async () => {
+test('GET: api/basemap/1 - Ensure Old Sharing Token is unusable', async () => {
     try {
-        const res = await flight.fetch('/api/basemap/1/tiles', {
+        const res = await flight.fetch('/api/basemap/1', {
             method: 'GET',
             auth: {
                 bearer: token,

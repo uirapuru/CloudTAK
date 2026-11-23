@@ -590,7 +590,8 @@ const allCards = computed<OverlayCard[]>(() => {
     }
 
     // The menu shows the map stack held by the manager upside down: its top row is drawn on top
-    return cards.sort((a, b) => OverlayManager.loaded.indexOf(b.overlay) - OverlayManager.loaded.indexOf(a.overlay));
+    const stack = OverlayManager.stack();
+    return cards.sort((a, b) => stack.indexOf(b.overlay) - stack.indexOf(a.overlay));
 });
 
 const overlayCards = computed<OverlayCard[]>(() => {

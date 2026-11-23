@@ -4,42 +4,41 @@
             v-if='mapStore.draw.mode === DrawToolMode.POINT'
             class='card cloudtak-panel user-select-none'
         >
-            <div class='card-header'>
-                <template v-if='!appStore.isMobileDetected'>
-                    <CoordinateType
-                        v-model='mapStore.draw.point.type'
-                    />
-                </template>
-                <template v-else>
-                    <IconPoint
-                        :size='24'
-                        stroke='1'
-                    /><span class='mx-2'>{{ t('util.drawOverlay.drawPoint') }}</span>
-                </template>
+            <div class='card-header point-header'>
+                <div class='d-flex flex-column'>
+                    <div class='point-label d-flex align-items-center'>
+                        <IconPoint
+                            :size='16'
+                            stroke='1'
+                        /><span class='ms-2'>{{ t('util.drawOverlay.drawPoint') }}</span>
+                    </div>
+                    <div class='d-flex align-items-center gap-2'>
+                        <CoordinateType
+                            v-model='mapStore.draw.point.type'
+                        />
+                        <IconSelect
+                            v-model='mapStore.draw.point.icon'
+                            :compact='true'
+                        />
+                    </div>
+                </div>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        v-if='appStore.isMobileDetected'
-                        :title='opened ? t("util.drawOverlay.closeSettings") : t("util.drawOverlay.openSettings")'
-                        @click='opened = !opened'
+                        v-if='!appStore.isMobileDetected'
+                        :title='mapStore.draw.point.drop === "multiple" ? t("util.drawOverlay.droppingMultiple") : t("util.drawOverlay.dropMultiple")'
+                        :class='{ "point-toggle--active": mapStore.draw.point.drop === "multiple" }'
+                        :aria-pressed='mapStore.draw.point.drop === "multiple"'
+                        @click='mapStore.draw.point.drop = mapStore.draw.point.drop === "multiple" ? "single" : "multiple"'
                     >
-                        <span class='d-flex align-items-center'>
-                            <span>{{ t('util.drawOverlay.more') }}</span>
-                            <IconChevronDown
-                                v-if='opened'
-                                :size='24'
-                                stroke='1'
-                            />
-                            <IconChevronUp
-                                v-else
-                                :size='24'
-                                stroke='1'
-                            />
-                        </span>
+                        <IconMapPins
+                            :size='24'
+                            stroke='1'
+                        />
                     </TablerIconButton>
                     <TablerIconButton
-                        :title='t("util.drawOverlay.finish")'
-                        :disabled='!mapStore.draw.canFinish'
+                        :title='mapStore.draw.point.drop === "multiple" ? t("util.drawOverlay.doneDropping") : t("util.drawOverlay.finish")'
+                        :disabled='mapStore.draw.point.drop !== "multiple" && !mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
                         <IconCheck
@@ -57,14 +56,6 @@
                         />
                     </TablerIconButton>
                 </div>
-            </div>
-            <div
-                v-if='appStore.isMobileDetected && opened'
-                class='card-body'
-            >
-                <CoordinateType
-                    v-model='mapStore.draw.point.type'
-                />
             </div>
         </div>
         <div
@@ -349,12 +340,12 @@
                     stroke='1'
                 /><span
                     class='mx-2'
-                    v-text='mapStore.draw.routeEditorKind === "build" ? t("util.drawOverlay.routeBuild") : t("util.drawOverlay.routeEdit")'
+                    v-text='mapStore.draw.routeEditorKind === "build" ? "Wyznaczanie trasy" : "Edycja trasy"'
                 />
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        :title='t("util.drawOverlay.saveRoute")'
+                        title='Zapisz trasę'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -364,7 +355,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        :title='t("common.cancel")'
+                        title='Anuluj'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -383,7 +374,7 @@
                     v-if='mapStore.draw.routeBusy'
                     class='text-secondary small route-busy'
                 >
-                    {{ t('util.drawOverlay.routeCalculating') }}
+                    Przeliczam trasę…
                 </div>
                 <div
                     v-if='mapStore.draw.routeError'
@@ -394,20 +385,20 @@
                     v-if='mapStore.draw.routeMenu'
                     class='d-flex align-items-center gap-2 mt-2 route-point-menu'
                 >
-                    <span v-text='t("util.drawOverlay.routePoint", { label: routePointLabel(mapStore.draw.routeMenu.index) })' />
+                    <span v-text='"Punkt " + routePointLabel(mapStore.draw.routeMenu.index)' />
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-danger route-remove-point'
                         @click='mapStore.draw.removeRouteWaypoint(mapStore.draw.routeMenu.index)'
                     >
-                        {{ t('util.drawOverlay.removePoint') }}
+                        Usuń punkt
                     </button>
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-secondary'
                         @click='mapStore.draw.routeMenu = null'
                     >
-                        {{ t('common.close') }}
+                        Zamknij
                     </button>
                 </div>
                 <template v-if='mapStore.draw.routeEditorKind === "edit"'>
@@ -415,7 +406,7 @@
                         type='button'
                         class='btn btn-sm btn-outline-secondary mt-2 route-settings-toggle'
                         @click='toggleRouteSettings'
-                        v-text='routeSettingsOpen ? t("util.drawOverlay.hideRouteSettings") : t("util.drawOverlay.routeSettings")'
+                        v-text='routeSettingsOpen ? "Ukryj tryb i opcje" : "Tryb i opcje"'
                     />
                     <div
                         v-if='routeSettingsOpen && routeModes.length'
@@ -424,7 +415,7 @@
                         <TablerEnum
                             v-model='routeModeName'
                             class='route-travel-mode'
-                            :label='t("util.drawOverlay.routeMode")'
+                            label='Tryb trasy'
                             :options='routeModes.map((m) => m.name)'
                             :disabled='mapStore.draw.routeBusy'
                         />
@@ -449,8 +440,8 @@
                     v-if='!mapStore.draw.routeMenu'
                     class='text-secondary small mt-1'
                     v-text='mapStore.draw.routeEditorKind === "build"
-                        ? t("util.drawOverlay.routeBuildHint")
-                        : t("util.drawOverlay.routeEditHint")'
+                        ? "Kliknij mapę, aby dodać kolejny punkt. Przeciągnij punkt albo odcinek, aby zmienić trasę."
+                        : "Kliknij mapę, aby dodać punkt do najbliższego odcinka. Przeciągnij punkt albo odcinek, aby zmienić trasę."'
                 />
             </div>
         </div>
@@ -495,13 +486,13 @@ import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import GenericBottomPane from '../GenericBottomPane.vue';
 import CoordinateType from '../util/CoordinateType.vue';
+import IconSelect from '../util/IconSelectOffline.vue';
 import { DrawToolMode } from '../../../stores/modules/draw.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { useAppStore } from '../../../stores/app.ts';
 import OverlayManager from '../../../base/overlay.ts';
 import TranslatedEnum from './TranslatedEnum.vue';
 import {
-    TablerEnum,
     TablerIconButton
 } from '@tak-ps/vue-tabler'
 import {
@@ -517,6 +508,7 @@ import {
     IconVector,
     IconPolygon,
     IconCheck,
+    IconMapPins,
     IconRoute,
 } from '@tabler/icons-vue';
 import { waypointLabel } from '../../../base/route-plan.ts';
@@ -610,3 +602,38 @@ watch(() => mapStore.draw.mode, async () => {
     }
 });
 </script>
+
+<style scoped>
+.point-header {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.point-header :deep(.btn-group .btn) {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.point-toggle--active {
+    color: var(--tblr-primary);
+}
+
+.point-label {
+    font-size: 0.75rem;
+    line-height: 1;
+    color: var(--tblr-secondary);
+    margin-bottom: 0.25rem;
+}
+
+@media (max-width: 600px) {
+    .point-header {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .point-header :deep(.btn-group .btn) {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
+</style>

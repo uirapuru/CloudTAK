@@ -34,6 +34,15 @@
                         stroke='1'
                     />
                 </TablerIconButton>
+                <TablerIconButton
+                    title='Notification Settings'
+                    @click='router.push("/menu/settings/notifications")'
+                >
+                    <IconSettings
+                        :size='32'
+                        stroke='1'
+                    />
+                </TablerIconButton>
             </div>
         </div>
         <div
@@ -132,8 +141,7 @@ import { liveQuery } from '../../database.ts';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useObservable } from '@vueuse/rxjs';
-import TAKNotification_, { NotificationType } from '../../base/notification.ts';
-const TAKNotification = TAKNotification_;
+import TAKNotification, { NotificationType } from '../../base/notification.ts';
 import NotificationIcon from './util/NotificationIcon.vue';
 import timeDiff from '../../timediff.ts';
 import {
@@ -144,6 +152,7 @@ import {
 import {
     IconTrash,
     IconSearch,
+    IconSettings,
 } from '@tabler/icons-vue';
 
 const router = useRouter();

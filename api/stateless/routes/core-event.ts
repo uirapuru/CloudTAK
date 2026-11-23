@@ -1,26 +1,26 @@
 import { Type } from '@sinclair/typebox';
-import { StandardResponse, CoreEventResponse, CoreEntityLink, CoreEntityStyle, CoreEventMission, CoreEntityExternalIdInput, GeoJSONFeatureGeometryPoint } from '../../common/types.js';
+import { StandardResponse, CoreEventResponse, CoreEntityLink, CoreEntityStyle, CoreEventMission, CoreEntityExternalId, GeoJSONFeatureGeometryPoint } from '../../common/types.js';
 import { sql, getTableColumns } from 'drizzle-orm';
 import Schema from '@openaddresses/batch-schema';
 import Err from '@openaddresses/batch-error';
-import Auth, { AuthUser, AuthResource, AuthResourceAccess } from '../../common/auth.js';
+import Auth, { AuthUser, AuthResource } from '../../common/auth.js';
 import { CoreEntity, CoreEntityEvent } from '../../common/schema.js';
-import { sharedWith, setChannels, setExternalId, toExternalId } from '../../common/models/CoreEntity.js';
+import { sharedWith, setChannels, setExternalId } from '../../common/models/CoreEntity.js';
 import { CoreEvent_Priority, LayerMapping_Destination } from '../../common/enums.js';
 import type ConfigStateless from '../config.js';
-import { userChannels, connectionChannels } from '../../common/control/tak-channels.js';
+import { userChannels } from '../../common/control/tak-channels.js';
 import { notifyCoreEvent } from '../lib/core-event.js';
-import EventControl from '../lib/control/event.js';
+import EntityControl from '../lib/control/entity.js';
 import { placementResponse } from '../lib/control/board.js';
 import { ETLEventAction } from '../../common/etl-events.js';
 import { uniqueViolation } from '../lib/pg-error.js';
 import * as Default from '../lib/limits.js';
 
 export default async function router(schema: Schema, config: ConfigStateless) {
-    const eventControl = new EventControl(config);
+    const eventControl = new EntityControl(config, 'Event');
     const resourceConnection = eventControl.resourceConnection.bind(eventControl);
-    const isEventCreator = eventControl.isEventCreator.bind(eventControl);
-    const ensureEventAccess = eventControl.ensureEventAccess.bind(eventControl);
+    const isEventCreator = eventControl.isCreator.bind(eventControl);
+    const ensureEventAccess = eventControl.ensureAccess.bind(eventControl);
 
     await schema.get('/core/event', {
         name: 'List Events',
@@ -49,13 +49,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }),
     }, async (req, res) => {
         try {
-            const auth = await Auth.is_auth(config, req, {
-                scope: 'event:read',
-                resources: [
-                    { access: AuthResourceAccess.CONNECTION },
-                    { access: AuthResourceAccess.LAYER },
-                ],
-            });
+            const auth = await Auth.is_auth(config, req);
 
             const filterChannels = req.query.channel === undefined
                 ? []
@@ -115,13 +109,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         res: CoreEventResponse,
     }, async (req, res) => {
         try {
-            const auth = await Auth.is_auth(config, req, {
-                scope: 'event:read',
-                resources: [
-                    { access: AuthResourceAccess.CONNECTION },
-                    { access: AuthResourceAccess.LAYER },
-                ],
-            });
+            const auth = await Auth.is_auth(config, req);
 
             const connection = auth instanceof AuthResource ? await resourceConnection(auth) : null;
 
@@ -164,7 +152,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 format: 'date-time',
                 description: 'Time at which the Event ends - a future time keeps the Event active until then, omit for an open ended Event',
             })])),
-            external_id: Type.Optional(CoreEntityExternalIdInput),
+            external_id: Type.Optional(CoreEntityExternalId),
             editable: Type.Boolean({
                 default: true,
                 description: 'Can users other than the creator edit the Event',
@@ -194,25 +182,13 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         res: CoreEventResponse,
     }, async (req, res) => {
         try {
-            const auth = await Auth.is_auth(config, req, {
-                scope: 'event:create',
-                resources: [
-                    { access: AuthResourceAccess.CONNECTION },
-                    { access: AuthResourceAccess.LAYER },
-                ],
-            });
+            const auth = await Auth.is_auth(config, req);
 
             const { channels: requested, external_id, ...body } = req.body;
 
             const connection = auth instanceof AuthResource ? await resourceConnection(auth) : null;
 
-            let channels = requested;
-            if (!channels) {
-                if (connection === null) throw new Err(400, null, 'channels is required - at least one Channel to share the Event with');
-
-                channels = Array.from(await connectionChannels(config, await config.models.Connection.from(connection)));
-                if (!channels.length) throw new Err(400, null, 'The Connection has no active Channels to share the Event with - provide channels');
-            }
+            const channels = await eventControl.createChannels(connection, requested);
 
             const id = await config.pg.transaction(async (tx) => {
                 const id = await config.models.CoreEntity.generateEvent({
@@ -223,7 +199,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
                 await setChannels(tx, id, channels);
 
-                if (external_id !== undefined) await setExternalId(tx, { id, kind: LayerMapping_Destination.COREEVENT, connection }, toExternalId(external_id));
+                if (external_id !== undefined) await setExternalId(tx, { id, kind: LayerMapping_Destination.COREEVENT, connection }, external_id);
 
                 return id;
             }).catch(uniqueViolation('external_id is already used by another Event of the Connection'));
@@ -268,7 +244,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 format: 'date-time',
                 description: 'Time at which the Event ends - push a future time out to keep the Event active, null leaves it open ended',
             })])),
-            external_id: Type.Optional(CoreEntityExternalIdInput),
+            external_id: Type.Optional(CoreEntityExternalId),
             editable: Type.Optional(Type.Boolean()),
             metadata: Type.Optional(Type.Record(Type.String(), Type.Unknown(), {
                 description: 'User defined key/value Event metadata - replaces the existing metadata object',
@@ -288,13 +264,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         res: CoreEventResponse,
     }, async (req, res) => {
         try {
-            const auth = await Auth.is_auth(config, req, {
-                scope: 'event:update',
-                resources: [
-                    { access: AuthResourceAccess.CONNECTION },
-                    { access: AuthResourceAccess.LAYER },
-                ],
-            });
+            const auth = await Auth.is_auth(config, req);
 
             const connection = auth instanceof AuthResource ? await resourceConnection(auth) : null;
 
@@ -340,15 +310,16 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                         ...(ended === undefined ? {} : { ended }),
                     }, tx);
 
-                    if (external_id !== undefined) await setExternalId(tx, { id: event.id, kind: LayerMapping_Destination.COREEVENT, connection: event.connection }, toExternalId(external_id));
+                    if (external_id !== undefined) await setExternalId(tx, { id: event.id, kind: LayerMapping_Destination.COREEVENT, connection: event.connection }, external_id);
                 }).catch(uniqueViolation('external_id is already used by another Event of the Connection'));
             }
 
-            if (channels !== undefined) await setChannels(config.pg, req.params.event, channels);
+            const shared = await eventControl.fillChannels(event, channels);
+            if (shared !== undefined) await setChannels(config.pg, req.params.event, shared);
 
             const updated = await config.models.CoreEntity.augmented_from(req.params.event);
 
-            if (changed || channels !== undefined) {
+            if (changed || shared !== undefined) {
                 notifyCoreEvent(config, ETLEventAction.Update, updated);
             }
 
@@ -368,15 +339,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             }),
         }),
         res: StandardResponse,
+        security: Auth.security('event:delete', { connection: true }),
     }, async (req, res) => {
         try {
-            const auth = await Auth.is_auth(config, req, {
-                scope: 'event:delete',
-                resources: [
-                    { access: AuthResourceAccess.CONNECTION },
-                    { access: AuthResourceAccess.LAYER },
-                ],
-            });
+            const auth = await Auth.is_auth(config, req);
 
             const connection = auth instanceof AuthResource ? await resourceConnection(auth) : null;
 

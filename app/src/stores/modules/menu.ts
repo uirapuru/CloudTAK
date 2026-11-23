@@ -26,6 +26,7 @@ import { std } from '../../std.ts';
 import ContactManager from '../../base/contact.ts';
 import Chatroom from '../../base/chatroom.ts';
 import type { Profile } from '../../types.ts';
+import { isNativePlatform } from '../../utils/capacitor.ts';
 
 export type MenuItemConfig = {
     key: string;
@@ -124,10 +125,10 @@ export default class MenuManager {
         return [
             {
                 key: 'features',
-                label: 'Your Features',
+                label: 'Features',
                 route: '/menu/features',
-                tooltip: 'Your Features',
-                description: 'Manage saved features',
+                tooltip: 'Features',
+                description: 'Saved features, events, and devices',
                 icon: IconMapPin,
             },
             {
@@ -290,7 +291,10 @@ export default class MenuManager {
 
     get items(): ComputedRef<MenuItemConfig[]> {
         return computed(() => {
+            const native = isNativePlatform();
+
             let combined = [...this.baseMenuItems, ...this.pluginMenuItems.value].filter((item) => {
+                if (item.routeExternal && native) return false;
                 if (item.requiresSystemAdmin && !this.isSystemAdmin.value) return false;
                 if (item.requiresVoiceHistory && !this.canSeeVoiceHistory.value) return false;
                 if (item.requiresOtsAdmin && !this.canSeeOtsAccounts.value) return false;

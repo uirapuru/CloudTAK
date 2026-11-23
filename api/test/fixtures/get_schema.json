@@ -1,14 +1,4 @@
 {
-    "GET /schema": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /openapi": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
     "GET /agency": {
         "body": false,
         "query": true,
@@ -58,16 +48,6 @@
         "body": false,
         "query": true,
         "res": true
-    },
-    "GET /basemap/:basemapid/tiles": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /basemap/:basemapid/tiles/:z/:x/:y": {
-        "body": false,
-        "query": true,
-        "res": false
     },
     "POST /basemap/:basemapid/feature": {
         "body": true,
@@ -494,6 +474,36 @@
         "query": false,
         "res": true
     },
+    "GET /core/entity/:entity/timeline": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /core/entity/:entity/timeline/:entry": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /core/entity/:entity/timeline": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "PUT /core/entity/:entity/timeline": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "PATCH /core/entity/:entity/timeline/:entry": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "DELETE /core/entity/:entity/timeline/:entry": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "GET /core/event/:event/assignment": {
         "body": false,
         "query": true,
@@ -784,11 +794,6 @@
         "query": true,
         "res": true
     },
-    "GET /fonts/:fontstack/:start-:end.pbf": {
-        "body": false,
-        "query": false,
-        "res": false
-    },
     "GET /geofence": {
         "body": false,
         "query": false,
@@ -1004,6 +1009,11 @@
         "query": true,
         "res": false
     },
+    "GET /marti/cot": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
     "GET /marti/cot/:uid": {
         "body": false,
         "query": false,
@@ -1190,7 +1200,7 @@
         "res": true
     },
     "POST /marti/missions/:guid/upload": {
-        "body": false,
+        "body": true,
         "query": true,
         "res": true
     },
@@ -1384,25 +1394,40 @@
         "query": false,
         "res": true
     },
-    "GET /ots/accounts/status": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /ots/accounts": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /ots/accounts/:username/qr": {
+    "GET /plugin": {
         "body": false,
         "query": true,
         "res": true
     },
-    "GET /marti/datasync-qr": {
+    "GET /plugin/:plugin": {
         "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /plugin": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "PATCH /plugin/:plugin": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "DELETE /plugin/:plugin": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /plugin/:plugin/bundle": {
+        "body": true,
         "query": true,
         "res": true
+    },
+    "GET /plugin/:plugin/bundle": {
+        "body": false,
+        "query": true,
+        "res": false
     },
     "GET /profile/asset": {
         "body": false,
@@ -1552,6 +1577,11 @@
     "GET /profile/overlay": {
         "body": false,
         "query": true,
+        "res": true
+    },
+    "PATCH /profile/overlay/order": {
+        "body": true,
+        "query": false,
         "res": true
     },
     "GET /profile/overlay/:overlay": {
@@ -1799,6 +1829,16 @@
         "query": false,
         "res": true
     },
+    "GET /schema": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /openapi": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "GET /swagger": {
         "body": false,
         "query": false,
@@ -1942,11 +1982,6 @@
     "GET /search": {
         "body": false,
         "query": false,
-        "res": true
-    },
-    "GET /search/reverse/:longitude/:latitude": {
-        "body": false,
-        "query": true,
         "res": true
     },
     "GET /search/reverse/:longitude/:latitude/sun": {

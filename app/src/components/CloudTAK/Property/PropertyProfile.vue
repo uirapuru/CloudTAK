@@ -328,7 +328,7 @@ function renderChart(): void {
             tooltip: {
                 callbacks: {
                     label(context: TooltipItem<'line'>) {
-                        return t('property.profile.elevationTooltip', { value: formatElevation(Number(context.parsed.y)) });
+                        return t('property.profile.elevationTooltip', { value: formatElevationFromDisplay(Number(context.parsed.y)) });
                     },
                     title(items: TooltipItem<'line'>[]) {
                         if (!items.length) return '';
@@ -433,6 +433,10 @@ function formatDistanceFromDisplay(value: number): string {
 
 function formatElevation(meters: number): string {
     return `${formatNumber(convertElevation(meters))} ${elevationUnitLabel()}`;
+}
+
+function formatElevationFromDisplay(value: number): string {
+    return `${formatNumber(value)} ${elevationUnitLabel()}`;
 }
 
 function formatNumber(value: number): string {

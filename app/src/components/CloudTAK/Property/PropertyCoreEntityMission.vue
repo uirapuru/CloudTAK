@@ -1,212 +1,189 @@
 <template>
-    <div class='col-12'>
-        <SlideDownHeader
-            v-model='expanded'
-            :label='t("property.coreEntityMission.missionTitle")'
-        >
-            <template #icon>
-                <IconCloudPin
-                    :size='18'
-                    stroke='1'
-                    color='#6b7990'
-                    class='ms-2 me-1'
-                />
-            </template>
-            <template #right>
-                <TablerBadge
-                    class='me-2'
-                    background-color='rgba(59, 130, 246, 0.15)'
-                    border-color='rgba(59, 130, 246, 0.4)'
-                    text-color='#3b82f6'
+    <PropertySection :label='t("property.coreEntityMission.title")'>
+        <template #actions>
+            <template v-if='props.edit && mode === "view" && !busy'>
+                <TablerIconButton
+                    :title='t("property.coreEntityMission.addExisting")'
+                    @click.stop='startSelect'
                 >
-                    {{ props.modelValue.length }}
-                </TablerBadge>
+                    <IconListSearch
+                        :size='20'
+                        stroke='1'
+                    />
+                </TablerIconButton>
+                <TablerIconButton
+                    :title='t("property.coreEntityMission.create")'
+                    @click.stop='createMission'
+                >
+                    <IconPlus
+                        :size='20'
+                        stroke='1'
+                    />
+                </TablerIconButton>
             </template>
+        </template>
 
-            <div class='overflow-hidden mb-2'>
-                <div class='rounded mx-2 mt-2 px-2 py-2'>
-                    <TablerInlineAlert
-                        v-if='error'
-                        class='mb-2'
-                        severity='danger'
-                        :title='t("property.coreEntityMission.missionError")'
-                        :description='error.message'
-                    />
+        <TablerInlineAlert
+            v-if='error'
+            class='mb-2'
+            severity='danger'
+            :title='t("property.coreEntityMission.error")'
+            :description='error.message'
+        />
 
-                    <TablerLoading
-                        v-if='busy'
-                        :compact='true'
-                        :desc='t("property.coreEntityMission.creatingMission")'
-                    />
+        <TablerLoading
+            v-if='busy'
+            :compact='true'
+            :desc='t("property.coreEntityMission.creating")'
+        />
 
-                    <template v-else-if='mode === "select"'>
-                        <div class='d-flex align-items-center mb-2 user-select-none'>
-                            <TablerIconButton
-                                :title='t("property.type.back")'
-                                @click='mode = "view"'
-                            >
-                                <IconChevronLeft
-                                    :size='20'
-                                    stroke='1'
-                                />
-                            </TablerIconButton>
-                            <div class='mx-2 subheader'>
-                                {{ t('property.coreEntityMission.selectMission') }}
-                            </div>
-                        </div>
-
-                        <TablerLoading
-                            v-if='listLoading'
-                            :compact='true'
-                            :desc='t("property.coreEntityMission.loadingMissions")'
+        <div
+            v-else-if='mode === "select"'
+            class='rounded mb-2 px-2 py-2 cloudtak-accent'
+        >
+            <div class='d-flex align-items-center mb-2 user-select-none'>
+                <div class='subheader'>
+                    {{ t('property.coreEntityMission.select') }}
+                </div>
+                <div class='ms-auto'>
+                    <TablerIconButton
+                        :title='t("common.cancel")'
+                        @click='mode = "view"'
+                    >
+                        <IconX
+                            :size='18'
+                            stroke='1'
                         />
-                        <template v-else>
-                            <TablerInput
-                                v-model='filter'
-                                :placeholder='t("property.coreEntityMission.filterMissions")'
-                                class='pb-2'
-                            />
-
-                            <div
-                                class='overflow-auto'
-                                style='max-height: 250px;'
-                            >
-                                <div
-                                    v-if='!filteredMissions.length'
-                                    class='px-1 py-1 text-muted'
-                                >
-                                    {{ t('property.coreEntityMission.noMissionsFound') }}
-                                </div>
-                                <div
-                                    v-for='mission of filteredMissions'
-                                    :key='mission.guid'
-                                    class='cloudtak-hover rounded cursor-pointer d-flex align-items-center px-2 py-2'
-                                    @click='selectMission(mission)'
-                                >
-                                    <IconLock
-                                        v-if='mission.passwordProtected'
-                                        :size='18'
-                                        stroke='1'
-                                        class='me-2 flex-shrink-0'
-                                    />
-                                    <IconCloudPin
-                                        v-else
-                                        :size='18'
-                                        stroke='1'
-                                        class='me-2 flex-shrink-0'
-                                    />
-                                    <span
-                                        class='text-truncate'
-                                        v-text='mission.name'
-                                    />
-                                </div>
-                            </div>
-                        </template>
-                    </template>
-
-                    <template v-else>
-                        <div
-                            v-for='mission of props.modelValue'
-                            :key='mission.guid'
-                            class='d-flex align-items-center gap-1 mb-2'
-                        >
-                            <TablerButton
-                                class='w-100 d-flex align-items-center text-start'
-                                :title='mission.name'
-                                @click='router.push(`/menu/missions/${mission.guid}`)'
-                            >
-                                <IconCloudPin
-                                    :size='20'
-                                    stroke='1'
-                                    class='flex-shrink-0'
-                                />
-                                <span
-                                    class='mx-2 text-truncate'
-                                    v-text='mission.name'
-                                />
-                            </TablerButton>
-
-                            <TablerIconButton
-                                v-if='props.edit'
-                                :title='t("property.mission.removeAssociatedMission")'
-                                @click='removeMission(mission.guid)'
-                            >
-                                <IconTrash
-                                    :size='18'
-                                    stroke='1'
-                                />
-                            </TablerIconButton>
-                        </div>
-
-                        <div
-                            v-if='!props.edit && !props.modelValue.length'
-                            class='px-1 py-1 text-muted'
-                        >
-                            {{ t('property.coreEntityMission.noAssociatedMissions') }}
-                        </div>
-                        <div
-                            v-else-if='props.edit'
-                            class='d-flex gap-2'
-                        >
-                            <TablerButton
-                                class='w-50 d-flex align-items-center justify-content-center'
-                                :title='t("property.coreEntityMission.associateExisting")'
-                                @click='startSelect'
-                            >
-                                <IconListSearch
-                                    :size='18'
-                                    stroke='1'
-                                    class='me-2 flex-shrink-0'
-                                />
-                                {{ t('property.coreEntityMission.existingMission') }}
-                            </TablerButton>
-                            <TablerButton
-                                class='w-50 d-flex align-items-center justify-content-center'
-                                :title='t("property.coreEntityMission.createNew")'
-                                @click='createMission'
-                            >
-                                <IconPlus
-                                    :size='18'
-                                    stroke='1'
-                                    class='me-2 flex-shrink-0'
-                                />
-                                {{ t('property.coreEntityMission.newMission') }}
-                            </TablerButton>
-                        </div>
-                    </template>
+                    </TablerIconButton>
                 </div>
             </div>
-        </SlideDownHeader>
-    </div>
+
+            <TablerLoading
+                v-if='listLoading'
+                :compact='true'
+                :desc='t("property.coreEntityMission.loading")'
+            />
+            <template v-else>
+                <TablerInput
+                    v-model='filter'
+                    :placeholder='t("property.coreEntityMission.filter")'
+                    class='pb-2'
+                />
+
+                <div
+                    class='overflow-auto'
+                    style='max-height: 250px;'
+                >
+                    <TablerNone
+                        v-if='!filteredMissions.length'
+                        :label='t("property.coreEntityMission.noneFound")'
+                        :compact='true'
+                        :create='false'
+                    />
+                    <div
+                        v-for='mission of filteredMissions'
+                        :key='mission.guid'
+                        class='mission-row d-flex align-items-center gap-2 px-2 rounded cursor-pointer'
+                        style='min-height: 36px;'
+                        @click='selectMission(mission)'
+                    >
+                        <IconLock
+                            v-if='mission.passwordProtected'
+                            :size='18'
+                            stroke='1'
+                            class='text-secondary flex-shrink-0'
+                        />
+                        <IconCloudPin
+                            v-else
+                            :size='18'
+                            stroke='1'
+                            class='text-secondary flex-shrink-0'
+                        />
+                        <span
+                            class='text-truncate'
+                            v-text='mission.name'
+                        />
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <template v-else>
+            <TablerNone
+                v-if='!props.modelValue.length'
+                :label='t("property.coreEntityMission.none")'
+                class='pb-2'
+                :compact='true'
+                :create='false'
+            />
+
+            <div
+                v-for='mission of props.modelValue'
+                :key='mission.guid'
+                class='mission-row d-flex align-items-center gap-2 px-2 rounded'
+            >
+                <a
+                    :href='`/menu/missions/${mission.guid}`'
+                    :title='mission.name'
+                    class='d-flex align-items-center gap-2 text-reset text-decoration-none flex-fill'
+                    style='min-width: 0; min-height: 36px;'
+                    @click.prevent='router.push(`/menu/missions/${mission.guid}`)'
+                >
+                    <IconCloudPin
+                        :size='18'
+                        stroke='1'
+                        class='text-secondary flex-shrink-0'
+                    />
+                    <span
+                        class='text-truncate'
+                        v-text='mission.name'
+                    />
+                </a>
+
+                <TablerIconButton
+                    v-if='props.edit'
+                    :title='t("property.coreEntityMission.remove")'
+                    class='mission-row-remove'
+                    @click='removeMission(mission.guid)'
+                >
+                    <IconTrash
+                        :size='18'
+                        stroke='1'
+                    />
+                </TablerIconButton>
+            </div>
+        </template>
+    </PropertySection>
 </template>
 
 <script setup lang='ts'>
+/** PropertyCoreEntityMission - the TAK Server Data Syncs (Missions) of a Core Event as a compact row list */
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import SlideDownHeader from '../util/SlideDownHeader.vue';
+import PropertySection from '../util/PropertySection.vue';
 import Subscription from '../../../base/subscription.ts';
 import GroupManager from '../../../base/group.ts';
 import OverlayManager from '../../../base/overlay.ts';
-import { useMapStore } from '../../../stores/map.ts';
 import { server } from '../../../std.ts';
 import type { Mission, CoreEntityMission } from '../../../types.ts';
 import {
-    TablerBadge,
-    TablerButton,
+    TablerNone,
     TablerInput,
     TablerLoading,
     TablerIconButton,
     TablerInlineAlert,
 } from '@tak-ps/vue-tabler';
 import {
+    IconX,
     IconLock,
     IconPlus,
     IconTrash,
     IconCloudPin,
     IconListSearch,
-    IconChevronLeft,
 } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     /** TAK Server Missions the Event is associated with */
@@ -224,11 +201,8 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: Array<CoreEntityMission>): void
 }>();
 
-const { t } = useI18n();
 const router = useRouter();
-const mapStore = useMapStore();
 
-const expanded = ref(true);
 const mode = ref<'view' | 'select'>('view');
 
 const error = ref<Error | undefined>();
@@ -250,7 +224,6 @@ const filteredMissions = computed(() => {
 
 watch(() => props.modelValue, () => {
     mode.value = 'view';
-    if (props.modelValue.length) expanded.value = true;
 });
 
 function addMission(mission: CoreEntityMission): void {
@@ -294,7 +267,7 @@ async function createMission(): Promise<void> {
     error.value = undefined;
 
     if (!missionName) {
-        error.value = new Error(t('property.coreEntityMission.missionNameRequired'));
+        error.value = new Error(t('property.coreEntityMission.nameRequired'));
         return;
     }
 
@@ -330,8 +303,6 @@ async function createMission(): Promise<void> {
                 token: res.data.token,
                 mode_id: res.data.guid,
             });
-
-            await mapStore.loadMission(res.data.guid);
         } catch (err) {
             console.error('Failed to load the new Mission onto the map:', err);
         }
@@ -346,3 +317,18 @@ async function createMission(): Promise<void> {
     busy.value = false;
 }
 </script>
+
+<style scoped>
+.mission-row:hover {
+    background: var(--cloudtak-hover-bg);
+}
+
+.mission-row-remove {
+    visibility: hidden;
+}
+
+.mission-row:hover .mission-row-remove,
+.mission-row:focus-within .mission-row-remove {
+    visibility: visible;
+}
+</style>

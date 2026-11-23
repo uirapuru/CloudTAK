@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import { Static, Type } from '@sinclair/typebox';
-import { X509Certificate } from 'crypto';
+import { certificateMetadata } from '../lib/certificate.js';
 import Schema from '@openaddresses/batch-schema';
 import Err from '@openaddresses/batch-error';
 import Auth, { AuthUserAccess } from '../../common/auth.js';
@@ -16,6 +16,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     const userControl = new UserControl(config);
 
     await schema.get('/server', {
+        security: Auth.security({ optional: true }),
         name: 'Get Server',
         group: 'Server',
         description: 'Get Server',
@@ -57,8 +58,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                     };
 
                     if (config.server.auth.cert && config.server.auth.key) {
-                        const { validFrom, validTo, subject } = new X509Certificate(config.server.auth.cert);
-                        response.certificate = { validFrom, validTo, subject };
+                        response.certificate = certificateMetadata(config.server.auth.cert);
                     }
 
                     res.json(response);
@@ -107,6 +107,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             })),
         }),
         res: ServerResponse,
+        security: Auth.security({ optional: true }),
     }, async (req, res) => {
         try {
             if (config.server.auth.key && config.server.auth.cert) {
@@ -170,8 +171,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             };
 
             if (config.server.auth.cert && config.server.auth.key) {
-                const { validFrom, validTo, subject } = new X509Certificate(config.server.auth.cert);
-                response.certificate = { validFrom, validTo, subject };
+                response.certificate = certificateMetadata(config.server.auth.cert);
             }
 
             res.json(response);

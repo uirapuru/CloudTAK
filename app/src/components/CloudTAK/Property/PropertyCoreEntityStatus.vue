@@ -1,9 +1,24 @@
 <template>
-    <PropertyStatusStrip>
-        <StatusDot
-            :status='active ? "Success" : "Unknown"'
-            :title='active ? t("property.coreEntityStatus.activeLabel") : t("property.coreEntityStatus.endedLabel")'
-        />
+    <div class='d-flex align-items-center gap-2 flex-nowrap'>
+        <TablerBadge
+            v-if='active'
+            background-color='rgba(47, 179, 68, 0.15)'
+            border-color='rgba(47, 179, 68, 0.4)'
+            text-color='#2fb344'
+            :title='t("property.coreEntityStatus.startedAt", { time: new Date(started).toLocaleString() })'
+        >
+            {{ t('property.coreEntityStatus.active', { elapsed }) }}
+        </TablerBadge>
+        <TablerBadge
+            v-else
+            background-color='rgba(107, 121, 144, 0.15)'
+            border-color='rgba(107, 121, 144, 0.4)'
+            text-color='#6b7990'
+            :title='t("property.coreEntityStatus.endedAt", { time: new Date(ended || started).toLocaleString() })'
+        >
+            {{ t('property.coreEntityStatus.ended', { elapsed: timediff(ended || started) }) }}
+        </TablerBadge>
+
         <TablerBadge
             v-if='priority !== "none"'
             :background-color='badge.background'
@@ -12,53 +27,48 @@
         >
             {{ badge.label }}
         </TablerBadge>
-        <button
-            v-if='edit'
-            type='button'
-            class='btn btn-sm ms-auto flex-shrink-0'
-            @click='emit("update:active", !active)'
-        >
-            <IconPlayerStop
-                v-if='active'
-                :size='16'
-                stroke='1.5'
-                class='me-1'
-            />
-            <IconPlayerPlay
-                v-else
-                :size='16'
-                stroke='1.5'
-                class='me-1'
-            />
-            {{ active ? t("property.coreEntityStatus.end") : t("property.coreEntityStatus.reactivate") }}
-        </button>
-    </PropertyStatusStrip>
+    </div>
 </template>
 
 <script setup lang='ts'>
-/**
- * PropertyCoreEntityStatus - the one-line status strip under the Event
- * header: whether it is active and its priority
- */
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+/** PropertyCoreEntityStatus - the at-a-glance state of a Core Event: active or ended with its age, and its priority */
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { TablerBadge } from '@tak-ps/vue-tabler';
-import { IconPlayerStop, IconPlayerPlay } from '@tabler/icons-vue';
-import StatusDot from '../../util/StatusDot.vue';
-import PropertyStatusStrip from '../util/PropertyStatusStrip.vue';
+import timediff from '../../../timediff';
 import { priorityBadge } from '../../../utils/priority.ts';
-
-const props = defineProps<{
-    active: boolean;
-    priority: string;
-    edit?: boolean;
-}>();
-
-const emit = defineEmits<{
-    (e: 'update:active', value: boolean): void
-}>();
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 
+const props = defineProps<{
+    started: string;
+    ended: string | null;
+    priority: string;
+}>();
+
+const now = ref(Date.now());
+let timer: ReturnType<typeof setInterval> | undefined;
+
+onMounted(() => {
+    timer = setInterval(() => now.value = Date.now(), 30000);
+});
+
+onUnmounted(() => {
+    if (timer) clearInterval(timer);
+});
+
+const active = computed(() => !props.ended || new Date(props.ended).getTime() > now.value);
+
 const badge = computed(() => priorityBadge(props.priority));
+
+/** Compact age of the Event - 45m, 13h, 2d 3h */
+const elapsed = computed(() => {
+    const minutes = Math.max(0, Math.floor((now.value - new Date(props.started).getTime()) / 60000));
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (minutes < 60) return `${minutes}m`;
+    if (hours < 24) return `${hours}h`;
+    return hours % 24 ? `${days}d ${hours % 24}h` : `${days}d`;
+});
 </script>

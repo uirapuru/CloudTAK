@@ -148,14 +148,15 @@
                 class='mx-2 mt-1 small text-danger'
                 v-text='attachError'
             />
-            <div class='d-flex align-items-center mx-2 mb-2 mt-1'>
-                <div class='flex-grow-1 me-2'>
-                    <TablerInput
-                        v-model='message'
-                        :placeholder='placeholder ?? t("util.genericChat.placeholder")'
-                        @keyup.enter='sendMessage'
-                    />
-                </div>
+            <MessageComposer
+                ref='composer'
+                class='mx-2 mb-2 mt-1'
+                :submit-label='t("util.genericChat.send")'
+                :placeholder='placeholder ?? t("util.genericChat.placeholder")'
+                :collapse-on-send='false'
+                :toolbar='false'
+                @send='sendMessage'
+            >
                 <TablerIconButton
                     v-if='canAttachMap'
                     :title='t("util.genericChat.attachMap")'
@@ -169,16 +170,7 @@
                         stroke='1'
                     />
                 </TablerIconButton>
-                <TablerIconButton
-                    :title='t("util.genericChat.sendMessage")'
-                    @click='sendMessage'
-                >
-                    <IconSend
-                        :size='32'
-                        stroke='1'
-                    />
-                </TablerIconButton>
-            </div>
+            </MessageComposer>
         </div>
     </div>
 </template>
@@ -187,7 +179,6 @@
 import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted, nextTick } from 'vue';
 import {
-    IconSend,
     IconArrowDown,
     IconClock,
     IconCheck,
@@ -200,11 +191,11 @@ import {
     TablerAlert,
     TablerDelete,
     TablerIconButton,
-    TablerInput,
     TablerLoading,
     TablerNone,
 } from '@tak-ps/vue-tabler';
 import timeDiff from '../../../timediff.ts';
+import MessageComposer from './MessageComposer.vue';
 
 const { t } = useI18n();
 
@@ -249,7 +240,7 @@ const emit = defineEmits<{
 
 const scrollContainer = ref<HTMLElement | null>(null);
 const atBottom = ref(true);
-const message = ref('');
+const composer = ref<InstanceType<typeof MessageComposer>>();
 const attachMap = ref(true);
 const selected = ref<Set<string | number>>(new Set());
 
@@ -290,11 +281,11 @@ function toggleSelect(id: string | number) {
     }
 }
 
-function sendMessage() {
-    if (!message.value.trim().length) return;
-    emit('send', message.value, props.canAttachMap && attachMap.value);
-    message.value = '';
+function sendMessage(text: string) {
+    if (!text.trim().length) return;
+    emit('send', text, props.canAttachMap && attachMap.value);
     attachMap.value = true;
+    void composer.value?.reset();
 }
 
 function emitDelete() {

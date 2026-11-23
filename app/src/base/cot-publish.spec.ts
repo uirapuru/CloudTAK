@@ -1,11 +1,15 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const std = vi.hoisted(() => vi.fn(async () => ({})));
+const server = vi.hoisted(() => ({
+    GET: vi.fn(),
+    PUT: vi.fn(async () => ({ data: {} })),
+    DELETE: vi.fn(async () => ({ data: {} })),
+}));
 
 vi.mock('../std.ts', () => ({
-    std,
-    server: {},
+    std: vi.fn(),
+    server,
     stdurl: (url: string) => new URL(url, 'http://localhost'),
     getRuntimeToken: async () => null,
     downloadUrl: vi.fn(),
@@ -13,6 +17,7 @@ vi.mock('../std.ts', () => ({
 
 import { db } from '../database.ts';
 import COT, { OriginMode } from './cot.ts';
+import FeatureOutbox from './feature-outbox.ts';
 import type { Feature } from '../types.ts';
 
 function cot(): COT {
@@ -25,24 +30,44 @@ function cot(): COT {
     } as unknown as Feature, { mode: OriginMode.CONNECTION }, { skipSave: true });
 }
 
+function submitted(): Array<boolean> {
+    return server.PUT.mock.calls.map((call) => (call as unknown as [string, { params: { query: { submit: boolean } } }])[1].params.query.submit);
+}
+
 beforeEach(async () => {
-    await db.config.put({ key: 'token', value: 'token' });
-    std.mockClear();
+    await db.feature.clear();
+    FeatureOutbox.pending.clear();
+    FeatureOutbox.submits.clear();
+    FeatureOutbox.cancelRetry();
+    server.PUT.mockClear();
 });
 
 describe('COT.save: publikacja przez submit', () => {
     it('bez opcji zapisuje jak dotąd', async () => {
         await cot().save();
-        expect(std).toHaveBeenCalledWith('/api/profile/feature', expect.objectContaining({ method: 'PUT' }));
+        await FeatureOutbox.push();
+        expect(submitted()).toEqual([false]);
     });
 
-    it('z submit dokleja ?submit=true', async () => {
+    it('z submit wysyła submit=true', async () => {
         await cot().save({ submit: true });
-        expect(std).toHaveBeenCalledWith('/api/profile/feature?submit=true', expect.objectContaining({ method: 'PUT' }));
+        await FeatureOutbox.push();
+        expect(submitted()).toEqual([true]);
     });
 
     it('submit: false to zwykły zapis', async () => {
         await cot().save({ submit: false });
-        expect(std).toHaveBeenCalledWith('/api/profile/feature', expect.objectContaining({ method: 'PUT' }));
+        await FeatureOutbox.push();
+        expect(submitted()).toEqual([false]);
+    });
+
+    it('flaga submit przetrwa przepisanie wiersza przez FeatureOutbox.row', async () => {
+        server.PUT.mockResolvedValueOnce({ error: { message: 'offline' } } as never);
+        await cot().save({ submit: true });
+        await FeatureOutbox.push();
+
+        await db.feature.put(FeatureOutbox.row(cot().as_feature({ clone: true })));
+        await FeatureOutbox.push();
+        expect(submitted()).toEqual([true, true]);
     });
 });

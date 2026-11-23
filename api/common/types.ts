@@ -3,7 +3,7 @@ import { Type, Static } from '@sinclair/typebox';
 import * as schemas from './schema.js';
 import { TAKGroup, TAKRole } from '@tak-ps/node-tak/lib/api/types';
 import { Profile_Coordinate, Profile_Projection, Profile_Menu_Visibility, Profile_Zoom, Profile_Style, Profile_Stale, Profile_Distance, Profile_Elevation, Profile_Area, Profile_Speed, Profile_Text, Profile_Radiation_Dose, Profile_Wake_Lock } from './enums.js';
-import { VideoLease_SourceType, CoreEventBoardColumn_Type, CoreEventEffect_Status, LayerMapping_Destination } from './enums.js';
+import { VideoLease_SourceType, CoreEventBoardColumn_Type, CoreEventEffect_Status, CoreEntityTimeline_Type, LayerMapping_Destination } from './enums.js';
 import { Capabilities, InvocationType } from '@tak-ps/etl';
 import { CoreEventSchema, CoreDeviceSchema, CoreEntityLinkSchema, CoreEntityStyleSchema, withoutHints } from './core-schema.js';
 import { AugmentedData } from './models/Data.js';
@@ -122,6 +122,10 @@ export const TileJSON = Type.Object({
     type: Type.String(),
     format: Type.Optional(Type.String()),
     vector_layers: Type.Optional(Type.Array(TileJSON_VectorLayer)),
+    legend: Type.Optional(Type.Array(Type.Object({
+        label: Type.String(),
+        color: Type.String({ description: 'CSS color of the legend swatch' }),
+    }), { description: 'Raster legend entries - a CloudTAK extension to TileJSON' })),
 });
 
 export const LayerError = Type.Object({
@@ -194,22 +198,10 @@ export const CoreEntityExternalIds = Type.Record(Type.String(), Type.String(), {
     description: 'IDs of the record in external systems keyed by system - ie: { "active911": "1234", "caltopo": "B42325" }',
 });
 
-/** Request form of an external ID - a bare string is the ID under the default system, deprecated and removed in v14 */
-export const CoreEntityExternalIdInput = Type.Union([
-    CoreEntityExternalId,
-    Type.String({ description: 'Deprecated - ID of the record under the default system, send { system, value } instead' }),
-]);
-
-/** Deprecated response field - the ID under the default system */
-export const CoreEntityExternalIdLegacy = Type.String({
-    description: 'Deprecated - ID of the record under the default system, use external_ids - removed in v14',
-});
-
 export const CoreEventResponse = Type.Composite([
     Type.Required(Type.Omit(withoutHints(CoreEventSchema), ['ended', 'external_id'])),
     Type.Object({
         id: Type.String(),
-        external_id: CoreEntityExternalIdLegacy,
         external_ids: CoreEntityExternalIds,
         missions: Type.Array(CoreEventMission, { description: 'TAK Server Missions associated with the Event' }),
         created: Type.String(),
@@ -300,7 +292,6 @@ export const CoreDeviceResponse = Type.Composite([
     Type.Required(Type.Omit(withoutHints(CoreDeviceSchema), ['battery', 'external_id'])),
     Type.Object({
         id: Type.String(),
-        external_id: CoreEntityExternalIdLegacy,
         external_ids: CoreEntityExternalIds,
         created: Type.String(),
         updated: Type.String(),
@@ -308,6 +299,7 @@ export const CoreDeviceResponse = Type.Composite([
         connection: Type.Union([Type.Null(), Type.Integer()], { description: 'Connection that created the Device if created by a Connection or Layer token' }),
         editable: Type.Boolean({ description: 'Can users other than the creator edit the Device' }),
         battery: Type.Union([Type.Null(), withoutHints(CoreDeviceSchema).properties.battery]),
+        stale: Type.Union([Type.Null(), Type.Integer()], { description: 'Seconds after its last update the Device stops being broadcast to TAK clients - null never expires' }),
         metadata: Type.Record(Type.String(), Type.Unknown(), { description: 'User defined key/value Device metadata' }),
         links: Type.Array(CoreEntityLink, { description: 'Named URLs associated with the Device' }),
         style: Type.Object(CoreEntityStyle.properties, { description: 'Point styling for the Device' }),
@@ -324,6 +316,54 @@ export const CoreEventAssignmentResponse = Type.Object({
     name: Type.String({ description: 'Name of the assigned person' }),
     role: Type.String({ description: 'Capacity the person manages the Event in - ie: IC, JAG' }),
     remarks: Type.String(),
+});
+
+export const CoreEntityTimelineResponse = Type.Object({
+    id: Type.String(),
+    created: Type.String(),
+    updated: Type.String(),
+    occurred: Type.String({ description: 'When the entry happened at its source' }),
+    entity: Type.String({ description: 'Core Event or Device the entry belongs to' }),
+    type: Type.Enum(CoreEntityTimeline_Type),
+    username: Type.Union([Type.Null(), Type.String()], { description: 'Username of the author if they have a Profile' }),
+    layer: Type.Union([Type.Null(), Type.Object({
+        id: Type.Integer(),
+        name: Type.String(),
+    })], { description: 'Layer that wrote the entry if written by a Layer token' }),
+    author: Type.String({ description: 'Display name of the author - a dispatcher, a unit, an ETL' }),
+    body: Type.String(),
+    metadata: Type.Record(Type.String(), Type.Unknown(), { description: 'Type specific payload - ie: unit & status' }),
+    external_id: Type.Union([Type.Null(), Type.String()], { description: 'ID of the entry in the source system' }),
+});
+
+export const CoreEntityTimelineCounts = Type.Object(
+    Object.fromEntries(Object.values(CoreEntityTimeline_Type).map(type => [type, Type.Integer()])),
+    { description: 'Number of entries of each type matching the filter, regardless of the type query' },
+);
+
+export const CoreEntityTimelineInput = Type.Object({
+    type: Type.Enum(CoreEntityTimeline_Type, { default: CoreEntityTimeline_Type.COMMENT }),
+    occurred: Type.Optional(Type.String({ format: 'date-time', description: 'When the entry happened at its source - defaults to now' })),
+    author: Type.String({ default: '', description: 'Display name of the author - defaults to the requesting user' }),
+    body: Type.String({ default: '' }),
+    metadata: Type.Record(Type.String(), Type.Unknown(), { default: {}, description: 'Type specific payload - ie: unit & status' }),
+    external_id: Type.Optional(Type.Unsafe<string | null>({
+        type: ['string', 'null'],
+        minLength: 1,
+        description: 'ID of the entry in the source system - unique per Entity',
+    })),
+});
+
+export const CoreEntityTimelinePatch = Type.Object({
+    type: Type.Optional(Type.Enum(CoreEntityTimeline_Type)),
+    occurred: Type.Optional(Type.String({ format: 'date-time' })),
+    author: Type.Optional(Type.String()),
+    body: Type.Optional(Type.String()),
+    metadata: Type.Optional(Type.Record(Type.String(), Type.Unknown())),
+    external_id: Type.Optional(Type.Unsafe<string | null>({
+        type: ['string', 'null'],
+        minLength: 1,
+    })),
 });
 
 export const CoreEventEffectResponse = Type.Object({
@@ -356,13 +396,11 @@ export const CoreSchemaResponse = Type.Object({
     description: 'JSON Schema of a Server supported record type',
 });
 
-/** A single named Output schema of a Task - tasks exposing a single unnamed schema are mapped to the `default` id */
+/** A single named Output schema of a Task */
 export const NamedSchema = Type.Object({
     id: Type.String(),
     schema: Type.Record(Type.String(), Type.Unknown()),
 });
-
-export const DEFAULT_SCHEMA_ID = 'default';
 
 const TaskCapabilitiesSchema = Type.Object({
     input: Type.Unknown(),
@@ -437,6 +475,26 @@ export const IconsetResponse = Type.Object({
     skip_resize: Type.Boolean(),
 });
 
+export const CertificateResponse = Type.Object({
+    subject: Type.String(),
+    validFrom: Type.String(),
+    validTo: Type.String(),
+    channels: Type.Boolean({
+        description: 'The certificate carries the TAK Server channels Extended Key Usage - without it TAK Server ignores the client\'s channel (group) selection',
+    }),
+    known: Type.Optional(Type.Boolean({
+        description: 'The TAK Server has a record of this certificate - only populated where the server was consulted',
+    })),
+    revoked: Type.Optional(Type.Boolean({
+        description: 'The TAK Server has revoked this certificate - only populated where the server was consulted',
+    })),
+    revocationDate: Type.Optional(Type.String({
+        description: 'When the TAK Server revoked this certificate',
+    })),
+}, {
+    description: 'Public metadata of an X509 certificate - clients derive expiry state from validTo',
+});
+
 export const ServerResponse = Type.Object({
     id: Type.Integer(),
     status: Type.String(),
@@ -454,28 +512,7 @@ export const ServerResponse = Type.Object({
     api: Type.String(),
     webtak: Type.String(),
     auth: Type.Boolean({ description: 'Once an admin certificate is configured it is not retrivable. This boolean refers to if a certificate is currently loaded' }),
-    certificate: Type.Optional(Type.Object({
-        subject: Type.String(),
-        validFrom: Type.String(),
-        validTo: Type.String(),
-    })),
-});
-
-export const CertificateResponse = Type.Object({
-    subject: Type.String(),
-    validFrom: Type.String(),
-    validTo: Type.String(),
-    known: Type.Optional(Type.Boolean({
-        description: 'The TAK Server has a record of this certificate - only populated where the server was consulted',
-    })),
-    revoked: Type.Optional(Type.Boolean({
-        description: 'The TAK Server has revoked this certificate - only populated where the server was consulted',
-    })),
-    revocationDate: Type.Optional(Type.String({
-        description: 'When the TAK Server revoked this certificate',
-    })),
-}, {
-    description: 'Public metadata of an X509 certificate - clients derive expiry state from validTo',
+    certificate: Type.Optional(CertificateResponse),
 });
 
 export const ProfileListResponse = Type.Object({
@@ -534,6 +571,13 @@ export const Profile = Type.Object({
     display_radiation_dose: Type.Enum(Profile_Radiation_Dose),
     display_wakelock: Type.Enum(Profile_Wake_Lock),
 
+    notification_contact: Type.Boolean(),
+    notification_import: Type.Boolean(),
+    notification_alert: Type.Boolean(),
+    notification_medical: Type.Boolean(),
+    notification_mission: Type.Boolean(),
+    notification_chat: Type.Boolean(),
+
     geometry_point_type: Type.Optional(Type.String()),
     geometry_point_color: Type.Optional(Type.String()),
     geometry_point_icon: Type.Optional(Type.String()),
@@ -578,6 +622,21 @@ export const VideoLeaseResponse = createSelectSchema(schemas.VideoLease, {
     source_type: Type.Enum(VideoLease_SourceType),
 });
 
+export const PluginResponse = createSelectSchema(schemas.Plugin, {
+    api_version: Type.Integer(),
+    version: Type.Union([Type.Null(), Type.String()]),
+    sha256: Type.Union([Type.Null(), Type.String()]),
+    size: Type.Union([Type.Null(), Type.Integer()]),
+    username: Type.Union([Type.Null(), Type.String()]),
+});
+
+/** Query params appended to tile and TileJSON requests, e.g. slope classes as repeatable `layer` values */
+export const BasemapArgs = Type.Record(
+    Type.String({ minLength: 1 }),
+    Type.Union([Type.String(), Type.Array(Type.String())]),
+    { description: 'Query params the client appends to every tile request. A string is a single value, an array is a repeated param' },
+);
+
 export const ProfileOverlayResponse = createSelectSchema(schemas.ProfileOverlay, {
     id: Type.Integer(),
     pos: Type.Integer(),
@@ -587,6 +646,7 @@ export const ProfileOverlayResponse = createSelectSchema(schemas.ProfileOverlay,
     visible: Type.Boolean(),
     styles: Type.Array(Type.Unknown()),
     group_id: Type.Union([Type.Null(), Type.Integer()]),
+    args: BasemapArgs,
 });
 
 export const ProfileOverlayGroupResponse = createSelectSchema(schemas.ProfileOverlayGroup, {
@@ -790,6 +850,10 @@ export const BasemapResponse = Type.Object({
     frequency: Type.Union([Type.Null(), Type.Integer()]),
     scheme: Type.Enum(Basemap_Scheme),
     overlay: Type.Boolean(),
+    tilejson: Type.Optional(Type.Union([Type.Null(), Type.String()], {
+        description: 'Upstream TileJSON URL used to resolve metadata for hosted basemaps',
+    })),
+    args: BasemapArgs,
 
     // Terrain
     encoding: Type.Optional(Type.Enum(BasemapTerrain_Encoding)),

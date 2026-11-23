@@ -25,6 +25,7 @@ test('GET: api/server - Configured - Admin', async () => {
         assert.ok(res.body.certificate.subject);
         assert.ok(res.body.certificate.validFrom);
         assert.ok(res.body.certificate.validTo);
+        assert.equal(typeof res.body.certificate.channels, 'boolean');
         assert.ok(res.body.url);
         assert.ok(res.body.api);
     } catch (err) {
@@ -221,6 +222,29 @@ test('PATCH: api/server - Unconfigured without username/password', async () => {
             auth: {
                 bearer: flight.token.admin,
             },
+            body: {
+                name: 'Test Server',
+                url: `ssl://localhost:${flight.tak.ports.streaming}`,
+                api: `https://localhost:${flight.tak.ports.marti}`,
+                webtak: `http://localhost:${flight.tak.ports.webtak}`,
+                auth: {
+                    cert: String(fs.readFileSync(flight.tak.keys.cert)),
+                    key: String(fs.readFileSync(flight.tak.keys.key)),
+                },
+            },
+        }, false);
+
+        assert.equal(res.status, 400);
+        assert.equal(res.body.message, 'Initial configuration must include valid TAK Username & Password to set System Administrator');
+    } catch (err) {
+        assert.ifError(err);
+    }
+});
+
+test('PATCH: api/server - Unconfigured - No Auth', async () => {
+    try {
+        const res = await flight.fetch('/api/server', {
+            method: 'PATCH',
             body: {
                 name: 'Test Server',
                 url: `ssl://localhost:${flight.tak.ports.streaming}`,

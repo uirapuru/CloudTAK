@@ -1,5 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import path from 'node:path';
+import fs from 'node:fs';
+import { Busboy } from '@fastify/busboy';
 import qr from 'qr-image';
 import { dataSyncQrFromEnv } from '../lib/control/datasync-qr.js';
 import tokml from 'tokml';
@@ -7,7 +9,7 @@ import Schema from '@openaddresses/batch-schema';
 import { Feature } from '@tak-ps/node-cot';
 import S3 from '../../common/aws/s3.js';
 import Err from '@openaddresses/batch-error';
-import Auth from '../../common/auth.js';
+import Auth, { AuthResourceAccess } from '../../common/auth.js';
 import type ConfigStateless from '../config.js';
 import MissionPackage, { resolveFeatures } from '../lib/mission-package.js';
 import { GenericMartiResponse, StandardResponse } from '../../common/types.js';
@@ -26,15 +28,15 @@ import { MissionInvite, MissionInviteType, MissionSubscriberRole } from '@tak-ps
 import {
     TAKList,
 } from '@tak-ps/node-tak/lib/api/types';
-import TAKServerControl, { profileUid } from '../../common/control/takserver.js';
-import { attachRoutePlan } from '../../common/taklab-route-cot.js';
 import MissionControl from '../lib/control/mission.js';
+import { attachRoutePlan } from '../../common/taklab-route-cot.js';
+import AttachmentControl from '../lib/control/attachment.js';
 
 const MISSION_COT_SUBMIT_MAX = 100;
 
 export default async function router(schema: Schema, config: ConfigStateless) {
-    const takserver = new TAKServerControl(config);
     const missionControl = new MissionControl(config);
+    const attachmentControl = new AttachmentControl(config);
 
     await schema.get('/marti/missions/:guid', {
         name: 'Get Mission',
@@ -58,9 +60,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             end: Type.Optional(Type.String()),
         }),
         res: Mission,
+        security: Auth.security('mission:read'),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const mission = await api.Mission.get(
                 req.params.guid,
@@ -90,9 +93,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 error: Type.String(),
             })),
         }),
+        security: Auth.security(['mission:read', 'mission-feature:read']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const feats = await api.Mission.latestFeats(req.params.guid, opts);
 
@@ -140,9 +144,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             message: Type.String(),
             uids: Type.Array(Type.String()),
         }),
+        security: Auth.security(['mission:read', 'mission-feature:create']),
     }, async (req, res) => {
         try {
-            const { user, api, opts } = await missionControl.context(req, req.params.guid);
+            const { username, api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const resolved = await resolveFeatures(req.body.features);
             // trasa z planem niesie <__taklab_route> także w misji (kolejność cots = kolejność features)
@@ -152,7 +157,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             });
 
             const missionPkg = await MissionPackage.from(resolved, {
-                username: user.email,
+                username,
             });
 
             try {
@@ -181,9 +186,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }),
         description: 'Delete an upload by hash',
         res: GenericMartiResponse,
+        security: Auth.security(['mission:read', 'mission-feature:delete']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const missionContent = await api.Mission.detachContents(
                 req.params.guid,
@@ -206,9 +212,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             guid: Type.String(),
         }),
         description: 'Return an SVG of a QR Code for a mission',
+        security: Auth.security({ resources: [AuthResourceAccess.LAYER], scope: 'mission:read', token: true }),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid, { token: true });
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const mission = await api.Mission.get(
                 req.params.guid,
@@ -241,9 +248,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         description: 'Helper API to get mission changes',
         query: MissionChangesInput,
         res: TAKList(MissionChange),
+        security: Auth.security('mission:read'),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const changes = await api.Mission.changes(
                 req.params.guid,
@@ -266,9 +274,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         description: 'Helper API to delete a single mission',
         query: MissionDeleteInput,
         res: GenericMartiResponse,
+        security: Auth.security('mission:delete'),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const mission = await api.Mission.delete(
                 req.params.guid,
@@ -288,14 +297,14 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         description: 'Helper API to create a mission',
         body: Type.Omit(MissionCreateInput, ['creatorUid']),
         res: Mission,
+        security: Auth.security('mission:create'),
     }, async (req, res) => {
         try {
-            const user = await Auth.as_user(config, req);
-            const api = await takserver.asUser(user.email);
+            const { api, creatorUid } = await missionControl.scoped(req);
 
             const mission = await api.Mission.create({
                 ...req.body,
-                creatorUid: profileUid(user.email),
+                creatorUid,
             });
 
             res.json(mission);
@@ -317,13 +326,22 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             groups: Type.Optional(Type.Array(Type.String(), {
                 description: 'Updated set of groups (channels) to assign to the Mission. Caller must be MISSION_OWNER or admin.',
             })),
+            defaultRole: Type.Optional(Type.Enum(MissionSubscriberRole, {
+                description: 'Role granted to new subscribers. Caller must have MISSION_SET_ROLE and every permission of the new role.',
+            })),
+            password: Type.Optional(Type.Unsafe<string | null>({
+                type: ['string', 'null'],
+                minLength: 1,
+                description: 'New password, or null to remove the password. Caller must have MISSION_SET_PASSWORD.',
+            })),
         }),
         res: Mission,
+        security: Auth.security('mission:update'),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts, creatorUid } = await missionControl.scoped(req, req.params.guid);
 
-            const { groups, ...rest } = req.body;
+            const { groups, password, ...rest } = req.body;
 
             const mission = await api.Mission.update(
                 req.params.guid,
@@ -333,6 +351,14 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 },
                 opts,
             );
+
+            if (password === null) {
+                await api.Mission.removePassword(req.params.guid, opts, creatorUid);
+                mission.passwordProtected = false;
+            } else if (password !== undefined) {
+                await api.Mission.setPassword(req.params.guid, password, opts, creatorUid);
+                mission.passwordProtected = true;
+            }
 
             res.json(mission);
         } catch (err) {
@@ -362,16 +388,16 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             invites: Type.Array(MissionInvite),
             total: Type.Integer(),
         }),
+        security: Auth.security('mission:read'),
     }, async (req, res) => {
         try {
-            const user = await Auth.as_user(config, req);
-            const api = await takserver.asUser(user.email);
+            const { api, creatorUid } = await missionControl.scoped(req);
 
             const { sort, order, groups, ...query } = req.query;
 
             const [missions, invites] = await Promise.all([
                 api.Mission.list(query),
-                api.MissionInvite.list(profileUid(user.email)),
+                api.MissionInvite.list(creatorUid),
             ]);
 
             if (groups) {
@@ -385,9 +411,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             }
 
             if (sort) {
-                missions.data.sort((a: any, b: any) => {
-                    const aVal = a[sort];
-                    const bVal = b[sort];
+                missions.data.sort((a, b) => {
+                    const aVal = (a as unknown as Record<string, string | number>)[sort];
+                    const bVal = (b as unknown as Record<string, string | number>)[sort];
 
                     if (aVal < bVal) return order === 'asc' ? -1 : 1;
                     if (aVal > bVal) return order === 'asc' ? 1 : -1;
@@ -423,15 +449,12 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             }),
         }),
         description: 'Get a Mission Archive Zip',
+        security: Auth.security('mission:read'),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const mission = await api.Mission.get(req.params.guid, {}, opts);
-
-            if (req.query.download) {
-                res.setHeader('Content-Disposition', `attachment; filename="${mission.name}.${req.query.format}"`);
-            }
 
             if (req.query.format === 'zip') {
                 const archive = await api.Mission.getArchive(
@@ -439,10 +462,18 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                     opts,
                 );
 
+                if (req.query.download) {
+                    res.setHeader('Content-Disposition', `attachment; filename="${mission.name}.${req.query.format}"`);
+                }
+
                 res.setHeader('Content-Type', 'application/zip');
 
                 archive.pipe(res);
             } else if (['geojson', 'kml'].includes(req.query.format)) {
+                if (req.query.download) {
+                    res.setHeader('Content-Disposition', `attachment; filename="${mission.name}.${req.query.format}"`);
+                }
+
                 const fc = {
                     type: 'FeatureCollection',
                     features: (await api.Mission.latestFeats(req.params.guid, opts)).features,
@@ -486,9 +517,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }),
         description: 'Return a role associated with your user',
         res: MissionRole,
+        security: Auth.security(['mission:read', 'mission-user:read']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const role = await api.Mission.role(
                 req.params.guid,
@@ -509,9 +541,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }),
         description: 'List subscriptions associated with a mission',
         res: GenericMartiResponse,
+        security: Auth.security(['mission:read', 'mission-user:read']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const subs = await api.Mission.subscriptions(
                 req.params.guid,
@@ -532,9 +565,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }),
         description: 'List subscriptions associated with a mission',
         res: TAKList(MissionSubscriber),
+        security: Auth.security(['mission:read', 'mission-user:read']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const roles = await api.Mission.subscriptionRoles(
                 req.params.guid,
@@ -560,9 +594,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             role: Type.Enum(MissionSubscriberRole),
         }),
         res: StandardResponse,
+        security: Auth.security(['mission:read', 'mission-user:update']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             await api.Mission.setRole(
                 req.params.guid,
@@ -599,9 +634,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             takv: Type.String(),
             uid: Type.String(),
         })),
+        security: Auth.security(['mission:read', 'mission-user:read']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const missions = await api.Mission.contacts(
                 req.params.guid,
@@ -677,40 +713,87 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         params: Type.Object({
             guid: Type.String(),
         }),
-        description: 'Create an upload',
+        description: 'Upload a file to a Mission as a multipart form upload - the file is staged on disk only until TAK Server accepts it',
         query: Type.Object({
-            name: Type.String(),
+            name: Type.Optional(Type.String({
+                description: 'Override the file name from the multipart form',
+            })),
         }),
+        body: {
+            'multipart/form-data': true,
+        },
         res: GenericMartiResponse,
+        security: Auth.security(['mission:read', 'mission-file:create']),
     }, async (req, res) => {
         try {
-            const { user, api, opts } = await missionControl.context(req, req.params.guid);
-            const creatorUid = user.email;
+            const contentType = req.headers['content-type'];
 
-            const name = String(req.query.name);
+            if (!contentType || !contentType.startsWith('multipart/form-data')) {
+                throw new Err(400, null, 'Unsupported Content-Type');
+            }
 
-            const content = await api.Files.upload({
-                name: name,
-                contentLength: Number(req.headers['content-length']),
-                keywords: [],
-                creatorUid: creatorUid,
-            }, req);
+            const { username: creatorUid, api, opts } = await missionControl.scoped(req, req.params.guid);
 
-            // @ts-expect-error Morgan will throw an error after not getting req.ip and there not being req.connection.remoteAddress
-            req.connection = {
-                // @ts-expect-error not a known type
-                remoteAddress: req._remoteAddress,
-            };
-
-            const missionContent = await api.Mission.attachContents(
-                req.params.guid,
-                {
-                    hashes: [content.Hash],
+            const bb = new Busboy({
+                headers: {
+                    'content-type': contentType,
                 },
-                opts,
-            );
+                limits: {
+                    files: 1,
+                },
+            });
 
-            res.json(missionContent);
+            let staged: Promise<{ path: string; size: number; cleanup: () => Promise<void>; name: string }> | undefined;
+
+            bb.on('file', (fieldname, file, filename) => {
+                const name = path.basename(req.query.name || filename);
+
+                staged = attachmentControl.stage(name, file).then((result) => {
+                    return { ...result, name };
+                });
+
+                // Drain the part so busboy still reaches 'finish' and reports the failure
+                staged.catch(() => file.resume());
+            }).on('error', (err) => {
+                req.unpipe(bb);
+                req.resume();
+
+                if (staged) staged.then(file => file.cleanup()).catch(() => {});
+
+                Err.respond(err, res);
+            }).on('finish', async () => {
+                let cleanup: (() => Promise<void>) | undefined;
+
+                try {
+                    if (!staged) throw new Err(400, null, 'No file uploaded');
+
+                    const file = await staged;
+                    cleanup = file.cleanup;
+
+                    const content = await api.Files.upload({
+                        name: file.name,
+                        contentLength: file.size,
+                        keywords: [],
+                        creatorUid,
+                    }, fs.createReadStream(file.path));
+
+                    const missionContent = await api.Mission.attachContents(
+                        req.params.guid,
+                        {
+                            hashes: [content.Hash],
+                        },
+                        opts,
+                    );
+
+                    res.json(missionContent);
+                } catch (err) {
+                    Err.respond(err, res);
+                } finally {
+                    if (cleanup) await cleanup();
+                }
+            });
+
+            req.pipe(bb);
         } catch (err) {
             Err.respond(err, res);
         }
@@ -725,9 +808,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }),
         description: 'Delete an upload by hash',
         res: GenericMartiResponse,
+        security: Auth.security(['mission:read', 'mission-file:delete']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const missionContent = await api.Mission.detachContents(
                 req.params.guid,
@@ -753,9 +837,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         res: Type.Object({
             data: Type.Array(MissionInvite),
         }),
+        security: Auth.security(['mission:read', 'mission-user:read']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const invites = await api.MissionInvite.get(req.params.guid, opts);
 
@@ -778,16 +863,17 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             role: Type.Enum(MissionSubscriberRole),
         }),
         res: StandardResponse,
+        security: Auth.security(['mission:read', 'mission-user:create']),
     }, async (req, res) => {
         try {
-            const { user, api, opts } = await missionControl.context(req, req.params.guid);
+            const { creatorUid, api, opts } = await missionControl.scoped(req, req.params.guid);
 
             await api.MissionInvite.invite(
                 req.params.guid,
                 req.body.type,
                 req.body.invitee,
                 {
-                    creatorUid: profileUid(user.email),
+                    creatorUid,
                     role: req.body.role,
                 },
                 opts,
@@ -814,16 +900,17 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             invitee: Type.String(),
         }),
         res: StandardResponse,
+        security: Auth.security(['mission:read', 'mission-user:delete']),
     }, async (req, res) => {
         try {
-            const { user, api, opts } = await missionControl.context(req, req.params.guid);
+            const { creatorUid, api, opts } = await missionControl.scoped(req, req.params.guid);
 
             await api.MissionInvite.uninvite(
                 req.params.guid,
                 req.query.type,
                 req.query.invitee,
                 {
-                    creatorUid: profileUid(user.email),
+                    creatorUid,
                 },
                 opts,
             );
@@ -840,7 +927,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.delete('/marti/missions/:guid/user', {
         name: 'Delete Mission User',
         group: 'MartiMissions',
-        description: 'Remove one or more active subscribers from a mission by UID',
+        description: 'Remove one or more subscribers from a mission by UID - requires MISSION_SET_ROLE',
         params: Type.Object({
             guid: Type.String(),
         }),
@@ -848,14 +935,15 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             uid: Type.Union([Type.String(), Type.Array(Type.String())]),
         }),
         res: StandardResponse,
+        security: Auth.security(['mission:read', 'mission-user:delete']),
     }, async (req, res) => {
         try {
-            const { api, opts } = await missionControl.context(req, req.params.guid);
+            const { api, opts } = await missionControl.scoped(req, req.params.guid);
 
             const uids = Array.isArray(req.query.uid) ? req.query.uid : [req.query.uid];
 
             for (const uid of uids) {
-                await api.Mission.unsubscribe(req.params.guid, { uid }, opts);
+                await api.Mission.removeUser(req.params.guid, { clientUid: uid }, opts);
             }
 
             res.json({

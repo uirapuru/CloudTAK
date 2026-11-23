@@ -12,18 +12,287 @@
 
 ### Deprecation Notices
 
-- `GET /api/search/reverse/:long/:lat` endpoint is deprecated and will be removed in v14, use `GET /api/search/reverse/:long/:lat/<type>` instead
 - `Layer.template` is deprecated and will be removed
-- The `external_id` string on CoreEvent & CoreDevice requests & responses is deprecated and will be removed in v14, use `external_id: { system, value }` on requests and `external_ids` on responses
-- ETLs in v14 will be required to declare Named Schemas, single schema support will be removed
-- The Minio Legacy Store will be removed in V14 - Ensure you have migrated to Garage before updating to v14.
-- CoreEntity single external ID support will be removed in v14 - ensure you have migrated to multi-system external IDs before updating to v14.
 
 ### Beta Notice
 
 - CoreEvents & CoreDevices are in beta and functionality may change in minor releases. Use with caution in production environments.
 
 ### Pending Release
+
+### v14.0.0 - 2026-11-22
+
+> [!WARNING]
+> This release requires ETLs to be on ETL-Base v11 or higher
+
+- :rocket: **Breaking** Remove the `GET /api/search/reverse/:long/:lat` endpoint - use the per-type `GET /api/search/reverse/:long/:lat/<sun|magnetic|weather|reverse|elevation>` endpoints
+- :rocket: **Breaking** Remove the `GET /api/fonts/:fontstack/:start-:end.pbf` glyph endpoint and the bundled API glyph files - the web app draws labels from bundled font files via the style `font-faces` property and no longer caches glyphs in the service worker
+- :rocket: **Breaking** Remove the `GET /api/basemap/:basemapid/tiles` and `GET /api/basemap/:basemapid/tiles/:z/:x/:y` proxy routes along with the API side tile proxying code - basemap TileJSON and tiles are served by the PMTiles tile server at `/tiles/basemap/:basemapid/tiles[/:z/:x/:y]`, the web app resolves `/api/basemap/:id/tiles` overlay URLs against the tile server
+- :rocket: **Breaking** Remove the deprecated `external_id` string from CoreEvent & CoreDevice requests & responses - send `external_id: { system, value }` and read `external_ids`; Layer Maps saved with the pre-system bare string `external_id` form are no longer accepted
+- :rocket: **Breaking** Task Capabilities must declare Named Output schemas - a Task returning a single unnamed Output schema is rejected with a 400
+- :rocket: **Breaking** Remove the legacy MinIO store - the `minio-legacy` & `migrate` Docker Compose services and `./cloudtak.sh migrate-store` are gone, `start` & `update` refuse to run while `.docker-store` exists until it is migrated with a v13 checkout
+
+### v13.128.0 - 2026-11-22
+
+- :tada: Add a `variant` query parameter to the `GET /api/iconset/:iconset?format=zip` export: `tak` (default) converts every icon to PNG for TAK clients, `cloudtak` keeps the original files including SVGs
+- :tada: Iconset download button is now a dropdown offering "TAK Compatible" or "Full CloudTAK" exports
+- :bug: Iconset zip exports are no longer truncated at 1,000 icons
+- :bug: Icons referenced with an `.svg` extension now resolve from the offline icon cache instead of relying on a network fallback
+- :rocket: Consolidate icon key normalisation, icon API calls, built-in sprite caching and iconset resync behind the `Icon`, `Sprite` and `IconManager` modules
+- :rocket: Share iconset and icon listing between the icon pickers via a `useIconsetIcons` composable
+- :white_check_mark: Add tests for the full CloudTAK iconset export and icon key normalisation
+- :bug: Fix the Data Sync Invite QR Code showing a broken image for password protected Data Syncs (#2032)
+- :bug: Fix a newly created Data Sync occasionally reporting "Overlay was created but could not be loaded"
+- :rocket: Move Data Sync creation from a modal to a `New Data Sync` menu sidebar
+- :rocket: Allow retrying the map load of a newly created Data Sync without creating it a second time
+- :rocket: The login token is no longer included in the Invite QR Code image URL
+- :rocket: Migrate the PMTiles, Events & Retention tasks from ESLint to OXLint to match the API
+- :arrow_up: Update PMTiles `@maplibre/geojson-vt` to v7
+
+### v13.127.0 - 2026-11-21
+
+- :tada: Redesign Iconset List UX to be combined into a single searchable menu instead of two seperate tabs
+- :tada: Redesigned iconset view that supports folder editing
+- :tada: Allow dropping multiple points via the native point dropper tool
+- :tada: Allow setting an icon from the point dropper
+- :tada: Support dropping a point from a single icon menu page
+
+### v13.126.0 - 2026-11-21
+
+- :tada: Introduce Initial Plugin Management APIs for future stand-alone plugins
+- :rocket: Redesign Admin Overview page to allow linking to a specific CloudTAK server setting section
+
+### v13.125.0 - 2026-11-17
+
+- :rocket: Add background downloading on iOS and Android w/ Download Notifications
+- :rocket: Add British National Grid to supported coordinates
+- :rocket: Restrict database ingress to the API & Stateful services and export the database Security Group
+- :rocket: Retain database backups for 14 days, export PostgreSQL logs & snapshot on delete/replace
+- :rocket: Pin ELB HTTPS listener to a TLS 1.2+ policy and drop invalid header fields
+- :rocket: Scope API Task Role & ETL Role IAM permissions to Layer resources
+- :rocket: Remove unused Secrets Manager & KMS permissions from the Events & Retention Task Roles
+- :rocket: Mail: require TLS, drop mail failing both SPF & DKIM, publish SPF & `p=reject` DMARC records
+
+### v13.124.0 - 2026-11-17
+
+- :arrow_up: Migrate to TS7 for blazing build times - `tsc` is TypeScript 7.0 via `@typescript/native`, tools that need the compiler API (ESLint, `vue-tsc`, TypeDoc) stay on the TypeScript 6 API
+- :arrow_up: Migrate the API off ESLint onto OXLint for blazing lint times
+- :bug: Fix numerous small bugs in the codebase surfaced by OXLint
+- :bug: Paging verification codes are accepted for one 30 second period either side of the current one - the tolerance was never applied, so a code expired at the end of the period it was sent in
+
+### v13.123.2 - 2026-11-17
+
+- :bug: Generate Links that are valid in ATAK
+
+### v13.123.1 - 2026-11-16
+
+- :rocket: Consolidate Permissions
+- :bug: Rectify Mission Changes API call body against TAK Server generated schema
+
+### v13.123.0 - 2026-11-16
+
+- :tada: `API` Core Devices accept a `stale` number of seconds - the Device is no longer broadcast to TAK clients once that long has passed since it was last updated, until its next update. The value is stored on the Core Entity so other kinds can adopt it
+- :rocket: `API` A Core Device without a `stale` is broadcast with a 30 second stale time in place of 30 minutes, so a Device that loses its location or is deleted drops from TAK clients promptly
+- :rocket: `API` Route `security` declarations are now enforced by `@openaddresses/batch-schema` before a request body is parsed or validated - a route without a declaration accepts users only, and every route that accepts Layer, Connection or other resource tokens, a `token` query parameter, or requires a System Administrator declares it via `Auth.security()`
+- :rocket: `API` The token of a request is parsed once and shared by every `Auth` call of a route handler
+- :rocket: `API` An unauthenticated request now receives its `401` before any validation error, with a `WWW-Authenticate` header
+
+### v13.122.8 - 2026-11-10
+
+- :rocket: Display and allow filtering by Layer ID
+
+### v13.122.7 - 2026-11-10
+
+- :rocket: Include Auth Information for failing requests
+
+### v13.122.6 - 2026-11-10
+
+- :bug: HTTP Clients were reused and would then have a potential request killed if it was cutoff by the 60s ALB timeout for the hub
+- :bug: Add 8 sec timeouts to Tile Lambda internal timeouts
+- :bug: Cache empty feature collections
+
+### v13.122.5 - 2026-11-09
+
+- :rocket: Allow users to configure desired notifications.
+
+### v13.122.4 - 2026-11-09
+
+- :rocket: Add support for ephemeral PolyLines via node-cot
+
+### v13.122.3 - 2026-11-09
+
+- :bug: Ensure enter submits the password when joining a password protected Data Sync - Closes: https://github.com/dfpc-coe/CloudTAK/issues/2026
+
+### v13.122.2 - 2026-11-08
+
+- :bug: Ensure app can't be built with plugins
+
+### v13.122.1 - 2026-11-08
+
+- :arrow_up: Update etl-base & node-cot to latest versions
+
+### v13.122.0 - 2026-11-08
+
+- :rocket: Refactor lower tabs into top level tabs for better visibility and discoverability of features
+- :rocket: Redesign Links & Data Syncs property panels to be more visually consistent
+- :tada: Introduce Core Event Timeline APIs for storing timelined events related to an Entity
+
+### v13.121.1 - 2026-11-07
+
+- :rocket: Migrate PMTile Tile utilities into the `@tak-ps/node-tiles` library for better unit testing and common usage across the API and ETL tasks
+- :arrow_up: Update all Lambda runtimes to Node 26
+
+### v13.121.0 - 2026-11-05
+
+- :tada: Introduce Slope & Composite Raster Layers
+- :bug: Data Sync names are trimmed on creation and existing names are trimmed by migration - TAK Server stores mission names trimmed but matches `<dest mission>` exactly, so a padded name left every Layer CoT brokered outside the Mission
+- :rocket: Layer CoTs submitted to a Data Sync are addressed by Mission GUID (`<dest mission-guid>`) rather than name, falling back to the trimmed name for Data Syncs without a stored GUID
+
+### v13.120.0 - 2026-11-05
+
+- :bug: Data Sync chat input is hidden unless the user is subscribed with `MISSION_WRITE` - TAK Server silently drops mission chat from read-only subscribers
+- :rocket: Subscribing to a Data Sync fetches the caller's role once instead of three times - `Subscription.load` skips the role refresh it just performed and `Subscription.update` adopts the stored role when another instance already applied the same subscription change
+- :tada: `PATCH /api/marti/missions/:guid` accepts `defaultRole` and a `password` (a string sets or replaces it, `null` removes it); the Mission response includes `defaultRole` (#2008)
+- :tada: Data Sync info screen shows the default subscriber role & password state with Set/Change/Remove controls for users with `MISSION_SET_ROLE` / `MISSION_SET_PASSWORD` (#2008)
+- :bug: Data Sync "Remove User" now removes the target subscriber (via a role-less TAK Server `PUT .../role`) instead of silently unsubscribing only the caller's own session; the button is gated on `MISSION_SET_ROLE` and failures are shown in the Users list (#2010)
+
+### v13.119.0 - 2026-11-03
+
+- :tada: Introduce new Appearance Menu
+- :rocket: Circle mode now snaps the center point to nearby feature vertices using the Terra-Draw 1.39.0 circle snapping options
+- :bug: Data Sync invite list hides current subscribers and pending invitees, re-inviting shows the server error instead of failing silently (#2009)
+
+### v13.118.1 - 2026-11-02
+
+- :rocket: Add additional Filter options when nominating an Event to a board
+
+### v13.118.0 - 2026-11-02
+
+- :tada: Unify the `Your Features` and `Devices` menus into a single `Features` menu with `Features`, `Events` & `Devices` tabs - `/menu/devices` redirects to `/menu/features/devices`
+
+### v13.117.2 - 2026-11-02
+
+- :rocket: Improve rendering performance on iOS by introduing a Feature Queue to avoid bottlenecking on indexDB
+
+### v13.117.1 - 2026-11-01
+
+- :bug: Pass `API_URL` to the Docker Compose `tiles` service so the PMTiles server can resolve basemap config (#1993)
+
+### v13.117.0 - 2026-10-31
+
+- :tada: Import WMTS capabilities URLs as basemaps (RESTful tile templates and KVP GetTile, Web Mercator tile matrix sets, `?layer=` selection)
+- :bug: Return a 400 with a clear message instead of a 500 when a basemap import URL returns XML, HTML or malformed JSON (#1989)
+- :rocket: `GET /api/basemap/:basemapid` accepts basemap sharing tokens so tile servers can resolve basemap config with the token they are handed
+- :tada: PMTiles tile server serves CloudTAK basemap TileJSON and tiles at `/tiles/basemap/:basemapid/tiles[/:z/:x/:y]`, mirroring the API routes: bearer or `?token=` auth, sharing tokens, owner/admin scoping, ESRI metadata merge, hosted upstream TileJSON, bounds short-circuit and zxy/hosted/MapServer/ImageServer/FeatureServer tile proxying, with basemap config cached in memory per container
+- :rocket: Expose `tilejson` on Basemap responses so tile servers can resolve hosted upstream TileJSON
+- :bug: Apply the SSRF URL check to ESRI layer metadata lookups, which previously bypassed it via esri-dump
+- :rocket: Add PMTiles API Gateway HTTP status widget to the ELB CloudWatch dashboard
+- :rocket: Basemap TileJSON and ATAK share URLs advertise tiles on the PMTiles tile server instead of the API - basemap edits and sharing revocations take up to 60 seconds to reach warm tile server containers
+- :rocket: PMTiles Lambda runs with 1536 MB, a 30 second timeout matching the API Gateway cap, a reserved concurrency ceiling (`PMTilesReservedConcurrency`) and a `live` alias with provisioned concurrency (`PMTilesProvisionedConcurrency`) so the first tile after idle is not a cold start
+- :rocket: PMTiles tile server returns 413 for proxied or rendered tiles over the 6 MiB Lambda response limit instead of failing the invocation
+- :bug: Archive 2D line and polygon CoTs to `connection_features` by padding a Z coordinate, dedupe repeated UIDs within a batch, and persist `enabled_geofence` from the CoT instead of resetting it on every archive
+
+### v13.116.1 - 2026-10-30
+
+- :rocket: Improvements to Rendering Performance
+- :bug: Fix double unit conversion in terrain elevation display
+
+### v13.116.0 - 2026-10-27
+
+- :bug: Improve History Performance
+- :tada: Add `profile` Plugin API to pulling user preferences
+
+### v13.115.1 - 2026-10-27
+
+- :bug: The Mission Archive API doesn't support GUIDs which would result in the download silently failing - Closes: Mission *Download Archive* returns an empty file #1977
+
+### v13.115.0 - 2026-10-27
+
+- :tada: `API` Add `GET /api/marti/cot` to list every CoT event visible to the user within a time window of at most 24 hours (`start`/`end` or `secago`), optionally restricted to a `bbox` - backed by the TAK Server `/Marti/api/cot/sa` query
+- :tada: `UI` Breadcrumb trails are now built from a local `feature_history` table of discrete timestamped points - hovering a point shows who/when, clicking it opens the properties that CoT reported at that moment; the dashed trail line is derived from the same points
+- :tada: `UI` The History menu can load every CoT's history for a time window (optionally only the current map view) alongside the existing per-CoT history loader in the CoT view
+- :tada: `PluginAPI` Add `cot.historyAll()` plus `breadcrumb.history.{load,loadAll,list,stream,clear}` and a `breadcrumb.history.popup` renderer registry so plugins can surface their own properties on hovered history points - existing `cot.history()` and `breadcrumb.live.*` are unchanged
+- :arrow_up: `API` Update `@tak-ps/node-tak` to `^12.32.0` for the `Query.saFeats` Situational Awareness client
+
+### v13.114.2 - 2026-10-26
+
+- :tada: Clicking on the name of the mission zooms to the mission extent
+- :rocket: Show labels next to Data Sync tabs when the sidebar is wide enough to avoid truncation, and show the tab icon only when the sidebar is narrow
+- :rocket: Only load the last 7 days of changes by default in the Mission Timeline view
+- :tada: `API` CoreEvent & CoreDevice `links` accept `tel:` URLs alongside `https://` so a marker can carry a tappable phone number - ATAK opens the `r-u` link in the dialer, which no longer carries a `text/html` mime (#1954)
+- :rocket: `UI` Core Entity `tel:` links show a phone icon and open in the current window
+
+### v13.114.1 - 2026-10-26
+
+- :rocket: Remove need to Glyphs API entirely
+
+### v13.114.0 - 2026-10-26
+
+- :bug: `API` Mission file uploads (`POST /api/marti/missions/:guid/upload`) of text, XML, JSON & `application/octet-stream` files reached TAK Server as empty bodies and were rejected - the global body parsers consumed the raw request stream before it could be forwarded
+- :rocket: `API` `POST /api/marti/missions/:guid/upload` now accepts a `multipart/form-data` upload like every other file route - the file is staged on disk so TAK Server receives the required `Content-Length`; the `name` query param is now an optional override of the form file name
+- :rocket: `UI` Mission file uploads use the standard multipart upload flow
+- :bug: `UI` Failed Mission file uploads show the API error message instead of the bare HTTP status text
+- :rocket: `UI` Map labels are drawn from a bundled Open Sans Bold font via the style `font-faces` property instead of glyph ranges fetched from `/api/fonts`, so labels never wait on the network
+- :rocket: `UI` Background location now has its own prominent disclosure, shown immediately after the foreground location grant and again before every settings hand-off from Settings > Permissions, to satisfy the Google Play User Data policy - the shared `LocationDisclosure` component names background use ("even when the app is closed or not in use") and requires an explicit `Agree and continue`
+- :bug: `UI` On Android, Settings > Permissions showed no action for Background Location until it had been denied once, leaving users who chose "While using the app" with no way to upgrade from inside the app
+
+### v13.113.0 - 2026-10-22
+
+- :rocket: Core Events & Devices are broadcast as CoT at most once every 10s per Entity - a create or update is still sent immediately unless that Entity was broadcast within the last 10s, in which case the next scheduled sweep carries it
+- :rocket: `POST /api/core/device` mirrors `POST /api/core/event` - `channels` is required for users and a Connection or Layer token that omits it shares the Device with the active Channels of its Connection, so machine-created Devices are broadcast to the map instead of sitting unshared
+- :rocket: `PATCH /api/core/device/:device` mirrors the Event API - `channels` can no longer be cleared, and a Device of a Connection that has no Channels inherits the active Channels of its Connection on its next PATCH so previously unshared Devices reach the map
+- :rocket: `PATCH /api/core/event/:event` fills in the active Channels of the Connection for an Event of a Connection that has none, the same as Devices
+- :rocket: Connection & Layer tokens can read a Device shared with an active Channel of their Connection, the same rule Events already followed - editing still requires the creator
+- :rocket: Access control and Channel sharing for Core Events & Devices is shared through one `EntityControl` instead of separate Event & Device control classes
+
+### v13.112.3 - 2026-10-21
+
+- :Bug: Centralize read/write operations to avoid overlay positional drift between Dexie and MapLibre
+
+### v13.112.2 - 2026-10-21
+
+- :tada: Certificate metadata returned by the Server, Connection & User APIs now includes `channels` - whether TAK Server signed the certificate with the channels Extended Key Usage (OID `1.2.840.113549.1.9.7`); certificates without it have their channel selection ignored by TAK Server. The Connection card, Server settings, Admin Overview, Admin User page, and the Admin Users list show the state as a `Channels` / `No Channels` badge
+- :white_check_mark: Queue mock TAK Server writes for streaming connections still completing their TLS handshake so chat and reconnect tests no longer race the server-side `secureConnection` event under Node 26.12.1
+- :bug: Install `gdal-driver-all` in the events task image - Alpine splits GDAL drivers into subpackages and the Parquet and PDF drivers the task uses were missing
+- :rocket: Install Node.js in the API image from the official `node:26-alpine3.24` image instead of Alpine's `nodejs-current` package so security releases (October 2026: Brotli RCE, TLS hostname bypass) ship as soon as upstream publishes them
+- :rocket: Build the events task on `node:26-alpine3.24` with GDAL 3.13.3 from Alpine 3.24 packages instead of the `osgeo/gdal` Alpine 3.23 image
+- :bug: `PATCH /api/basemap/:basemapid` no longer defaults `scope` to `user` or `tilesize` to `256` when omitted, so editing a single field of a Server scoped basemap keeps it Server scoped (#1947)
+
+### v13.112.1 - 2026-10-21
+
+- :bug: Send `Cache-Control: no-store` from the nginx SPA fallback so browsers never heuristically cache `index.html` under a misrouted path (#1949)
+- :bug: The mobile app is only able to show the SPA at this time and navigation events to other pages result in an ugly reload. Hide all nav elements that nav to other parts of the web app - IE Board/Video/Admin etc when on mobile
+
+### v13.112.0 - 2026-10-21
+
+- :tada: Add a Devices menu listing Core Devices from the Device API, falling back to the Device markers already on the map when offline
+- :tada: Add a Core Device sidebar for viewing and editing a Device, reached from a Device marker the same way Events are
+- :rocket: Open the Core Device a marker was generated from when clicking a Device CoT, with the same offline fallback Events have, and sync dragged Device markers back to the Device API
+- :rocket: Broadcast Core Devices with a `p` Link of type `core-device` carrying the Device UUID so clients can open the Device a marker was generated from
+
+### v13.111.3 - 2026-10-20
+
+- :rocket: Allow global search to search through remarks field
+
+### v13.111.2 - 2026-10-20
+
+- :bug: FeatureServer basemap tiles derive the Esri quantization tolerance from the tile zoom (one unit per 4096th of the tile width) instead of a fixed 0.001 degrees - the fixed value snapped geometry to a ~100m grid and collapsed most parcels once tiles were requested as Esri JSON, which honours quantization where `f=geojson` ignored it
+- :bug: Badges that relied on the default white badge text (Layer & Token permissions, basemap type selector, settings permissions, etc.) now use the theme body color so they are legible in light mode
+- :tada: Links section shows `r-u` links to images (by mime or URL extension) as thumbnails loaded through the `/api/proxy/image` API
+
+### v13.111.1 - 2026-10-18
+
+- :arrow_up: Update `@tak-ps/maplibre-gl` to 6.15.0 (upstream MapLibre 6.15.0 with the worker restart fork)
+- :rocket: Mouse drag rotate & pitch now turn the map around the point under the pointer (`dragRotate: { around: 'pointer' }`) instead of the map center
+- :tada: Layer environment inputs carrying an `@widget: type` hint are edited with the MIL-STD-2525E type picker (requires the pending vue-tabler `TablerSchema` widget slot)
+- :rocket: User rows in feature lists (Search Box, Mission Layers, etc.) use the same `FeatureRow` layout and height as other features, with the team puck in the icon slot and team/role as the subtitle
+- :bug: FeatureServer basemaps now request Esri JSON and nest polygon holes themselves - ArcGIS `f=geojson` flattened multipart holes into standalone polygons, which rendered as double-filled shapes instead of cutouts
+
+### v13.111.0 - 2026-10-16
+
+- :rocket: Surface Overlays in Search Box
+- :rocket: Surface Feature Type (and cache it in local client) in FeatureRow
+- :tada: UX overhaul of Search Box
 
 ### v13.110.2 - 2026-10-15
 

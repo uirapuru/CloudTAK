@@ -8,8 +8,9 @@ import * as mapgl from 'maplibre-gl';
 import { db } from '../../database.ts';
 import KV from '../../base/kv.ts';
 import { std, server, serverUrl, getRuntimeToken } from '../../std.ts';
-import { authorizeTileJSON } from '../../utils/tilejson.ts';
-import { profileAssetIdFromUrl, hasCompleteOfflineTiles } from '../../utils/offline-tiles.ts';
+import { applyTileArgs, authorizeTileJSON, basemapIdFromUrl, fetchBasemapTileJSON } from '../../utils/tilejson.ts';
+import type { TileArgs } from '../../utils/tilejson.ts';
+import { profileAssetIdFromUrl } from '../../utils/offline-tiles.ts';
 import { registerPMTilesProtocol, offlineTileJSON, offlineTileTemplate, isOfflineTileJSON, setNetworkTileTemplate } from './pmtiles.ts';
 import type { OverlayTileJSON } from '../../types.ts';
 
@@ -21,6 +22,7 @@ const TILES_URL_KEY = 'tiles::url';
 type TileJSONEntry = {
     url: string;
     tilejson: OverlayTileJSON | null;
+    args?: TileArgs | null;
 };
 
 // In-memory overrides so a loaded overlay's document wins over a stale Dexie record
@@ -34,7 +36,7 @@ export function tileJSONSourceUrl(id: number): string {
 }
 
 export function setOverlayTileJSON(id: number, entry: TileJSONEntry): void {
-    entries.set(id, { url: entry.url, tilejson: entry.tilejson });
+    entries.set(id, { url: entry.url, tilejson: entry.tilejson, args: entry.args ?? null });
 }
 
 export function clearOverlayTileJSON(id: number): void {
@@ -100,7 +102,7 @@ export function registerTileJSONProtocol(): void {
             const record = await db.overlay.get(id);
             if (!record) throw new Error(`Overlay ${id} is not in the local database`);
 
-            entry = { url: record.url, tilejson: record.tilejson ?? null };
+            entry = { url: record.url, tilejson: record.tilejson ?? null, args: record.args ?? null };
             entries.set(id, entry);
         }
 
@@ -112,16 +114,14 @@ export function registerTileJSONProtocol(): void {
         };
 
         // Profile assets always tile through the PMTiles protocol, which picks
-        // the OPFS archive or the hosted server per request
+        // the stored archive or the hosted server per request
         const assetId = profileAssetIdFromUrl(entry.url);
         if (assetId) {
             registerPMTilesProtocol();
 
             let tilejson = entry.tilejson;
             if (!tilejson) {
-                tilejson = await hasCompleteOfflineTiles(assetId)
-                    ? await offlineTileJSON(assetId)
-                    : await std(entry.url) as OverlayTileJSON;
+                tilejson = await offlineTileJSON(assetId) ?? await std(entry.url) as OverlayTileJSON;
                 await cache(tilejson);
             }
 
@@ -134,12 +134,15 @@ export function registerTileJSONProtocol(): void {
 
         let tilejson = entry.tilejson;
         if (!tilejson) {
-            tilejson = await std(entry.url) as OverlayTileJSON;
+            const basemapId = basemapIdFromUrl(entry.url);
+            tilejson = basemapId
+                ? await fetchBasemapTileJSON<OverlayTileJSON>(basemapId)
+                : await std(entry.url) as OverlayTileJSON;
             await cache(tilejson);
         }
 
         return {
-            data: authorizeTileJSON(tilejson, await getRuntimeToken(), await getTokenHosts())
+            data: authorizeTileJSON(applyTileArgs(tilejson, entry.args), await getRuntimeToken(), await getTokenHosts())
         };
     });
 }

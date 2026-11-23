@@ -1,78 +1,65 @@
 <template>
-    <StandardItem @click='$emit("click")'>
-        <div class='d-flex align-items-start gap-3 px-3 py-2'>
-            <div
-                v-if='icon'
-                class='icon-wrapper d-flex align-items-center justify-content-center rounded-circle bg-black bg-opacity-25 mt-1 flex-shrink-0'
-                style='width: 36px; height: 36px;'
+    <StandardItem
+        class='core-row w-100 d-flex flex-row gap-3 align-items-center px-2 py-2'
+        @click='$emit("click")'
+    >
+        <span
+            v-if='icon'
+            class='position-relative flex-shrink-0 d-inline-flex'
+            :title='event.type'
+        >
+            <img
+                v-if='typeIcon'
+                :src='typeIcon'
+                :alt='t("util.standardCoreEntity.eventType")'
+                style='width: 36px; height: 36px; object-fit: contain;'
+            >
+            <span
+                v-else
+                class='avatar avatar-sm rounded-circle core-row__icon'
             >
                 <IconCalendarEvent
-                    :size='18'
+                    :size='20'
                     stroke='1.5'
                     :class='priorityClass'
                 />
-            </div>
+            </span>
+            <span
+                class='core-row__status position-absolute rounded-circle'
+                :class='event.active ? "bg-green" : "bg-dark"'
+                :title='event.active ? t("util.standardCoreEntity.active") : t("util.standardCoreEntity.ended")'
+            />
+        </span>
 
-            <div class='flex-grow-1 overflow-hidden'>
-                <div class='d-flex align-items-center gap-2'>
-                    <StatusDot
-                        :status='event.active ? "Success" : "Unknown"'
-                        :title='event.active ? t("util.standardCoreEntity.active") : t("util.standardCoreEntity.ended")'
-                    />
-                    <span class='fw-semibold text-truncate flex-grow-1'>{{ event.name }}</span>
-                    <span
-                        v-if='event.priority !== "none"'
-                        class='badge flex-shrink-0 text-uppercase'
-                        :class='priorityBadgeClass'
-                    >{{ priorityLabel }}</span>
-                </div>
-                <div class='d-flex align-items-center gap-2 mt-1'>
-                    <img
-                        v-if='typeIcon'
-                        :src='typeIcon'
-                        :alt='t("util.standardCoreEntity.eventType")'
-                        class='flex-shrink-0'
-                        style='width: 40px; height: 40px; object-fit: contain;'
-                    >
-                    <div class='flex-grow-1 overflow-hidden'>
-                        <div
-                            v-if='event.location'
-                            class='small d-flex align-items-center'
-                            style='opacity: 0.85;'
-                        >
-                            <IconMapPin
-                                :size='14'
-                                stroke='1.5'
-                                class='me-1 flex-shrink-0'
-                            />
-                            <span
-                                class='text-truncate'
-                                v-text='event.location'
-                            />
-                        </div>
-                        <div class='text-muted small d-flex align-items-center'>
-                            <IconClock
-                                :size='14'
-                                stroke='1.5'
-                                class='me-1 flex-shrink-0'
-                            />
-                            {{ new Date(event.created).toLocaleString() }}
-                        </div>
-                        <div class='text-muted small text-truncate'>
-                            {{ creator }}
-                            <template v-if='event.ended && event.active'>
-                                &middot; {{ t('util.standardCoreEntity.endsIn', { time: timediff(event.ended) }) }}
-                            </template>
-                            <template v-else-if='event.ended'>
-                                &middot; {{ t('util.standardCoreEntity.endedAgo', { time: new Date(event.ended).toLocaleString() }) }}
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <slot name='actions' />
+        <div
+            class='flex-grow-1 d-flex flex-column'
+            style='min-width: 0;'
+        >
+            <span class='d-flex align-items-center gap-2'>
+                <StatusDot
+                    v-if='!icon'
+                    :status='event.active ? "Success" : "Unknown"'
+                    :title='event.active ? t("util.standardCoreEntity.active") : t("util.standardCoreEntity.ended")'
+                />
+                <span
+                    class='fw-semibold text-truncate'
+                    v-text='event.name'
+                />
+            </span>
+            <span
+                class='text-secondary small text-truncate'
+                v-text='subtitle'
+            />
         </div>
+
+        <span
+            v-if='event.priority !== "none"'
+            class='badge flex-shrink-0 text-uppercase'
+            :class='priorityBadgeClass'
+            v-text='priorityLabel'
+        />
+
+        <slot name='actions' />
     </StandardItem>
 </template>
 
@@ -139,11 +126,7 @@ import { useI18n } from 'vue-i18n';
 import { computed, ref, watch } from 'vue';
 import StandardItem from './StandardItem.vue';
 import StatusDot from '../../util/StatusDot.vue';
-import {
-    IconClock,
-    IconMapPin,
-    IconCalendarEvent,
-} from '@tabler/icons-vue';
+import { IconCalendarEvent } from '@tabler/icons-vue';
 import type { CoreEntity } from '../../../types.ts';
 import timediff from '../../../timediff';
 
@@ -175,6 +158,16 @@ const creator = computed(() => {
     return t('util.standardCoreEntity.unknownCreator');
 });
 
+const subtitle = computed(() => {
+    const when = props.event.ended && !props.event.active
+        ? t('util.standardCoreEntity.endedAgo', { time: timediff(props.event.ended) })
+        : props.event.ended && props.event.active
+            ? t('util.standardCoreEntity.endsIn', { time: timediff(props.event.ended) })
+            : timediff(props.event.created);
+
+    return [props.event.location, creator.value, when].filter(Boolean).join(' · ');
+});
+
 const PRIORITIES = ['critical', 'high', 'medium', 'low', 'none'];
 
 const priorityLabel = computed(() => {
@@ -202,3 +195,27 @@ const priorityBadgeClass = computed(() => {
     }[props.event.priority] || 'bg-secondary text-secondary-fg';
 });
 </script>
+
+<style scoped>
+.core-row__icon {
+    --tblr-avatar-size: 2.25rem;
+    color: var(--tblr-body-color);
+    background-color: var(--cloudtak-inset-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--cloudtak-inset-border, rgba(255, 255, 255, 0.12));
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.core-row:hover .core-row__icon,
+.core-row:focus-within .core-row__icon {
+    border-color: rgba(var(--tblr-primary-rgb), 0.4);
+}
+
+.core-row__status {
+    width: 10px;
+    height: 10px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid var(--standard-item-bg, rgba(0, 0, 0, 0.35));
+    box-sizing: content-box;
+}
+</style>

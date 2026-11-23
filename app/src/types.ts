@@ -65,7 +65,7 @@ export type CoreDeviceList = paths["/api/core/device"]["get"]["responses"]["200"
 export type CoreEntity = paths["/api/core/event/{:event}"]["get"]["responses"]["200"]["content"]["application/json"];
 export type CoreEntityList = paths["/api/core/event"]["get"]["responses"]["200"]["content"]["application/json"];
 export type CoreEntityLink = CoreEntity["links"][0];
-export type CoreEntityExternalId = Exclude<NonNullable<paths["/api/core/event/{:event}"]["patch"]["requestBody"]["content"]["application/json"]["external_id"]>, string>;
+export type CoreEntityExternalId = NonNullable<paths["/api/core/event/{:event}"]["patch"]["requestBody"]["content"]["application/json"]["external_id"]>;
 export type CoreEntityStyle = CoreEntity["style"];
 export type CoreEntityMission = CoreEntity["missions"][0];
 export type CoreEntityBoardSummary = CoreEntity["boards"][0];
@@ -88,6 +88,9 @@ export type CoreEntityAssignmentList = paths["/api/core/event/{:event}/assignmen
 export type CoreEntityAssignment = CoreEntityAssignmentList["items"][0];
 /** Editable form of an Assignment - a blank username means no Profile link */
 export type CoreEntityAssignmentInput = { name: string; uid: string; role: string; remarks: string };
+export type CoreEntityTimelineList = paths["/api/core/entity/{:entity}/timeline"]["get"]["responses"]["200"]["content"]["application/json"];
+export type CoreEntityTimelineEntry = CoreEntityTimelineList["items"][0];
+export type CoreEntityTimelineType = CoreEntityTimelineEntry["type"];
 
 export type Contact = paths["/api/marti/api/contacts/all"]["get"]["responses"]["200"]["content"]["application/json"][0];
 export type ContactList = paths["/api/marti/api/contacts/all"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -143,7 +146,7 @@ export type IconList = paths["/api/icon"]["get"]["responses"]["200"]["content"][
 export type AttachmentList = paths["/api/attachment"]["get"]["responses"]["200"]["content"]["application/json"]
 export type Attachment = paths["/api/attachment"]["get"]["responses"]["200"]["content"]["application/json"]["items"][0]
 
-export type TileJSON = paths["/api/basemap/{:basemapid}/tiles"]["get"]["responses"]["200"]["content"]["application/json"]
+export type TileJSON = OverlayTileJSON
 
 export type Basemap = paths["/api/basemap/{:basemapid}"]["patch"]["responses"]["200"]["content"]["application/json"]
 export type BasemapList = paths["/api/basemap"]["get"]["responses"]["200"]["content"]["application/json"]
@@ -192,6 +195,8 @@ export type APIProfileChat = {
 }
 
 export type MissionTemplate = paths["/api/template/mission/{:mission}"]["get"]["responses"]["200"]["content"]["application/json"]
+export type PluginList = paths["/api/plugin"]["get"]["responses"]["200"]["content"]["application/json"]
+export type Plugin = PluginList["items"][0]
 export type MissionTemplateList = paths["/api/template/mission"]["get"]["responses"]["200"]["content"]["application/json"]
 export type MissionTemplateLog = paths["/api/template/mission/{:mission}/log/{:log}"]["get"]["responses"]["200"]["content"]["application/json"]
 export type MissionTemplateLogList = paths["/api/template/mission/{:mission}/log"]["get"]["responses"]["200"]["content"]["application/json"]
@@ -255,7 +260,6 @@ export type ProfilePagingList = paths["/api/profile/paging"]["get"]["responses"]
 export type ProfilePaging = ProfilePagingList["items"][0]
 export type ProfilePaging_Create = paths["/api/profile/paging"]["post"]["requestBody"]["content"]["application/json"]
 
-export type SearchReverse = paths["/api/search/reverse/{:longitude}/{:latitude}"]["get"]["responses"]["200"]["content"]["application/json"]
 export type SearchReverseSun = paths["/api/search/reverse/{:longitude}/{:latitude}/sun"]["get"]["responses"]["200"]["content"]["application/json"]
 export type SearchReverseMagnetic = paths["/api/search/reverse/{:longitude}/{:latitude}/magnetic"]["get"]["responses"]["200"]["content"]["application/json"]
 export type SearchReverseWeather = paths["/api/search/reverse/{:longitude}/{:latitude}/weather"]["get"]["responses"]["200"]["content"]["application/json"]

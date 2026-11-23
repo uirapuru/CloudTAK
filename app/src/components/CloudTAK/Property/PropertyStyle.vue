@@ -136,6 +136,7 @@ import {
 } from '@tak-ps/vue-tabler';
 import IconSelect from '../util/IconSelectOffline.vue';
 import TranslatedEnum from '../util/TranslatedEnum.vue';
+import Icon from '../../../base/icon.ts';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -172,12 +173,7 @@ function updateProperty(key: string, event: any) {
 }
 
 function updatePropertyIcon(event: string | null) {
-    if (event) {
-        event = event.replace(/\.png$/g, '');
-        if (!event.includes(':') && event.includes('/')) {
-            event = event.replace('/', ':');
-        }
-    }
+    if (event) event = Icon.key(event);
 
     const properties = { ...props.modelValue };
 

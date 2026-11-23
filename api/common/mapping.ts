@@ -191,23 +191,6 @@ function entry(map: unknown, field: MapField): { value: unknown; update: unknown
     return { value: raw, update: true };
 }
 
-/**
- * Maps saved before external IDs carried a system hold the value template at
- * `external_id` itself - as a bare string or a `{ value, update }` entry - it
- * becomes the `external_id.value` field
- */
-function normalize(map: Record<string, unknown>): Record<string, unknown> {
-    const external = map.external_id;
-
-    if (typeof external === 'string') return { ...map, external_id: { value: external } };
-
-    if (external !== null && typeof external === 'object' && !Array.isArray(external) && 'update' in external && !('system' in external)) {
-        return { ...map, external_id: { value: external } };
-    }
-
-    return map;
-}
-
 function label(field: MapField): string {
     const parts = field.key.split('.');
     const name = parts[parts.length - 1]
@@ -259,18 +242,18 @@ const KINDS: Record<MapFieldKind, {
     render: (raw: unknown, ctx: Render) => unknown;
 }> = {
     template: {
-        validate: (value, field, name) => assertTemplate(value, `Invalid ${name} Template: ${value}`),
+        validate: (value, field, name) => assertTemplate(value, `Invalid ${name} Template: ${String(value)}`),
         render: (raw, { compile }) => typeof raw === 'string' ? compile(raw) : undefined,
     },
     number: {
         validate: (value, field, name) => {
             if (isNumeric(value)) {
-                if (field.min !== undefined && Number(value) < field.min) throw invalid(null, `Invalid ${name}: ${value} - Less than ${field.min}`);
-                if (field.max !== undefined && Number(value) > field.max) throw invalid(null, `Invalid ${name}: ${value} - Greater than ${field.max}`);
+                if (field.min !== undefined && Number(value) < field.min) throw invalid(null, `Invalid ${name}: ${String(value)} - Less than ${field.min}`);
+                if (field.max !== undefined && Number(value) > field.max) throw invalid(null, `Invalid ${name}: ${String(value)} - Greater than ${field.max}`);
             } else if (typeof value === 'string') {
-                assertTemplate(value, `Invalid ${name} Template: ${value}`);
+                assertTemplate(value, `Invalid ${name} Template: ${String(value)}`);
             } else {
-                throw invalid(null, `Invalid ${name}: ${value} - Expected a number`);
+                throw invalid(null, `Invalid ${name}: ${String(value)} - Expected a number`);
             }
         },
         render: (raw, { field, compile }) => {
@@ -293,7 +276,7 @@ const KINDS: Record<MapFieldKind, {
     },
     expiry: {
         validate: (value, field, name) => {
-            if (!isNumeric(value)) assertTemplate(value, `Invalid ${name} Template: ${value}`);
+            if (!isNumeric(value)) assertTemplate(value, `Invalid ${name} Template: ${String(value)}`);
         },
         render: (raw, ctx) => {
             const seconds = renderNumber(raw, ctx.compile);
@@ -303,7 +286,7 @@ const KINDS: Record<MapFieldKind, {
         },
     },
     timestamp: {
-        validate: (value, field, name) => assertTemplate(value, `Invalid ${name} Template: ${value}`),
+        validate: (value, field, name) => assertTemplate(value, `Invalid ${name} Template: ${String(value)}`),
         render: (raw, { compile }) => {
             if (typeof raw !== 'string') return undefined;
 
@@ -316,9 +299,9 @@ const KINDS: Record<MapFieldKind, {
     boolean: {
         validate: (value, field, name) => {
             if (isTemplate(value)) {
-                assertTemplate(value, `Invalid ${name} Template: ${value}`);
+                assertTemplate(value, `Invalid ${name} Template: ${String(value)}`);
             } else if (typeof value !== 'boolean' && value !== 'true' && value !== 'false') {
-                throw invalid(null, `Invalid ${name}: ${value} - Expected a boolean`);
+                throw invalid(null, `Invalid ${name}: ${String(value)} - Expected a boolean`);
             }
         },
         render: (raw, { compile }) => {
@@ -332,9 +315,9 @@ const KINDS: Record<MapFieldKind, {
     enum: {
         validate: (value, field, name) => {
             if (isTemplate(value)) {
-                assertTemplate(value, `Invalid ${name} Template: ${value}`);
+                assertTemplate(value, `Invalid ${name} Template: ${String(value)}`);
             } else if (typeof value !== 'string' || !field.options?.includes(value)) {
-                throw invalid(null, `Invalid ${name}: ${value} - Expected one of ${field.options?.join(', ')}`);
+                throw invalid(null, `Invalid ${name}: ${String(value)} - Expected one of ${field.options?.join(', ')}`);
             }
         },
         render: (raw, { field, compile }) => {
@@ -424,9 +407,7 @@ export default class Mapping {
     /**
      * Validate a Map object against the fields of its destination
      */
-    static validate(destination: LayerMapping_Destination, raw: Record<string, unknown>): true {
-        const map = normalize(raw);
-
+    static validate(destination: LayerMapping_Destination, map: Record<string, unknown>): true {
         for (const field of MAP_FIELDS[destination]) {
             const { value, update } = entry(map, field);
             if (typeof update !== 'boolean') throw invalid(null, `Invalid ${label(field)}: update must be a boolean`);
@@ -463,7 +444,7 @@ export default class Mapping {
      * created but left alone when the record already exists
      */
     static createOnly(row: MappingRow): Set<string> {
-        const map = normalize(row.mapping);
+        const map = row.mapping;
 
         return new Set(MAP_FIELDS[row.destination]
             .filter(field => entry(map, field).update === false)
@@ -485,7 +466,7 @@ export default class Mapping {
             ? feature as unknown as Record<string, unknown>
             : {};
 
-        const map = normalize(row.mapping);
+        const map = row.mapping;
 
         try {
             for (const field of MAP_FIELDS[row.destination]) {

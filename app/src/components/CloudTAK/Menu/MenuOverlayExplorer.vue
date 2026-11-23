@@ -429,7 +429,8 @@ async function addBasemap(overlay: Basemap): Promise<Overlay> {
         mode_id: String(overlay.id),
         frequency: overlay.frequency,
         type: overlay.type,
-        styles: overlay.styles
+        styles: overlay.styles,
+        args: overlay.args
     });
 }
 

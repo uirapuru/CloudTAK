@@ -10,7 +10,7 @@ import Err from '@openaddresses/batch-error';
 import Auth, { AuthUser } from '../../common/auth.js';
 import { BasemapTerrain_Encoding } from '../../common/enums.js';
 import { ProfileOverlay, ProfileOverlayGroup, ProfileOverlayFavorite } from '../../common/schema.js';
-import { StandardResponse, ProfileOverlayResponse, ProfileOverlayGroupResponse, ProfileOverlayFavoriteResponse } from '../../common/types.js';
+import { StandardResponse, ProfileOverlayResponse, ProfileOverlayGroupResponse, ProfileOverlayFavoriteResponse, BasemapArgs } from '../../common/types.js';
 import ConnectionEvents, { ConnectionEventDataType, ConnectionEventAction } from '../lib/connection-events.js';
 import { sql, and, eq, asc } from 'drizzle-orm';
 import * as Default from '../lib/limits.js';
@@ -455,6 +455,38 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }
     });
 
+    await schema.patch('/profile/overlay/order', {
+        name: 'Order Overlays',
+        group: 'ProfileOverlay',
+        description: `
+            Persist the stack order of the user's overlays.
+
+            Ids are given bottom-first and each overlay's pos is set to its index. Basemaps keep
+            their fixed position and may be omitted.
+        `,
+        body: Type.Object({
+            ids: Type.Array(Type.Integer()),
+        }),
+        res: Type.Object({
+            items: Type.Array(ProfileOverlayResponse),
+        }),
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+
+            const items = await overlayControl.reorder(user.email, req.body.ids);
+
+            // Other sessions re-list rather than receiving one event per overlay
+            ConnectionEvents.user(config, user, ConnectionEventDataType.OVERLAY, ConnectionEventAction.UPDATE);
+
+            res.json({
+                items: items.map(overlay => ({ ...overlay, opacity: Number(overlay.opacity) })),
+            });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
     await schema.get('/profile/overlay/:overlay', {
         name: 'Get Overlay',
         group: 'ProfileOverlay',
@@ -497,6 +529,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             group_id: Type.Optional(Type.Union([Type.Null(), Type.Integer()], {
                 description: 'User defined Overlay Group the overlay belongs to, null to ungroup',
             })),
+            args: Type.Optional(BasemapArgs),
         }),
         res: AugmentedProfileOverlayResponse,
     }, async (req, res) => {
@@ -553,6 +586,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             mode: Type.String(),
             mode_id: Type.Optional(Type.String()),
             styles: Type.Optional(Type.Array(Type.Unknown())),
+            args: Type.Optional(BasemapArgs),
             token: Type.Optional(Type.String()),
             url: Type.String(),
         }),

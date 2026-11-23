@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import Flight from './flight.js';
+import { basemapTileJSON } from '../stateless/lib/tilejson.js';
 
 const flight = new Flight();
 
@@ -113,6 +114,8 @@ test('POST: api/basemap', async () => {
             actions: { feature: [] },
             url: 'https://test.com/test/{z}/{x}/{y}',
             overlay: false,
+            tilejson: null,
+            args: {},
             iconset: null,
             attribution: null,
             frequency: null,
@@ -137,18 +140,15 @@ test('POST: api/basemap', async () => {
     }
 });
 
-test('GET: api/basemap/1/tiles', async () => {
+test('TileJSON: basemap 1', async () => {
     try {
-        const res = await flight.fetch('/api/basemap/1/tiles', {
-            method: 'GET',
-            auth: {
-                bearer: flight.token.admin,
-            },
-        }, true);
+        const basemap = await flight.config!.models.Basemap.from(1);
+        const tilejson = await basemapTileJSON(flight.config!, basemap, { upstreamToken: flight.token.admin });
 
-        assert.deepEqual(res.body, {
+        assert.deepEqual(tilejson, {
             tilejson: '3.0.0',
             version: '1.0.0',
+            attribution: undefined,
             description: '',
             scheme: 'xyz',
             name: 'Test Basemap',
@@ -158,8 +158,8 @@ test('GET: api/basemap/1/tiles', async () => {
             tileSize: 256,
             minzoom: 0,
             maxzoom: 16,
-            actions: { feature: [] },
-            tiles: [`${flight.base}/api/basemap/1/tiles/{z}/{x}/{y}`],
+            tiles: [`${flight.base}/tiles/basemap/1/tiles/{z}/{x}/{y}`],
+            vector_layers: undefined,
         });
     } catch (err) {
         assert.ifError(err);
@@ -189,6 +189,8 @@ test('PATCH: api/basemap/1', async () => {
             actions: { feature: [] },
             url: 'https://test.com/test/{z}/{x}/{y}',
             overlay: false,
+            tilejson: null,
+            args: {},
             iconset: null,
             attribution: null,
             frequency: null,

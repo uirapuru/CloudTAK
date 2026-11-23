@@ -16,13 +16,14 @@ import Schema from '@openaddresses/batch-schema';
 import { validateTemplate, renderTemplate } from '../../common/style.js';
 import { Geometry, BBox } from 'geojson';
 import { Static, Type } from '@sinclair/typebox';
-import { StandardResponse, BasemapResponse, TileJSON, MultiGeoJSONFeature, MultiGeoJSONFeatureCollection } from '../../common/types.js';
-import { BasemapCollection } from '../../common/models/Basemap.js';
+import { StandardResponse, BasemapResponse, BasemapArgs, TileJSON, MultiGeoJSONFeature, MultiGeoJSONFeatureCollection } from '../../common/types.js';
+import { BasemapCollection, type BasemapListRow } from '../../common/models/Basemap.js';
 import { Basemap as BasemapParser, Feature } from '@tak-ps/node-cot';
 import { Basemap } from '../../common/schema.js';
 import { toEnum, Basemap_Format, Basemap_Protocol, Basemap_Scheme, Basemap_Type, Basemap_FeatureAction, AllBoolean, AllBooleanCast, BasemapTerrain_Encoding } from '../../common/enums.js';
 import { EsriBase, EsriProxyLayer } from '../lib/esri.js';
-import { AugmentedTileJSON, basemapTileJSON, isEsriLayerURL } from '../lib/tilejson.js';
+import { isWMTSCapabilities, isWMSCapabilities, parseWMTSCapabilities } from '../lib/wmts.js';
+import { isEsriLayerURL } from '../lib/tilejson.js';
 import { isSafeUrl } from '@tak-ps/node-safeurl';
 import * as Default from '../lib/limits.js';
 
@@ -59,7 +60,7 @@ const BasemapImportRequest = Type.Object({
     auth: Type.Optional(BasemapImportAuth),
 });
 
-function augmentBasemap(basemap: any): any {
+function augmentBasemap<T extends BasemapListRow>(basemap: T) {
     return {
         ...basemap,
         bounds: basemap.bounds ? bbox(basemap.bounds) : undefined,
@@ -72,7 +73,7 @@ async function listChildren(
     config: ConfigStateless,
     parent: number,
     user?: { email: string; access: AuthUserAccess },
-): Promise<Array<any>> {
+): Promise<Array<ReturnType<typeof augmentBasemap>>> {
     const where = !user || user.access === AuthUserAccess.ADMIN
         ? sql`parent = ${Param(parent)}::INT`
         : sql`parent = ${Param(parent)}::INT AND (username IS NULL OR username = ${Param(user.email)}::TEXT)`;
@@ -107,6 +108,27 @@ async function validateParent(
 
     if (parent.parent !== null) {
         throw new Err(400, null, 'Basemaps can only be nested a single level deep');
+    }
+}
+
+/**
+ * Users may read server basemaps and their own; admins may read any.
+ * Basemap sharing tokens may read only the basemap they were minted for while sharing stays enabled.
+ */
+function assertBasemapAccess(
+    auth: AuthUser | AuthResource,
+    basemap: { name: string; username: string | null; sharing_enabled: boolean; sharing_token: string | null },
+): void {
+    if (auth instanceof AuthUser) {
+        if (basemap.username && basemap.username !== auth.email && auth.access === AuthUserAccess.USER) {
+            throw new Err(400, null, 'You don\'t have permission to access this resource');
+        }
+    } else if (auth instanceof AuthResource) {
+        if (basemap.sharing_enabled === false) {
+            throw new Err(400, null, `Sharing for ${basemap.name} is disabled`);
+        } else if (basemap.sharing_token !== auth.token) {
+            throw new Err(400, null, 'You don\'t have permission to access this resource');
+        }
     }
 }
 
@@ -160,7 +182,38 @@ async function importBasemapURL(
         throw new Err(400, new Error(await tjres.text()), 'Unable to fetch TileJSON from source URL');
     }
 
-    const tjbody = await tjres.json() as Record<string, any>;
+    const tjtext = (await tjres.text()).replace(/^\uFEFF/, '').trim();
+
+    if (tjtext.startsWith('<')) {
+        if (isWMTSCapabilities(tjtext)) {
+            return parseWMTSCapabilities(tjtext, { layer: url.searchParams.get('layer') });
+        } else if (isWMSCapabilities(tjtext)) {
+            throw new Err(400, null, 'WMS services are not supported - provide a TileJSON, WMTS capabilities, or ArcGIS service URL');
+        }
+
+        throw new Err(400, null, 'URL returned XML instead of TileJSON - only TileJSON and WMTS capabilities documents are supported');
+    }
+
+    let tjbody: {
+        name?: string;
+        attribution?: string;
+        maxzoom?: number;
+        minzoom?: number;
+        tileSize?: number;
+        vector_layers?: unknown;
+        tiles?: unknown;
+        encoding?: string;
+        [key: string]: unknown;
+    };
+    try {
+        tjbody = JSON.parse(tjtext);
+    } catch (err) {
+        throw new Err(400, err instanceof Error ? err : new Error(String(err)), 'URL did not return a valid TileJSON document');
+    }
+
+    if (!tjbody || typeof tjbody !== 'object' || Array.isArray(tjbody)) {
+        throw new Err(400, null, 'URL did not return a valid TileJSON document');
+    }
 
     if (tjbody.name) imported.name = tjbody.name;
     if (tjbody.attribution) imported.attribution = tjbody.attribution;
@@ -252,7 +305,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                         }
 
                         const buffer = await filePromise;
-                        const b = await BasemapParser.parse(buffer.toString('utf8'));
+                        const b = BasemapParser.parse(buffer.toString('utf8'));
 
                         if (!b.raw.customMapSource) {
                             res.json(imported);
@@ -523,6 +576,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             title: Type.Optional(Type.String()),
             iconset: Type.Optional(Type.Union([Type.Null(), Type.String()])),
             tilejson: Type.Optional(Type.String()),
+            args: Type.Optional(BasemapArgs),
         }),
         res: AugmentedBasemapResponse,
     }, async (req, res) => {
@@ -627,9 +681,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             collection: Type.Optional(Type.Union([Type.Null(), Type.String()])),
             overlay: Type.Optional(Type.Boolean()),
             hidden: Type.Optional(Type.Boolean()),
-            scope: Type.Enum(ResourceCreationScope, { default: ResourceCreationScope.USER }),
+            scope: Type.Optional(Type.Enum(ResourceCreationScope)),
             url: Type.Optional(Type.String()),
-            tilesize: Type.Optional(Type.Integer({ default: 256, minimum: 256, maximum: 512 })),
+            tilesize: Type.Optional(Type.Integer({ minimum: 256, maximum: 512 })),
             attribution: Type.Optional(Type.Union([Type.Null(), Type.String()])),
             frequency: Type.Optional(Type.Union([Type.Null(), Type.Integer()])),
             minzoom: Type.Optional(Type.Integer()),
@@ -649,6 +703,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             title: Type.Optional(Type.String()),
             iconset: Type.Optional(Type.Union([Type.Null(), Type.String()])),
             tilejson: Type.Optional(Type.String()),
+            args: Type.Optional(BasemapArgs),
         }),
         res: AugmentedBasemapResponse,
     }, async (req, res) => {
@@ -762,15 +817,18 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             token: Type.Optional(Type.String()),
         }),
         res: Type.Union([AugmentedBasemapWithChildrenResponse, Type.String()]),
+        security: Auth.security({ resources: [AuthResourceAccess.BASEMAP], token: true }),
     }, async (req, res) => {
         try {
-            const user = await Auth.as_user(config, req, { token: true });
+            const auth = await Auth.is_auth(config, req, {
+                resources: [
+                    { access: AuthResourceAccess.BASEMAP, id: req.params.basemapid },
+                ],
+            });
 
             const basemap = await config.models.Basemap.from(req.params.basemapid);
 
-            if (basemap.username && basemap.username !== user.email && user.access === AuthUserAccess.USER) {
-                throw new Err(400, null, 'You don\'t have permission to access this resource');
-            }
+            assertBasemapAccess(auth, basemap);
 
             if (req.query.download) {
                 res.setHeader('Content-Disposition', `attachment; filename="${basemap.name}.${req.query.format}"`);
@@ -795,111 +853,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             } else {
                 res.json({
                     ...augmentBasemap(basemap),
-                    children: await listChildren(config, basemap.id, user),
+                    children: auth instanceof AuthUser ? await listChildren(config, basemap.id, auth) : [],
                 });
             }
-        } catch (err) {
-            Err.respond(err, res);
-        }
-    });
-
-    await schema.get('/basemap/:basemapid/tiles', {
-        name: 'Get Basemap TileJSON',
-        group: 'BaseMap',
-        description: 'Get a basemap tilejson',
-        params: Type.Object({
-            basemapid: Type.Integer({ minimum: 1 }),
-        }),
-        query: Type.Object({
-            token: Type.Optional(Type.String()),
-        }),
-        res: AugmentedTileJSON,
-    }, async (req, res) => {
-        try {
-            const auth = await Auth.is_auth(config, req, {
-                token: true,
-                resources: [
-                    { access: AuthResourceAccess.BASEMAP, id: req.params.basemapid },
-                ],
-            });
-
-            const basemap = await config.models.Basemap.from(req.params.basemapid);
-
-            if (auth instanceof AuthUser) {
-                if (basemap.username && basemap.username !== auth.email && auth.access === AuthUserAccess.USER) {
-                    throw new Err(400, null, 'You don\'t have permission to access this resource');
-                }
-            } else if (auth instanceof AuthResource) {
-                if (basemap.sharing_enabled === false) {
-                    throw new Err(400, null, `Sharing for ${basemap.name} is disabled`);
-                } else if (basemap.sharing_token !== auth.token) {
-                    throw new Err(400, null, 'You don\'t have permission to access this resource');
-                }
-            }
-
-            const tilejson = await basemapTileJSON(config, basemap, {
-                token: req.query.token,
-                upstreamToken: auth.token,
-            });
-
-            res.json({
-                ...tilejson,
-                actions: fromProtocol(basemap.protocol, basemap).actions(),
-            });
-        } catch (err) {
-            Err.respond(err, res);
-        }
-    });
-
-    await schema.get('/basemap/:basemapid/tiles/:z/:x/:y', {
-        name: 'Get Basemap Tile',
-        group: 'BaseMap',
-        description: 'Get a basemap tile',
-        params: Type.Object({
-            basemapid: Type.Integer({ minimum: 1 }),
-            z: Type.Integer({ minimum: 0 }),
-            x: Type.Integer({ minimum: 0 }),
-            y: Type.Integer({ minimum: 0 }),
-        }),
-        query: Type.Object({
-            token: Type.Optional(Type.String()),
-        }),
-    }, async (req, res) => {
-        try {
-            const auth = await Auth.is_auth(config, req, {
-                token: true,
-                resources: [
-                    { access: AuthResourceAccess.BASEMAP, id: req.params.basemapid },
-                ],
-            });
-
-            const basemap = await config.models.Basemap.from(req.params.basemapid);
-
-            if (auth instanceof AuthUser) {
-                if (basemap.username && basemap.username !== auth.email && auth.access === AuthUserAccess.USER) {
-                    throw new Err(400, null, 'You don\'t have permission to access this resource');
-                }
-            } else if (auth instanceof AuthResource) {
-                if (basemap.sharing_enabled === false) {
-                    throw new Err(400, null, `Sharing for ${basemap.name} is disabled`);
-                } else if (basemap.sharing_token !== auth.token) {
-                    throw new Err(400, null, 'You don\'t have permission to access this resource');
-                }
-            }
-
-            return await fromProtocol(basemap.protocol, basemap).tile(
-                req.params.z,
-                req.params.x,
-                req.params.y,
-                res,
-                {
-                    headers: {
-                        'user-agent': req.headers['user-agent'],
-                        'accept': req.headers['accept'],
-                        'accept-language': req.headers['accept-language'],
-                    },
-                },
-            );
         } catch (err) {
             Err.respond(err, res);
         }
@@ -916,9 +872,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             polygon: Feature.Polygon,
         }),
         res: MultiGeoJSONFeatureCollection,
+        security: Auth.security({ token: true }),
     }, async (req, res) => {
         try {
-            const user = await Auth.as_user(config, req, { token: true });
+            const user = await Auth.as_user(config, req);
 
             const basemap = await config.models.Basemap.from(req.params.basemapid);
 
@@ -960,9 +917,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             featureid: Type.String(),
         }),
         res: MultiGeoJSONFeature,
+        security: Auth.security({ token: true }),
     }, async (req, res) => {
         try {
-            const user = await Auth.as_user(config, req, { token: true });
+            const user = await Auth.as_user(config, req);
 
             const basemap = await config.models.Basemap.from(req.params.basemapid);
 
