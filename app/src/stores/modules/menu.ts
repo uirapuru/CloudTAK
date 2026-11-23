@@ -19,6 +19,7 @@ import {
     IconAffiliate,
     IconHistory,
     IconMicrophone,
+    IconQrcode,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -39,6 +40,8 @@ export type MenuItemConfig = {
     requiresSystemAdmin?: boolean;
     /** taklab: only accounts allowed to see the voice log history (VOICE_HISTORY_USERS). */
     requiresVoiceHistory?: boolean;
+    /** taklab: only OTS administrators (OTS account list with QR codes). */
+    requiresOtsAdmin?: boolean;
     requiresAgencyAdmin?: boolean;
 };
 
@@ -55,6 +58,7 @@ export default class MenuManager {
     isSystemAdmin: Ref<boolean>;
     isAgencyAdmin: Ref<boolean>;
     canSeeVoiceHistory: Ref<boolean>;
+    canSeeOtsAccounts: Ref<boolean>;
     pluginMenuItems: Ref<MenuItemConfig[]>;
     preferenceOrder: Ref<Profile['menu_order']>;
 
@@ -67,6 +71,7 @@ export default class MenuManager {
         this.isSystemAdmin = ref(false);
         this.isAgencyAdmin = ref(false);
         this.canSeeVoiceHistory = ref(false);
+        this.canSeeOtsAccounts = ref(false);
         this.pluginMenuItems = ref([]);
         this.preferenceOrder = ref([]);
 
@@ -87,6 +92,14 @@ export default class MenuManager {
             this.canSeeVoiceHistory.value = Boolean(s.enabled && s.history);
         }).catch(() => {
             this.canSeeVoiceHistory.value = false;
+        });
+
+        // taklab: "Konta serwera" only for accounts with the OTS administrator role.
+        std('/api/ots/accounts/status').then((status) => {
+            const s = status as { enabled?: boolean; administrator?: boolean };
+            this.canSeeOtsAccounts.value = Boolean(s.enabled && s.administrator);
+        }).catch(() => {
+            this.canSeeOtsAccounts.value = false;
         });
 
         try {
@@ -192,6 +205,16 @@ export default class MenuManager {
                 requiresVoiceHistory: true,
             },
             {
+                // taklab: konta serwera OTS z kodami QR ATAK i OpenTAK ICU
+                key: 'ots-accounts',
+                label: 'Konta serwera',
+                route: '/menu/ots-accounts',
+                tooltip: 'Konta serwera',
+                description: 'Konta serwera OTS z kodami QR dla ATAK i OpenTAK ICU',
+                icon: IconQrcode,
+                requiresOtsAdmin: true,
+            },
+            {
                 key: 'routes',
                 label: 'Routes',
                 route: '/menu/routes',
@@ -270,6 +293,7 @@ export default class MenuManager {
             let combined = [...this.baseMenuItems, ...this.pluginMenuItems.value].filter((item) => {
                 if (item.requiresSystemAdmin && !this.isSystemAdmin.value) return false;
                 if (item.requiresVoiceHistory && !this.canSeeVoiceHistory.value) return false;
+                if (item.requiresOtsAdmin && !this.canSeeOtsAccounts.value) return false;
                 if (item.requiresAgencyAdmin && !(this.isAgencyAdmin.value || this.isSystemAdmin.value)) return false;
                 return true;
             });
