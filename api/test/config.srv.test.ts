@@ -275,4 +275,29 @@ test('GET api/config/layer', async () => {
     }
 });
 
+// taklab: the login page asks for its branding before anyone logs in
+test('GET: api/config - public login keys without a token', async () => {
+    try {
+        const res = await flight.fetch('/api/config?keys=login::name,login::logo,login::username', {
+            method: 'GET',
+        }, false);
+
+        assert.equal(res.status, 200, JSON.stringify(res.body));
+    } catch (err) {
+        assert.ifError(err);
+    }
+});
+
+test('GET: api/config - a non-public key without a token is refused', async () => {
+    try {
+        const res = await flight.fetch('/api/config?keys=agol::token', {
+            method: 'GET',
+        }, false);
+
+        assert.equal(res.status, 401, JSON.stringify(res.body));
+    } catch (err) {
+        assert.ifError(err);
+    }
+});
+
 flight.landing();

@@ -92,6 +92,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     const profileControl = new ProfileControl(config);
 
     await schema.get('/config', {
+        // taklab: the login page reads the public login::* keys without a
+        // token; the handler below still requires a user for any other key
+        security: Auth.security({ optional: true }),
         name: 'Get Config',
         group: 'Config',
         description: 'Get Config',
