@@ -78,3 +78,21 @@ test('history only for VOICE_HISTORY_USERS, status says so, nothing reaches the 
     delete process.env.VOICE_HISTORY_USERS;
     assert.equal(control.canSeeHistory('administrator'), false);
 });
+
+test('deleteRecordings: history accounts only, DELETE with ids, nothing sent otherwise', async () => {
+    process.env.VOICE_URL = 'http://voice.test:8080';
+    process.env.VOICE_HISTORY_USERS = 'administrator';
+    const control = new VoiceControl();
+    const calls: Array<{ url: string; method?: string }> = [];
+    control.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+        calls.push({ url: String(input), method: init?.method });
+        return new Response(JSON.stringify({ deleted: 2 }), { status: 200 });
+    }) as typeof fetch;
+
+    await assert.rejects(control.deleteRecordings('operator', '1,2'), (err: { status: number }) => err.status === 403);
+    await assert.rejects(control.deleteRecordings('administrator', '1;drop'), (err: { status: number }) => err.status === 400);
+    assert.deepEqual(calls, []);
+
+    assert.deepEqual(await control.deleteRecordings('administrator', '1,2'), { deleted: 2 });
+    assert.deepEqual(calls, [{ url: 'http://voice.test:8080/api/v1/recordings?ids=1%2C2', method: 'DELETE' }]);
+});

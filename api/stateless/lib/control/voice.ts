@@ -67,13 +67,14 @@ export class VoiceControl {
         return url || null;
     }
 
-    private async request(path: string, user: string, timeout = TIMEOUT_MS): Promise<Response> {
+    private async request(path: string, user: string, timeout = TIMEOUT_MS, method = 'GET'): Promise<Response> {
         const base = this.baseUrl();
         if (!base) throw new Err(404, null, 'Rejestr głosu nie jest włączony w tym środowisku');
 
         let res: Response;
         try {
             res = await this.fetch(`${base}${path}`, {
+                method,
                 headers: {
                     'X-Voice-Token': process.env.VOICE_TOKEN || '',
                     'X-Voice-User': user,
@@ -118,6 +119,14 @@ export class VoiceControl {
     async export(user: string, q: VoiceQuery, res: ExpressResponse): Promise<void> {
         this.requireHistory(user);
         await this.pipe(await this.request(`/api/v1/export${VoiceControl.query(q)}`, user, EXPORT_TIMEOUT_MS), res, true);
+    }
+
+    /** Delete one or more recordings (ids "1,2,3"); history accounts only. */
+    async deleteRecordings(user: string, ids: string): Promise<{ deleted: number }> {
+        this.requireHistory(user);
+        if (!/^[0-9]+(,[0-9]+)*$/.test(ids)) throw new Err(400, null, 'Nieprawidłowa lista nagrań');
+        const res = await this.request(`/api/v1/recordings${VoiceControl.query({ ids })}`, user, TIMEOUT_MS, 'DELETE');
+        return await res.json() as { deleted: number };
     }
 
     private async pipe(upstream: Response, res: ExpressResponse, download: boolean): Promise<void> {

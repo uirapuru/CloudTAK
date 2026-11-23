@@ -74,6 +74,23 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }
     });
 
+    await schema.delete('/voice/recordings', {
+        name: 'Delete Voice Recordings',
+        group: 'Voice',
+        description: 'Delete one or more recordings with their audio (history accounts only)',
+        query: Type.Object({
+            ids: Type.String({ pattern: '^[0-9]+(,[0-9]+)*$', maxLength: 4000 }),
+        }),
+        res: Type.Object({ deleted: Type.Integer() }),
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+            res.json(await voiceControl.deleteRecordings(user.email, req.query.ids));
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
     await schema.get('/voice/recordings/:id/audio', {
         name: 'Get Voice Recording Audio',
         group: 'Voice',

@@ -65,3 +65,18 @@ export function speakingNow(status: VoiceStatus): Array<{ channel: string; user:
         .filter((c) => c.speaking)
         .map((c) => ({ channel: c.name, user: c.speaking as string }));
 }
+
+/** Confirmation question with the Polish plural of "nagranie". */
+export function deleteQuestion(n: number): string {
+    const last = n % 10;
+    const lastTwo = n % 100;
+    let word = 'nagrań';
+    if (n === 1) word = 'nagranie';
+    else if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) word = 'nagrania';
+    return n === 1 ? 'Usunąć to nagranie?' : `Usunąć ${n} ${word}?`;
+}
+
+export function withoutIds(items: VoiceRecording[], ids: number[]): VoiceRecording[] {
+    const gone = new Set(ids);
+    return items.filter((r) => !gone.has(r.id));
+}
