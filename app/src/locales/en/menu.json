@@ -1,0 +1,244 @@
+{
+    "common": {
+        "filter": "Filter",
+        "filters": "Filters",
+        "clear": "Clear",
+        "status": "Status",
+        "create": "Create",
+        "edit": "Edit",
+        "export": "Export",
+        "moreOptions": "More Options",
+        "name": "Name",
+        "none": "None",
+        "offline": "This device is offline.",
+        "zoomTo": "Zoom To"
+    },
+    "channelChangeModal": {
+        "title": "Channel List Changed",
+        "body": "Your available channel list has been updated by the server. Would you like to review and update your channel/group assignments?",
+        "dismiss": "Dismiss",
+        "update": "Update Channels"
+    },
+    "debugger": {
+        "title": "COT Debugger",
+        "uid": "COT UID",
+        "error": "Historic Features Error",
+        "none": "No Features"
+    },
+    "basemaps": {
+        "title": "Basemaps",
+        "create": "Create Basemap",
+        "none": "No Basemaps",
+        "edit": "Edit Basemap",
+        "addOverlay": "Add Overlay",
+        "addAsOverlay": "Add as Overlay",
+        "downloadXml": "Download XML",
+        "share": "Share"
+    },
+    "channels": {
+        "title": "Channels",
+        "allOn": "All Channels On",
+        "allOff": "All Channels Off",
+        "active": "Active",
+        "inactive": "Inactive"
+    },
+    "chat": {
+        "select": "Select Chats",
+        "send": "Send Message..."
+    },
+    "chats": {
+        "title": "Chats",
+        "newChat": "New Chat"
+    },
+    "connections": {
+        "title": "Connections",
+        "create": "Create Connection",
+        "none": "No Connections",
+        "loadError": "Failed to load connections"
+    },
+    "contacts": {
+        "title": "Contacts",
+        "none": "No Contacts",
+        "online": "Online",
+        "noneOnline": "No Online Contacts",
+        "recentlyOffline": "Recently Offline",
+        "noneOffline": "No Offline Contacts"
+    },
+    "featView": {
+        "title": "Feature",
+        "endNavigation": "End Navigation",
+        "navigate": "Navigate",
+        "cut": "Cut to Marker",
+        "location": "Location",
+        "center": "Center",
+        "elevation": "Elevation",
+        "description": "Description",
+        "attributes": "Attributes",
+        "openLink": "Open Link",
+        "noAttributes": "No Attributes",
+        "details": "Details",
+        "debug": "Debug",
+        "noName": "No Name"
+    },
+    "featuresTabs": {
+        "features": "Features",
+        "events": "Events",
+        "devices": "Devices"
+    },
+    "features": {
+        "title": "Features",
+        "deleteAll": "Delete All Features",
+        "geometry": "Geometry",
+        "point": "Point",
+        "line": "LineString",
+        "polygon": "Polygon",
+        "createFolder": "Create Folder",
+        "renameFolder": "Rename Folder",
+        "folderName": "Folder Name",
+        "folderPlaceholder": "Operations",
+        "folderEmpty": "Folder is empty",
+        "loading": "Loading Features",
+        "recentlyDeleted": "Recently Deleted",
+        "noMatching": "No Matching Features",
+        "noArchived": "No Archived Features"
+    },
+    "featuresDeleted": {
+        "title": "Deleted Features",
+        "loading": "Loading Deleted Features",
+        "restore": "Restore Features"
+    },
+    "featuresDevices": {
+        "search": "Search Devices",
+        "cached": "Showing Cached Devices",
+        "cachedDescription": "{reason} Only Devices that have been received on the map are listed.",
+        "loading": "Loading Devices",
+        "none": "No Devices",
+        "unreachable": "The Device API could not be reached."
+    },
+    "featuresEvents": {
+        "create": "Create Event",
+        "search": "Search Events",
+        "noChannels": "No channels available",
+        "cached": "Showing Cached Events",
+        "cachedDescription": "{reason} Only Events that have been received on the map are listed.",
+        "loading": "Loading Events",
+        "none": "No Events",
+        "unreachable": "The Event API could not be reached."
+    },
+    "files": {
+        "title": "Files",
+        "upload": "File Upload",
+        "online": "Online",
+        "offline": "Offline",
+        "imports": "Imports",
+        "importsDescription": "Review and manage data imports",
+        "openImports": "Open Imports",
+        "none": "No Files",
+        "folderPlaceholder": "Documents",
+        "moveTitle": "Move File to Folder",
+        "root": "/ (Root)"
+    },
+    "filesOffline": {
+        "none": "No Offline Files",
+        "connectToAdd": "Connect to add to Map as Overlay",
+        "remove": "Remove from Device"
+    },
+    "filesRow": {
+        "shareChannel": "Share to Channel",
+        "shared": "Shared",
+        "sharedFromUser": "Shared file from another user",
+        "sharedToChannel": "Shared to channel",
+        "sharedFrom": "Shared from {username}. Owner-only actions are unavailable.",
+        "addOverlay": "Add to Map as Overlay",
+        "overlayExists": "Overlay already added",
+        "notOptimized": "Not Cloud Optimized",
+        "unsupported": "Cannot Add to Map - Unsupported Format",
+        "download": "Download",
+        "addDataSync": "Add to Data Sync",
+        "createPackage": "Create Data Package",
+        "rename": "Rename File",
+        "move": "Move to Folder",
+        "delete": "Delete File"
+    },
+    "history": {
+        "title": "History",
+        "clearAll": "Clear All Trails",
+        "loadHistory": "Load History",
+        "loadDescription": "Every CoT reported to the server within the window, drawn as points you can hover and open.",
+        "window": "Window",
+        "hour1": "1 Hour",
+        "hours4": "4 Hours",
+        "hours8": "8 Hours",
+        "hours24": "24 Hours",
+        "bboxOnly": "Current map view only",
+        "loading": "Loading history…",
+        "load": "Load",
+        "loaded": "Loaded {count} points",
+        "noHistory": "No history in that window",
+        "none": "No Breadcrumb Trails",
+        "filter": "Filter trails…",
+        "summary": "{shown} of {total} trails · {points} points",
+        "pts": "{count} pts",
+        "liveTrail": "Live Trail",
+        "viewCot": "View CoT",
+        "clearTrail": "Clear Trail"
+    },
+    "icon": {
+        "title": "Icon",
+        "data": "Icon Data",
+        "type2525b": "2525B Type",
+        "iconset": "Iconset",
+        "quickActions": "Quick Actions",
+        "dropPoint": "Drop Point",
+        "iconOffline": "Icon not available offline. Refresh to sync this iconset.",
+        "iconsetOffline": "Iconset not available offline. Refresh to sync this iconset.",
+        "deleteUnsynced": "Icon cannot be deleted until it has been synced from the server."
+    },
+    "iconsetEdit": {
+        "unnamed": "Unnamed",
+        "regenerate": "Regenerate Spritesheet",
+        "loading": "Loading Iconset",
+        "submit": "Submit"
+    },
+    "iconsets": {
+        "title": "Iconsets",
+        "create": "Create Iconset",
+        "zipUpload": "Zip Upload"
+    },
+    "iconset": {
+        "addIcons": "Add Icons",
+        "settings": "Settings",
+        "downloadZip": "Download Zip",
+        "takCompatible": "TAK Compatible",
+        "takCompatibleDescription": "Every icon as PNG",
+        "fullCloudtak": "Full CloudTAK",
+        "fullCloudtakDescription": "Original files, including SVGs",
+        "filter": "Filter icons",
+        "newFolder": "New folder",
+        "folderName": "Folder name",
+        "noMatching": "No matching icons",
+        "noIcons": "No icons",
+        "rename": "Rename",
+        "cancelRename": "Cancel rename",
+        "noFolder": "No folder",
+        "folderActions": "Folder actions",
+        "addHere": "Add icons here",
+        "deleteFolder": "Delete folder",
+        "deleteFolderDescription": "Icons move to No folder",
+        "pendingEmpty": "Empty. This folder is saved once it holds an icon.",
+        "folderEmpty": "No icons here.",
+        "footer": "Drop files on a folder to add them there. Drag an icon to move it.",
+        "everyone": "Everyone",
+        "onlyYou": "Only you",
+        "onlyUser": "Only {username}",
+        "iconCount": "{count} icons | {count} icon | {count} icons",
+        "folderCount": "{count} folders | {count} folder | {count} folders",
+        "invalidFolder": "Folder names cannot contain empty, \".\" or \"..\" segments",
+        "renaming": "Renaming {name}",
+        "removing": "Removing {name}",
+        "clash": "{folder} already has an icon named \"{name}\"",
+        "onlyImages": "Only PNG and SVG files can be added as icons",
+        "adding": "Adding {count} icons | Adding {count} icon | Adding {count} icons",
+        "moving": "Moving {name}"
+    }
+}

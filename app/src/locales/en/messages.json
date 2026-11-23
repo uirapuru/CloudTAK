@@ -1,0 +1,77 @@
+{
+    "schedule": {
+        "cronFields": "Cron expressions require 6 fields: minutes hours day-of-month month day-of-week year",
+        "cronDayField": "One of day-of-month or day-of-week must be \"?\"",
+        "empty": "Schedule cannot be empty",
+        "rateFormat": "Rates must be in the format rate(<frequency> <seconds{'|'}minutes{'|'}hours{'|'}days>)",
+        "unknownType": "Schedules must be either a rate(...) or cron(...) expression",
+        "runsEveryOne": "Runs once every {unit}",
+        "runsEvery": "Runs once every {count} {unit}",
+        "unit_second_one": "second",
+        "unit_second_few": "seconds",
+        "unit_second_many": "seconds",
+        "unit_minute_one": "minute",
+        "unit_minute_few": "minutes",
+        "unit_minute_many": "minutes",
+        "unit_hour_one": "hour",
+        "unit_hour_few": "hours",
+        "unit_hour_many": "hours",
+        "unit_day_one": "day",
+        "unit_day_few": "days",
+        "unit_day_many": "days"
+    },
+    "loading": {
+        "waitingResume": "Waiting for app to resume…",
+        "startingWorker": "Starting worker…",
+        "initializingWorker": "Initializing worker…",
+        "checkingPermissions": "Checking permissions…",
+        "mapConfig": "Loading map configuration…",
+        "creatingMap": "Creating map…",
+        "overlays": "Loading overlays…",
+        "menus": "Building menus…",
+        "profile": "Loading your profile…",
+        "connecting": "Connecting to server…",
+        "styles": "Setting up styles…",
+        "account": "Checking your account…",
+        "signingIn": "Signing you in…"
+    },
+    "map": {
+        "navigationFeatureMissing": "Unable to load feature for navigation",
+        "navigationUnsupported": "Navigation is only supported for Point and Route (b-m-r LineString) features"
+    },
+    "float": {
+        "noFeeds": "Cannot add Stream as it does not have any valid feeds"
+    },
+    "draw": {
+        "editError": "Error editing this feature: {reason}"
+    },
+    "overlay": {
+        "createdNotLoaded": "Overlay was created but could not be loaded",
+        "dataSyncLoadFailed": "Failed to load the Data Sync onto the map"
+    },
+    "validators": {
+        "notEmpty": "This field cannot be empty",
+        "urlProtocol": "URL must start with one of {protocols}",
+        "latLngPair": "Must have contain latitude,longitude",
+        "latNaN": "First number (latitude) is not a number",
+        "lngNaN": "Second number (longitude) is not a number",
+        "latMin": "Latitude cannot be less than -90°",
+        "latMax": "Latitude cannot exceed 90°",
+        "lngMin": "Longitude cannot be less than -180°",
+        "lngMax": "Longitude cannot exceed 180°"
+    },
+    "senders": {
+        "tooMany": "No more than {max} senders are allowed",
+        "invalid": "{sender} is not an address or {'@'}domain"
+    },
+    "coordinates": {
+        "required": "Coordinates are required",
+        "unparsable": "Unable to parse coordinates",
+        "expectedDecimal": "Expected a valid decimal, DM, or DMS coordinate pair",
+        "expectedUtm": "Expected UTM coordinates like \"13S 500000 4400000\"",
+        "expectedMgrs": "Expected MGRS coordinates like \"13S EC 12345 67890\"",
+        "utmBounds": "Latitude is outside supported UTM bounds",
+        "mgrsZone": "Expected a valid MGRS zone letter",
+        "bngBounds": "Coordinates are outside the British National Grid"
+    }
+}

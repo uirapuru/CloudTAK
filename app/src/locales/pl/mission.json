@@ -1,0 +1,143 @@
+{
+    "common": {
+        "filter": "Filtruj",
+        "retry": "Ponów",
+        "create": "Utwórz",
+        "name": "Nazwa",
+        "keywords": "Słowa kluczowe"
+    },
+    "roles": {
+        "owner": "Właściciel",
+        "subscriber": "Subskrybent",
+        "readOnly": "Tylko odczyt",
+        "unknown": "Nieznana"
+    },
+    "users": {
+        "title": "Subskrybenci misji",
+        "invite": "Zaproś użytkownika",
+        "username": "Nazwa użytkownika",
+        "inviteButton": "Zaproś",
+        "pendingInvites": "Oczekujące zaproszenia",
+        "unknownRole": "Nieznana rola",
+        "revokeInvite": "Cofnij zaproszenie",
+        "empty": "Brak subskrybentów misji",
+        "editUser": "Edytuj użytkownika",
+        "removeUser": "Usuń użytkownika",
+        "alreadyInvited": "{invitee} ma już zaproszenie"
+    },
+    "chats": {
+        "title": "Czaty misji"
+    },
+    "log": {
+        "updating": "Aktualizowanie wpisu",
+        "unknownAuthor": "Nieznany autor",
+        "unread": "Nieprzeczytany",
+        "edit": "Edytuj wpis",
+        "time": "Czas wpisu",
+        "noDtg": "Brak DTG"
+    },
+    "logs": {
+        "title": "Dziennik misji",
+        "download": "Pobierz dziennik",
+        "filters": "Filtry",
+        "clear": "Wyczyść",
+        "noKeywords": "Brak słów kluczowych",
+        "empty": "Brak wpisów",
+        "creating": "Tworzenie wpisu",
+        "create": "Nowy wpis",
+        "entryPlaceholder": "Dodaj wpis…",
+        "save": "Zapisz wpis",
+        "defaultType": "Domyślny",
+        "sort": {
+            "alphaAsc": "A → Z",
+            "alphaDesc": "Z → A"
+        }
+    },
+    "layers": {
+        "title": "Warstwy misji",
+        "newLayer": "Nowa warstwa misji",
+        "loading": "Wczytywanie warstw...",
+        "retrySync": "Ponów synchronizację",
+        "search": "Szukaj obiektów po znaku wywoławczym...",
+        "noMatch": "Brak pasujących obiektów",
+        "folderEmpty": "Folder jest pusty",
+        "empty": "Brak warstw",
+        "folderName": "Nazwa folderu",
+        "folderNoFeatures": "Ten folder nie może zawierać obiektów",
+        "pendingFeature": "obiekty: 1",
+        "pendingFeatures": "obiekty: {count}",
+        "pendingDelete": "usunięcia: 1",
+        "pendingDeletes": "usunięcia: {count}",
+        "pendingJoin": ", ",
+        "notSynced": "Niezsynchronizowane: {parts}",
+        "sort": {
+            "newest": "Od najnowszych",
+            "oldest": "Od najstarszych",
+            "alphaAsc": "Alfabetycznie A→Z",
+            "alphaDesc": "Alfabetycznie Z→A"
+        }
+    },
+    "changes": {
+        "title": "Zmiany w misji",
+        "loadFailed": "Nie udało się wczytać zmian w misji",
+        "empty": "Brak ostatnich zmian w misji",
+        "created": "Utworzono misję: {name}",
+        "newMessage": "Nowa wiadomość",
+        "contentAdded": "Dodano zawartość",
+        "contentRemoved": "Usunięto zawartość",
+        "fetchAll": "Pobierz wszystkie zmiany"
+    },
+    "invites": {
+        "title": "Zaproszenie do misji",
+        "invited": "Masz zaproszenie do misji:",
+        "ignore": "Zignoruj",
+        "accept": "Akceptuj",
+        "delete": "Usuń zaproszenie"
+    },
+    "contents": {
+        "title": "Pliki misji",
+        "upload": "Wgraj plik",
+        "noFiles": "Brak plików",
+        "noPhotos": "Brak zdjęć",
+        "photos": "Zdjęcia",
+        "files": "Pliki",
+        "download": "Pobierz plik",
+        "import": "Importuj plik"
+    },
+    "info": {
+        "title": "Informacje o misji",
+        "mission": "Misja",
+        "zoom": "Przybliż do obiektów misji",
+        "created": "Utworzono",
+        "subscribers": "Subskrybenci",
+        "users": "Użytkownicy: {count}",
+        "contents": "Zawartość",
+        "files": "Pliki: {count}",
+        "groups": "Grupy (kanały)",
+        "noKeywords": "Brak słów kluczowych",
+        "addKeywords": "Dodaj słowa kluczowe",
+        "description": "Opis",
+        "noDescription": "Brak opisu",
+        "advanced": "Zaawansowane",
+        "defaultRole": "Domyślna rola subskrybenta",
+        "editDefaultRole": "Edytuj domyślną rolę",
+        "saving": "Zapisywanie...",
+        "password": "Hasło",
+        "passwordProtected": "Chroniona hasłem",
+        "noPassword": "Bez hasła",
+        "change": "Zmień",
+        "setPassword": "Ustaw hasło",
+        "changePassword": "Zmień hasło",
+        "remove": "Usuń",
+        "quickActions": "Szybkie akcje",
+        "updatingSubscription": "Aktualizowanie subskrypcji...",
+        "subscribe": "Subskrybuj",
+        "unsubscribe": "Anuluj subskrypcję",
+        "makeActive": "Ustaw jako aktywną",
+        "deactivate": "Dezaktywuj",
+        "inviteQr": "Kod QR zaproszenia",
+        "inviteQrTitle": "{name} – kod QR zaproszenia",
+        "loadingQr": "Wczytywanie kodu QR...",
+        "childMissions": "Misje podrzędne"
+    }
+}

@@ -1,0 +1,498 @@
+{
+    "channelInfo": {
+        "onlyShown": "{label} are only shown if the channel in which they belong is turned on",
+        "dataSyncs": "Data Syncs"
+    },
+    "offlineBadge": {
+        "title": "Available offline on this device",
+        "offline": "Offline"
+    },
+    "notSyncedBadge": {
+        "syncing": "Syncing",
+        "notSynced": "Not Synced",
+        "submitting": "Submitting this change to the server",
+        "savedLocally": "This change is saved on this device and has not reached the server yet",
+        "savedLocallyError": "This change is saved on this device and has not reached the server yet: {error}",
+        "retry": "{reason} - Click to retry"
+    },
+    "floatingGeneric": {
+        "panel": "Panel"
+    },
+    "polygonArea": {
+        "label": "Area",
+        "squareFeet": "Square Feet",
+        "squareMeters": "Square Meters",
+        "acresShort": "acres",
+        "acres": "Acres",
+        "hectares": "Hectares"
+    },
+    "lineLength": {
+        "label": "Length",
+        "feet": "Feet",
+        "yards": "Yards",
+        "meters": "Meters",
+        "kilometers": "Kilometers",
+        "miles": "Miles",
+        "notALine": "Not a Line!"
+    },
+    "warnChannels": {
+        "title": "No Channels Active",
+        "basis": "Channels are the basis of who and what you are able to see in TAK",
+        "noActive": "At this time you do not have any active channels and as such you will not see any Users, Data Packages, or Data Syncs associated with channels.",
+        "recommended": "It is recommended to turn on relevant channels now",
+        "selectChannels": "Select Channels"
+    },
+    "jsonModal": {
+        "title": "JSON Object"
+    },
+    "common": {
+        "done": "Done",
+        "noDescription": "No Description",
+        "biDirectional": "Bi-Directional",
+        "locationSharing": "Location Sharing",
+        "noLocationSharing": "No Location Sharing",
+        "filter": "Filter",
+        "sort": "Sort",
+        "download": "Download",
+        "home": "Home",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "saving": "Saving...",
+        "clear": "Clear",
+        "none": "None",
+        "share": "Share",
+        "moreOptions": "More Options",
+        "moveToDataSync": "Move to Data Sync",
+        "addToDataSync": "Add to Data Sync",
+        "unknown": "Unknown",
+        "cancelShare": "Cancel Share",
+        "shareToSelected": "Share to Selected",
+        "searchPlaceholder": "Search...",
+        "name": "Name",
+        "create": "Create",
+        "priority": {
+            "critical": "critical",
+            "high": "high",
+            "medium": "medium",
+            "low": "low",
+            "none": "none"
+        },
+        "back": "Back",
+        "filterPlaceholder": "Filter...",
+        "roles": {
+            "Team_Member": "Team Member",
+            "Team_Lead": "Team Lead",
+            "HQ": "HQ",
+            "Sniper": "Sniper",
+            "Medic": "Medic",
+            "Forward_Observer": "Forward Observer",
+            "RTO": "RTO",
+            "K9": "K9"
+        }
+    },
+    "timesFooter": {
+        "toggle": "Toggle relative & absolute time"
+    },
+    "copyButton": {
+        "copy": "Copy",
+        "copied": "Copied"
+    },
+    "videoLeaseSourceType": {
+        "vehicle": "Vehicle",
+        "bodyCamera": "Body Camera",
+        "uasRotorcraft": "UAS Rotorcraft",
+        "mannedRotorcraft": "Manned Rotorcraft",
+        "fixedWing": "Fixed Wing",
+        "uasFixedWing": "UAS Fixed Wing",
+        "screenshare": "Screenshare",
+        "unknown": "Unknown Source"
+    },
+    "coordinateType": {
+        "pointIcon": "Point Icon",
+        "custom": "Custom Point",
+        "unknown": "Unknown Point",
+        "friendly": "Friendly Point",
+        "hostile": "Hostile Point",
+        "neutral": "Neutral Point"
+    },
+    "emptyInfo": {
+        "noChannels": "No Channels are active",
+        "channelSelection": "Channel Selection",
+        "noMissions": "No Data Syncs have been subscribed to that have Write Access"
+    },
+    "standardItemProfileSession": {
+        "unknownBrowser": "Unknown Browser",
+        "terminate": "Terminate Session"
+    },
+    "offlineDownloader": {
+        "downloading": "Downloading for Offline Use",
+        "available": "Available Offline",
+        "make": "Make Available Offline"
+    },
+    "standardItemLayer": {
+        "adminLayer": "Admin Layer",
+        "layerId": "Layer ID",
+        "incomingOutgoing": "Incoming & Outgoing",
+        "outgoing": "Outgoing",
+        "incoming": "Incoming",
+        "unconfigured": "Unconfigured"
+    },
+    "standardItemImport": {
+        "sourceImport": "{source} Import",
+        "retry": "Retry Import",
+        "download": "Download File"
+    },
+    "floatingAttachment": {
+        "noPreview": "No preview available for {ext} files."
+    },
+    "standardCoreDevice": {
+        "stale": "Stale",
+        "onMap": "On Map",
+        "notOnMap": "Not on Map",
+        "simulated": "Simulated"
+    },
+    "pathBrowser": {
+        "show": "Show Folder",
+        "hide": "Hide Folder",
+        "rename": "Rename Folder"
+    },
+    "groupSelect": {
+        "filter": "Filter Channels...",
+        "selectUpToOne": "Select up to {limit} Channel",
+        "selectUpToMany": "Select up to {limit} Channels",
+        "loading": "Loading Channels",
+        "none": "No Groups",
+        "tooMany": "Cannot select more than {limit} Channels"
+    },
+    "inlineKeywords": {
+        "label": "Keywords",
+        "edit": "Edit keywords",
+        "none": "No keywords provided",
+        "add": "Add keywords"
+    },
+    "locationDisclosure": {
+        "sentToServer": "Your location is sent to the TAK server you are connected to and shared with members of your team.",
+        "adminControls": "The server's administrator controls whether location data is stored and for how long.",
+        "persistentNotification": "A persistent notification is shown whenever CloudTAK is sharing your location in the background.",
+        "noAdvertising": "CloudTAK does not use your location for advertising.",
+        "notNow": "Not now",
+        "requesting": "Requesting...",
+        "agree": "Agree and continue",
+        "alwaysAndroid": "\"Allow all the time\"",
+        "alwaysIOS": "\"Always\"",
+        "titleBackground": "Background location",
+        "titleLocation": "Location access",
+        "leadBackground": "CloudTAK shares your location with your team even when the app is closed or not in use, so your position stays current on the map while you are not looking at it.",
+        "leadNative": "CloudTAK collects your device's location, including when the app is closed or not in use, so your team can see your position on the map.",
+        "leadBrowser": "CloudTAK collects your device's location while it is open in your browser so your team can see your position on the map.",
+        "nextBackgroundSettings": "Next, CloudTAK will open your device settings. Set Location to {always} to keep sharing your position in the background.",
+        "nextBackgroundAndroid": "Next, Android will ask for background location access. Choose \"Allow all the time\" to keep sharing your position in the background. You can change this anytime in Settings.",
+        "nextBackgroundIOS": "Next, iOS will ask to change location access to \"Always\". Choose \"Change to Always Allow\" to keep sharing your position in the background. You can change this anytime in Settings.",
+        "nextSettings": "Next, CloudTAK will open your device settings. Set Location to {always} to share your position with your team, including in the background.",
+        "nextAndroid": "Next, Android will ask for location access. Choose \"While using the app\" or \"Allow all the time\" to continue. You can change this anytime in Settings.",
+        "nextIOS": "Next, iOS will ask for location access. Choose \"Allow While Using App\" to continue. You can change this anytime in Settings.",
+        "nextBrowser": "Next, your browser will ask for location access. You can change this anytime in your browser settings."
+    },
+    "coordinate": {
+        "label": "Coordinates"
+    },
+    "breadcrumb": {
+        "title": "Breadcrumb",
+        "liveTrail": "Live Trail",
+        "loadHistory": "Load History",
+        "load": "Load",
+        "loaded": "Loaded {count} points",
+        "noHistory": "No history in that window",
+        "hours1": "1 Hour",
+        "hours4": "4 Hours",
+        "hours8": "8 Hours",
+        "hours24": "24 Hours"
+    },
+    "contact": {
+        "startChat": "Start Chat"
+    },
+    "coreEntityType": {
+        "loading": "Loading Event Types",
+        "type": "Type",
+        "other": "Other",
+        "back": "Back to Preconfigured Types"
+    },
+    "subscriptions": {
+        "enabled": "User has Channel Enabled",
+        "disabled": "User has Channel Disabled",
+        "details": "Show Details"
+    },
+    "inlineExpiration": {
+        "label": "Expiry",
+        "edit": "Edit expiry",
+        "inputLabel": "Expiration Time"
+    },
+    "inlineGroupSelect": {
+        "label": "Groups (Channels)",
+        "edit": "Edit channels"
+    },
+    "messageComposer": {
+        "placeholder": "Write a message…",
+        "post": "Post",
+        "hint": "Ctrl+Enter to {action}"
+    },
+    "selectFeats": {
+        "title": "Selected Features",
+        "newPackage": "New Data Package",
+        "delete": "Delete Features"
+    },
+    "standardItemBasemap": {
+        "slopeBeta": "Slope angle shading is in beta - rendering may change",
+        "compositeBeta": "Raster compositing is in beta - rendering may change",
+        "beta": "Beta",
+        "private": "Private",
+        "public": "Public",
+        "hidden": "Hidden"
+    },
+    "keywords": {
+        "suggested": "Suggested",
+        "inputPlaceholder": "keyword...",
+        "add": "Add keyword",
+        "new": "New Keyword",
+        "none": "No Keywords"
+    },
+    "floatingVideo": {
+        "streaming": "Streaming",
+        "title": "Video Stream",
+        "watchers": "Watchers",
+        "watcher": "Watcher",
+        "push": "Push to Video Wall",
+        "pushing": "Pushing",
+        "wallError": "Video Wall Error"
+    },
+    "formWizard": {
+        "title": "Complete Required Forms",
+        "progress": "Form {step} of {total}",
+        "submittedFor": "Submitted for {name}",
+        "submitContinue": "Submit & Continue",
+        "submit": "Submit"
+    },
+    "standardCoreEntity": {
+        "eventType": "Event Type",
+        "active": "Active",
+        "ended": "Ended",
+        "connection": "Connection #{id}",
+        "unknownCreator": "Unknown Creator",
+        "endedAgo": "Ended {time}",
+        "endsIn": "Ends {time}"
+    },
+    "groupSelectDropdown": {
+        "placeholder": "Select a Channel",
+        "title": "Channels",
+        "refresh": "Refresh Channels",
+        "loading": "Loading Channels",
+        "noMatching": "No Matching Channels",
+        "none": "No Channels"
+    },
+    "boardSelectDropdown": {
+        "placeholder": "Select a Board",
+        "title": "Boards",
+        "refresh": "Refresh Boards",
+        "loading": "Loading Boards",
+        "noMatching": "No Matching Boards",
+        "none": "No Boards"
+    },
+    "featureIcon": {
+        "alt": "Feature Icon"
+    },
+    "selectBasemapCollection": {
+        "label": "Collection Folder",
+        "create": "Create Folder in Path",
+        "newName": "New folder name",
+        "add": "Add Folder",
+        "existing": "Select Existing Folder",
+        "loading": "Loading folders",
+        "none": "No folders"
+    },
+    "shareToPackage": {
+        "title": "Create Data Package",
+        "contents": "Contents:",
+        "noContents": "No Contents",
+        "hashtags": "Hashtags"
+    },
+    "icons": {
+        "filter": "Filter iconsets and icons",
+        "loading": "Loading Iconsets",
+        "noMatches": "No matches",
+        "none": "No Iconsets",
+        "open": "Open Iconset",
+        "noIcons": "No icons yet.",
+        "showAll": "Show all {count} icons"
+    },
+    "createCoreEntity": {
+        "title": "Create Event",
+        "creating": "Creating Event",
+        "priority": "Priority",
+        "location": "Location",
+        "locationPlaceholder": "Address or place name",
+        "remarks": "Remarks",
+        "shareToChannels": "Share to Channels",
+        "selectChannel": "Select at least one Channel to share the Event with"
+    },
+    "menuTemplate": {
+        "close": "Close Menu",
+        "loading": "Loading {name}"
+    },
+    "featureRow": {
+        "viewInfo": "View Info",
+        "remove": "Remove",
+        "noCallsign": "No Callsign",
+        "show": "Show Feature",
+        "hide": "Hide Feature"
+    },
+    "floatingPane": {
+        "close": "Close Pane"
+    },
+    "formSelect": {
+        "requiredHint": "The Form must be completed - click to make it optional",
+        "optionalHint": "The Form is optional - click to make it required",
+        "required": "Required",
+        "optional": "Optional",
+        "remove": "Remove Form",
+        "attach": "Attach a Form",
+        "title": "Forms",
+        "refresh": "Refresh Forms",
+        "loading": "Loading Forms",
+        "noMatching": "No Matching Forms",
+        "none": "No Forms shared with this Channel"
+    },
+    "genericChat": {
+        "selected": "{count} selected",
+        "none": "No Chat Messages",
+        "scrollBottom": "Scroll to bottom",
+        "send": "Send",
+        "placeholder": "Send Message...",
+        "status": {
+            "sending": "Sending",
+            "sent": "Sent to Server",
+            "pending": "Pending Delivery",
+            "failed": "Failed to Deliver",
+            "delivered": "Delivered",
+            "read": "Read"
+        }
+    },
+    "iconSelectOffline": {
+        "iconName": "Icon: {name}",
+        "select": "Select Icon",
+        "label": "Icon Select",
+        "noIconsets": "No Iconsets Loaded",
+        "notFound": "Icon Not Found",
+        "noneSelected": "No Icon Selected",
+        "remove": "Remove Icon",
+        "noIcon": "No Icon",
+        "search": "Icon Search",
+        "showNames": "Show Icon Names",
+        "loadingIcons": "Loading Icons",
+        "notFoundMessage": "Icon not found: {icon}"
+    },
+    "share": {
+        "title": "Share Features",
+        "users": "Users",
+        "channels": "Channels",
+        "dataSyncs": "Data Syncs",
+        "broadcast": "Broadcast To All Users"
+    },
+    "copyField": {
+        "editor": "Editor",
+        "doneEditing": "Done Editing",
+        "editField": "Edit Field",
+        "edit": "Edit"
+    },
+    "drawOverlay": {
+        "drawPoint": "Draw Point",
+        "droppingMultiple": "Dropping Multiple Points",
+        "dropMultiple": "Drop Multiple Points",
+        "doneDropping": "Done Dropping Points",
+        "finish": "Finish Drawing",
+        "cancel": "Cancel Editing",
+        "circle": "Circle Editing",
+        "rectangle": "Rectangle Editing",
+        "line": "Line Editing",
+        "polygon": "Polygon Editing",
+        "sector": "Sector Editing",
+        "lasso": "Lasso Select",
+        "existing": "Editing Existing Feature",
+        "closeSettings": "Close Settings",
+        "openSettings": "Open Settings",
+        "more": "More",
+        "snappingHelp": "Choose the type of line to draw.",
+        "noSnapping": "No Snapping",
+        "layerSelection": "Layer Selection",
+        "layerSelectionHelp": "Features will be selected from the chosen layer.",
+        "mapFeatures": "Map Features"
+    },
+    "warnConfiguration": {
+        "detailsIntro": "Before you get started, tell other TAK users who you are. These can be changed at any time from Settings.",
+        "callsign": "Callsign",
+        "callsignHelp": "The name other users will see you as on the map",
+        "callsignPlaceholder": "Enter your callsign",
+        "team": "Team",
+        "role": "Role",
+        "phone": "Phone Number",
+        "phoneHelp": "Optional - shared with other users in your channels",
+        "permissionsIntro": "CloudTAK needs the following permissions to keep your team informed. You can review these later under Settings.",
+        "getStarted": "Get Started",
+        "skip": "Skip for now",
+        "refresh": "Refresh",
+        "welcome": "Welcome to CloudTAK",
+        "permissions": "Permissions",
+        "location": "Location",
+        "locationNative": "Share your live position with your team, including when the app is closed or not in use.",
+        "locationBrowser": "Share your live position with your team on the map.",
+        "notifications": "Notifications",
+        "notificationsHelp": "Receive alerts for chats, pages, and mission updates.",
+        "status": {
+            "granted": "Allowed",
+            "whenInUse": "While Using",
+            "denied": "Re-request",
+            "prompt": "Request",
+            "unsupported": "Unsupported"
+        },
+        "reRequest": "Re-request Permission",
+        "request": "Request Permission",
+        "refreshFailed": "Failed to refresh permission status",
+        "requestFailed": "Failed to request {type} permission"
+    },
+    "searchBox": {
+        "pickingTitle": "Click on map to select location",
+        "pickTitle": "Select location on map",
+        "picking": "Click on the map to select a location",
+        "emptyTitle": "Search the map",
+        "emptySubtitle": "Find places, addresses, coordinates, or features by callsign or remarks",
+        "noResults": "No Results",
+        "navigate": "Navigate",
+        "select": "Select",
+        "types": {
+            "address": "Address",
+            "street": "Street",
+            "poi": "Point of Interest",
+            "trailhead": "Trailhead",
+            "parking": "Parking",
+            "hospital": "Hospital",
+            "police": "Police",
+            "park": "Park",
+            "peak": "Peak",
+            "locality": "City or Town",
+            "region": "Region",
+            "postal": "Postal Code"
+        },
+        "groups": {
+            "coordinate": "Coordinates",
+            "feature": "Map Features",
+            "overlay": "Overlays",
+            "place": "Places"
+        },
+        "overlayKind": {
+            "vector": "Vector",
+            "raster": "Raster",
+            "terrain": "Terrain"
+        },
+        "overlayHidden": "{kind} · Hidden",
+        "goToCoordinate": "Go to coordinate"
+    }
+}

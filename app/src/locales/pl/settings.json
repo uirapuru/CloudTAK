@@ -21,9 +21,9 @@
         "values": {
             "display_stale": {
                 "Immediate": "Od razu",
-                "10 Minutes": "Po 10 minutach",
-                "30 Minutes": "Po 30 minutach",
-                "1 Hour": "Po godzinie",
+                "10_Minutes": "Po 10 minutach",
+                "30_Minutes": "Po 30 minutach",
+                "1_Hour": "Po godzinie",
                 "Never": "Nigdy"
             },
             "display_text": {
@@ -41,15 +41,15 @@
                 "feet": "stopy"
             },
             "display_area": {
-                "square meter": "metry kwadratowe",
-                "square feet": "stopy kwadratowe",
+                "square_meter": "metry kwadratowe",
+                "square_feet": "stopy kwadratowe",
                 "acre": "akry",
                 "hectare": "hektary"
             },
             "display_speed": {
-                "m/s": "m/s",
-                "km/h": "km/h",
-                "mi/h": "mi/h"
+                "m_s": "m/s",
+                "km_h": "km/h",
+                "mi_h": "mi/h"
             },
             "display_radiation_dose": {
                 "sieverts": "siwerty",
@@ -60,7 +60,7 @@
                 "mercator": "Mercator"
             },
             "display_style": {
-                "System Default": "Jak w systemie",
+                "System_Default": "Jak w systemie",
                 "Light": "Jasny",
                 "Dark": "Ciemny"
             },
@@ -72,7 +72,7 @@
             "display_wakelock": {
                 "Default": "Domyślnie",
                 "Charging": "Podczas ładowania",
-                "Always On": "Zawsze"
+                "Always_On": "Zawsze"
             }
         }
     }

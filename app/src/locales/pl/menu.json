@@ -1,0 +1,244 @@
+{
+    "common": {
+        "filter": "Filtruj",
+        "filters": "Filtry",
+        "clear": "Wyczyść",
+        "status": "Stan",
+        "create": "Utwórz",
+        "edit": "Edytuj",
+        "export": "Eksportuj",
+        "moreOptions": "Więcej opcji",
+        "name": "Nazwa",
+        "none": "Brak",
+        "offline": "To urządzenie jest offline.",
+        "zoomTo": "Przybliż"
+    },
+    "channelChangeModal": {
+        "title": "Zmieniła się lista kanałów",
+        "body": "Serwer zaktualizował listę dostępnych kanałów. Czy chcesz przejrzeć i zaktualizować przypisanie do kanałów i grup?",
+        "dismiss": "Pomiń",
+        "update": "Zaktualizuj kanały"
+    },
+    "debugger": {
+        "title": "Debugger CoT",
+        "uid": "UID CoT",
+        "error": "Błąd historii obiektów",
+        "none": "Brak obiektów"
+    },
+    "basemaps": {
+        "title": "Mapy bazowe",
+        "create": "Utwórz mapę bazową",
+        "none": "Brak map bazowych",
+        "edit": "Edytuj mapę bazową",
+        "addOverlay": "Dodaj nakładkę",
+        "addAsOverlay": "Dodaj jako nakładkę",
+        "downloadXml": "Pobierz XML",
+        "share": "Udostępnij"
+    },
+    "channels": {
+        "title": "Kanały",
+        "allOn": "Włącz wszystkie kanały",
+        "allOff": "Wyłącz wszystkie kanały",
+        "active": "Aktywne",
+        "inactive": "Nieaktywne"
+    },
+    "chat": {
+        "select": "Zaznacz czaty",
+        "send": "Wyślij wiadomość..."
+    },
+    "chats": {
+        "title": "Czaty",
+        "newChat": "Nowy czat"
+    },
+    "connections": {
+        "title": "Połączenia",
+        "create": "Utwórz połączenie",
+        "none": "Brak połączeń",
+        "loadError": "Nie udało się wczytać połączeń"
+    },
+    "contacts": {
+        "title": "Kontakty",
+        "none": "Brak kontaktów",
+        "online": "Online",
+        "noneOnline": "Brak kontaktów online",
+        "recentlyOffline": "Niedawno offline",
+        "noneOffline": "Brak kontaktów offline"
+    },
+    "featView": {
+        "title": "Obiekt",
+        "endNavigation": "Zakończ nawigację",
+        "navigate": "Nawiguj",
+        "cut": "Wytnij do znacznika",
+        "location": "Położenie",
+        "center": "Środek",
+        "elevation": "Wysokość",
+        "description": "Opis",
+        "attributes": "Atrybuty",
+        "openLink": "Otwórz link",
+        "noAttributes": "Brak atrybutów",
+        "details": "Szczegóły",
+        "debug": "Debug",
+        "noName": "Bez nazwy"
+    },
+    "featuresTabs": {
+        "features": "Obiekty",
+        "events": "Zdarzenia",
+        "devices": "Urządzenia"
+    },
+    "features": {
+        "title": "Obiekty",
+        "deleteAll": "Usuń wszystkie obiekty",
+        "geometry": "Geometria",
+        "point": "Punkt",
+        "line": "Linia",
+        "polygon": "Wielokąt",
+        "createFolder": "Utwórz folder",
+        "renameFolder": "Zmień nazwę folderu",
+        "folderName": "Nazwa folderu",
+        "folderPlaceholder": "Operacje",
+        "folderEmpty": "Folder jest pusty",
+        "loading": "Wczytywanie obiektów",
+        "recentlyDeleted": "Niedawno usunięte",
+        "noMatching": "Brak pasujących obiektów",
+        "noArchived": "Brak zapisanych obiektów"
+    },
+    "featuresDeleted": {
+        "title": "Usunięte obiekty",
+        "loading": "Wczytywanie usuniętych obiektów",
+        "restore": "Przywróć obiekty"
+    },
+    "featuresDevices": {
+        "search": "Szukaj urządzeń",
+        "cached": "Urządzenia z pamięci podręcznej",
+        "cachedDescription": "{reason} Widać tylko urządzenia, które dotarły na mapę.",
+        "loading": "Wczytywanie urządzeń",
+        "none": "Brak urządzeń",
+        "unreachable": "Brak połączenia z API urządzeń."
+    },
+    "featuresEvents": {
+        "create": "Utwórz zdarzenie",
+        "search": "Szukaj zdarzeń",
+        "noChannels": "Brak dostępnych kanałów",
+        "cached": "Zdarzenia z pamięci podręcznej",
+        "cachedDescription": "{reason} Widać tylko zdarzenia, które dotarły na mapę.",
+        "loading": "Wczytywanie zdarzeń",
+        "none": "Brak zdarzeń",
+        "unreachable": "Brak połączenia z API zdarzeń."
+    },
+    "files": {
+        "title": "Pliki",
+        "upload": "Wyślij plik",
+        "online": "Online",
+        "offline": "Offline",
+        "imports": "Importy",
+        "importsDescription": "Przeglądaj importy danych i zarządzaj nimi",
+        "openImports": "Otwórz importy",
+        "none": "Brak plików",
+        "folderPlaceholder": "Dokumenty",
+        "moveTitle": "Przenieś plik do folderu",
+        "root": "/ (główny)"
+    },
+    "filesOffline": {
+        "none": "Brak plików offline",
+        "connectToAdd": "Połącz się, aby dodać do mapy jako nakładkę",
+        "remove": "Usuń z urządzenia"
+    },
+    "filesRow": {
+        "shareChannel": "Udostępnij na kanale",
+        "shared": "Udostępniony",
+        "sharedFromUser": "Plik udostępniony przez innego użytkownika",
+        "sharedToChannel": "Udostępniony na kanale",
+        "sharedFrom": "Udostępnił: {username}. Działania właściciela są niedostępne.",
+        "addOverlay": "Dodaj do mapy jako nakładkę",
+        "overlayExists": "Nakładka już dodana",
+        "notOptimized": "Format nie jest Cloud Optimized",
+        "unsupported": "Nie można dodać do mapy - nieobsługiwany format",
+        "download": "Pobierz",
+        "addDataSync": "Dodaj do Data Sync",
+        "createPackage": "Utwórz paczkę danych",
+        "rename": "Zmień nazwę pliku",
+        "move": "Przenieś do folderu",
+        "delete": "Usuń plik"
+    },
+    "history": {
+        "title": "Historia",
+        "clearAll": "Wyczyść wszystkie ślady",
+        "loadHistory": "Wczytaj historię",
+        "loadDescription": "Wszystkie CoT zgłoszone do serwera w wybranym oknie czasu, jako punkty, które można wskazać i otworzyć.",
+        "window": "Okno czasu",
+        "hour1": "1 godzina",
+        "hours4": "4 godziny",
+        "hours8": "8 godzin",
+        "hours24": "24 godziny",
+        "bboxOnly": "Tylko bieżący widok mapy",
+        "loading": "Wczytywanie historii…",
+        "load": "Wczytaj",
+        "loaded": "Wczytane punkty: {count}",
+        "noHistory": "Brak historii w tym oknie czasu",
+        "none": "Brak śladów",
+        "filter": "Filtruj ślady…",
+        "summary": "Ślady: {shown} z {total} · punkty: {points}",
+        "pts": "{count} pkt",
+        "liveTrail": "Ślad na żywo",
+        "viewCot": "Pokaż CoT",
+        "clearTrail": "Wyczyść ślad"
+    },
+    "icon": {
+        "title": "Ikona",
+        "data": "Plik ikony",
+        "type2525b": "Typ 2525B",
+        "iconset": "Zestaw ikon",
+        "quickActions": "Szybkie akcje",
+        "dropPoint": "Postaw punkt",
+        "iconOffline": "Ikona nie jest dostępna offline. Odśwież, aby zsynchronizować ten zestaw ikon.",
+        "iconsetOffline": "Zestaw ikon nie jest dostępny offline. Odśwież, aby go zsynchronizować.",
+        "deleteUnsynced": "Ikonę można usunąć dopiero po synchronizacji z serwerem."
+    },
+    "iconsetEdit": {
+        "unnamed": "Bez nazwy",
+        "regenerate": "Wygeneruj ponownie arkusz ikon",
+        "loading": "Wczytywanie zestawu ikon",
+        "submit": "Zatwierdź"
+    },
+    "iconsets": {
+        "title": "Zestawy ikon",
+        "create": "Utwórz zestaw ikon",
+        "zipUpload": "Wyślij ZIP"
+    },
+    "iconset": {
+        "addIcons": "Dodaj ikony",
+        "settings": "Ustawienia",
+        "downloadZip": "Pobierz ZIP",
+        "takCompatible": "Zgodny z TAK",
+        "takCompatibleDescription": "Każda ikona jako PNG",
+        "fullCloudtak": "Pełny CloudTAK",
+        "fullCloudtakDescription": "Oryginalne pliki, także SVG",
+        "filter": "Filtruj ikony",
+        "newFolder": "Nowy folder",
+        "folderName": "Nazwa folderu",
+        "noMatching": "Brak pasujących ikon",
+        "noIcons": "Brak ikon",
+        "rename": "Zmień nazwę",
+        "cancelRename": "Anuluj zmianę nazwy",
+        "noFolder": "Bez folderu",
+        "folderActions": "Działania na folderze",
+        "addHere": "Dodaj ikony tutaj",
+        "deleteFolder": "Usuń folder",
+        "deleteFolderDescription": "Ikony trafią do „Bez folderu”",
+        "pendingEmpty": "Pusty. Folder zostanie zapisany, gdy trafi do niego ikona.",
+        "folderEmpty": "Brak ikon w tym folderze.",
+        "footer": "Upuść pliki na folder, aby je tam dodać. Przeciągnij ikonę, aby ją przenieść.",
+        "everyone": "Wszyscy",
+        "onlyYou": "Tylko ty",
+        "onlyUser": "Tylko {username}",
+        "iconCount": "Ikony: {count}",
+        "folderCount": "Foldery: {count}",
+        "invalidFolder": "Nazwa folderu nie może zawierać pustych segmentów ani segmentów „.” i „..”",
+        "renaming": "Zmiana nazwy: {name}",
+        "removing": "Usuwanie: {name}",
+        "clash": "„{folder}” ma już ikonę o nazwie „{name}”",
+        "onlyImages": "Jako ikony można dodać tylko pliki PNG i SVG",
+        "adding": "Dodawanie ikon: {count}",
+        "moving": "Przenoszenie: {name}"
+    }
+}

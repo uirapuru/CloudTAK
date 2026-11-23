@@ -18,6 +18,62 @@
             "display_icon_rotation": "Rotate Icons with Course",
             "display_wakelock": "Keep Screen Awake"
         },
-        "values": {}
+        "values": {
+            "display_stale": {
+                "Immediate": "Immediate",
+                "10_Minutes": "10 Minutes",
+                "30_Minutes": "30 Minutes",
+                "1_Hour": "1 Hour",
+                "Never": "Never"
+            },
+            "display_text": {
+                "Small": "Small",
+                "Medium": "Medium",
+                "Large": "Large"
+            },
+            "display_distance": {
+                "meter": "meter",
+                "kilometer": "kilometer",
+                "mile": "mile"
+            },
+            "display_elevation": {
+                "meter": "meter",
+                "feet": "feet"
+            },
+            "display_area": {
+                "square_meter": "square meter",
+                "square_feet": "square feet",
+                "acre": "acre",
+                "hectare": "hectare"
+            },
+            "display_speed": {
+                "m_s": "m/s",
+                "km_h": "km/h",
+                "mi_h": "mi/h"
+            },
+            "display_radiation_dose": {
+                "sieverts": "sieverts",
+                "rems": "rems"
+            },
+            "display_projection": {
+                "globe": "globe",
+                "mercator": "mercator"
+            },
+            "display_style": {
+                "System_Default": "System Default",
+                "Light": "Light",
+                "Dark": "Dark"
+            },
+            "display_zoom": {
+                "always": "always",
+                "conditional": "conditional",
+                "never": "never"
+            },
+            "display_wakelock": {
+                "Default": "Default",
+                "Charging": "Charging",
+                "Always_On": "Always On"
+            }
+        }
     }
 }

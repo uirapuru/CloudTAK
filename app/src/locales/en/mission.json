@@ -1,0 +1,143 @@
+{
+    "common": {
+        "filter": "Filter",
+        "retry": "Retry",
+        "create": "Create",
+        "name": "Name",
+        "keywords": "Keywords"
+    },
+    "roles": {
+        "owner": "Owner",
+        "subscriber": "Subscriber",
+        "readOnly": "Read Only",
+        "unknown": "Unknown"
+    },
+    "users": {
+        "title": "Mission Subscribers",
+        "invite": "Invite User",
+        "username": "Username",
+        "inviteButton": "Invite",
+        "pendingInvites": "Pending Invites",
+        "unknownRole": "Unknown Role",
+        "revokeInvite": "Revoke Invite",
+        "empty": "No Mission Subscribers",
+        "editUser": "Edit User",
+        "removeUser": "Remove User",
+        "alreadyInvited": "{invitee} has already been invited"
+    },
+    "chats": {
+        "title": "Mission Chats"
+    },
+    "log": {
+        "updating": "Updating Log",
+        "unknownAuthor": "Unknown Author",
+        "unread": "Unread",
+        "edit": "Edit Log",
+        "time": "Log Time",
+        "noDtg": "No DTG"
+    },
+    "logs": {
+        "title": "Mission Logs",
+        "download": "Download Logs",
+        "filters": "Filters",
+        "clear": "Clear",
+        "noKeywords": "No keywords available",
+        "empty": "No Logs",
+        "creating": "Creating Log",
+        "create": "Create Log",
+        "entryPlaceholder": "Add a log entry…",
+        "save": "Save Log",
+        "defaultType": "Default",
+        "sort": {
+            "alphaAsc": "A → Z",
+            "alphaDesc": "Z → A"
+        }
+    },
+    "layers": {
+        "title": "Mission Layers",
+        "newLayer": "New Mission Layer",
+        "loading": "Loading Layers...",
+        "retrySync": "Retry Sync",
+        "search": "Search features by callsign...",
+        "noMatch": "No matching features",
+        "folderEmpty": "Folder is empty",
+        "empty": "No Layers",
+        "folderName": "Folder Name",
+        "folderNoFeatures": "This folder cannot contain features",
+        "pendingFeature": "1 feature",
+        "pendingFeatures": "{count} features",
+        "pendingDelete": "1 delete",
+        "pendingDeletes": "{count} deletes",
+        "pendingJoin": " & ",
+        "notSynced": "{parts} not synced",
+        "sort": {
+            "newest": "Newest → Oldest",
+            "oldest": "Oldest → Newest",
+            "alphaAsc": "Alphabetical A→Z",
+            "alphaDesc": "Alphabetical Z→A"
+        }
+    },
+    "changes": {
+        "title": "Mission Changes",
+        "loadFailed": "Failed to load Mission Changes",
+        "empty": "No Recent Mission Changes",
+        "created": "Mission Created: {name}",
+        "newMessage": "New Message",
+        "contentAdded": "Content Added",
+        "contentRemoved": "Content Removed",
+        "fetchAll": "Fetch All Changes"
+    },
+    "invites": {
+        "title": "Mission Invitation",
+        "invited": "You have been invited to join the mission:",
+        "ignore": "Ignore",
+        "accept": "Accept",
+        "delete": "Delete Invite"
+    },
+    "contents": {
+        "title": "Mission Files",
+        "upload": "Upload File",
+        "noFiles": "No Files",
+        "noPhotos": "No Photos",
+        "photos": "Photos",
+        "files": "Files",
+        "download": "Download Asset",
+        "import": "Import File"
+    },
+    "info": {
+        "title": "Mission Info",
+        "mission": "Mission",
+        "zoom": "Zoom to Mission Features",
+        "created": "Created",
+        "subscribers": "Subscribers",
+        "users": "{count} Users",
+        "contents": "Contents",
+        "files": "{count} Files",
+        "groups": "Groups (Channels)",
+        "noKeywords": "No keywords provided",
+        "addKeywords": "Add keywords",
+        "description": "Description",
+        "noDescription": "No Feed Description",
+        "advanced": "Advanced",
+        "defaultRole": "Default Subscriber Role",
+        "editDefaultRole": "Edit default role",
+        "saving": "Saving...",
+        "password": "Password",
+        "passwordProtected": "Password protected",
+        "noPassword": "No password",
+        "change": "Change",
+        "setPassword": "Set Password",
+        "changePassword": "Change Password",
+        "remove": "Remove",
+        "quickActions": "Quick Actions",
+        "updatingSubscription": "Updating Subscription...",
+        "subscribe": "Subscribe",
+        "unsubscribe": "Unsubscribe",
+        "makeActive": "Make Active",
+        "deactivate": "Deactivate",
+        "inviteQr": "Invite QR Code",
+        "inviteQrTitle": "{name} Invite QR",
+        "loadingQr": "Loading QR Code...",
+        "childMissions": "Child Missions"
+    }
+}

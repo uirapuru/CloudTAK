@@ -1,13 +1,17 @@
 <template>
     <div class='row'>
-        <TablerLabel
+        <div
             v-if='label'
-            :label='label'
-            :description='description'
-            :required='required'
+            class='col-12 d-flex my-1'
         >
+            <label
+                class='px-2 w-100'
+                :class='{ required }'
+                :title='description || undefined'
+                v-text='label'
+            />
             <slot />
-        </TablerLabel>
+        </div>
         <div class='col-12'>
             <select
                 v-model='current'
@@ -33,7 +37,6 @@
  * text shown to the user (e.g. the value "meter" shown as "metr").
  */
 import { ref, watch, computed } from 'vue';
-import TablerLabel from '@tak-ps/vue-tabler/components/internal/Label.vue';
 
 export type EnumOption = string | { value: string; label: string };
 

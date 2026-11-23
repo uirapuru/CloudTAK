@@ -1,0 +1,77 @@
+{
+    "schedule": {
+        "cronFields": "Wyrażenie cron wymaga 6 pól: minuty godziny dzień-miesiąca miesiąc dzień-tygodnia rok",
+        "cronDayField": "Jedno z pól dzień-miesiąca lub dzień-tygodnia musi mieć wartość „?”",
+        "empty": "Harmonogram nie może być pusty",
+        "rateFormat": "Interwał musi mieć format rate(<frequency> <seconds{'|'}minutes{'|'}hours{'|'}days>)",
+        "unknownType": "Harmonogram musi być wyrażeniem rate(...) lub cron(...)",
+        "runsEveryOne": "Uruchamiane co {unit}",
+        "runsEvery": "Uruchamiane co {count} {unit}",
+        "unit_second_one": "sekundę",
+        "unit_second_few": "sekundy",
+        "unit_second_many": "sekund",
+        "unit_minute_one": "minutę",
+        "unit_minute_few": "minuty",
+        "unit_minute_many": "minut",
+        "unit_hour_one": "godzinę",
+        "unit_hour_few": "godziny",
+        "unit_hour_many": "godzin",
+        "unit_day_one": "dzień",
+        "unit_day_few": "dni",
+        "unit_day_many": "dni"
+    },
+    "loading": {
+        "waitingResume": "Oczekiwanie na wznowienie aplikacji…",
+        "startingWorker": "Uruchamianie procesu roboczego…",
+        "initializingWorker": "Inicjalizacja procesu roboczego…",
+        "checkingPermissions": "Sprawdzanie uprawnień…",
+        "mapConfig": "Wczytywanie konfiguracji mapy…",
+        "creatingMap": "Tworzenie mapy…",
+        "overlays": "Wczytywanie nakładek…",
+        "menus": "Budowanie menu…",
+        "profile": "Wczytywanie profilu…",
+        "connecting": "Łączenie z serwerem…",
+        "styles": "Przygotowywanie stylów…",
+        "account": "Sprawdzanie konta…",
+        "signingIn": "Logowanie…"
+    },
+    "map": {
+        "navigationFeatureMissing": "Nie udało się wczytać obiektu do nawigacji",
+        "navigationUnsupported": "Nawigacja działa tylko dla punktów i tras (b-m-r LineString)"
+    },
+    "float": {
+        "noFeeds": "Nie można dodać strumienia, bo nie ma żadnego poprawnego feedu"
+    },
+    "draw": {
+        "editError": "Błąd edycji obiektu: {reason}"
+    },
+    "overlay": {
+        "createdNotLoaded": "Nakładka została utworzona, ale nie udało się jej wczytać",
+        "dataSyncLoadFailed": "Nie udało się wczytać Data Sync na mapę"
+    },
+    "validators": {
+        "notEmpty": "To pole nie może być puste",
+        "urlProtocol": "Adres URL musi zaczynać się od jednego z: {protocols}",
+        "latLngPair": "Wymagany format: szerokość,długość",
+        "latNaN": "Pierwsza wartość (szerokość) nie jest liczbą",
+        "lngNaN": "Druga wartość (długość) nie jest liczbą",
+        "latMin": "Szerokość nie może być mniejsza niż -90°",
+        "latMax": "Szerokość nie może przekraczać 90°",
+        "lngMin": "Długość nie może być mniejsza niż -180°",
+        "lngMax": "Długość nie może przekraczać 180°"
+    },
+    "senders": {
+        "tooMany": "Dozwolonych nadawców: maksymalnie {max}",
+        "invalid": "{sender} nie jest adresem ani {'@'}domeną"
+    },
+    "coordinates": {
+        "required": "Współrzędne są wymagane",
+        "unparsable": "Nie udało się odczytać współrzędnych",
+        "expectedDecimal": "Oczekiwano poprawnej pary współrzędnych w formacie dziesiętnym, DM lub DMS",
+        "expectedUtm": "Oczekiwano współrzędnych UTM w postaci „13S 500000 4400000”",
+        "expectedMgrs": "Oczekiwano współrzędnych MGRS w postaci „13S EC 12345 67890”",
+        "utmBounds": "Szerokość jest poza obsługiwanym zakresem UTM",
+        "mgrsZone": "Oczekiwano poprawnej litery strefy MGRS",
+        "bngBounds": "Współrzędne są poza British National Grid"
+    }
+}

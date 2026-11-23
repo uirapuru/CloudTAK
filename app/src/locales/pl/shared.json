@@ -1,0 +1,254 @@
+{
+    "common": {
+        "unknown": "Nieznany",
+        "create": "Utwórz",
+        "refresh": "Odśwież",
+        "back": "Wstecz",
+        "name": "Nazwa"
+    },
+    "certificateBadge": {
+        "expired": "Wygasł",
+        "nearExpiry": "Wkrótce wygaśnie"
+    },
+    "certificateChannelsBadge": {
+        "enabledTitle": "TAK Server uwzględnia wybór kanałów dla tego certyfikatu",
+        "disabledTitle": "Wystawiony bez rozszerzenia Extended Key Usage dla kanałów - TAK Server ignoruje wybór kanałów dla tego certyfikatu",
+        "enabled": "Kanały",
+        "disabled": "Bez kanałów"
+    },
+    "certificateInfo": {
+        "validFrom": "Certyfikat ważny od",
+        "validTo": "Certyfikat ważny do",
+        "expiredCertificate": "Certyfikat wygasł",
+        "subject": "Podmiot certyfikatu",
+        "channelsEnabled": "Kanały włączone",
+        "enabled": "Włączone",
+        "disabled": "Wyłączone"
+    },
+    "initialAuthor": {
+        "author": "Autor"
+    },
+    "offline": {
+        "title": "Brak połączenia",
+        "requiresNetwork": "Ta funkcja wymaga połączenia z siecią.",
+        "checkConnection": "Sprawdź połączenie i spróbuj ponownie."
+    },
+    "tableFooter": {
+        "noEntries": "Brak wpisów",
+        "of": "z"
+    },
+    "basemapSelect": {
+        "loadingBasemap": "Wczytywanie mapy bazowej",
+        "removeBasemap": "Usuń mapę bazową",
+        "unknownBasemap": "Nieznana mapa bazowa",
+        "noDefaultBasemap": "Brak domyślnej mapy bazowej",
+        "loadingBasemaps": "Wczytywanie map bazowych",
+        "failedToLoad": "Nie udało się wczytać podanej mapy bazowej",
+        "filter": "Filtruj mapy bazowe...",
+        "noBasemaps": "Nie znaleziono map bazowych"
+    },
+    "dataSelect": {
+        "noneSelected": "Nie wybrano Data Sync - dane trafią jako CoT bezpośrednio do połączenia",
+        "statusName": "(Status) Nazwa"
+    },
+    "esriFilter": {
+        "title": "Filtr warstwy ESRI",
+        "sqlQuery": "Zapytanie SQL",
+        "testQuery": "Testuj zapytanie",
+        "queryError": "Błąd zapytania",
+        "loadingFeatures": "Wczytywanie obiektów",
+        "saveFilter": "Zapisz filtr"
+    },
+    "esriPortalCreate": {
+        "title": "Utwórz usługę obiektów",
+        "serviceName": "Nazwa usługi"
+    },
+    "groupSelectModal": {
+        "selectedCount": "Wybrane kanały: {count}",
+        "title": "Udostępnij w kanałach"
+    },
+    "groupSelect": {
+        "filter": "Filtruj kanały...",
+        "selectUpTo": "Wybierz maksymalnie {limit} kanałów",
+        "loading": "Wczytywanie kanałów",
+        "noGroups": "Brak grup",
+        "tooMany": "Nie można wybrać więcej niż {limit} kanałów"
+    },
+    "esri": {
+        "connectionError": "Błąd połączenia z ESRI",
+        "closeExplorer": "Zamknij przeglądarkę",
+        "tokenRequiredList": "Do wyświetlenia serwerów potrzebny jest token uwierzytelniający",
+        "tokenRequiredCreate": "Do utworzenia usługi potrzebny jest token uwierzytelniający"
+    },
+    "esriPortal": {
+        "closeViewer": "Zamknij podgląd",
+        "connecting": "Łączenie z portalem ESRI",
+        "title": "Przeglądarka portalu ESRI",
+        "createHostedService": "Utwórz usługę hostowaną",
+        "noServers": "Brak serwerów ArcGIS",
+        "filterByTitle": "Filtruj po tytule",
+        "searchingContent": "Wyszukiwanie zawartości",
+        "noContent": "Brak elementów",
+        "attributes": "Atrybuty",
+        "readOnly": "Portal jest tylko do odczytu",
+        "noServersPresent": "Brak serwerów"
+    },
+    "esriServer": {
+        "connecting": "Łączenie z serwerem ESRI",
+        "noServices": "Brak usług",
+        "noLayers": "Brak warstw",
+        "deleteLayer": "Usuń warstwę"
+    },
+    "handleForm": {
+        "type": "Wpisz:",
+        "suggestions": "aby zobaczyć podpowiedzi szablonu"
+    },
+    "iconSelect": {
+        "label": "Wybór ikony",
+        "loadingIconsets": "Wczytywanie zestawów ikon",
+        "noIconsets": "Nie wczytano zestawów ikon",
+        "notFound": "Nie znaleziono ikony",
+        "noneSelected": "Nie wybrano ikony",
+        "remove": "Usuń ikonę",
+        "select": "Wybierz ikonę",
+        "search": "Szukaj ikony",
+        "showNames": "Pokaż nazwy ikon",
+        "loadingIcons": "Wczytywanie ikon"
+    },
+    "layerAlarmSelect": {
+        "title": "Konfiguracja alarmów",
+        "urgency": "Pilność alarmu",
+        "priority_off": "wyłączone",
+        "priority_high": "wysoka",
+        "priority_low": "niska",
+        "highTitle": "Alarmy o wysokiej pilności",
+        "highDescription": "Używaj tylko dla warstw krytycznych dla misji, które wymagają natychmiastowej reakcji",
+        "lowTitle": "Alarmy o niskiej pilności",
+        "lowDescription": "Używaj dla warstw ważnych, ale niekrytycznych dla misji",
+        "invalidTitle": "Błędna konfiguracja alarmu",
+        "invalidDescription": "Liczba punktów danych do alarmu nie może przekraczać liczby okresów oceny",
+        "evaluationPeriods": "Okresy oceny",
+        "dataPoints": "Punkty danych do alarmu",
+        "period": "Okres (sekundy)",
+        "disabled": "Alarmy wyłączone",
+        "summaryHigh": "Wysoka pilność - {points} z {evals} okresów po {period} s",
+        "summaryLow": "Niska pilność - {points} z {evals} okresów po {period} s"
+    },
+    "layerInfrastructureSelect": {
+        "title": "Infrastruktura",
+        "memory": "Pamięć (Mb)",
+        "timeout": "Limit czasu (s)",
+        "vpc": "Dostęp do sieci prywatnej",
+        "egress": "Stałe adresy wyjściowe",
+        "summary": "Pamięć {memory} Mb - limit czasu {timeout} s",
+        "summaryVpc": "Pamięć {memory} Mb - limit czasu {timeout} s - sieć prywatna",
+        "vpcDescriptionAdmin": "Uruchamiaj w sieci prywatnej, aby żądania wychodziły ze stałych adresów poniżej, a zasoby wewnętrzne były osiągalne. Daje temu ETL wyższy poziom zaufania.",
+        "vpcDescription": "Uruchamiaj w sieci prywatnej, aby żądania wychodziły ze stałych adresów poniżej, a zasoby wewnętrzne były osiągalne. To ustawienie może zmienić tylko administrator systemu."
+    },
+    "layerTaskSelect": {
+        "title": "Wybór zadania",
+        "loadingTasks": "Wczytywanie zadań",
+        "loadingTask": "Wczytywanie zadania",
+        "logoPreview": "Podgląd logo",
+        "upToDate": "Aktualne",
+        "checkUpdates": "Sprawdź aktualizacje",
+        "updateTo": "Zaktualizuj do v{version}",
+        "remove": "Usuń zadanie",
+        "filter": "Filtruj zadania...",
+        "noTasks": "Brak zadań",
+        "info": "Informacje o zadaniu"
+    },
+    "layerTaskUpdateModal": {
+        "title": "Aktualizacja zadania: v{from} → v{to}",
+        "loading": "Wczytywanie uprawnień zadania",
+        "error": "Błąd aktualizacji zadania",
+        "noCapabilities": "Nowa wersja zadania nie publikuje dokumentu Capabilities - obecne uprawnienia warstwy zostaną bez zmian.",
+        "permissionsRequested": "Żądane uprawnienia",
+        "permission": "Uprawnienie",
+        "then": "Przed (v{version})",
+        "now": "Teraz (v{version})",
+        "granted": "Przyznane",
+        "notGranted": "Nieprzyznane",
+        "removed": "Usunięte",
+        "required": "Wymagane",
+        "grant": "Przyznaj",
+        "accept": "Zaakceptuj i zaktualizuj"
+    },
+    "loginSessionsList": {
+        "none": "Brak sesji logowania"
+    },
+    "navHeader": {
+        "home": "Strona główna CloudTAK",
+        "profile": "Profil",
+        "map": "Mapa",
+        "connections": "Połączenia",
+        "admin": "Administracja",
+        "docs": "Dokumentacja",
+        "logout": "Wyloguj"
+    },
+    "publicTilesSelect": {
+        "title": "Wybór kafelków publicznych",
+        "loadingTiles": "Wczytywanie kafelków",
+        "loadingMetadata": "Wczytywanie metadanych kafelków",
+        "remove": "Usuń kafelki",
+        "filter": "Filtruj kafelki...",
+        "loadingList": "Wczytywanie kafelków",
+        "none": "Brak kafelków"
+    },
+    "taskFilter": {
+        "allTasks": "Wszystkie zadania",
+        "search": "Szukaj zadań...",
+        "none": "Brak zadań"
+    },
+    "scheduleInput": {
+        "label": "Harmonogram",
+        "rate": "Interwał",
+        "every": "Co",
+        "frequency": "Częstotliwość",
+        "unit": "Jednostka",
+        "cronExpression": "Wyrażenie cron",
+        "presetEvery15": "Co 15 min",
+        "presetHourly": "Co godzinę",
+        "presetDaily": "Codziennie o 10:15",
+        "presetWeekday": "Dni robocze w godzinach pracy",
+        "frequencyInvalid": "Częstotliwość musi być dodatnią liczbą całkowitą"
+    },
+    "upload": {
+        "sizeWarning": "Przesyłane pliki są ograniczone do 5 GB",
+        "label": "Wybierz plik do przesłania",
+        "upload": "Prześlij",
+        "uploading": "Przesyłanie {name} ({progress}%)",
+        "complete": "{name} - przesyłanie zakończone",
+        "failedWith": "Przesyłanie nie powiodło się: {message}",
+        "parseFailed": "Nie udało się odczytać odpowiedzi",
+        "failed": "Przesyłanie nie powiodło się"
+    },
+    "uploadP12": {
+        "drop": "Upuść tutaj plik .p12",
+        "click": "lub kliknij, aby przesłać",
+        "password": "Hasło P12",
+        "ok": "OK"
+    },
+    "userSelect": {
+        "loading": "Wczytywanie użytkownika...",
+        "none": "Udostępnione publicznie - nie wybrano użytkownika",
+        "remove": "Usuń wybór",
+        "select": "Wybór użytkownika",
+        "filter": "Filtruj..."
+    },
+    "videoPlayer": {
+        "loading": "Wczytywanie strumienia",
+        "error": "Błąd wideo",
+        "retry": "Ponów",
+        "noProtocol": "Brak obsługiwanego protokołu strumieniowania",
+        "buffering": "Buforowanie...",
+        "noProtocolForStream": "Dla tego strumienia nie ma obsługiwanego protokołu",
+        "noWebrtc": "Ta przeglądarka nie obsługuje WebRTC",
+        "codecUnsupported": "Twoja przeglądarka nie obsługuje kodeka wideo wymaganego przez ten strumień",
+        "codecUnsupportedType": "Twoja przeglądarka nie obsługuje kodeka wideo wymaganego przez ten strumień ({type})",
+        "stalled": "Strumień WebRTC zatrzymał się",
+        "couldNotStart": "Nie udało się uruchomić strumienia",
+        "noPlayback": "Ta przeglądarka nie obsługuje ani WebRTC, ani HLS.js.",
+        "urlFailed": "Nie udało się wczytać adresu wideo"
+    }
+}

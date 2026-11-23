@@ -1,0 +1,376 @@
+{
+    "coreEntityTimes": {
+        "created": "Utworzono",
+        "createdBy": "przez {username}",
+        "updated": "Zaktualizowano"
+    },
+    "email": {
+        "label": "E-mail"
+    },
+    "phone": {
+        "label": "Telefon"
+    },
+    "times": {
+        "updated": "Zaktualizowano",
+        "start": "Początek",
+        "stale": "Nieaktualny"
+    },
+    "coreEntityAssignmentFields": {
+        "name": "Imię i nazwisko",
+        "namePlaceholder": "Jan Kowalski",
+        "role": "Rola",
+        "username": "Nazwa użytkownika",
+        "usernamePlaceholder": "Opcjonalnie - łączy z profilem CloudTAK",
+        "remarks": "Uwagi",
+        "optional": "Opcjonalnie"
+    },
+    "remarks": {
+        "label": "Uwagi"
+    },
+    "coreEntityPriority": {
+        "label": "Priorytet"
+    },
+    "common": {
+        "priority": {
+            "none": "Brak",
+            "low": "Niski",
+            "medium": "Średni",
+            "high": "Wysoki",
+            "critical": "Krytyczny"
+        },
+        "unknown": "NIEZNANE"
+    },
+    "battery": {
+        "title": "Bateria: {battery}%"
+    },
+    "coreEntityLinkFields": {
+        "name": "Nazwa",
+        "namePlaceholder": "Raport z incydentu"
+    },
+    "metadata": {
+        "device": "Urządzenie"
+    },
+    "speed": {
+        "label": "Prędkość",
+        "milesPerHour": "Mile na godzinę",
+        "kilometersPerHour": "Kilometry na godzinę",
+        "metersPerSecond": "Metry na sekundę"
+    },
+    "elevation": {
+        "label": "Wysokość",
+        "feet": "Stopy",
+        "meters": "Metry"
+    },
+    "coreEntityTimelineIcon": {
+        "comment": "Komentarz",
+        "status": "Status",
+        "unit": "Jednostka",
+        "location": "Położenie",
+        "attachment": "Załącznik",
+        "external": "Zewnętrzne"
+    },
+    "coreEntityDuration": {
+        "started": "Rozpoczęto",
+        "ended": "Zakończono",
+        "openEnded": "Bez terminu zakończenia",
+        "startedRequired": "Czas rozpoczęcia jest wymagany"
+    },
+    "mission": {
+        "associatedMission": "Powiązana misja",
+        "removeAssociatedMission": "Usuń powiązaną misję"
+    },
+    "geofence": {
+        "title": "Geofence",
+        "elevationMonitored": "Monitorowana wysokość",
+        "alarmOnEnter": "Alarm przy wejściu",
+        "alarmOnExit": "Alarm przy wyjściu"
+    },
+    "coreEntityStatus": {
+        "startedAt": "Rozpoczęto {time}",
+        "active": "Aktywne · {elapsed}",
+        "endedAt": "Zakończono {time}",
+        "ended": "Zakończone · {elapsed}"
+    },
+    "creator": {
+        "label": "Autor",
+        "toggleTime": "Przełącz czas względny i bezwzględny",
+        "chat": "Czat"
+    },
+    "video": {
+        "title": "Wideo",
+        "url": "Adres URL wideo"
+    },
+    "coreEntityLatestActivity": {
+        "openTimeline": "Otwórz oś czasu",
+        "addNoteToTimeline": "Dodaj notatkę do osi czasu",
+        "latest": "Najnowsze",
+        "typeEntry": "Wpis: {type}",
+        "noActivity": "Brak aktywności",
+        "addNote": "Dodaj notatkę"
+    },
+    "origin": {
+        "from": "Z",
+        "readOnlyTitle": "Twoja rola w tej misji nie pozwala edytować tego obiektu",
+        "readOnly": "Tylko do odczytu"
+    },
+    "sensor": {
+        "title": "Sensor",
+        "type": "Typ",
+        "model": "Model",
+        "unknown": "Nieznany",
+        "rangeLength": "Zasięg sensora",
+        "direction": "Kierunek sensora",
+        "fov": "Pole widzenia sensora"
+    },
+    "bearing": {
+        "label": "Azymut",
+        "degrees": "Stopnie",
+        "radians": "Radiany",
+        "milRadians": "Tysięczne"
+    },
+    "distance": {
+        "label": "Odległość",
+        "feet": "Stopy",
+        "yards": "Jardy",
+        "meters": "Metry",
+        "kilometers": "Kilometry",
+        "miles": "Mile"
+    },
+    "sensorData": {
+        "information": "Informacje o sensorze",
+        "manufacturer": "Producent",
+        "model": "Model",
+        "serialNumber": "Numer seryjny",
+        "battery": "Bateria",
+        "status": "Status",
+        "callsign": "Znak wywoławczy",
+        "class": "Klasa",
+        "type": "Typ",
+        "alarm": "Alarm",
+        "measurements": "Pomiary",
+        "name": "Nazwa",
+        "value": "Wartość",
+        "alarmActive": "ALARM",
+        "normal": "W normie"
+    },
+    "chemSensor": {
+        "title": "Sensor chemiczny",
+        "detections": "Wykrycia",
+        "agent": "Środek",
+        "quantity": "Ilość"
+    },
+    "bioSensor": {
+        "title": "Sensor biologiczny",
+        "dose": "Dawka",
+        "harmful": "Szkodliwy",
+        "yes": "TAK",
+        "no": "Nie"
+    },
+    "radSensor": {
+        "title": "Sensor promieniowania",
+        "gammaStatus": "Status gamma",
+        "neutronStatus": "Status neutronowy",
+        "identifiedIsotopes": "Zidentyfikowane izotopy",
+        "confidence": "Pewność"
+    },
+    "coreEntityExternalId": {
+        "title": "Zewnętrzne identyfikatory",
+        "add": "Dodaj zewnętrzny identyfikator",
+        "none": "Brak zewnętrznych identyfikatorów",
+        "remove": "Usuń zewnętrzny identyfikator",
+        "externalId": "Zewnętrzny identyfikator",
+        "save": "Zapisz zewnętrzny identyfikator",
+        "discard": "Odrzuć zewnętrzny identyfikator",
+        "system": "System",
+        "systemDescription": "Litery, cyfry, kropki, myślniki i podkreślenia",
+        "id": "ID"
+    },
+    "coreEntityMetadata": {
+        "title": "Metadane",
+        "add": "Dodaj metadane",
+        "none": "Brak metadanych",
+        "remove": "Usuń metadane",
+        "save": "Zapisz metadane",
+        "discard": "Odrzuć metadane",
+        "key": "Klucz",
+        "value": "Wartość"
+    },
+    "coreEntityLinks": {
+        "title": "Linki",
+        "add": "Dodaj link",
+        "none": "Brak linków",
+        "edit": "Edytuj link",
+        "untitled": "Link bez nazwy"
+    },
+    "style": {
+        "title": "Styl",
+        "icon": "Ikona",
+        "color": "Kolor",
+        "opacity": "Krycie",
+        "stroke": "Obrys",
+        "lineStyle": "Styl linii",
+        "width": "Grubość",
+        "fill": "Wypełnienie",
+        "fillOpacity": "Krycie wypełnienia",
+        "strokeStyles": {
+            "solid": "ciągła",
+            "dashed": "kreskowana",
+            "dotted": "kropkowana",
+            "outlined": "z obwódką"
+        }
+    },
+    "coreEntityTimelineEntry": {
+        "you": "ty",
+        "edited": "Ten wpis był edytowany",
+        "editedSuffix": "· edytowano",
+        "markdownHint": "Markdown · Ctrl+Enter zapisuje",
+        "edit": "Edytuj wpis",
+        "writtenByLayer": "Zapisane przez warstwę {name}",
+        "via": "przez {name}",
+        "typeEntry": "Wpis: {type}",
+        "timeline": "Oś czasu"
+    },
+    "coreEntityChannels": {
+        "title": "Kanały",
+        "edit": "Edytuj kanały",
+        "save": "Zapisz kanały",
+        "mustShare": "Zdarzenie musi być udostępnione w co najmniej jednym kanale",
+        "loading": "Wczytywanie kanałów",
+        "selectAtLeastOne": "Wybierz co najmniej jeden kanał, w którym udostępnisz zdarzenie",
+        "none": "Nie udostępniono w żadnym kanale",
+        "openBoard": "Otwórz {name} na tablicy zdarzeń",
+        "nominateTo": "Zgłoś to zdarzenie do {name}",
+        "nominate": "Zgłoś",
+        "channelBitpos": "Kanał {bitpos}"
+    },
+    "attachments": {
+        "title": "Załączniki",
+        "add": "Dodaj załącznik",
+        "loadFailed": "Nie udało się wczytać załączników",
+        "retry": "Ponów",
+        "none": "Brak załączników",
+        "remove": "Usuń załącznik",
+        "download": "Pobierz załącznik"
+    },
+    "coreEntityMission": {
+        "title": "Data Sync",
+        "addExisting": "Dodaj istniejący Data Sync",
+        "create": "Utwórz Data Sync z nazwy, uwag i kanałów zdarzenia",
+        "error": "Błąd Data Sync",
+        "creating": "Tworzenie Data Sync",
+        "select": "Wybierz Data Sync",
+        "loading": "Wczytywanie Data Sync",
+        "filter": "Filtruj Data Sync...",
+        "noneFound": "Nie znaleziono Data Sync",
+        "none": "Brak Data Sync",
+        "remove": "Usuń Data Sync",
+        "nameRequired": "Zdarzenie musi mieć nazwę, zanim utworzysz z niego Data Sync"
+    },
+    "coreEntityAssignments": {
+        "title": "Przydziały",
+        "add": "Dodaj przydział",
+        "loading": "Wczytywanie przydziałów",
+        "none": "Brak przydziałów",
+        "assignment": "Przydział",
+        "save": "Zapisz przydział",
+        "remove": "Usuń przydział",
+        "edit": "Edytuj przydział",
+        "discard": "Odrzuć przydział"
+    },
+    "coreEntityTimeline": {
+        "placeholder": "Dodaj do osi czasu…",
+        "you": "Ty",
+        "notSaved": "Nie zapisano zmiany",
+        "loading": "Wczytywanie osi czasu",
+        "none": "Brak wpisów na osi czasu",
+        "loadingMore": "Wczytywanie…",
+        "showOlderOne": "Pokaż 1 starszy wpis",
+        "showOlder": "Pokaż starsze wpisy: {count}",
+        "today": "Dzisiaj",
+        "yesterday": "Wczoraj"
+    },
+    "coreEntityForms": {
+        "title": "Formularze",
+        "complete": "Wypełnij formularz",
+        "refresh": "Odśwież formularze",
+        "search": "Szukaj...",
+        "loading": "Wczytywanie formularzy",
+        "noMatching": "Brak pasujących formularzy",
+        "noneShared": "Brak formularzy udostępnionych dla tego zdarzenia",
+        "noneCompleted": "Brak wypełnionych formularzy",
+        "unknownUser": "Nieznany użytkownik",
+        "editResponse": "Edytuj odpowiedź",
+        "deleteResponse": "Usuń odpowiedź"
+    },
+    "profile": {
+        "title": "Profil terenu",
+        "generated": "Wygenerowano",
+        "loading": "Wczytywanie profilu terenu",
+        "error": "Błąd profilu terenu",
+        "retry": "Ponów profil terenu",
+        "noSamples": "Brak próbek terenu dla tej linii.",
+        "distance": "Odległość",
+        "minMax": "Min. / maks.",
+        "gain": "Przewyższenie",
+        "loss": "Spadek",
+        "tileConfigFailed": "Nie udało się wczytać konfiguracji kafelków",
+        "tileConfigNoUrl": "Konfiguracja kafelków nie zawiera adresu URL PMTiles",
+        "elevation": "Wysokość",
+        "elevationTooltip": "Wysokość: {value}",
+        "distanceTooltip": "Odległość: {value}",
+        "distanceAxis": "Odległość ({unit})",
+        "elevationAxis": "Wysokość ({unit})"
+    },
+    "links": {
+        "title": "Linki",
+        "add": "Dodaj link zewnętrzny",
+        "none": "Brak linków zewnętrznych",
+        "externalLink": "Link zewnętrzny",
+        "save": "Zapisz link",
+        "remove": "Usuń link",
+        "label": "Etykieta",
+        "openLink": "Otwórz link",
+        "untitled": "Link bez nazwy",
+        "edit": "Edytuj link",
+        "discard": "Odrzuć link",
+        "taskedPersonnel": "Personel z zadaniami",
+        "statusCount": "{status}:",
+        "unknown": "Nieznany"
+    },
+    "type": {
+        "loadingType": "Wczytywanie typu obiektu",
+        "loadingTypeFailed": "Nie udało się wczytać typu obiektu",
+        "retry": "Ponów",
+        "type": "Typ",
+        "userDrawn": "Obiekt narysowany przez użytkownika",
+        "cannotChange": "Nie można zmienić",
+        "filter": "Filtruj",
+        "status": "Status",
+        "loadingTypesFailed": "Nie udało się wczytać typów obiektów",
+        "noTypes": "Nie znaleziono typów",
+        "back": "Wstecz",
+        "noSymbols": "Nie znaleziono symboli",
+        "subtypes": "Podtypy: {count}",
+        "symbolSets": "Zestawy symboli",
+        "affiliations": {
+            "Pending": "Oczekujący",
+            "Assumed_Friendly": "Przypuszczalnie swój",
+            "Friendly": "Swój",
+            "Neutral": "Neutralny",
+            "Suspect": "Podejrzany",
+            "Hostile": "Wrogi",
+            "Joker": "Joker",
+            "Faker": "Faker",
+            "Unknown": "Nieznany",
+            "None": "Brak"
+        },
+        "statuses": {
+            "Present": "Obecny",
+            "Planned": "Planowany",
+            "Fully_Capable": "W pełni sprawny",
+            "Damaged": "Uszkodzony",
+            "Destroyed": "Zniszczony",
+            "Full_to_Capacity": "Pełne obłożenie"
+        }
+    }
+}

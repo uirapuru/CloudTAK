@@ -254,7 +254,7 @@ function itemLabel(item: SettingItem): string {
 // Stored values stay in English (they are what the API expects); only the text is translated.
 function itemOptions(item: SettingItem): { value: string; label: string }[] {
     return (item.options || []).map((value) => {
-        const key = `settings.display.values.${item.key}.${value}`;
+        const key = `settings.display.values.${item.key}.${value.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '')}`;
         return { value, label: te(key) ? t(key) : value };
     });
 }

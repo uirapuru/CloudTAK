@@ -1,0 +1,165 @@
+{
+    "common": {
+        "minZoom": "Min. zoom",
+        "maxZoom": "Maks. zoom",
+        "tileSize": "Rozmiar kafla",
+        "format": "Format",
+        "opacity": "Krycie %",
+        "fetchMetadata": "Pobierz metadane",
+        "beta": "Beta",
+        "basemap": "Mapa bazowa",
+        "overlay": "Nakładka",
+        "changeType": "Zmień typ"
+    },
+    "types": {
+        "zxy": {
+            "label": "ZXY",
+            "description": "Skonfiguruj standardowy szablon kafli XYZ.",
+            "urlLabel": "Szablon URL kafli",
+            "urlDescription": "Podaj standardowy szablon XYZ ze zmiennymi zoom, x i y."
+        },
+        "imageserver": {
+            "label": "ImageServer",
+            "description": "Użyj usługi ArcGIS ImageServer.",
+            "urlLabel": "URL usługi",
+            "urlDescription": "Podaj adres ArcGIS ImageServer dla tej mapy bazowej."
+        },
+        "mapserver": {
+            "label": "MapServer",
+            "description": "Użyj warstwy ArcGIS MapServer.",
+            "urlLabel": "URL usługi",
+            "urlDescription": "Podaj URL warstwy ArcGIS MapServer razem z identyfikatorem warstwy."
+        },
+        "featureserver": {
+            "label": "FeatureServer",
+            "description": "Użyj warstwy ArcGIS FeatureServer.",
+            "urlLabel": "URL usługi",
+            "urlDescription": "Podaj URL warstwy ArcGIS FeatureServer razem z identyfikatorem warstwy."
+        },
+        "tilejson": {
+            "label": "Import TileJSON / WMTS",
+            "description": "Pobierz ustawienia z adresu TileJSON lub WMTS GetCapabilities.",
+            "urlLabel": "URL TileJSON lub WMTS Capabilities",
+            "urlDescription": "Podaj dokument TileJSON albo URL WMTS GetCapabilities, żeby wstępnie wypełnić formularz mapy bazowej. Dopisz ?layer=<identyfikator> do URL WMTS, żeby wybrać warstwę."
+        },
+        "upload": {
+            "label": "Wgraj TAK XML",
+            "description": "Zaimportuj ustawienia mapy bazowej z istniejącego pliku TAK XML.",
+            "urlLabel": "URL kafli",
+            "urlDescription": "Adres kafli lub usługi dla tej mapy bazowej"
+        },
+        "hosted": {
+            "label": "Kafle na serwerze",
+            "description": "Wybierz zestaw kafli PMTiles przechowywany na tym serwerze.",
+            "urlLabel": "URL TileJSON",
+            "urlDescription": "Adres TileJSON przechowywanego zestawu kafli."
+        },
+        "slope": {
+            "label": "Nachylenie stoku",
+            "description": "Cieniuj klasy nachylenia stoku wyliczone z istniejącej mapy bazowej terenu (raster-dem).",
+            "urlLabel": "URL kafli nachylenia",
+            "urlDescription": "Generowany z wybranej mapy terenu i klas nachylenia."
+        },
+        "composite": {
+            "label": "Mapa złożona",
+            "description": "Spłaszcz uporządkowany stos rastrowych map bazowych w jeden zestaw kafli z trybami mieszania.",
+            "urlLabel": "URL kafli złożonych",
+            "urlDescription": "Generowany ze skonfigurowanego stosu warstw."
+        }
+    },
+    "tokens": {
+        "z": "Wstaw zmienną zoom",
+        "x": "Wstaw zmienną X",
+        "y": "Wstaw zmienną Y",
+        "q": "Wstaw zmienną quadkey"
+    },
+    "picker": {
+        "loading": "Wczytywanie map bazowych",
+        "filter": "Filtruj mapy bazowe",
+        "empty": "Brak map bazowych",
+        "zoomRange": "{type} · zoom {min}–{max}"
+    },
+    "slope": {
+        "loading": "Wczytywanie metadanych nachylenia",
+        "filter": "Filtruj mapy terenu",
+        "empty": "Brak map terenu (raster-dem)",
+        "loadingTerrain": "Wczytywanie map terenu",
+        "hint": "Renderowane z mapy terenu nr {dem}. Piksele spoza wszystkich klas pozostają przezroczyste. Użytkownicy mogą zmienić te klasy na własnej nakładce.",
+        "defaultName": "{name} – nachylenie"
+    },
+    "slopeClasses": {
+        "title": "Klasy nachylenia",
+        "reset": "Przywróć domyślne",
+        "add": "Dodaj klasę",
+        "from": "Od °",
+        "to": "Do °",
+        "color": "Kolor",
+        "remove": "Usuń klasę"
+    },
+    "edit": {
+        "title": "Mapy bazowe i nakładki",
+        "newEntry": "Nowy wpis",
+        "downloadXml": "Pobierz TAK XML",
+        "delete": "Usuń mapę bazową / nakładkę",
+        "save": "Zapisz mapę bazową / nakładkę",
+        "selectType": "Przed zapisaniem wybierz typ mapy bazowej"
+    },
+    "arcgis": {
+        "fetching": "Pobieranie metadanych usługi"
+    },
+    "tilejson": {
+        "fetching": "Pobieranie metadanych"
+    },
+    "composite": {
+        "building": "Budowanie mapy złożonej",
+        "filterBottom": "Filtruj mapy rastrowe dla dolnej warstwy",
+        "filter": "Filtruj mapy rastrowe",
+        "empty": "Brak map rastrowych",
+        "layers": "Warstwy (od dołu do góry)",
+        "addLayer": "Dodaj warstwę",
+        "basemapId": "Mapa bazowa nr {id}",
+        "moveDown": "Przesuń w dół",
+        "moveUp": "Przesuń w górę",
+        "removeLayer": "Usuń warstwę",
+        "blend": "Mieszanie",
+        "greyscale": "Skala szarości",
+        "hint": "Do {max} warstw rastrowych spłaszczanych w jeden zestaw kafli.",
+        "defaultName": "{name} – złożona"
+    },
+    "base": {
+        "sharingWarnTitle": "Wyłączasz udostępnianie",
+        "sharingWarnDescription": "Po wyłączeniu udostępniania inni użytkownicy nie będą mogli udostępniać tej mapy bazowej, a jeśli już była udostępniona, stracą do niej dostęp",
+        "name": "Nazwa",
+        "enableSharing": "Włącz udostępnianie",
+        "advanced": "Opcje zaawansowane",
+        "type": "Typ",
+        "terrainEncoding": "Kodowanie terenu",
+        "accessScope": "Zakres dostępu",
+        "scopeUser": "użytkownik",
+        "scopeServer": "serwer",
+        "attribution": "Atrybucja",
+        "attributionPlaceholder": "Atrybucja (opcjonalnie)",
+        "titleField": "Pole tytułu obiektu",
+        "titleFieldDescription": "Właściwość obiektu używana jako tytuł wektora. Wpisz {'{'}{'{'}, żeby przejrzeć pola znalezione w vector_layers.",
+        "hidden": "Ukryta",
+        "hiddenDescription": "Ukryj tę warstwę na domyślnej liście",
+        "frequency": "Częstotliwość odświeżania (sekundy)",
+        "frequencyDescription": "Co ile sekund odświeżać kafle",
+        "enabled": "Włączone",
+        "enableFrequency": "Włącz automatyczne odświeżanie",
+        "enableFrequencyDescription": "Odświeżaj kafle automatycznie co jakiś czas",
+        "enableSnapping": "Włącz przyciąganie",
+        "enableSnappingDescription": "Pozwól narzędziom rysowania przyciągać do obiektów wektorowych pod spodem",
+        "snappingLayer": "Warstwa przyciągania",
+        "snappingLayerChoose": "Wybierz warstwę wektorową, do której przyciągają narzędzia rysowania",
+        "snappingLayerName": "Nazwa warstwy w kaflach wektorowych, do której przyciągać"
+    },
+    "hosted": {
+        "filter": "Filtruj zestawy kafli",
+        "loading": "Wczytywanie zestawów kafli",
+        "empty": "Brak zestawów kafli na serwerze"
+    },
+    "typeSelector": {
+        "filter": "Filtruj typy map bazowych"
+    }
+}

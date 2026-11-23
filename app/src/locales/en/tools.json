@@ -1,0 +1,339 @@
+{
+    "common": {
+        "opacity": "Opacity",
+        "retry": "Retry",
+        "back": "Back",
+        "name": "Name",
+        "color": "Color",
+        "errorOccurred": "An Error Occurred"
+    },
+    "affiliation": {
+        "title": "Affiliation",
+        "context": "Context",
+        "more": "More affiliations",
+        "friendlyFamily": "Friendly family",
+        "hostileFamily": "Hostile family",
+        "other": "Other"
+    },
+    "affiliations": {
+        "f": {
+            "label": "Friendly",
+            "meaning": "Known friendly"
+        },
+        "h": {
+            "label": "Hostile",
+            "meaning": "Known hostile"
+        },
+        "n": {
+            "label": "Neutral",
+            "meaning": "Known neutral"
+        },
+        "u": {
+            "label": "Unknown",
+            "meaning": "Evaluated, affiliation unknown"
+        },
+        "a": {
+            "label": "Assumed friend",
+            "meaning": "Probably friendly, not confirmed"
+        },
+        "s": {
+            "label": "Suspect",
+            "meaning": "Probably hostile, not confirmed"
+        },
+        "j": {
+            "label": "Joker",
+            "meaning": "Friendly playing hostile (exercise)"
+        },
+        "k": {
+            "label": "Faker",
+            "meaning": "Friendly posing as hostile (exercise)"
+        },
+        "p": {
+            "label": "Pending",
+            "meaning": "Not yet evaluated"
+        },
+        "o": {
+            "label": "None",
+            "meaning": "No affiliation"
+        }
+    },
+    "context": {
+        "c0": {
+            "label": "Reality",
+            "meaning": "Real world"
+        },
+        "c1": {
+            "label": "Exercise",
+            "meaning": "Training exercise"
+        },
+        "c2": {
+            "label": "Simulation",
+            "meaning": "Simulated"
+        }
+    },
+    "status": {
+        "title": "Status",
+        "s0": {
+            "label": "Present",
+            "meaning": "At the reported location"
+        },
+        "s1": {
+            "label": "Planned",
+            "meaning": "Anticipated or planned, drawn with a dashed frame"
+        },
+        "s2": {
+            "label": "Fully capable",
+            "meaning": "Present and fully operational"
+        },
+        "s3": {
+            "label": "Damaged",
+            "meaning": "Present with reduced capability"
+        },
+        "s4": {
+            "label": "Destroyed",
+            "meaning": "Present and no longer operational"
+        },
+        "s5": {
+            "label": "Full to capacity",
+            "meaning": "Present and unable to take on more"
+        }
+    },
+    "symbolDetails": {
+        "indicators": "Indicators",
+        "only2525e": "Status, echelon and indicators are only available for 2525E symbols."
+    },
+    "indicators": {
+        "headquarters": "Headquarters",
+        "taskForce": "Task force",
+        "dummy": "Feint / Dummy"
+    },
+    "amplifierGroups": {
+        "Echelon": "Echelon",
+        "Mobility": "Mobility",
+        "Towed_array": "Towed array",
+        "Leadership": "Leadership"
+    },
+    "amplifiers": {
+        "a00": "None",
+        "a11": "Team / Crew",
+        "a12": "Squad",
+        "a13": "Section",
+        "a14": "Platoon / Detachment",
+        "a15": "Company / Battery / Troop",
+        "a16": "Battalion / Squadron",
+        "a17": "Regiment / Group",
+        "a18": "Brigade",
+        "a21": "Division",
+        "a22": "Corps / MEF",
+        "a23": "Army",
+        "a24": "Army Group / Front",
+        "a25": "Region / Theater",
+        "a26": "Command",
+        "a31": "Wheeled, limited cross country",
+        "a32": "Wheeled, cross country",
+        "a33": "Tracked",
+        "a34": "Wheeled and tracked",
+        "a35": "Towed",
+        "a36": "Rail",
+        "a37": "Pack animals",
+        "a41": "Over snow (prime mover)",
+        "a42": "Sled",
+        "a51": "Barge",
+        "a52": "Amphibious",
+        "a61": "Short towed array",
+        "a62": "Long towed array",
+        "a71": "Leader",
+        "a72": "Deputy"
+    },
+    "symbolSets": {
+        "s01": "Air",
+        "s02": "Air missiles",
+        "s05": "Space",
+        "s06": "Space missiles",
+        "s10": "Land units",
+        "s11": "Civilian units",
+        "s15": "Land equipment",
+        "s20": "Installations",
+        "s25": "Control measures",
+        "s27": "Dismounted individuals",
+        "s30": "Sea surface",
+        "s35": "Sea subsurface",
+        "s36": "Mine warfare",
+        "s40": "Activities & incidents",
+        "s45": "Weather - atmospheric",
+        "s46": "Weather - oceanographic",
+        "s47": "Weather - space",
+        "s50": "SIGINT - space",
+        "s51": "SIGINT - air",
+        "s52": "SIGINT - land",
+        "s53": "SIGINT - surface",
+        "s54": "SIGINT - subsurface",
+        "s60": "Cyberspace"
+    },
+    "appearanceRow": {
+        "edit": "Edit Appearance"
+    },
+    "marker": {
+        "title": "Marker",
+        "symbol": "Military symbol",
+        "icon": "Custom icon",
+        "spot": "Spot",
+        "symbolHint": "Color and frame come from affiliation. Pick Custom icon or Spot to choose your own color.",
+        "iconset": "Iconset",
+        "loadingIconsets": "Loading Iconsets",
+        "noIconsets": "No Iconsets Loaded",
+        "iconLabel": "Icon",
+        "filterIcons": "Filter icons",
+        "loadingIcons": "Loading Icons",
+        "noIcons": "No Icons Found",
+        "iconHint": "Shown on the map instead of the military symbol. \"What it is\" stays the same.",
+        "spotHint": "A spot is a plain point in your color - it keeps no type."
+    },
+    "stroke": {
+        "stroke": "Stroke",
+        "lineStyle": "Line style",
+        "width": "Width",
+        "strokeOpacity": "Stroke opacity",
+        "fill": "Fill",
+        "fillOpacity": "Fill opacity",
+        "styles": {
+            "solid": "solid",
+            "dashed": "dashed",
+            "dotted": "dotted",
+            "outlined": "outlined"
+        }
+    },
+    "typeSelect": {
+        "title": "Type",
+        "choose": "Choose a type…",
+        "search": "Search all types",
+        "loading": "Loading Types",
+        "loadFailed": "Loading Types Failed",
+        "noTypes": "No Types Found",
+        "browseAll": "Browse all categories",
+        "symbolSets": "Symbol sets",
+        "noSymbols": "No Symbols Found",
+        "subtypes": "{count} Subtypes"
+    },
+    "colorSwatches": {
+        "color": "Color",
+        "custom": "Custom color"
+    },
+    "colors": {
+        "White": "White",
+        "Red": "Red",
+        "Orange": "Orange",
+        "Yellow": "Yellow",
+        "Green": "Green",
+        "Blue": "Blue",
+        "Purple": "Purple"
+    },
+    "buffer": {
+        "title": "Buffer Geometry",
+        "radius": "Radius",
+        "apply": "Apply"
+    },
+    "coordInput": {
+        "title": "Coordinate Entry",
+        "create": "Create Point"
+    },
+    "rangeInput": {
+        "title": "Range & Bearing",
+        "create": "Create Range & Bearing"
+    },
+    "rangeRings": {
+        "title": "Range Rings",
+        "origin": "Origin",
+        "diameter": "Ring Diameter",
+        "addRing": "Add Ring",
+        "styleOptions": "Style Options",
+        "style": "Style",
+        "create": "Create Range Rings"
+    },
+    "geojson": {
+        "title": "GeoJSON Import",
+        "file": "File",
+        "fyi": "FYI",
+        "largeFiles": "Large GeoJSON files should be uploaded via the Imports menu",
+        "featuresToImport": "Features To Import",
+        "create": "Create Features",
+        "readError": "File read error: No content",
+        "invalid": "Invalid GeoJSON format"
+    },
+    "quickPic": {
+        "title": "Quick Pic",
+        "waiting": "Waiting for photo...",
+        "uploading": "Uploading photo...",
+        "creating": "Creating marker...",
+        "hint": "Take a photo to create a marker at your current location",
+        "take": "Take Photo",
+        "noImage": "Camera returned no image",
+        "noHash": "Upload returned no attachment hash"
+    },
+    "query": {
+        "elevation": "Elevation",
+        "loadingElevation": "Loading elevation...",
+        "noElevation": "No Elevation Data",
+        "magnetic": "Magnetic Declination",
+        "loadingMagnetic": "Loading magnetic data...",
+        "inclination": "Inclination: {value}°",
+        "location": "Location",
+        "loadingLocation": "Loading location...",
+        "noFeatures": "No Features Found"
+    },
+    "sun": {
+        "title": "Sun Phase",
+        "loading": "Loading sun data...",
+        "prevNight": "Prev Night",
+        "moon": "Moon",
+        "illuminated": "{value}% Illuminated",
+        "events": {
+            "Sunrise": "Sunrise",
+            "Sunset": "Sunset",
+            "Dawn": "Dawn",
+            "Dusk": "Dusk",
+            "Solar_Noon": "Solar Noon",
+            "Nadir": "Nadir",
+            "Current_Time": "Current Time"
+        },
+        "moonPhases": {
+            "New_Moon": "New Moon",
+            "Waxing_Crescent": "Waxing Crescent",
+            "First_Quarter": "First Quarter",
+            "Waxing_Gibbous": "Waxing Gibbous",
+            "Full_Moon": "Full Moon",
+            "Waning_Gibbous": "Waning Gibbous",
+            "Last_Quarter": "Last Quarter",
+            "Waning_Crescent": "Waning Crescent"
+        }
+    },
+    "weather": {
+        "nws": "National Weather Service",
+        "loading": "Loading weather...",
+        "wind": "Wind",
+        "humidity": "Humidity",
+        "dewpoint": "Dewpoint",
+        "precipitation": "Precipitation",
+        "none": "No Forecast Found"
+    },
+    "gps": {
+        "gpsFormatTooltip": "GPS Location - Click to change format",
+        "cursorFormatTooltip": "Cursor Position - Click to change format",
+        "copied": "Copied",
+        "copy": "Copy",
+        "notDefined": "Not defined at this location",
+        "cursor": "Cursor",
+        "cursorOffscreen": "Cursor Offscreen",
+        "noGpsFix": "No GPS Fix",
+        "zoomToLocation": "Zoom To Location",
+        "tooltipSetLocation": "Click on map to set location",
+        "tooltipManual": "Manual Location - Click to adjust or switch to GPS",
+        "tooltipLive": "Live Location - Click to set manually",
+        "tooltipAcquiring": "Acquiring GPS",
+        "tooltipSet": "Set Your Location - Click to enable GPS or set manually",
+        "clickMap": "Click map",
+        "manual": "Manual",
+        "acquiring": "Acquiring",
+        "noFix": "No Fix"
+    }
+}

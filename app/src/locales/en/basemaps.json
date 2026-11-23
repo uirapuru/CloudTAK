@@ -1,0 +1,165 @@
+{
+    "common": {
+        "minZoom": "MinZoom",
+        "maxZoom": "MaxZoom",
+        "tileSize": "Tile Size",
+        "format": "Format",
+        "opacity": "Opacity %",
+        "fetchMetadata": "Fetch Metadata",
+        "beta": "Beta",
+        "basemap": "Basemap",
+        "overlay": "Overlay",
+        "changeType": "Change Type"
+    },
+    "types": {
+        "zxy": {
+            "label": "ZXY",
+            "description": "Configure a standard XYZ tile template.",
+            "urlLabel": "Tile URL Template",
+            "urlDescription": "Provide a standard XYZ template using zoom, x, and y variables."
+        },
+        "imageserver": {
+            "label": "ImageServer",
+            "description": "Use an ArcGIS ImageServer service endpoint.",
+            "urlLabel": "Service URL",
+            "urlDescription": "Provide the ArcGIS ImageServer endpoint for this basemap."
+        },
+        "mapserver": {
+            "label": "MapServer",
+            "description": "Use an ArcGIS MapServer layer endpoint.",
+            "urlLabel": "Service URL",
+            "urlDescription": "Provide the ArcGIS MapServer layer URL, including the layer id."
+        },
+        "featureserver": {
+            "label": "FeatureServer",
+            "description": "Use an ArcGIS FeatureServer layer endpoint.",
+            "urlLabel": "Service URL",
+            "urlDescription": "Provide the ArcGIS FeatureServer layer URL, including the layer id."
+        },
+        "tilejson": {
+            "label": "TileJSON / WMTS Import",
+            "description": "Fetch defaults from a TileJSON or WMTS capabilities URL.",
+            "urlLabel": "TileJSON or WMTS Capabilities URL",
+            "urlDescription": "Provide a TileJSON document or WMTS GetCapabilities URL to prefill the basemap form. Add ?layer=<identifier> to a WMTS URL to pick a layer."
+        },
+        "upload": {
+            "label": "TAK XML Upload",
+            "description": "Import basemap settings from an existing TAK XML file.",
+            "urlLabel": "Tile Url",
+            "urlDescription": "The tile endpoint or service URL for this basemap"
+        },
+        "hosted": {
+            "label": "Hosted Tileset",
+            "description": "Select from hosted PMTiles tilesets on this server.",
+            "urlLabel": "TileJSON URL",
+            "urlDescription": "The hosted tileset TileJSON endpoint."
+        },
+        "slope": {
+            "label": "Slope Angle",
+            "description": "Shade slope angle classes rendered from an existing terrain (raster-dem) basemap.",
+            "urlLabel": "Slope Tile URL",
+            "urlDescription": "Generated from the selected terrain basemap and slope classes."
+        },
+        "composite": {
+            "label": "Composite",
+            "description": "Flatten an ordered stack of raster basemaps into a single tile set with blend modes.",
+            "urlLabel": "Composite Tile URL",
+            "urlDescription": "Generated from the configured layer stack."
+        }
+    },
+    "tokens": {
+        "z": "Insert Zoom Variable",
+        "x": "Insert X Variable",
+        "y": "Insert Y Variable",
+        "q": "Insert Quadkey Variable"
+    },
+    "picker": {
+        "loading": "Loading Basemaps",
+        "filter": "Filter basemaps",
+        "empty": "No Basemaps",
+        "zoomRange": "{type} · Zoom {min} - {max}"
+    },
+    "slope": {
+        "loading": "Loading Slope Metadata",
+        "filter": "Filter terrain basemaps",
+        "empty": "No Terrain (raster-dem) Basemaps",
+        "loadingTerrain": "Loading Terrain Basemaps",
+        "hint": "Rendered from terrain basemap #{dem}. Pixels outside every class stay transparent. Users can override these classes on their own overlay.",
+        "defaultName": "{name} Slope"
+    },
+    "slopeClasses": {
+        "title": "Slope Classes",
+        "reset": "Reset Defaults",
+        "add": "Add Class",
+        "from": "From °",
+        "to": "To °",
+        "color": "Colour",
+        "remove": "Remove Class"
+    },
+    "edit": {
+        "title": "Basemaps & Overlays",
+        "newEntry": "New Entry",
+        "downloadXml": "Download TAK XML",
+        "delete": "Delete Basemap / Overlay",
+        "save": "Save Basemap / Overlay",
+        "selectType": "Select a basemap type before saving"
+    },
+    "arcgis": {
+        "fetching": "Fetching Service Metadata"
+    },
+    "tilejson": {
+        "fetching": "Fetching Metadata"
+    },
+    "composite": {
+        "building": "Building Composite",
+        "filterBottom": "Filter raster basemaps for the bottom layer",
+        "filter": "Filter raster basemaps",
+        "empty": "No Raster Basemaps",
+        "layers": "Layers (bottom to top)",
+        "addLayer": "Add Layer",
+        "basemapId": "Basemap #{id}",
+        "moveDown": "Move Down",
+        "moveUp": "Move Up",
+        "removeLayer": "Remove Layer",
+        "blend": "Blend",
+        "greyscale": "Greyscale",
+        "hint": "Up to {max} raster layers are flattened into one tile set.",
+        "defaultName": "{name} Composite"
+    },
+    "base": {
+        "sharingWarnTitle": "You are disabling sharing",
+        "sharingWarnDescription": "Disabling sharing will prevent other users from sharing the basemap and will also disable their access if the basemap has already been shared",
+        "name": "Name",
+        "enableSharing": "Enable Sharing",
+        "advanced": "Advanced Options",
+        "type": "Type",
+        "terrainEncoding": "Terrain Encoding",
+        "accessScope": "Access Scope",
+        "scopeUser": "user",
+        "scopeServer": "server",
+        "attribution": "Attribution",
+        "attributionPlaceholder": "Optional Attribution",
+        "titleField": "Feature Title Field",
+        "titleFieldDescription": "Feature property used as the vector title. Type {'{'}{'{'} to browse fields discovered from vector_layers.",
+        "hidden": "Hidden",
+        "hiddenDescription": "Hide this layer from the default list",
+        "frequency": "Update Frequency (Seconds)",
+        "frequencyDescription": "How often to refresh the tiles in seconds",
+        "enabled": "Enabled",
+        "enableFrequency": "Enable Auto-Update Frequency",
+        "enableFrequencyDescription": "Automatically refresh the tiles periodically",
+        "enableSnapping": "Enable Snapping",
+        "enableSnappingDescription": "Allow drawing tools to snap to the underlying vector features",
+        "snappingLayer": "Snapping Layer",
+        "snappingLayerChoose": "Choose the vector layer to snap drawing tools to",
+        "snappingLayerName": "The specific layer name within the vector tiles to snap to"
+    },
+    "hosted": {
+        "filter": "Filter tilesets",
+        "loading": "Loading Tilesets",
+        "empty": "No Hosted Tilesets"
+    },
+    "typeSelector": {
+        "filter": "Filter basemap types"
+    }
+}

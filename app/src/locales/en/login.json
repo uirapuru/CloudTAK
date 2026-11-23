@@ -1,0 +1,52 @@
+{
+    "lostUser": {
+        "title": "Oops… You just found an error page",
+        "subtitle": "We are sorry but the page you are looking for was not found",
+        "home": "Home"
+    },
+    "pageFooter": {
+        "documentation": "Documentation",
+        "sourceCode": "Source code",
+        "license": "AGPL-3.0 license"
+    },
+    "loading": {
+        "agencyLogo": "Agency Logo",
+        "loadingCloudtak": "Loading CloudTAK",
+        "hardReset": "Hard Reset",
+        "hardResetHint": "If loading has stalled, click to clear the cache and reload."
+    },
+    "login": {
+        "cloudtakLogo": "CloudTAK Logo",
+        "systemLogo": "CloudTAK System Logo",
+        "title": "Login to your account",
+        "loggingIn": "Logging in",
+        "ssoOnly": "This instance only supports Single Sign-On (SSO). Please use the SSO login button below.",
+        "usernameOrEmail": "Username or Email",
+        "notMe": "Not Me",
+        "emailPlaceholder": "your{'@'}email.com",
+        "password": "Password",
+        "forgotPassword": "Forgot Password",
+        "passwordPlaceholder": "Your password",
+        "signIn": "Sign In",
+        "or": "or",
+        "oidcMisconfigured": "OIDC Misconfigured",
+        "oidcMisconfiguredDescription": "The administrator has not configured OIDC correctly. Please contact your system administrator.",
+        "signInWith": "Sign in with {name}",
+        "signInWithPasskey": "Sign in with Passkey",
+        "certRenewalRequired": "Certificate Renewal Required",
+        "certExpired": "Your TAK certificate is expired or no longer valid. Please enter your password to issue a new one.",
+        "certExpiring": "Your TAK certificate is expiring soon. Please enter your password to renew it.",
+        "enterPassword": "Enter your password",
+        "renewCertificate": "Renew Certificate",
+        "skip": "Skip",
+        "noAccount": "Don't have an account yet?",
+        "signUp": "Sign Up",
+        "settings": "Login Settings",
+        "switchServers": "Switch Servers",
+        "running": "Running",
+        "build": "(build: {build})",
+        "noServiceWorkers": "No Service Workers Found",
+        "serviceWorker": "Service Worker",
+        "unregister": "Unregister"
+    }
+}

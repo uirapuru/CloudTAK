@@ -1,0 +1,376 @@
+{
+    "coreEntityTimes": {
+        "created": "Created",
+        "createdBy": "by {username}",
+        "updated": "Updated"
+    },
+    "email": {
+        "label": "Email"
+    },
+    "phone": {
+        "label": "Phone"
+    },
+    "times": {
+        "updated": "Updated",
+        "start": "Start",
+        "stale": "Stale"
+    },
+    "coreEntityAssignmentFields": {
+        "name": "Name",
+        "namePlaceholder": "Jane Doe",
+        "role": "Role",
+        "username": "Username",
+        "usernamePlaceholder": "Optional - links a CloudTAK Profile",
+        "remarks": "Remarks",
+        "optional": "Optional"
+    },
+    "remarks": {
+        "label": "Remarks"
+    },
+    "coreEntityPriority": {
+        "label": "Priority"
+    },
+    "common": {
+        "priority": {
+            "none": "None",
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High",
+            "critical": "Critical"
+        },
+        "unknown": "UNKNOWN"
+    },
+    "battery": {
+        "title": "{battery}% Battery"
+    },
+    "coreEntityLinkFields": {
+        "name": "Name",
+        "namePlaceholder": "Incident Report"
+    },
+    "metadata": {
+        "device": "Device"
+    },
+    "speed": {
+        "label": "Speed",
+        "milesPerHour": "Miles Per Hour",
+        "kilometersPerHour": "Kilometers Per Hour",
+        "metersPerSecond": "Meters Per Second"
+    },
+    "elevation": {
+        "label": "Elevation",
+        "feet": "Feet",
+        "meters": "Meters"
+    },
+    "coreEntityTimelineIcon": {
+        "comment": "Comment",
+        "status": "Status",
+        "unit": "Unit",
+        "location": "Location",
+        "attachment": "Attachment",
+        "external": "External"
+    },
+    "coreEntityDuration": {
+        "started": "Started",
+        "ended": "Ended",
+        "openEnded": "Open Ended",
+        "startedRequired": "Started is required"
+    },
+    "mission": {
+        "associatedMission": "Associated Mission",
+        "removeAssociatedMission": "Remove Associated Mission"
+    },
+    "geofence": {
+        "title": "Geofence",
+        "elevationMonitored": "Elevation Monitored",
+        "alarmOnEnter": "Alarm on Enter",
+        "alarmOnExit": "Alarm on Exit"
+    },
+    "coreEntityStatus": {
+        "startedAt": "Started {time}",
+        "active": "Active · {elapsed}",
+        "endedAt": "Ended {time}",
+        "ended": "Ended · {elapsed}"
+    },
+    "creator": {
+        "label": "Creator",
+        "toggleTime": "Toggle relative & absolute time",
+        "chat": "Chat"
+    },
+    "video": {
+        "title": "Video",
+        "url": "Video URL"
+    },
+    "coreEntityLatestActivity": {
+        "openTimeline": "Open the Timeline",
+        "addNoteToTimeline": "Add a note to the Timeline",
+        "latest": "Latest",
+        "typeEntry": "{type} entry",
+        "noActivity": "No activity yet",
+        "addNote": "Add a note"
+    },
+    "origin": {
+        "from": "From",
+        "readOnlyTitle": "Your role in this Mission does not allow editing this feature",
+        "readOnly": "Read Only"
+    },
+    "sensor": {
+        "title": "Sensor",
+        "type": "Type",
+        "model": "Model",
+        "unknown": "Unknown",
+        "rangeLength": "Sensor Range Length",
+        "direction": "Sensor Direction",
+        "fov": "Sensor FOV"
+    },
+    "bearing": {
+        "label": "Bearing",
+        "degrees": "Degrees",
+        "radians": "Radians",
+        "milRadians": "Mil-Radians"
+    },
+    "distance": {
+        "label": "Distance",
+        "feet": "Feet",
+        "yards": "Yards",
+        "meters": "Meters",
+        "kilometers": "Kilometers",
+        "miles": "Miles"
+    },
+    "sensorData": {
+        "information": "Sensor Information",
+        "manufacturer": "Manufacturer",
+        "model": "Model",
+        "serialNumber": "Serial Number",
+        "battery": "Battery",
+        "status": "Status",
+        "callsign": "Callsign",
+        "class": "Class",
+        "type": "Type",
+        "alarm": "Alarm",
+        "measurements": "Measurements",
+        "name": "Name",
+        "value": "Value",
+        "alarmActive": "ALARM",
+        "normal": "Normal"
+    },
+    "chemSensor": {
+        "title": "Chemical Sensor",
+        "detections": "Detections",
+        "agent": "Agent",
+        "quantity": "Quantity"
+    },
+    "bioSensor": {
+        "title": "Biological Sensor",
+        "dose": "Dose",
+        "harmful": "Harmful",
+        "yes": "YES",
+        "no": "No"
+    },
+    "radSensor": {
+        "title": "Radiation Sensor",
+        "gammaStatus": "Gamma Status",
+        "neutronStatus": "Neutron Status",
+        "identifiedIsotopes": "Identified Isotopes",
+        "confidence": "Confidence"
+    },
+    "coreEntityExternalId": {
+        "title": "External IDs",
+        "add": "Add External ID",
+        "none": "No External IDs",
+        "remove": "Remove External ID",
+        "externalId": "External ID",
+        "save": "Save External ID",
+        "discard": "Discard External ID",
+        "system": "System",
+        "systemDescription": "Letters, numbers, dots, dashes & underscores",
+        "id": "ID"
+    },
+    "coreEntityMetadata": {
+        "title": "Metadata",
+        "add": "Add Metadata",
+        "none": "No Metadata",
+        "remove": "Remove Metadata",
+        "save": "Save Metadata",
+        "discard": "Discard Metadata",
+        "key": "Key",
+        "value": "Value"
+    },
+    "coreEntityLinks": {
+        "title": "Links",
+        "add": "Add Link",
+        "none": "No Links",
+        "edit": "Edit Link",
+        "untitled": "Untitled Link"
+    },
+    "style": {
+        "title": "Style",
+        "icon": "Icon",
+        "color": "Color",
+        "opacity": "Opacity",
+        "stroke": "Stroke",
+        "lineStyle": "Line Style",
+        "width": "Width",
+        "fill": "Fill",
+        "fillOpacity": "Fill Opacity",
+        "strokeStyles": {
+            "solid": "solid",
+            "dashed": "dashed",
+            "dotted": "dotted",
+            "outlined": "outlined"
+        }
+    },
+    "coreEntityTimelineEntry": {
+        "you": "you",
+        "edited": "This entry has been edited",
+        "editedSuffix": "· edited",
+        "markdownHint": "Markdown · Ctrl+Enter to save",
+        "edit": "Edit Entry",
+        "writtenByLayer": "Written by the {name} Layer",
+        "via": "via {name}",
+        "typeEntry": "{type} entry",
+        "timeline": "Timeline"
+    },
+    "coreEntityChannels": {
+        "title": "Channels",
+        "edit": "Edit Channels",
+        "save": "Save Channels",
+        "mustShare": "An Event must be shared with at least one Channel",
+        "loading": "Loading Channels",
+        "selectAtLeastOne": "Select at least one Channel to share the Event with",
+        "none": "Not shared with any Channels",
+        "openBoard": "Open {name} in the Event Board",
+        "nominateTo": "Nominate this Event to {name}",
+        "nominate": "Nominate",
+        "channelBitpos": "Channel {bitpos}"
+    },
+    "attachments": {
+        "title": "Attachments",
+        "add": "Add Attachment",
+        "loadFailed": "Failed to load Attachments",
+        "retry": "Retry",
+        "none": "No Attachments",
+        "remove": "Remove Attachment",
+        "download": "Download Attachment"
+    },
+    "coreEntityMission": {
+        "title": "Data Syncs",
+        "addExisting": "Add an existing Data Sync",
+        "create": "Create a Data Sync from the Event name, remarks & channels",
+        "error": "Data Sync Error",
+        "creating": "Creating Data Sync",
+        "select": "Select Data Sync",
+        "loading": "Loading Data Syncs",
+        "filter": "Filter Data Syncs...",
+        "noneFound": "No Data Syncs Found",
+        "none": "No Data Syncs",
+        "remove": "Remove Data Sync",
+        "nameRequired": "The Event must have a name before a Data Sync can be created from it"
+    },
+    "coreEntityAssignments": {
+        "title": "Assignments",
+        "add": "Add Assignment",
+        "loading": "Loading Assignments",
+        "none": "No Assignments",
+        "assignment": "Assignment",
+        "save": "Save Assignment",
+        "remove": "Remove Assignment",
+        "edit": "Edit Assignment",
+        "discard": "Discard Assignment"
+    },
+    "coreEntityTimeline": {
+        "placeholder": "Add to the timeline…",
+        "you": "You",
+        "notSaved": "Change Not Saved",
+        "loading": "Loading Timeline",
+        "none": "No Timeline Events",
+        "loadingMore": "Loading…",
+        "showOlderOne": "Show 1 older entry",
+        "showOlder": "Show {count} older entries",
+        "today": "Today",
+        "yesterday": "Yesterday"
+    },
+    "coreEntityForms": {
+        "title": "Forms",
+        "complete": "Complete a Form",
+        "refresh": "Refresh Forms",
+        "search": "Search...",
+        "loading": "Loading Forms",
+        "noMatching": "No Matching Forms",
+        "noneShared": "No Forms shared with this Event",
+        "noneCompleted": "No Completed Forms",
+        "unknownUser": "Unknown User",
+        "editResponse": "Edit Response",
+        "deleteResponse": "Delete Response"
+    },
+    "profile": {
+        "title": "Terrain Profile",
+        "generated": "Generated",
+        "loading": "Loading terrain profile",
+        "error": "Terrain Profile Error",
+        "retry": "Retry Terrain Profile",
+        "noSamples": "No terrain samples are available for this line.",
+        "distance": "Distance",
+        "minMax": "Min / Max",
+        "gain": "Gain",
+        "loss": "Loss",
+        "tileConfigFailed": "Failed to load tile configuration",
+        "tileConfigNoUrl": "Tile configuration did not include a PMTiles URL",
+        "elevation": "Elevation",
+        "elevationTooltip": "Elevation: {value}",
+        "distanceTooltip": "Distance: {value}",
+        "distanceAxis": "Distance ({unit})",
+        "elevationAxis": "Elevation ({unit})"
+    },
+    "links": {
+        "title": "Links",
+        "add": "Add External Link",
+        "none": "No External Links",
+        "externalLink": "External Link",
+        "save": "Save Link",
+        "remove": "Remove Link",
+        "label": "Label",
+        "openLink": "Open Link",
+        "untitled": "Untitled Link",
+        "edit": "Edit Link",
+        "discard": "Discard Link",
+        "taskedPersonnel": "Tasked Personnel",
+        "statusCount": "{status}:",
+        "unknown": "Unknown"
+    },
+    "type": {
+        "loadingType": "Loading Feature Type",
+        "loadingTypeFailed": "Loading Feature Type Failed",
+        "retry": "Retry",
+        "type": "Type",
+        "userDrawn": "User Drawn Feature",
+        "cannotChange": "Cannot be changed",
+        "filter": "Filter",
+        "status": "Status",
+        "loadingTypesFailed": "Loading Feature Types Failed",
+        "noTypes": "No Types Found",
+        "back": "Back",
+        "noSymbols": "No Symbols Found",
+        "subtypes": "{count} Subtypes",
+        "symbolSets": "Symbol Sets",
+        "affiliations": {
+            "Pending": "Pending",
+            "Assumed_Friendly": "Assumed Friendly",
+            "Friendly": "Friendly",
+            "Neutral": "Neutral",
+            "Suspect": "Suspect",
+            "Hostile": "Hostile",
+            "Joker": "Joker",
+            "Faker": "Faker",
+            "Unknown": "Unknown",
+            "None": "None"
+        },
+        "statuses": {
+            "Present": "Present",
+            "Planned": "Planned",
+            "Fully_Capable": "Fully Capable",
+            "Damaged": "Damaged",
+            "Destroyed": "Destroyed",
+            "Full_to_Capacity": "Full to Capacity"
+        }
+    }
+}

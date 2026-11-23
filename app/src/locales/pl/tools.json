@@ -1,0 +1,339 @@
+{
+    "common": {
+        "opacity": "Krycie",
+        "retry": "Ponów",
+        "back": "Wstecz",
+        "name": "Nazwa",
+        "color": "Kolor",
+        "errorOccurred": "Wystąpił błąd"
+    },
+    "affiliation": {
+        "title": "Przynależność",
+        "context": "Kontekst",
+        "more": "Więcej przynależności",
+        "friendlyFamily": "Grupa swoich",
+        "hostileFamily": "Grupa wrogich",
+        "other": "Inne"
+    },
+    "affiliations": {
+        "f": {
+            "label": "Swój",
+            "meaning": "Potwierdzony swój"
+        },
+        "h": {
+            "label": "Wrogi",
+            "meaning": "Potwierdzony wrogi"
+        },
+        "n": {
+            "label": "Neutralny",
+            "meaning": "Potwierdzony neutralny"
+        },
+        "u": {
+            "label": "Nieznany",
+            "meaning": "Oceniony, przynależność nieznana"
+        },
+        "a": {
+            "label": "Przypuszczalnie swój",
+            "meaning": "Prawdopodobnie swój, niepotwierdzony"
+        },
+        "s": {
+            "label": "Podejrzany",
+            "meaning": "Prawdopodobnie wrogi, niepotwierdzony"
+        },
+        "j": {
+            "label": "Joker",
+            "meaning": "Swój grający wrogiego (ćwiczenia)"
+        },
+        "k": {
+            "label": "Faker",
+            "meaning": "Swój udający wrogiego (ćwiczenia)"
+        },
+        "p": {
+            "label": "Oczekujący",
+            "meaning": "Jeszcze nieoceniony"
+        },
+        "o": {
+            "label": "Brak",
+            "meaning": "Bez przynależności"
+        }
+    },
+    "context": {
+        "c0": {
+            "label": "Rzeczywistość",
+            "meaning": "Świat rzeczywisty"
+        },
+        "c1": {
+            "label": "Ćwiczenia",
+            "meaning": "Ćwiczenia szkoleniowe"
+        },
+        "c2": {
+            "label": "Symulacja",
+            "meaning": "Symulowany"
+        }
+    },
+    "status": {
+        "title": "Status",
+        "s0": {
+            "label": "Obecny",
+            "meaning": "W zgłoszonym położeniu"
+        },
+        "s1": {
+            "label": "Planowany",
+            "meaning": "Przewidywany lub planowany, rysowany przerywaną ramką"
+        },
+        "s2": {
+            "label": "W pełni sprawny",
+            "meaning": "Obecny i w pełni zdolny do działania"
+        },
+        "s3": {
+            "label": "Uszkodzony",
+            "meaning": "Obecny, z ograniczonymi możliwościami"
+        },
+        "s4": {
+            "label": "Zniszczony",
+            "meaning": "Obecny, niezdolny do działania"
+        },
+        "s5": {
+            "label": "Pełne obłożenie",
+            "meaning": "Obecny, nie przyjmie więcej"
+        }
+    },
+    "symbolDetails": {
+        "indicators": "Wskaźniki",
+        "only2525e": "Status, szczebel i wskaźniki są dostępne tylko dla symboli 2525E."
+    },
+    "indicators": {
+        "headquarters": "Dowództwo",
+        "taskForce": "Zgrupowanie zadaniowe",
+        "dummy": "Pozorny / makieta"
+    },
+    "amplifierGroups": {
+        "Echelon": "Szczebel",
+        "Mobility": "Mobilność",
+        "Towed_array": "Antena holowana",
+        "Leadership": "Dowodzenie"
+    },
+    "amplifiers": {
+        "a00": "Brak",
+        "a11": "Zespół / załoga",
+        "a12": "Drużyna",
+        "a13": "Sekcja",
+        "a14": "Pluton",
+        "a15": "Kompania / bateria",
+        "a16": "Batalion / dywizjon",
+        "a17": "Pułk / grupa",
+        "a18": "Brygada",
+        "a21": "Dywizja",
+        "a22": "Korpus / MEF",
+        "a23": "Armia",
+        "a24": "Grupa armii / front",
+        "a25": "Region / teatr działań",
+        "a26": "Dowództwo",
+        "a31": "Kołowy, ograniczona terenowość",
+        "a32": "Kołowy, terenowy",
+        "a33": "Gąsienicowy",
+        "a34": "Kołowo-gąsienicowy",
+        "a35": "Holowany",
+        "a36": "Kolejowy",
+        "a37": "Zwierzęta juczne",
+        "a41": "Po śniegu (ciągnik)",
+        "a42": "Sanie",
+        "a51": "Barka",
+        "a52": "Amfibia",
+        "a61": "Krótka antena holowana",
+        "a62": "Długa antena holowana",
+        "a71": "Dowódca",
+        "a72": "Zastępca"
+    },
+    "symbolSets": {
+        "s01": "Powietrze",
+        "s02": "Pociski w powietrzu",
+        "s05": "Kosmos",
+        "s06": "Pociski w kosmosie",
+        "s10": "Jednostki lądowe",
+        "s11": "Jednostki cywilne",
+        "s15": "Sprzęt lądowy",
+        "s20": "Obiekty",
+        "s25": "Środki koordynacji",
+        "s27": "Żołnierze pieszo",
+        "s30": "Powierzchnia morza",
+        "s35": "Pod powierzchnią morza",
+        "s36": "Walka minowa",
+        "s40": "Działania i zdarzenia",
+        "s45": "Pogoda - atmosfera",
+        "s46": "Pogoda - oceanografia",
+        "s47": "Pogoda - kosmos",
+        "s50": "SIGINT - kosmos",
+        "s51": "SIGINT - powietrze",
+        "s52": "SIGINT - ląd",
+        "s53": "SIGINT - powierzchnia",
+        "s54": "SIGINT - pod powierzchnią",
+        "s60": "Cyberprzestrzeń"
+    },
+    "appearanceRow": {
+        "edit": "Edytuj wygląd"
+    },
+    "marker": {
+        "title": "Znacznik",
+        "symbol": "Symbol wojskowy",
+        "icon": "Własna ikona",
+        "spot": "Punkt",
+        "symbolHint": "Kolor i ramka wynikają z przynależności. Wybierz „Własna ikona” albo „Punkt”, żeby ustawić własny kolor.",
+        "iconset": "Zestaw ikon",
+        "loadingIconsets": "Wczytywanie zestawów ikon",
+        "noIconsets": "Brak wczytanych zestawów ikon",
+        "iconLabel": "Ikona",
+        "filterIcons": "Filtruj ikony",
+        "loadingIcons": "Wczytywanie ikon",
+        "noIcons": "Nie znaleziono ikon",
+        "iconHint": "Wyświetlana na mapie zamiast symbolu wojskowego. Typ obiektu się nie zmienia.",
+        "spotHint": "Punkt to zwykła kropka w wybranym kolorze, bez typu."
+    },
+    "stroke": {
+        "stroke": "Obrys",
+        "lineStyle": "Styl linii",
+        "width": "Grubość",
+        "strokeOpacity": "Krycie obrysu",
+        "fill": "Wypełnienie",
+        "fillOpacity": "Krycie wypełnienia",
+        "styles": {
+            "solid": "ciągła",
+            "dashed": "kreskowana",
+            "dotted": "kropkowana",
+            "outlined": "z obwódką"
+        }
+    },
+    "typeSelect": {
+        "title": "Typ",
+        "choose": "Wybierz typ…",
+        "search": "Szukaj we wszystkich typach",
+        "loading": "Wczytywanie typów",
+        "loadFailed": "Nie udało się wczytać typów",
+        "noTypes": "Nie znaleziono typów",
+        "browseAll": "Przeglądaj wszystkie kategorie",
+        "symbolSets": "Zestawy symboli",
+        "noSymbols": "Nie znaleziono symboli",
+        "subtypes": "Podtypy: {count}"
+    },
+    "colorSwatches": {
+        "color": "Kolor",
+        "custom": "Własny kolor"
+    },
+    "colors": {
+        "White": "Biały",
+        "Red": "Czerwony",
+        "Orange": "Pomarańczowy",
+        "Yellow": "Żółty",
+        "Green": "Zielony",
+        "Blue": "Niebieski",
+        "Purple": "Fioletowy"
+    },
+    "buffer": {
+        "title": "Bufor geometrii",
+        "radius": "Promień",
+        "apply": "Zastosuj"
+    },
+    "coordInput": {
+        "title": "Wprowadź współrzędne",
+        "create": "Utwórz punkt"
+    },
+    "rangeInput": {
+        "title": "Odległość i azymut",
+        "create": "Utwórz odległość i azymut"
+    },
+    "rangeRings": {
+        "title": "Pierścienie odległości",
+        "origin": "Środek",
+        "diameter": "Średnica pierścienia",
+        "addRing": "Dodaj pierścień",
+        "styleOptions": "Opcje stylu",
+        "style": "Styl",
+        "create": "Utwórz pierścienie odległości"
+    },
+    "geojson": {
+        "title": "Import GeoJSON",
+        "file": "Plik",
+        "fyi": "Uwaga",
+        "largeFiles": "Duże pliki GeoJSON wgrywaj przez menu importu",
+        "featuresToImport": "Obiekty do importu",
+        "create": "Utwórz obiekty",
+        "readError": "Błąd odczytu pliku: brak zawartości",
+        "invalid": "Nieprawidłowy format GeoJSON"
+    },
+    "quickPic": {
+        "title": "Szybkie zdjęcie",
+        "waiting": "Czekam na zdjęcie...",
+        "uploading": "Wysyłanie zdjęcia...",
+        "creating": "Tworzenie znacznika...",
+        "hint": "Zrób zdjęcie, żeby utworzyć znacznik w swojej pozycji",
+        "take": "Zrób zdjęcie",
+        "noImage": "Aparat nie zwrócił zdjęcia",
+        "noHash": "Wysyłanie nie zwróciło identyfikatora załącznika"
+    },
+    "query": {
+        "elevation": "Wysokość",
+        "loadingElevation": "Wczytywanie wysokości...",
+        "noElevation": "Brak danych o wysokości",
+        "magnetic": "Deklinacja magnetyczna",
+        "loadingMagnetic": "Wczytywanie danych magnetycznych...",
+        "inclination": "Inklinacja: {value}°",
+        "location": "Położenie",
+        "loadingLocation": "Wczytywanie położenia...",
+        "noFeatures": "Nie znaleziono obiektów"
+    },
+    "sun": {
+        "title": "Fazy słońca",
+        "loading": "Wczytywanie danych o słońcu...",
+        "prevNight": "Poprzednia noc",
+        "moon": "Księżyc",
+        "illuminated": "Oświetlenie: {value}%",
+        "events": {
+            "Sunrise": "Wschód słońca",
+            "Sunset": "Zachód słońca",
+            "Dawn": "Świt",
+            "Dusk": "Zmierzch",
+            "Solar_Noon": "Górowanie słońca",
+            "Nadir": "Dołowanie słońca",
+            "Current_Time": "Teraz"
+        },
+        "moonPhases": {
+            "New_Moon": "Nów",
+            "Waxing_Crescent": "Przybywający sierp",
+            "First_Quarter": "Pierwsza kwadra",
+            "Waxing_Gibbous": "Przybywający garb",
+            "Full_Moon": "Pełnia",
+            "Waning_Gibbous": "Ubywający garb",
+            "Last_Quarter": "Ostatnia kwadra",
+            "Waning_Crescent": "Ubywający sierp"
+        }
+    },
+    "weather": {
+        "nws": "National Weather Service",
+        "loading": "Wczytywanie pogody...",
+        "wind": "Wiatr",
+        "humidity": "Wilgotność",
+        "dewpoint": "Punkt rosy",
+        "precipitation": "Opady",
+        "none": "Brak prognozy"
+    },
+    "gps": {
+        "gpsFormatTooltip": "Pozycja GPS – kliknij, żeby zmienić format",
+        "cursorFormatTooltip": "Pozycja kursora – kliknij, żeby zmienić format",
+        "copied": "Skopiowano",
+        "copy": "Kopiuj",
+        "notDefined": "Nieokreślone w tym miejscu",
+        "cursor": "Kursor",
+        "cursorOffscreen": "Kursor poza mapą",
+        "noGpsFix": "Brak sygnału GPS",
+        "zoomToLocation": "Przybliż do pozycji",
+        "tooltipSetLocation": "Kliknij mapę, żeby ustawić pozycję",
+        "tooltipManual": "Pozycja ręczna – kliknij, żeby ją zmienić albo przełączyć na GPS",
+        "tooltipLive": "Pozycja na żywo – kliknij, żeby ustawić ręcznie",
+        "tooltipAcquiring": "Szukam sygnału GPS",
+        "tooltipSet": "Ustaw swoją pozycję – kliknij, żeby włączyć GPS albo ustawić ręcznie",
+        "clickMap": "Kliknij mapę",
+        "manual": "Ręczna",
+        "acquiring": "Szukam",
+        "noFix": "Brak sygnału"
+    }
+}

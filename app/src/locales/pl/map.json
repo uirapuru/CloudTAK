@@ -1,0 +1,295 @@
+{
+    "common": {
+        "changeNotSaved": "Zmiana nie została zapisana",
+        "channels": "Kanały",
+        "coords": "Współrzędne",
+        "creator": "Twórca",
+        "details": "Szczegóły",
+        "moveMarker": "Przesuń znacznik",
+        "noLocation": "Brak zgłoszonego położenia",
+        "status": "Status",
+        "unknown": "Nieznany",
+        "zoomTo": "Przybliż"
+    },
+    "activeMission": {
+        "noActive": "Brak aktywnej misji",
+        "layers": "Warstwy",
+        "changes": "Zmiany",
+        "users": "Użytkownicy",
+        "logs": "Dziennik",
+        "chats": "Czaty",
+        "files": "Pliki"
+    },
+    "serverStatus": {
+        "returnHome": "Wróć do widoku startowego",
+        "serverLogo": "Logo serwera"
+    },
+    "mapLoading": {
+        "agencyLogo": "Logo organizacji",
+        "loadingState": "Wczytywanie stanu mapy",
+        "hardReset": "Pełny reset",
+        "hardResetHint": "Jeśli wczytywanie stoi w miejscu, kliknij, aby wyczyścić pamięć podręczną i przeładować."
+    },
+    "drawTools": {
+        "geometryEditing": "Edycja geometrii",
+        "title": "Narzędzia rysowania",
+        "searchTools": "Szukaj narzędzi",
+        "searchPlaceholder": "Szukaj...",
+        "noTools": "Brak narzędzi",
+        "coordinateInput": "Wpisz współrzędne",
+        "coordinateEntry": "Wprowadzanie współrzędnych",
+        "createEvent": "Utwórz zdarzenie",
+        "quickPic": "Szybkie zdjęcie",
+        "rangeBearing": "Odległość i azymut",
+        "rangeRings": "Pierścienie odległości",
+        "drawPoint": "Rysuj punkt",
+        "drawLine": "Rysuj linię",
+        "drawPolygon": "Rysuj wielokąt",
+        "drawRectangle": "Rysuj prostokąt",
+        "drawCircle": "Rysuj okrąg",
+        "drawSector": "Rysuj sektor",
+        "lassoSelect": "Zaznacz lassem",
+        "geojsonImport": "Import GeoJSON"
+    },
+    "navigating": {
+        "destination": "Cel",
+        "route": "Trasa",
+        "toDestination": "Do celu: {distance}",
+        "acquiring": "Ustalanie położenia…",
+        "eta": "ETA",
+        "zoomDestination": "Przybliż do celu",
+        "zoomRoute": "Przybliż do trasy",
+        "reverse": "Odwróć kierunek",
+        "end": "Zakończ nawigację"
+    },
+    "queryView": {
+        "title": "Tryb zapytania",
+        "endNavigation": "Zakończ nawigację",
+        "navigate": "Nawiguj",
+        "createRoute": "Utwórz trasę",
+        "refresh": "Odśwież",
+        "createEvent": "Utwórz zdarzenie"
+    },
+    "topBar": {
+        "notifications": "Powiadomienia",
+        "openMenu": "Otwórz menu",
+        "closeMenu": "Zamknij menu"
+    },
+    "notifications": {
+        "title": "Powiadomienia",
+        "deleteAll": "Usuń wszystkie",
+        "settings": "Ustawienia powiadomień",
+        "none": "Brak powiadomień",
+        "types": {
+            "Contact": "Kontakt",
+            "Import": "Import",
+            "Alert": "Alarm",
+            "Medical": "Medyczne",
+            "Mission": "Misja",
+            "Chat": "Czat"
+        }
+    },
+    "mainMenu": {
+        "title": "Menu główne",
+        "appSwitcher": "Przełącznik aplikacji",
+        "applications": "Aplikacje",
+        "appLogo": "Logo {name}",
+        "videoWall": "Ściana wideo",
+        "eventBoard": "Tablica zdarzeń",
+        "forms": "Formularze",
+        "tileView": "Widok kafelków",
+        "listView": "Widok listy",
+        "saveOrder": "Zapisz kolejność",
+        "reorder": "Zmień kolejność",
+        "searchPlaceholder": "Szukaj...",
+        "noItems": "Brak pozycji menu",
+        "userIcon": "Użytkownik",
+        "logout": "Wyloguj",
+        "username": "Nazwa użytkownika",
+        "items": {
+            "features": {
+                "label": "Obiekty",
+                "tooltip": "Obiekty",
+                "description": "Zapisane obiekty, zdarzenia i urządzenia"
+            },
+            "overlays": {
+                "label": "Nakładki",
+                "tooltip": "Nakładki",
+                "description": "Włączaj i konfiguruj nakładki danych"
+            },
+            "contacts": {
+                "label": "Kontakty",
+                "tooltip": "Kontakty",
+                "description": "Przeglądaj i wyszukuj kontakty"
+            },
+            "basemaps": {
+                "label": "Mapy bazowe",
+                "tooltip": "Mapy bazowe",
+                "description": "Przełączaj dostępne mapy bazowe"
+            },
+            "missions": {
+                "label": "Data Sync",
+                "tooltip": "Data Sync",
+                "description": "Zbiory danych w czasie rzeczywistym"
+            },
+            "packages": {
+                "label": "Paczki danych",
+                "tooltip": "Paczki danych",
+                "description": "Twórz i udostępniaj paczki danych"
+            },
+            "channels": {
+                "label": "Kanały",
+                "tooltip": "Kanały",
+                "description": "Dołączaj do kanałów danych i zarządzaj nimi"
+            },
+            "videos": {
+                "label": "Wideo",
+                "tooltip": "Wideo",
+                "description": "Oglądaj strumienie wideo na żywo i nagrania"
+            },
+            "chats": {
+                "label": "Czaty",
+                "tooltip": "Czaty",
+                "description": "Otwarte rozmowy i historia czatów"
+            },
+            "routes": {
+                "label": "Trasy",
+                "tooltip": "Trasy",
+                "description": "Planuj trasy i zarządzaj nimi"
+            },
+            "files": {
+                "label": "Pliki",
+                "tooltip": "Pliki",
+                "description": "Przeglądaj przesłane pliki i pliki offline"
+            },
+            "iconsets": {
+                "label": "Zestawy ikon",
+                "tooltip": "Zestawy ikon",
+                "description": "Dostosuj ikony"
+            },
+            "connections": {
+                "label": "Połączenia",
+                "tooltip": "Połączenia (administrator)",
+                "description": "Zarządzaj integracjami"
+            },
+            "debugger": {
+                "label": "Debuger CoT",
+                "tooltip": "Debuger (administrator)",
+                "description": "Podglądaj i debuguj ruch CoT"
+            },
+            "server": {
+                "label": "Administracja",
+                "tooltip": "Administracja",
+                "description": "Administracja CloudTAK i ustawienia serwera."
+            },
+            "history": {
+                "label": "Historia",
+                "tooltip": "Historia",
+                "description": "Ślady i historia przemieszczania"
+            },
+            "settings": {
+                "label": "Ustawienia",
+                "tooltip": "Ustawienia wyświetlania",
+                "description": "Dostosuj własne ustawienia wyświetlania."
+            }
+        }
+    },
+    "cotAppearance": {
+        "title": "Wygląd",
+        "chooseIcon": "Wybierz ikonę",
+        "chooseIconHint": "Do czasu wyboru ikony na mapie zostaje symbol wojskowy."
+    },
+    "coreDeviceView": {
+        "none": "Brak urządzenia",
+        "simulated": "Symulowane źródło danych",
+        "sim": "Sym.",
+        "battery": "Bateria",
+        "hardware": "Sprzęt",
+        "serial": "Numer seryjny",
+        "firmware": "Oprogramowanie",
+        "notOnMap": "Znacznika urządzenia nie ma teraz na mapie, więc nie można tu edytować jego położenia"
+    },
+    "coreEntityView": {
+        "none": "Brak zdarzenia",
+        "end": "Zakończ",
+        "reactivate": "Wznów",
+        "disableEditing": "Zablokuj edycję innym",
+        "allowEditing": "Pozwól edytować innym",
+        "location": "Położenie",
+        "noneValue": "Brak",
+        "timeline": "Oś czasu",
+        "assignments": "Przydziały",
+        "forms": "Formularze",
+        "completeForm": "Wypełnij formularz",
+        "editResponse": "Edytuj odpowiedź",
+        "notOnMap": "Znacznika zdarzenia nie ma teraz na mapie, więc nie można tu edytować jego położenia"
+    },
+    "cotView": {
+        "none": "Brak znacznika CoT",
+        "offline": {
+            "event": {
+                "title": "Szczegóły zdarzenia niedostępne",
+                "description": "Ten znacznik to zdarzenie CloudTAK. Nie udało się wczytać z serwera zdarzenia, z którego powstał."
+            },
+            "device": {
+                "title": "Szczegóły urządzenia niedostępne",
+                "description": "Ten znacznik to urządzenie CloudTAK. Nie udało się wczytać z serwera urządzenia, z którego powstał."
+            }
+        },
+        "retry": "Ponów",
+        "savedFeature": "Zapisany obiekt",
+        "saveFeature": "Zapisz obiekt",
+        "unlock": "Odblokuj",
+        "lockOn": "Śledź znacznik",
+        "viewVideo": "Pokaż strumień wideo",
+        "share": "Udostępnij",
+        "breadcrumb": "Ślad",
+        "moreActions": "Więcej działań",
+        "editGeometry": "Edytuj geometrię",
+        "chat": "Czat",
+        "buffer": "Bufor",
+        "convertToRoute": "Zamień na trasę",
+        "addAttachment": "Dodaj załącznik",
+        "addLinks": "Dodaj linki zewnętrzne",
+        "addVideo": "Dodaj wideo",
+        "addSensor": "Dodaj czujnik",
+        "addGeofence": "Dodaj geofence",
+        "location": "Położenie",
+        "center": "Środek",
+        "elevation": "Wysokość",
+        "radius": "Promień",
+        "speed": "Prędkość",
+        "course": "Kurs",
+        "debug": "Debugowanie"
+    },
+    "map": {
+        "clickToSetLocation": "Kliknij na mapie, aby ustawić swoją pozycję",
+        "clickToUpdateLocation": "Kliknij na mapie, aby zmienić swoją pozycję",
+        "useGps": "Użyj GPS",
+        "cancelManualLocation": "Anuluj ręczne ustawianie pozycji",
+        "search": "Szukaj",
+        "orientNorth": "Północ u góry",
+        "snapNorth": "Obróć na północ",
+        "snapFlat": "Widok z góry",
+        "zoomIn": "Przybliż",
+        "zoomOut": "Oddal",
+        "disableTerrain": "Wyłącz teren 3D",
+        "enableTerrain": "Włącz teren 3D",
+        "lockedToMarker": "Mapa śledzi znacznik. Kliknij, aby odblokować",
+        "searchPlaceholder": "Szukaj miejsc, nakładek, współrzędnych lub znaków wywoławczych",
+        "rotatedTo": "Mapa obrócona na {bearing}",
+        "pitchTo": "Nachylenie mapy: {pitch}",
+        "loadFailedRetrying": "Wczytywanie nie powiodło się, ponawiam…",
+        "errors": {
+            "noMapElement": "Nie znaleziono elementu mapy. Odśwież stronę i spróbuj ponownie",
+            "noLocation": "Nie ustawiono pozycji albo nie udało się jej ustalić",
+            "noMarker": "Nie znaleziono znacznika CoT",
+            "noCopyMarker": "Nie znaleziono znacznika CoT do skopiowania",
+            "noPasteLocation": "Nie można ustalić miejsca wklejenia",
+            "clipboardNoPoint": "Schowek nie zawiera punktu GeoJSON",
+            "noSplitMarker": "Nie znaleziono znacznika CoT do podzielenia",
+            "splitLineOnly": "Podzielić można tylko linię (LineString)",
+            "splitTooClose": "Nie można podzielić: kliknięty punkt jest za blisko końca linii"
+        }
+    }
+}

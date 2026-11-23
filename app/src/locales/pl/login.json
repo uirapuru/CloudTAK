@@ -1,0 +1,52 @@
+{
+    "lostUser": {
+        "title": "Ups… Trafiłeś na stronę błędu",
+        "subtitle": "Przepraszamy, nie znaleziono strony, której szukasz",
+        "home": "Strona główna"
+    },
+    "pageFooter": {
+        "documentation": "Dokumentacja",
+        "sourceCode": "Kod źródłowy",
+        "license": "Licencja AGPL-3.0"
+    },
+    "loading": {
+        "agencyLogo": "Logo instytucji",
+        "loadingCloudtak": "Wczytywanie CloudTAK",
+        "hardReset": "Twardy reset",
+        "hardResetHint": "Jeśli wczytywanie stoi w miejscu, kliknij, aby wyczyścić pamięć podręczną i przeładować."
+    },
+    "login": {
+        "cloudtakLogo": "Logo CloudTAK",
+        "systemLogo": "Logo systemu CloudTAK",
+        "title": "Zaloguj się na swoje konto",
+        "loggingIn": "Logowanie",
+        "ssoOnly": "Ta instancja obsługuje tylko logowanie jednokrotne (SSO). Użyj przycisku logowania SSO poniżej.",
+        "usernameOrEmail": "Nazwa użytkownika lub e-mail",
+        "notMe": "To nie ja",
+        "emailPlaceholder": "twoj{'@'}email.pl",
+        "password": "Hasło",
+        "forgotPassword": "Nie pamiętam hasła",
+        "passwordPlaceholder": "Twoje hasło",
+        "signIn": "Zaloguj się",
+        "or": "lub",
+        "oidcMisconfigured": "Błędna konfiguracja OIDC",
+        "oidcMisconfiguredDescription": "Administrator nie skonfigurował poprawnie OIDC. Skontaktuj się z administratorem systemu.",
+        "signInWith": "Zaloguj się przez {name}",
+        "signInWithPasskey": "Zaloguj się kluczem dostępu",
+        "certRenewalRequired": "Wymagane odnowienie certyfikatu",
+        "certExpired": "Twój certyfikat TAK wygasł lub jest już nieważny. Wpisz hasło, aby wystawić nowy.",
+        "certExpiring": "Twój certyfikat TAK wkrótce wygaśnie. Wpisz hasło, aby go odnowić.",
+        "enterPassword": "Wpisz hasło",
+        "renewCertificate": "Odnów certyfikat",
+        "skip": "Pomiń",
+        "noAccount": "Nie masz jeszcze konta?",
+        "signUp": "Zarejestruj się",
+        "settings": "Ustawienia logowania",
+        "switchServers": "Zmień serwer",
+        "running": "Wersja",
+        "build": "(kompilacja: {build})",
+        "noServiceWorkers": "Nie znaleziono service workerów",
+        "serviceWorker": "Service worker",
+        "unregister": "Wyrejestruj"
+    }
+}

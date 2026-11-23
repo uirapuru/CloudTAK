@@ -1,0 +1,254 @@
+{
+    "common": {
+        "unknown": "Unknown",
+        "create": "Create",
+        "refresh": "Refresh",
+        "back": "Back",
+        "name": "Name"
+    },
+    "certificateBadge": {
+        "expired": "Expired",
+        "nearExpiry": "Near Expiry"
+    },
+    "certificateChannelsBadge": {
+        "enabledTitle": "TAK Server honours channel selection for this certificate",
+        "disabledTitle": "Issued without the channels Extended Key Usage - TAK Server ignores channel selection for this certificate",
+        "enabled": "Channels",
+        "disabled": "No Channels"
+    },
+    "certificateInfo": {
+        "validFrom": "Certificate Valid From",
+        "validTo": "Certificate Valid To",
+        "expiredCertificate": "Expired Certificate",
+        "subject": "Certificate Subject",
+        "channelsEnabled": "Channels Enabled",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+    },
+    "initialAuthor": {
+        "author": "Author"
+    },
+    "offline": {
+        "title": "You're Offline",
+        "requiresNetwork": "This feature requires a network connection.",
+        "checkConnection": "Please check your connection and try again."
+    },
+    "tableFooter": {
+        "noEntries": "No entries",
+        "of": "of"
+    },
+    "basemapSelect": {
+        "loadingBasemap": "Loading Basemap",
+        "removeBasemap": "Remove Basemap",
+        "unknownBasemap": "Unknown Basemap",
+        "noDefaultBasemap": "No Default Basemap",
+        "loadingBasemaps": "Loading Basemaps",
+        "failedToLoad": "Failed to load provided basemap",
+        "filter": "Filter Basemaps...",
+        "noBasemaps": "No Basemaps Found"
+    },
+    "dataSelect": {
+        "noneSelected": "No Data Sync Selected - Data will output as CoTs directly to the Connection",
+        "statusName": "(Status) Name"
+    },
+    "esriFilter": {
+        "title": "ESRI Layer Filter",
+        "sqlQuery": "SQL Query",
+        "testQuery": "Test Query",
+        "queryError": "Query Error",
+        "loadingFeatures": "Loading Features",
+        "saveFilter": "Save Filter"
+    },
+    "esriPortalCreate": {
+        "title": "Create Feature Service",
+        "serviceName": "Service Name"
+    },
+    "groupSelectModal": {
+        "selectedCount": "{count} selected channel | {count} selected channels",
+        "title": "Share to Channels"
+    },
+    "groupSelect": {
+        "filter": "Filter Channels...",
+        "selectUpTo": "Select up to {limit} Channels",
+        "loading": "Loading Channels",
+        "noGroups": "No Groups",
+        "tooMany": "Cannot select more than {limit} Channels"
+    },
+    "esri": {
+        "connectionError": "ESRI Connection Error",
+        "closeExplorer": "Close Explorer",
+        "tokenRequiredList": "Auth Token is required to list servers",
+        "tokenRequiredCreate": "Auth Token is required to create a service"
+    },
+    "esriPortal": {
+        "closeViewer": "Close Viewer",
+        "connecting": "Connecting to ESRI Portal",
+        "title": "ESRI Portal Explorer",
+        "createHostedService": "Create Hosted Service",
+        "noServers": "No ArcGIS Servers",
+        "filterByTitle": "Filter by Title",
+        "searchingContent": "Searching Content",
+        "noContent": "No Content Items",
+        "attributes": "Attributes",
+        "readOnly": "Portal is Read Only",
+        "noServersPresent": "No Servers Present"
+    },
+    "esriServer": {
+        "connecting": "Connecting to ESRI Server",
+        "noServices": "No Services",
+        "noLayers": "No Layers",
+        "deleteLayer": "Delete Layer"
+    },
+    "handleForm": {
+        "type": "Type:",
+        "suggestions": "to see template suggestions"
+    },
+    "iconSelect": {
+        "label": "Icon Select",
+        "loadingIconsets": "Loading Iconsets",
+        "noIconsets": "No Iconsets Loaded",
+        "notFound": "Icon Not Found",
+        "noneSelected": "No Icon Selected",
+        "remove": "Remove Icon",
+        "select": "Select Icon",
+        "search": "Icon Search",
+        "showNames": "Show Icon Names",
+        "loadingIcons": "Loading Icons"
+    },
+    "layerAlarmSelect": {
+        "title": "Alarm Configuration",
+        "urgency": "Alarm Urgency",
+        "priority_off": "off",
+        "priority_high": "high",
+        "priority_low": "low",
+        "highTitle": "High Urgency Alarms",
+        "highDescription": "Use only for mission-critical layers that require immediate attention",
+        "lowTitle": "Low Urgency Alarms",
+        "lowDescription": "Use for layers that are important but not mission-critical",
+        "invalidTitle": "Invalid Alarm Configuration",
+        "invalidDescription": "Data Points to Alarm must be less than or equal to Evaluation Periods",
+        "evaluationPeriods": "Evaluation Periods",
+        "dataPoints": "Data Points to Alarm",
+        "period": "Period (seconds)",
+        "disabled": "Alarms Disabled",
+        "summaryHigh": "High Urgency - {points} of {evals} periods of {period}s",
+        "summaryLow": "Low Urgency - {points} of {evals} periods of {period}s"
+    },
+    "layerInfrastructureSelect": {
+        "title": "Infrastructure",
+        "memory": "Memory (Mb)",
+        "timeout": "Timeout (s)",
+        "vpc": "Private Network Access",
+        "egress": "Static Egress Addresses",
+        "summary": "{memory} Mb Memory - {timeout}s Timeout",
+        "summaryVpc": "{memory} Mb Memory - {timeout}s Timeout - Private Network",
+        "vpcDescriptionAdmin": "Run inside the private network so requests leave from the static addresses below and internal resources are reachable. Grants a higher degree of trust to this ETL.",
+        "vpcDescription": "Run inside the private network so requests leave from the static addresses below and internal resources are reachable. Only a System Administrator can change this setting."
+    },
+    "layerTaskSelect": {
+        "title": "Task Selection",
+        "loadingTasks": "Loading Tasks",
+        "loadingTask": "Loading Task",
+        "logoPreview": "Logo Preview",
+        "upToDate": "Up to date",
+        "checkUpdates": "Check for Updates",
+        "updateTo": "Update to v{version}",
+        "remove": "Remove Task",
+        "filter": "Task Filter...",
+        "noTasks": "No Tasks",
+        "info": "Task Info"
+    },
+    "layerTaskUpdateModal": {
+        "title": "Update Task: v{from} → v{to}",
+        "loading": "Loading Task Permissions",
+        "error": "Task Update Error",
+        "noCapabilities": "The new task version does not publish a Capabilities document - existing Layer permissions will be kept as-is.",
+        "permissionsRequested": "Permissions Requested",
+        "permission": "Permission",
+        "then": "Then (v{version})",
+        "now": "Now (v{version})",
+        "granted": "Granted",
+        "notGranted": "Not Granted",
+        "removed": "Removed",
+        "required": "Required",
+        "grant": "Grant",
+        "accept": "Accept & Update"
+    },
+    "loginSessionsList": {
+        "none": "No Login Sessions"
+    },
+    "navHeader": {
+        "home": "CloudTAK Home",
+        "profile": "Profile",
+        "map": "Map",
+        "connections": "Connections",
+        "admin": "Admin",
+        "docs": "Docs",
+        "logout": "Logout"
+    },
+    "publicTilesSelect": {
+        "title": "Public Tiles Selection",
+        "loadingTiles": "Loading Tiles",
+        "loadingMetadata": "Loading Tile Metadata",
+        "remove": "Remove Tile",
+        "filter": "Task Filter...",
+        "loadingList": "Loading Tasks",
+        "none": "No Tasks"
+    },
+    "taskFilter": {
+        "allTasks": "All Tasks",
+        "search": "Search Tasks...",
+        "none": "No Tasks"
+    },
+    "scheduleInput": {
+        "label": "Schedule",
+        "rate": "Rate",
+        "every": "Every",
+        "frequency": "Frequency",
+        "unit": "Unit",
+        "cronExpression": "Cron Expression",
+        "presetEvery15": "Every 15 Min",
+        "presetHourly": "Hourly",
+        "presetDaily": "Daily {'@'} 10:15",
+        "presetWeekday": "Weekday Working Hours",
+        "frequencyInvalid": "Frequency must be a positive whole number"
+    },
+    "upload": {
+        "sizeWarning": "Uploads are limited to 5 GB",
+        "label": "Select a file to upload",
+        "upload": "Upload",
+        "uploading": "Uploading {name} ({progress}%)",
+        "complete": "{name} - Upload Complete",
+        "failedWith": "Upload Failed: {message}",
+        "parseFailed": "Failed to parse response",
+        "failed": "Upload failed"
+    },
+    "uploadP12": {
+        "drop": "Drop .p12 here",
+        "click": "click to upload",
+        "password": "P12 Password",
+        "ok": "OK"
+    },
+    "userSelect": {
+        "loading": "Loading User...",
+        "none": "Publically Shared - No User Selected",
+        "remove": "Remove Selected",
+        "select": "User Select",
+        "filter": "Filter..."
+    },
+    "videoPlayer": {
+        "loading": "Loading Stream",
+        "error": "Video Error",
+        "retry": "Retry",
+        "noProtocol": "No Supported Streaming Protocol",
+        "buffering": "Buffering...",
+        "noProtocolForStream": "No supported streaming protocol is available for this stream",
+        "noWebrtc": "WebRTC is not supported in this browser",
+        "codecUnsupported": "Your browser does not support the required video codec for this stream",
+        "codecUnsupportedType": "Your browser does not support the required video codec for this stream ({type})",
+        "stalled": "WebRTC stream stalled",
+        "couldNotStart": "Could not start stream",
+        "noPlayback": "Neither WebRTC nor HLS.js is supported in this browser.",
+        "urlFailed": "Video URL could not be loaded"
+    }
+}

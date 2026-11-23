@@ -1,0 +1,498 @@
+{
+    "channelInfo": {
+        "onlyShown": "{label} są widoczne tylko wtedy, gdy kanał, do którego należą, jest włączony",
+        "dataSyncs": "Misje Data Sync"
+    },
+    "offlineBadge": {
+        "title": "Dostępne offline na tym urządzeniu",
+        "offline": "Offline"
+    },
+    "notSyncedBadge": {
+        "syncing": "Synchronizacja",
+        "notSynced": "Niezsynchronizowane",
+        "submitting": "Wysyłanie tej zmiany na serwer",
+        "savedLocally": "Ta zmiana jest zapisana na tym urządzeniu i nie dotarła jeszcze na serwer",
+        "savedLocallyError": "Ta zmiana jest zapisana na tym urządzeniu i nie dotarła jeszcze na serwer: {error}",
+        "retry": "{reason} - kliknij, aby ponowić"
+    },
+    "floatingGeneric": {
+        "panel": "Panel"
+    },
+    "polygonArea": {
+        "label": "Powierzchnia",
+        "squareFeet": "Stopy kwadratowe",
+        "squareMeters": "Metry kwadratowe",
+        "acresShort": "akry",
+        "acres": "Akry",
+        "hectares": "Hektary"
+    },
+    "lineLength": {
+        "label": "Długość",
+        "feet": "Stopy",
+        "yards": "Jardy",
+        "meters": "Metry",
+        "kilometers": "Kilometry",
+        "miles": "Mile",
+        "notALine": "To nie jest linia!"
+    },
+    "warnChannels": {
+        "title": "Brak aktywnych kanałów",
+        "basis": "Kanały decydują o tym, kogo i co widzisz w TAK",
+        "noActive": "Nie masz teraz żadnego aktywnego kanału, więc nie zobaczysz użytkowników, paczek danych ani misji Data Sync powiązanych z kanałami.",
+        "recommended": "Zalecamy teraz włączyć właściwe kanały",
+        "selectChannels": "Wybierz kanały"
+    },
+    "jsonModal": {
+        "title": "Obiekt JSON"
+    },
+    "common": {
+        "done": "Gotowe",
+        "noDescription": "Brak opisu",
+        "biDirectional": "Dwukierunkowy",
+        "locationSharing": "Udostępnianie położenia",
+        "noLocationSharing": "Bez udostępniania położenia",
+        "filter": "Filtruj",
+        "sort": "Sortuj",
+        "download": "Pobierz",
+        "home": "Start",
+        "selectAll": "Zaznacz wszystko",
+        "deselectAll": "Odznacz wszystko",
+        "saving": "Zapisywanie...",
+        "clear": "Wyczyść",
+        "none": "Brak",
+        "share": "Udostępnij",
+        "moreOptions": "Więcej opcji",
+        "moveToDataSync": "Przenieś do Data Sync",
+        "addToDataSync": "Dodaj do Data Sync",
+        "unknown": "Nieznany",
+        "cancelShare": "Anuluj udostępnianie",
+        "shareToSelected": "Udostępnij zaznaczonym",
+        "searchPlaceholder": "Szukaj...",
+        "name": "Nazwa",
+        "create": "Utwórz",
+        "priority": {
+            "critical": "krytyczny",
+            "high": "wysoki",
+            "medium": "średni",
+            "low": "niski",
+            "none": "brak"
+        },
+        "back": "Wstecz",
+        "filterPlaceholder": "Filtruj...",
+        "roles": {
+            "Team_Member": "Członek zespołu",
+            "Team_Lead": "Dowódca zespołu",
+            "HQ": "Sztab",
+            "Sniper": "Snajper",
+            "Medic": "Medyk",
+            "Forward_Observer": "Wysunięty obserwator",
+            "RTO": "Radiooperator",
+            "K9": "K9"
+        }
+    },
+    "timesFooter": {
+        "toggle": "Przełącz czas względny i bezwzględny"
+    },
+    "copyButton": {
+        "copy": "Kopiuj",
+        "copied": "Skopiowano"
+    },
+    "videoLeaseSourceType": {
+        "vehicle": "Pojazd",
+        "bodyCamera": "Kamera osobista",
+        "uasRotorcraft": "BSP wielowirnikowy",
+        "mannedRotorcraft": "Śmigłowiec załogowy",
+        "fixedWing": "Samolot",
+        "uasFixedWing": "BSP płatowiec",
+        "screenshare": "Udostępnianie ekranu",
+        "unknown": "Nieznane źródło"
+    },
+    "coordinateType": {
+        "pointIcon": "Ikona punktu",
+        "custom": "Punkt własny",
+        "unknown": "Punkt nieznany",
+        "friendly": "Punkt swój",
+        "hostile": "Punkt wrogi",
+        "neutral": "Punkt neutralny"
+    },
+    "emptyInfo": {
+        "noChannels": "Brak aktywnych kanałów",
+        "channelSelection": "Wybór kanałów",
+        "noMissions": "Brak subskrybowanych misji Data Sync z prawem zapisu"
+    },
+    "standardItemProfileSession": {
+        "unknownBrowser": "Nieznana przeglądarka",
+        "terminate": "Zakończ sesję"
+    },
+    "offlineDownloader": {
+        "downloading": "Pobieranie do użytku offline",
+        "available": "Dostępne offline",
+        "make": "Udostępnij offline"
+    },
+    "standardItemLayer": {
+        "adminLayer": "Warstwa administracyjna",
+        "layerId": "ID warstwy",
+        "incomingOutgoing": "Przychodzące i wychodzące",
+        "outgoing": "Wychodzące",
+        "incoming": "Przychodzące",
+        "unconfigured": "Nieskonfigurowana"
+    },
+    "standardItemImport": {
+        "sourceImport": "Import: {source}",
+        "retry": "Ponów import",
+        "download": "Pobierz plik"
+    },
+    "floatingAttachment": {
+        "noPreview": "Brak podglądu dla plików {ext}."
+    },
+    "standardCoreDevice": {
+        "stale": "Nieaktualne",
+        "onMap": "Na mapie",
+        "notOnMap": "Poza mapą",
+        "simulated": "Symulowane"
+    },
+    "pathBrowser": {
+        "show": "Pokaż folder",
+        "hide": "Ukryj folder",
+        "rename": "Zmień nazwę folderu"
+    },
+    "groupSelect": {
+        "filter": "Filtruj kanały...",
+        "selectUpToOne": "Wybierz maksymalnie {limit} kanał",
+        "selectUpToMany": "Maksymalna liczba kanałów: {limit}",
+        "loading": "Wczytywanie kanałów",
+        "none": "Brak grup",
+        "tooMany": "Nie można wybrać więcej kanałów niż {limit}"
+    },
+    "inlineKeywords": {
+        "label": "Słowa kluczowe",
+        "edit": "Edytuj słowa kluczowe",
+        "none": "Brak słów kluczowych",
+        "add": "Dodaj słowa kluczowe"
+    },
+    "locationDisclosure": {
+        "sentToServer": "Twoje położenie trafia na serwer TAK, z którym masz połączenie, i widzą je członkowie twojego zespołu.",
+        "adminControls": "Administrator serwera decyduje, czy dane o położeniu są przechowywane i jak długo.",
+        "persistentNotification": "Gdy CloudTAK udostępnia twoje położenie w tle, widzisz stałe powiadomienie.",
+        "noAdvertising": "CloudTAK nie używa twojego położenia do reklam.",
+        "notNow": "Nie teraz",
+        "requesting": "Wysyłanie prośby...",
+        "agree": "Zgadzam się i kontynuuję",
+        "alwaysAndroid": "„Zezwalaj zawsze”",
+        "alwaysIOS": "„Zawsze”",
+        "titleBackground": "Położenie w tle",
+        "titleLocation": "Dostęp do położenia",
+        "leadBackground": "CloudTAK udostępnia twoje położenie zespołowi także wtedy, gdy aplikacja jest zamknięta albo nieużywana, więc twoja pozycja na mapie jest aktualna, nawet gdy na nią nie patrzysz.",
+        "leadNative": "CloudTAK zbiera położenie twojego urządzenia, także gdy aplikacja jest zamknięta albo nieużywana, żeby zespół widział twoją pozycję na mapie.",
+        "leadBrowser": "CloudTAK zbiera położenie twojego urządzenia, gdy jest otwarty w przeglądarce, żeby zespół widział twoją pozycję na mapie.",
+        "nextBackgroundSettings": "Teraz CloudTAK otworzy ustawienia urządzenia. Ustaw lokalizację na {always}, żeby dalej udostępniać pozycję w tle.",
+        "nextBackgroundAndroid": "Teraz Android zapyta o dostęp do lokalizacji w tle. Wybierz „Zezwalaj zawsze”, żeby dalej udostępniać pozycję w tle. Możesz to w każdej chwili zmienić w ustawieniach.",
+        "nextBackgroundIOS": "Teraz iOS zapyta o zmianę dostępu do lokalizacji na „Zawsze”. Wybierz „Zmień na Zawsze”, żeby dalej udostępniać pozycję w tle. Możesz to w każdej chwili zmienić w ustawieniach.",
+        "nextSettings": "Teraz CloudTAK otworzy ustawienia urządzenia. Ustaw lokalizację na {always}, żeby udostępniać pozycję zespołowi, także w tle.",
+        "nextAndroid": "Teraz Android zapyta o dostęp do lokalizacji. Wybierz „Podczas używania aplikacji” albo „Zezwalaj zawsze”, żeby kontynuować. Możesz to w każdej chwili zmienić w ustawieniach.",
+        "nextIOS": "Teraz iOS zapyta o dostęp do lokalizacji. Wybierz „Zezwalaj podczas używania aplikacji”, żeby kontynuować. Możesz to w każdej chwili zmienić w ustawieniach.",
+        "nextBrowser": "Teraz przeglądarka zapyta o dostęp do lokalizacji. Możesz to w każdej chwili zmienić w jej ustawieniach."
+    },
+    "coordinate": {
+        "label": "Współrzędne"
+    },
+    "breadcrumb": {
+        "title": "Ślad",
+        "liveTrail": "Ślad na żywo",
+        "loadHistory": "Wczytaj historię",
+        "load": "Wczytaj",
+        "loaded": "Wczytane punkty: {count}",
+        "noHistory": "Brak historii w tym przedziale",
+        "hours1": "1 godzina",
+        "hours4": "4 godziny",
+        "hours8": "8 godzin",
+        "hours24": "24 godziny"
+    },
+    "contact": {
+        "startChat": "Rozpocznij czat"
+    },
+    "coreEntityType": {
+        "loading": "Wczytywanie typów zdarzeń",
+        "type": "Typ",
+        "other": "Inny",
+        "back": "Wróć do gotowych typów"
+    },
+    "subscriptions": {
+        "enabled": "Użytkownik ma włączony kanał",
+        "disabled": "Użytkownik ma wyłączony kanał",
+        "details": "Pokaż szczegóły"
+    },
+    "inlineExpiration": {
+        "label": "Termin ważności",
+        "edit": "Edytuj termin ważności",
+        "inputLabel": "Czas wygaśnięcia"
+    },
+    "inlineGroupSelect": {
+        "label": "Grupy (kanały)",
+        "edit": "Edytuj kanały"
+    },
+    "messageComposer": {
+        "placeholder": "Napisz wiadomość...",
+        "post": "Opublikuj",
+        "hint": "Ctrl+Enter: {action}"
+    },
+    "selectFeats": {
+        "title": "Zaznaczone obiekty",
+        "newPackage": "Nowa paczka danych",
+        "delete": "Usuń obiekty"
+    },
+    "standardItemBasemap": {
+        "slopeBeta": "Cieniowanie nachylenia stoku jest w wersji beta - wygląd może się zmienić",
+        "compositeBeta": "Łączenie rastrów jest w wersji beta - wygląd może się zmienić",
+        "beta": "Beta",
+        "private": "Prywatna",
+        "public": "Publiczna",
+        "hidden": "Ukryta"
+    },
+    "keywords": {
+        "suggested": "Sugerowane",
+        "inputPlaceholder": "słowo kluczowe...",
+        "add": "Dodaj słowo kluczowe",
+        "new": "Nowe słowo kluczowe",
+        "none": "Brak słów kluczowych"
+    },
+    "floatingVideo": {
+        "streaming": "Nadawanie",
+        "title": "Strumień wideo",
+        "watchers": "oglądających",
+        "watcher": "oglądający",
+        "push": "Wyślij na ścianę wideo",
+        "pushing": "Wysyłanie",
+        "wallError": "Błąd ściany wideo"
+    },
+    "formWizard": {
+        "title": "Wypełnij wymagane formularze",
+        "progress": "Formularz {step} z {total}",
+        "submittedFor": "Wysyłane dla: {name}",
+        "submitContinue": "Wyślij i kontynuuj",
+        "submit": "Wyślij"
+    },
+    "standardCoreEntity": {
+        "eventType": "Typ zdarzenia",
+        "active": "Aktywne",
+        "ended": "Zakończone",
+        "connection": "Połączenie #{id}",
+        "unknownCreator": "Nieznany autor",
+        "endedAgo": "Zakończone {time}",
+        "endsIn": "Kończy się {time}"
+    },
+    "groupSelectDropdown": {
+        "placeholder": "Wybierz kanał",
+        "title": "Kanały",
+        "refresh": "Odśwież kanały",
+        "loading": "Wczytywanie kanałów",
+        "noMatching": "Brak pasujących kanałów",
+        "none": "Brak kanałów"
+    },
+    "boardSelectDropdown": {
+        "placeholder": "Wybierz tablicę",
+        "title": "Tablice",
+        "refresh": "Odśwież tablice",
+        "loading": "Wczytywanie tablic",
+        "noMatching": "Brak pasujących tablic",
+        "none": "Brak tablic"
+    },
+    "featureIcon": {
+        "alt": "Ikona obiektu"
+    },
+    "selectBasemapCollection": {
+        "label": "Folder kolekcji",
+        "create": "Utwórz folder w ścieżce",
+        "newName": "Nazwa nowego folderu",
+        "add": "Dodaj folder",
+        "existing": "Wybierz istniejący folder",
+        "loading": "Wczytywanie folderów",
+        "none": "Brak folderów"
+    },
+    "shareToPackage": {
+        "title": "Utwórz paczkę danych",
+        "contents": "Zawartość:",
+        "noContents": "Brak zawartości",
+        "hashtags": "Hashtagi"
+    },
+    "icons": {
+        "filter": "Filtruj zestawy ikon i ikony",
+        "loading": "Wczytywanie zestawów ikon",
+        "noMatches": "Brak wyników",
+        "none": "Brak zestawów ikon",
+        "open": "Otwórz zestaw ikon",
+        "noIcons": "Nie ma jeszcze ikon.",
+        "showAll": "Pokaż wszystkie ikony ({count})"
+    },
+    "createCoreEntity": {
+        "title": "Utwórz zdarzenie",
+        "creating": "Tworzenie zdarzenia",
+        "priority": "Priorytet",
+        "location": "Położenie",
+        "locationPlaceholder": "Adres albo nazwa miejsca",
+        "remarks": "Uwagi",
+        "shareToChannels": "Udostępnij w kanałach",
+        "selectChannel": "Wybierz co najmniej jeden kanał, w którym udostępnisz zdarzenie"
+    },
+    "menuTemplate": {
+        "close": "Zamknij menu",
+        "loading": "Wczytywanie: {name}"
+    },
+    "featureRow": {
+        "viewInfo": "Pokaż informacje",
+        "remove": "Usuń",
+        "noCallsign": "Brak znaku wywoławczego",
+        "show": "Pokaż obiekt",
+        "hide": "Ukryj obiekt"
+    },
+    "floatingPane": {
+        "close": "Zamknij panel"
+    },
+    "formSelect": {
+        "requiredHint": "Formularz trzeba wypełnić - kliknij, aby był opcjonalny",
+        "optionalHint": "Formularz jest opcjonalny - kliknij, aby był wymagany",
+        "required": "Wymagany",
+        "optional": "Opcjonalny",
+        "remove": "Usuń formularz",
+        "attach": "Dołącz formularz",
+        "title": "Formularze",
+        "refresh": "Odśwież formularze",
+        "loading": "Wczytywanie formularzy",
+        "noMatching": "Brak pasujących formularzy",
+        "none": "Brak formularzy udostępnionych w tym kanale"
+    },
+    "genericChat": {
+        "selected": "Zaznaczone: {count}",
+        "none": "Brak wiadomości",
+        "scrollBottom": "Przewiń na dół",
+        "send": "Wyślij",
+        "placeholder": "Wyślij wiadomość...",
+        "status": {
+            "sending": "Wysyłanie",
+            "sent": "Wysłano na serwer",
+            "pending": "Oczekuje na doręczenie",
+            "failed": "Nie doręczono",
+            "delivered": "Doręczono",
+            "read": "Przeczytano"
+        }
+    },
+    "iconSelectOffline": {
+        "iconName": "Ikona: {name}",
+        "select": "Wybierz ikonę",
+        "label": "Wybór ikony",
+        "noIconsets": "Nie wczytano zestawów ikon",
+        "notFound": "Nie znaleziono ikony",
+        "noneSelected": "Nie wybrano ikony",
+        "remove": "Usuń ikonę",
+        "noIcon": "Bez ikony",
+        "search": "Szukaj ikony",
+        "showNames": "Pokaż nazwy ikon",
+        "loadingIcons": "Wczytywanie ikon",
+        "notFoundMessage": "Nie znaleziono ikony: {icon}"
+    },
+    "share": {
+        "title": "Udostępnij obiekty",
+        "users": "Użytkownicy",
+        "channels": "Kanały",
+        "dataSyncs": "Misje Data Sync",
+        "broadcast": "Rozgłoś do wszystkich"
+    },
+    "copyField": {
+        "editor": "Edytor",
+        "doneEditing": "Zakończ edycję",
+        "editField": "Edytuj pole",
+        "edit": "Edytuj"
+    },
+    "drawOverlay": {
+        "drawPoint": "Rysuj punkt",
+        "droppingMultiple": "Stawianie wielu punktów",
+        "dropMultiple": "Postaw wiele punktów",
+        "doneDropping": "Zakończ stawianie punktów",
+        "finish": "Zakończ rysowanie",
+        "cancel": "Anuluj edycję",
+        "circle": "Edycja okręgu",
+        "rectangle": "Edycja prostokąta",
+        "line": "Edycja linii",
+        "polygon": "Edycja wielokąta",
+        "sector": "Edycja sektora",
+        "lasso": "Zaznaczanie lassem",
+        "existing": "Edycja istniejącego obiektu",
+        "closeSettings": "Zamknij ustawienia",
+        "openSettings": "Otwórz ustawienia",
+        "more": "Więcej",
+        "snappingHelp": "Wybierz rodzaj rysowanej linii.",
+        "noSnapping": "Bez przyciągania",
+        "layerSelection": "Wybór warstwy",
+        "layerSelectionHelp": "Obiekty zostaną zaznaczone z wybranej warstwy.",
+        "mapFeatures": "Obiekty na mapie"
+    },
+    "warnConfiguration": {
+        "detailsIntro": "Zanim zaczniesz, powiedz innym użytkownikom TAK, kim jesteś. Możesz to w każdej chwili zmienić w ustawieniach.",
+        "callsign": "Znak wywoławczy",
+        "callsignHelp": "Nazwa, pod którą zobaczą cię na mapie inni użytkownicy",
+        "callsignPlaceholder": "Wpisz swój znak wywoławczy",
+        "team": "Zespół",
+        "role": "Rola",
+        "phone": "Numer telefonu",
+        "phoneHelp": "Opcjonalny - widzą go użytkownicy w twoich kanałach",
+        "permissionsIntro": "CloudTAK potrzebuje tych uprawnień, żeby twój zespół miał aktualne informacje. Możesz je później sprawdzić w ustawieniach.",
+        "getStarted": "Zaczynamy",
+        "skip": "Pomiń na razie",
+        "refresh": "Odśwież",
+        "welcome": "Witaj w CloudTAK",
+        "permissions": "Uprawnienia",
+        "location": "Położenie",
+        "locationNative": "Udostępniaj zespołowi swoją bieżącą pozycję, także gdy aplikacja jest zamknięta albo nieużywana.",
+        "locationBrowser": "Udostępniaj zespołowi swoją bieżącą pozycję na mapie.",
+        "notifications": "Powiadomienia",
+        "notificationsHelp": "Otrzymuj powiadomienia o czatach, wezwaniach i zmianach w misjach.",
+        "status": {
+            "granted": "Dozwolone",
+            "whenInUse": "Podczas używania",
+            "denied": "Poproś ponownie",
+            "prompt": "Poproś",
+            "unsupported": "Nieobsługiwane"
+        },
+        "reRequest": "Poproś ponownie o uprawnienie",
+        "request": "Poproś o uprawnienie",
+        "refreshFailed": "Nie udało się odświeżyć stanu uprawnień",
+        "requestFailed": "Nie udało się poprosić o uprawnienie: {type}"
+    },
+    "searchBox": {
+        "pickingTitle": "Kliknij mapę, aby wybrać położenie",
+        "pickTitle": "Wybierz położenie na mapie",
+        "picking": "Kliknij mapę, aby wybrać położenie",
+        "emptyTitle": "Przeszukaj mapę",
+        "emptySubtitle": "Znajdź miejsca, adresy, współrzędne albo obiekty po znaku wywoławczym lub uwagach",
+        "noResults": "Brak wyników",
+        "navigate": "Nawigacja",
+        "select": "Wybierz",
+        "types": {
+            "address": "Adres",
+            "street": "Ulica",
+            "poi": "Punkt orientacyjny",
+            "trailhead": "Początek szlaku",
+            "parking": "Parking",
+            "hospital": "Szpital",
+            "police": "Policja",
+            "park": "Park",
+            "peak": "Szczyt",
+            "locality": "Miasto lub miejscowość",
+            "region": "Region",
+            "postal": "Kod pocztowy"
+        },
+        "groups": {
+            "coordinate": "Współrzędne",
+            "feature": "Obiekty na mapie",
+            "overlay": "Nakładki",
+            "place": "Miejsca"
+        },
+        "overlayKind": {
+            "vector": "Wektorowa",
+            "raster": "Rastrowa",
+            "terrain": "Teren"
+        },
+        "overlayHidden": "{kind} · ukryta",
+        "goToCoordinate": "Przejdź do współrzędnych"
+    }
+}

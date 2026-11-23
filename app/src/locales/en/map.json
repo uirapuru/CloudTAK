@@ -1,0 +1,295 @@
+{
+    "common": {
+        "changeNotSaved": "Change Not Saved",
+        "channels": "Channels",
+        "coords": "Coords",
+        "creator": "Creator",
+        "details": "Details",
+        "moveMarker": "Move Marker",
+        "noLocation": "No location reported",
+        "status": "Status",
+        "unknown": "Unknown",
+        "zoomTo": "Zoom To"
+    },
+    "activeMission": {
+        "noActive": "No Active Mission",
+        "layers": "Layers",
+        "changes": "Changes",
+        "users": "Users",
+        "logs": "Logs",
+        "chats": "Chats",
+        "files": "Files"
+    },
+    "serverStatus": {
+        "returnHome": "Return Home",
+        "serverLogo": "Server Logo"
+    },
+    "mapLoading": {
+        "agencyLogo": "Agency Logo",
+        "loadingState": "Loading Map State",
+        "hardReset": "Hard Reset",
+        "hardResetHint": "If loading has stalled, click to clear the cache and reload."
+    },
+    "drawTools": {
+        "geometryEditing": "Geometry Editing",
+        "title": "Drawing Tools",
+        "searchTools": "Search Tools",
+        "searchPlaceholder": "Search...",
+        "noTools": "No Tools",
+        "coordinateInput": "Coordinate Input",
+        "coordinateEntry": "Coordinate Entry",
+        "createEvent": "Create Event",
+        "quickPic": "Quick Pic",
+        "rangeBearing": "Range & Bearing",
+        "rangeRings": "Range Rings",
+        "drawPoint": "Draw Point",
+        "drawLine": "Draw Line",
+        "drawPolygon": "Draw Polygon",
+        "drawRectangle": "Draw Rectangle",
+        "drawCircle": "Draw Circle",
+        "drawSector": "Draw Sector",
+        "lassoSelect": "Lasso Select",
+        "geojsonImport": "GeoJSON Import"
+    },
+    "navigating": {
+        "destination": "Destination",
+        "route": "Route",
+        "toDestination": "{distance} to destination",
+        "acquiring": "Acquiring location…",
+        "eta": "ETA",
+        "zoomDestination": "Zoom to Destination",
+        "zoomRoute": "Zoom to Route",
+        "reverse": "Reverse Direction",
+        "end": "End Navigation"
+    },
+    "queryView": {
+        "title": "Query Mode",
+        "endNavigation": "End Navigation",
+        "navigate": "Navigate",
+        "createRoute": "Create Route",
+        "refresh": "Refresh",
+        "createEvent": "Create Event"
+    },
+    "topBar": {
+        "notifications": "Notifications Icon",
+        "openMenu": "Open Menu",
+        "closeMenu": "Close Menu"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "deleteAll": "Delete All",
+        "settings": "Notification Settings",
+        "none": "No Notifications",
+        "types": {
+            "Contact": "Contact",
+            "Import": "Import",
+            "Alert": "Alert",
+            "Medical": "Medical",
+            "Mission": "Mission",
+            "Chat": "Chat"
+        }
+    },
+    "mainMenu": {
+        "title": "Main Menu",
+        "appSwitcher": "Application Switcher",
+        "applications": "Applications",
+        "appLogo": "{name} logo",
+        "videoWall": "Video Wall",
+        "eventBoard": "Event Board",
+        "forms": "Forms",
+        "tileView": "Tile View",
+        "listView": "List View",
+        "saveOrder": "Save Order",
+        "reorder": "Reorder Items",
+        "searchPlaceholder": "Search...",
+        "noItems": "No Menu Items",
+        "userIcon": "User Icon",
+        "logout": "Logout",
+        "username": "Username",
+        "items": {
+            "features": {
+                "label": "Features",
+                "tooltip": "Features",
+                "description": "Saved features, events, and devices"
+            },
+            "overlays": {
+                "label": "Overlays",
+                "tooltip": "Overlays",
+                "description": "Toggle and configure data overlays"
+            },
+            "contacts": {
+                "label": "Contacts",
+                "tooltip": "Contacts",
+                "description": "Manage and search for contacts"
+            },
+            "basemaps": {
+                "label": "BaseMaps",
+                "tooltip": "Basemaps",
+                "description": "Switch between available basemaps"
+            },
+            "missions": {
+                "label": "Data Sync",
+                "tooltip": "Data Sync",
+                "description": "Real-Time Datasets"
+            },
+            "packages": {
+                "label": "Data Package",
+                "tooltip": "Data Packages",
+                "description": "Create and share Data Packages"
+            },
+            "channels": {
+                "label": "Channels",
+                "tooltip": "Channels",
+                "description": "Join and manage Data Channels"
+            },
+            "videos": {
+                "label": "Videos",
+                "tooltip": "Videos",
+                "description": "Access live and recorded video feeds"
+            },
+            "chats": {
+                "label": "Chats",
+                "tooltip": "Chats",
+                "description": "Open chat threads and history"
+            },
+            "routes": {
+                "label": "Routes",
+                "tooltip": "Routes",
+                "description": "Plan and manage route overlays"
+            },
+            "files": {
+                "label": "Files",
+                "tooltip": "Files",
+                "description": "Browse your uploaded and offline files"
+            },
+            "iconsets": {
+                "label": "Iconsets",
+                "tooltip": "Iconsets",
+                "description": "Customize Icons"
+            },
+            "connections": {
+                "label": "Connections",
+                "tooltip": "Connections (Admin)",
+                "description": "Manage Integrations"
+            },
+            "debugger": {
+                "label": "COT Debugger",
+                "tooltip": "Debugger (Admin)",
+                "description": "Inspect and debug COT traffic"
+            },
+            "server": {
+                "label": "Admin",
+                "tooltip": "Admin",
+                "description": "Manage CloudTAK administration and server settings."
+            },
+            "history": {
+                "label": "History",
+                "tooltip": "History",
+                "description": "Breadcrumb trails and track history"
+            },
+            "settings": {
+                "label": "Settings",
+                "tooltip": "Display Settings",
+                "description": "Adjust personal display preferences."
+            }
+        }
+    },
+    "cotAppearance": {
+        "title": "Appearance",
+        "chooseIcon": "Choose an icon",
+        "chooseIconHint": "The military symbol stays on the map until an icon is picked."
+    },
+    "coreDeviceView": {
+        "none": "No Device",
+        "simulated": "Simulated data source",
+        "sim": "Sim",
+        "battery": "Battery",
+        "hardware": "Hardware",
+        "serial": "Serial",
+        "firmware": "Firmware",
+        "notOnMap": "The Device marker is not currently on the map so its location cannot be edited here"
+    },
+    "coreEntityView": {
+        "none": "No Event",
+        "end": "End",
+        "reactivate": "Reactivate",
+        "disableEditing": "Disable Editing by Others",
+        "allowEditing": "Allow Editing by Others",
+        "location": "Location",
+        "noneValue": "None",
+        "timeline": "Timeline",
+        "assignments": "Assignments",
+        "forms": "Forms",
+        "completeForm": "Complete Form",
+        "editResponse": "Edit Response",
+        "notOnMap": "The Event marker is not currently on the map so its location cannot be edited here"
+    },
+    "cotView": {
+        "none": "No CoT Marker",
+        "offline": {
+            "event": {
+                "title": "Event Details Unavailable",
+                "description": "This marker is a CloudTAK Event - the Event it was generated from could not be loaded from the server."
+            },
+            "device": {
+                "title": "Device Details Unavailable",
+                "description": "This marker is a CloudTAK Device - the Device it was generated from could not be loaded from the server."
+            }
+        },
+        "retry": "Retry",
+        "savedFeature": "Saved Feature",
+        "saveFeature": "Save Feature",
+        "unlock": "Unlock",
+        "lockOn": "Lock On",
+        "viewVideo": "View Video Stream",
+        "share": "Share",
+        "breadcrumb": "Breadcrumb",
+        "moreActions": "More Actions",
+        "editGeometry": "Edit Geometry",
+        "chat": "Chat",
+        "buffer": "Buffer",
+        "convertToRoute": "Convert to Route",
+        "addAttachment": "Add Attachment",
+        "addLinks": "Add External Links",
+        "addVideo": "Add Video",
+        "addSensor": "Add Sensor",
+        "addGeofence": "Add Geofence",
+        "location": "Location",
+        "center": "Center",
+        "elevation": "Elevation",
+        "radius": "Radius",
+        "speed": "Speed",
+        "course": "Course",
+        "debug": "Debug"
+    },
+    "map": {
+        "clickToSetLocation": "Click on the map to set your location",
+        "clickToUpdateLocation": "Click on the map to update your location",
+        "useGps": "Use GPS",
+        "cancelManualLocation": "Cancel Manual Location",
+        "search": "Search Button",
+        "orientNorth": "Orient North",
+        "snapNorth": "Snap to North",
+        "snapFlat": "Snap Flat",
+        "zoomIn": "Zoom In Button",
+        "zoomOut": "Zoom Out Button",
+        "disableTerrain": "Disable 3D Terrain",
+        "enableTerrain": "Enable 3D Terrain",
+        "lockedToMarker": "Map is locked to marker - Click to Unlock",
+        "searchPlaceholder": "Search places, overlays, coordinates, or callsigns",
+        "rotatedTo": "Map Rotated to {bearing}",
+        "pitchTo": "Map Pitch to {pitch}",
+        "loadFailedRetrying": "Load failed - retrying…",
+        "errors": {
+            "noMapElement": "Map Element could not be found - Please refresh the page and try again",
+            "noLocation": "No Location Set or Location could not be retrieved",
+            "noMarker": "Cannot Find COT Marker",
+            "noCopyMarker": "Cannot find COT to copy",
+            "noPasteLocation": "Cannot determine paste location",
+            "clipboardNoPoint": "Clipboard does not contain a GeoJSON Point Feature",
+            "noSplitMarker": "Cannot find COT to split",
+            "splitLineOnly": "Can only split LineString geometries",
+            "splitTooClose": "Cannot split: click point is too close to a line endpoint"
+        }
+    }
+}
