@@ -305,6 +305,10 @@
             "noSplitMarker": "Cannot find COT to split",
             "splitLineOnly": "Can only split LineString geometries",
             "splitTooClose": "Cannot split: click point is too close to a line endpoint"
+        },
+        "areaPackage": {
+            "zoomMin": "Lowest zoom",
+            "zoomMax": "Highest zoom"
         }
     }
 }

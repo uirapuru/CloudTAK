@@ -305,6 +305,10 @@
             "noSplitMarker": "Nie znaleziono znacznika CoT do podzielenia",
             "splitLineOnly": "Podzielić można tylko linię (LineString)",
             "splitTooClose": "Nie można podzielić: kliknięty punkt jest za blisko końca linii"
+        },
+        "areaPackage": {
+            "zoomMin": "Najmniejsze przybliżenie",
+            "zoomMax": "Największe przybliżenie"
         }
     }
 }
