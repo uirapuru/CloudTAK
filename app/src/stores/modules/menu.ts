@@ -21,6 +21,7 @@ import {
     IconMicrophone,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
+import { std } from '../../std.ts';
 import ContactManager from '../../base/contact.ts';
 import Chatroom from '../../base/chatroom.ts';
 import type { Profile } from '../../types.ts';
@@ -36,6 +37,8 @@ export type MenuItemConfig = {
     badge?: string;
     visibility?: string;
     requiresSystemAdmin?: boolean;
+    /** taklab: only accounts allowed to see the voice log history (VOICE_HISTORY_USERS). */
+    requiresVoiceHistory?: boolean;
     requiresAgencyAdmin?: boolean;
 };
 
@@ -51,6 +54,7 @@ export default class MenuManager {
     unreadChatsCount: Ref<number>;
     isSystemAdmin: Ref<boolean>;
     isAgencyAdmin: Ref<boolean>;
+    canSeeVoiceHistory: Ref<boolean>;
     pluginMenuItems: Ref<MenuItemConfig[]>;
     preferenceOrder: Ref<Profile['menu_order']>;
 
@@ -62,6 +66,7 @@ export default class MenuManager {
         this.unreadChatsCount = ref(0);
         this.isSystemAdmin = ref(false);
         this.isAgencyAdmin = ref(false);
+        this.canSeeVoiceHistory = ref(false);
         this.pluginMenuItems = ref([]);
         this.preferenceOrder = ref([]);
 
@@ -75,6 +80,14 @@ export default class MenuManager {
 
         const isAgencyAdmin = await ProfileConfig.get('agency_admin');
         this.isAgencyAdmin.value = (isAgencyAdmin?.value && isAgencyAdmin.value.length > 0) || false;
+
+        // taklab: the Voice menu (history) is for the environment administrator only.
+        std('/api/voice/status').then((status) => {
+            const s = status as { enabled?: boolean; history?: boolean };
+            this.canSeeVoiceHistory.value = Boolean(s.enabled && s.history);
+        }).catch(() => {
+            this.canSeeVoiceHistory.value = false;
+        });
 
         try {
             const menuOrder = await ProfileConfig.get('menu_order');
@@ -176,6 +189,7 @@ export default class MenuManager {
                 tooltip: 'Głos',
                 description: 'Historia rozmów głosowych z transkrypcją',
                 icon: IconMicrophone,
+                requiresVoiceHistory: true,
             },
             {
                 key: 'routes',
@@ -255,6 +269,7 @@ export default class MenuManager {
         return computed(() => {
             let combined = [...this.baseMenuItems, ...this.pluginMenuItems.value].filter((item) => {
                 if (item.requiresSystemAdmin && !this.isSystemAdmin.value) return false;
+                if (item.requiresVoiceHistory && !this.canSeeVoiceHistory.value) return false;
                 if (item.requiresAgencyAdmin && !(this.isAgencyAdmin.value || this.isSystemAdmin.value)) return false;
                 return true;
             });

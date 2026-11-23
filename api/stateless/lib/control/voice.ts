@@ -42,6 +42,26 @@ export type VoiceQuery = {
 export class VoiceControl {
     fetch: typeof fetch = globalThis.fetch;
 
+    /**
+     * Accounts that may see the history, play and download recordings
+     * (VOICE_HISTORY_USERS, comma separated; taklab decision of 23 XI 2026:
+     * only the environment administrator). Empty = nobody. Live listening
+     * and PTT on the map are for everyone - that is the radio, not history.
+     */
+    canSeeHistory(user: string): boolean {
+        const allowed = (process.env.VOICE_HISTORY_USERS || '')
+            .split(',')
+            .map(u => u.trim().toLowerCase())
+            .filter(Boolean);
+        return allowed.includes(user.trim().toLowerCase());
+    }
+
+    requireHistory(user: string): void {
+        if (!this.canSeeHistory(user)) {
+            throw new Err(403, null, 'Historia głosu jest dostępna tylko dla administratora środowiska');
+        }
+    }
+
     baseUrl(): string | null {
         const url = (process.env.VOICE_URL || '').trim().replace(/\/+$/, '');
         return url || null;
@@ -82,18 +102,21 @@ export class VoiceControl {
     async status(user: string): Promise<{ enabled: boolean } & Record<string, unknown>> {
         if (!this.baseUrl()) return { enabled: false };
         const body = await (await this.request('/api/v1/status', user)).json() as Record<string, unknown>;
-        return { ...body, enabled: true };
+        return { ...body, enabled: true, history: this.canSeeHistory(user) };
     }
 
     async recordings(user: string, q: VoiceQuery): Promise<{ items: VoiceRecording[] }> {
+        this.requireHistory(user);
         return await (await this.request(`/api/v1/recordings${VoiceControl.query(q)}`, user)).json() as { items: VoiceRecording[] };
     }
 
     async audio(user: string, id: number, res: ExpressResponse, download: boolean): Promise<void> {
+        this.requireHistory(user);
         await this.pipe(await this.request(`/api/v1/recordings/${id}/audio`, user), res, download);
     }
 
     async export(user: string, q: VoiceQuery, res: ExpressResponse): Promise<void> {
+        this.requireHistory(user);
         await this.pipe(await this.request(`/api/v1/export${VoiceControl.query(q)}`, user, EXPORT_TIMEOUT_MS), res, true);
     }
 

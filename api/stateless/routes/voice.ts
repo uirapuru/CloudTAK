@@ -29,7 +29,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.get('/voice/status', {
         name: 'Voice Log Status',
         group: 'Voice',
-        description: 'State of the taklab voice log: channels, current speaker; {enabled: false} when not installed',
+        description: 'State of the taklab voice log: channels, current speaker, whether the caller may see the history; {enabled: false} when not installed',
         res: Type.Object({ enabled: Type.Boolean() }, { additionalProperties: true }),
     }, async (req, res) => {
         try {
