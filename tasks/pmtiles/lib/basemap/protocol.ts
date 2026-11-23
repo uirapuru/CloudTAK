@@ -50,6 +50,26 @@ export function assertTileSize(bytes: number): void {
 }
 
 /**
+ * Exact origins (scheme://host:port) a deployment lets basemaps reach despite
+ * the SSRF block-list, read from SAFEURL_ALLOW (comma separated). Bare
+ * hostnames are ignored so an entry can never open every port of a host.
+ */
+export function safeUrlAllow(env: string | undefined = process.env.SAFEURL_ALLOW): string[] {
+    if (!env) return [];
+    return env.split(',')
+        .map((entry) => entry.trim())
+        .filter((entry) => {
+            if (!entry.includes('://')) return false;
+            try {
+                const url = new URL(entry);
+                return (url.protocol === 'http:' || url.protocol === 'https:') && url.origin === entry.replace(/\/$/, '');
+            } catch {
+                return false;
+            }
+        });
+}
+
+/**
  * Base class for basemap tile protocols, mirroring the CloudTAK API
  * BasemapProtocol. Subclasses implement _tile() to proxy or render a tile.
  */
@@ -219,7 +239,7 @@ export class BasemapProtocol {
     protected async fetchBuffer(url: URL, opts: ResolvedTileOpts): Promise<TileBuffer | null> {
         try {
             if (process.env.StackName !== 'test') {
-                const { safe, reason } = await isSafeUrl(url.href);
+                const { safe, reason } = await isSafeUrl(url.href, { allow: safeUrlAllow() });
                 if (!safe) throw new Err(400, null, `Blocked tile URL: ${reason}`);
             }
 
@@ -282,7 +302,7 @@ export class BasemapProtocol {
     protected async pipe(url: URL, res: Response, opts: ResolvedTileOpts): Promise<void> {
         try {
             if (process.env.StackName !== 'test') {
-                const { safe, reason } = await isSafeUrl(url.href);
+                const { safe, reason } = await isSafeUrl(url.href, { allow: safeUrlAllow() });
                 if (!safe) throw new Err(400, null, `Blocked tile URL: ${reason}`);
             }
 
