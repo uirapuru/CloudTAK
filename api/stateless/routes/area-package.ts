@@ -5,7 +5,7 @@ import Err from '@openaddresses/batch-error';
 import bboxPolygon from '@turf/bbox-polygon';
 import { sql } from 'drizzle-orm';
 import { GenericListOrder } from '@openaddresses/batch-generic';
-import Auth from '../../common/auth.js';
+import Auth, { AuthResourceAccess } from '../../common/auth.js';
 import S3 from '../../common/aws/s3.js';
 import { StandardResponse } from '../../common/types.js';
 import { Basemap_Type } from '../../common/enums.js';
@@ -22,6 +22,7 @@ import {
     isGoogleUrl,
     limits,
     newToken,
+    safeFileName,
 } from '../../common/area-package.js';
 
 const FEATURES_MAX_BYTES = 10 * 1024 * 1024;
@@ -90,6 +91,29 @@ const PreviewLayer = Type.Object({
 });
 
 type AreaPackageRow = typeof AreaPackage.$inferSelect;
+
+export const AreaPackageJob = Type.Composite([AreaPackageResponse, Type.Object({
+    username: Type.String(),
+    features: Type.Array(Type.Unknown()),
+})]);
+
+function serializeJob(row: AreaPackageRow): Static<typeof AreaPackageJob> {
+    return {
+        ...serialize(row),
+        username: row.username,
+        features: row.features,
+    };
+}
+
+/** RFC 6266 Content-Disposition with an ASCII fallback and a UTF-8 filename */
+function disposition(name: string): string {
+    const file = `${safeFileName(name)}.zip`;
+    // eslint-disable-next-line no-control-regex
+    const ascii = file.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
+    return `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(file)}`;
+}
+
+const NOT_FOUND = { status: 404, message: 'Not Found', messages: [] };
 type ResolvedLayer = Static<typeof PreviewLayer>;
 
 /** Strip internal fields (the feature snapshot) before sending a row to its owner */
@@ -454,6 +478,134 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             await deleteProfileAssets(config, user.email, row.assets);
 
             res.json({ status: 200, message: 'Area Package Deleted' });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+    await schema.get('/public/area-package/:token.zip', {
+        name: 'Download Area Package',
+        group: 'AreaPackage',
+        description: 'Public, unauthenticated download of a finished area package by its link token',
+        params: Type.Object({
+            token: Type.String(),
+        }),
+        security: Auth.security({ optional: true }),
+    }, async (req, res) => {
+        try {
+            const rows = await config.models.AreaPackage.list({
+                limit: 1,
+                where: sql`token = ${req.params.token} AND status = 'Success'`,
+            });
+
+            if (rows.items.length !== 1) {
+                res.status(404).json(NOT_FOUND);
+                return;
+            }
+
+            const row = rows.items[0];
+
+            let object;
+            try {
+                object = await S3.getObject(`area-package/${row.id}/package.zip`);
+            } catch {
+                res.status(404).json(NOT_FOUND);
+                return;
+            }
+
+            res.set('Content-Type', 'application/zip');
+            if (object.contentLength !== undefined) res.set('Content-Length', String(object.contentLength));
+            res.set('Content-Disposition', disposition(row.name));
+
+            object.body.pipe(res);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.get('/area-package', {
+        name: 'List Area Package Jobs',
+        group: 'AreaPackage',
+        description: 'Internal: list area package jobs for the worker',
+        query: Type.Object({
+            status: Type.Optional(Type.Union([Type.Literal('Pending'), Type.Literal('Running'), Type.Literal('Success'), Type.Literal('Fail')])),
+            limit: Type.Integer({ minimum: 1, maximum: 100, default: 1 }),
+        }),
+        res: Type.Object({
+            items: Type.Array(AreaPackageJob),
+        }),
+        security: Auth.security({ resources: [AuthResourceAccess.AREA_PACKAGE] }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_resource(config, req, { resources: [{ access: AuthResourceAccess.AREA_PACKAGE }] });
+
+            const list = await config.models.AreaPackage.list({
+                limit: req.query.limit,
+                order: GenericListOrder.ASC,
+                sort: 'created',
+                where: req.query.status ? sql`status = ${req.query.status}` : undefined,
+            });
+
+            res.json({ items: list.items.map(serializeJob) });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.post('/area-package/requeue', {
+        name: 'Requeue Area Package Jobs',
+        group: 'AreaPackage',
+        description: 'Internal: put Running jobs back to Pending after a worker restart',
+        res: Type.Object({
+            count: Type.Integer(),
+        }),
+        security: Auth.security({ resources: [AuthResourceAccess.AREA_PACKAGE] }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_resource(config, req, { resources: [{ access: AuthResourceAccess.AREA_PACKAGE }] });
+
+            const rows = await config.pg.update(AreaPackage)
+                .set({ status: 'Pending', progress: 0, updated: sql`Now()` })
+                .where(sql`status = 'Running'`)
+                .returning({ id: AreaPackage.id });
+
+            res.json({ count: rows.length });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.patch('/area-package/:id', {
+        name: 'Update Area Package Job',
+        group: 'AreaPackage',
+        description: 'Internal: worker reports status, progress and results',
+        params: Type.Object({
+            id: Type.String({ format: 'uuid' }),
+        }),
+        body: Type.Object({
+            status: Type.Optional(Type.Union([Type.Literal('Pending'), Type.Literal('Running'), Type.Literal('Success'), Type.Literal('Fail')])),
+            progress: Type.Optional(Type.Integer({ minimum: 0, maximum: 100 })),
+            error: Type.Optional(Type.String()),
+            size: Type.Optional(Type.Integer({ minimum: 0 })),
+            assets: Type.Optional(Type.Array(Type.String({ format: 'uuid' }))),
+        }),
+        res: AreaPackageJob,
+        security: Auth.security({ resources: [AuthResourceAccess.AREA_PACKAGE] }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_resource(config, req, { resources: [{ access: AuthResourceAccess.AREA_PACKAGE }] });
+
+            try {
+                await config.models.AreaPackage.from(req.params.id);
+            } catch {
+                throw new Err(404, null, 'Area Package Not Found');
+            }
+
+            const row = await config.models.AreaPackage.commit(req.params.id, {
+                ...req.body,
+                updated: sql`Now()`,
+            });
+
+            res.json(serializeJob(row));
         } catch (err) {
             Err.respond(err, res);
         }

@@ -43,6 +43,9 @@ export enum AuthResourceAccess {
     BASEMAP = 'basemap',
     CONNECTION = 'connection',
 
+    // Only used for the area package worker in tasks/events
+    AREA_PACKAGE = 'area_package',
+
     // Only used for media-infra <=> CloudTAK requests
     MEDIA = 'media',
 
@@ -124,6 +127,7 @@ const SCHEME_KINDS: Array<{ kind: SchemeKind; name: string; description: string 
     { kind: AuthResourceAccess.IMPORT, name: 'import', description: 'Import token (`etl.<jwt>`)' },
     { kind: AuthResourceAccess.LEASE, name: 'lease', description: 'Video Lease token (`etl.<jwt>`)' },
     { kind: AuthResourceAccess.BASEMAP, name: 'basemap', description: 'Basemap sharing token (`etl.<jwt>`)' },
+    { kind: AuthResourceAccess.AREA_PACKAGE, name: 'areaPackage', description: 'Area package worker token (`etl.<jwt>`)' },
     { kind: 'resource', name: 'resource', description: 'Any resource token (`etl.<jwt>`)' },
 ];
 

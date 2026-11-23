@@ -34,6 +34,26 @@
         "query": false,
         "res": true
     },
+    "GET /public/area-package/:token.zip": {
+        "body": false,
+        "query": false,
+        "res": false
+    },
+    "GET /area-package": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "POST /area-package/requeue": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "PATCH /area-package/:id": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
     "GET /attachment": {
         "body": false,
         "query": true,
