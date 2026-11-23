@@ -9,7 +9,7 @@
             <div class='modal-body mx-2'>
                 <TablerInput
                     v-model='editing.name'
-                    label='Name'
+                    :label='t("mission.common.name")'
                     @keyup.enter='editLayer'
                 />
 
@@ -18,14 +18,14 @@
                         class='btn btn-secondary'
                         @click='emit("cancel")'
                     >
-                        Cancel
+                        {{ t('common.cancel') }}
                     </button>
                     <div class='ms-auto'>
                         <button
                             class='btn btn-primary'
                             @click='editLayer'
                         >
-                            Save
+                            {{ t('common.save') }}
                         </button>
                     </div>
                 </div>
@@ -43,6 +43,9 @@ import {
 } from '@tak-ps/vue-tabler';
 import Subscription from '../../../../base/subscription.ts';
 import type { MissionLayer } from '../../../../types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits(['layer', 'cancel']);
 const props = defineProps<{

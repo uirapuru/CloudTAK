@@ -1,10 +1,10 @@
 <template>
     <MenuTemplate
-        name='Data Syncs'
+        :name='t("panels.missions.title")'
     >
         <template #buttons>
             <TablerIconButton
-                title='Create Sync'
+                :title='t("panels.missions.create")'
                 @click='create = true'
             >
                 <IconPlus
@@ -23,8 +23,8 @@
                     v-model='tab'
                     class='pt-2'
                     :options='[
-                        { value: "subscribed", label: "Subscribed" },
-                        { value: "available", label: "Available" },
+                        { value: "subscribed", label: t("panels.missions.subscribed") },
+                        { value: "available", label: t("panels.missions.available") },
                     ]'
                 />
 
@@ -34,7 +34,7 @@
                     class='pt-2'
                     :sort-options='tab === "available" ? sortOptions : []'
                     :active-filters='activeFilterCount'
-                    placeholder='Filter data syncs'
+                    :placeholder='t("panels.missions.filter")'
                 >
                     <template #sort-icon>
                         <template v-if='sort'>
@@ -58,26 +58,26 @@
                     <template #filters>
                         <div class='d-flex flex-column'>
                             <div class='d-flex align-items-center justify-content-between px-3 py-2'>
-                                <strong class='small text-uppercase text-white-50'>Filters</strong>
+                                <strong class='small text-uppercase text-white-50'>{{ t('panels.missions.filters') }}</strong>
                                 <button
                                     v-if='activeFilterCount > 0'
                                     type='button'
                                     class='btn btn-link btn-sm p-0'
                                     @click='clearFilters'
                                 >
-                                    Clear
+                                    {{ t('panels.missions.clear') }}
                                 </button>
                             </div>
                             <div class='px-3 pb-2 d-flex flex-column gap-2'>
                                 <div>
                                     <div class='small text-uppercase text-white-50 mb-1'>
-                                        Channels
+                                        {{ t('panels.missions.channels') }}
                                     </div>
                                     <div
                                         v-if='!availableChannels.length'
                                         class='small text-secondary'
                                     >
-                                        No channels available
+                                        {{ t('panels.missions.noChannels') }}
                                     </div>
                                     <label
                                         v-for='channel in availableChannels'
@@ -98,13 +98,13 @@
                                 </div>
                                 <div>
                                     <div class='small text-uppercase text-white-50 mb-1'>
-                                        Keywords
+                                        {{ t('panels.missions.keywords') }}
                                     </div>
                                     <div
                                         v-if='!availableKeywords.length'
                                         class='small text-secondary'
                                     >
-                                        No keywords available
+                                        {{ t('panels.missions.noKeywords') }}
                                     </div>
                                     <label
                                         v-for='keyword in availableKeywords'
@@ -149,7 +149,7 @@
                             <TablerNone
                                 v-if='!filteredList.length'
                                 :create='false'
-                                label='No data syncs match your filter'
+                                :label='t("panels.missions.noMatch")'
                             />
                         </template>
                         <div
@@ -193,7 +193,7 @@
                                             v-model='missionPasswords[mission.guid]'
                                             type='password'
                                             autocomplete='new-password'
-                                            placeholder='Password'
+                                            :placeholder='t("panels.missions.password")'
                                             :error='errors[mission.guid]'
                                             class='flex-grow-1 w-100'
                                             @keyup.enter='openMission(mission, true)'
@@ -204,7 +204,7 @@
                                             type='button'
                                             @click.stop='openMission(mission, true)'
                                         >
-                                            Unlock
+                                            {{ t('panels.missions.unlock') }}
                                         </button>
                                     </div>
                                     <div
@@ -216,14 +216,14 @@
                                         />
                                         <span class='text-white-50'>•</span>
                                         <span
-                                            v-text='mission.contents.length + " Items"'
+                                            v-text='t("panels.missions.items", { count: mission.contents.length })'
                                         />
                                     </div>
                                 </div>
 
                                 <div class='d-flex align-items-center gap-2 pe-2'>
                                     <TablerIconButton
-                                        title='Kod QR dla ATAK Data Sync'
+                                        :title='t("panels.missions.qrCode")'
                                         @click.stop='qrMission = mission.name'
                                     >
                                         <IconQrcode
@@ -233,7 +233,7 @@
                                     </TablerIconButton>
                                     <span
                                         v-if='subscribed.has(mission.guid)'
-                                        title='Subscribed'
+                                        :title='t("panels.missions.subscribed")'
                                     >
                                         <IconAccessPoint
                                             class='text-success'
@@ -256,7 +256,7 @@
                         <TablerNone
                             v-if='!filteredList.length'
                             :create='false'
-                            label='No subscribed data syncs'
+                            :label='t("panels.missions.noSubscribed")'
                         />
                         <div
                             v-if='filteredList.length'
@@ -284,14 +284,14 @@
                                         />
                                         <span class='text-white-50'>•</span>
                                         <span
-                                            v-text='mission.contents.length + " Items"'
+                                            v-text='t("panels.missions.items", { count: mission.contents.length })'
                                         />
                                     </div>
                                 </div>
 
                                 <div class='d-flex align-items-center gap-2 pe-2'>
                                     <TablerIconButton
-                                        title='Kod QR dla ATAK Data Sync'
+                                        :title='t("panels.missions.qrCode")'
                                         @click.stop='qrMission = mission.name'
                                     >
                                         <IconQrcode
@@ -299,7 +299,7 @@
                                             stroke='1'
                                         />
                                     </TablerIconButton>
-                                    <span title='Subscribed'>
+                                    <span :title='t("panels.missions.subscribed")'>
                                         <IconAccessPoint
                                             class='text-success'
                                             :size='32'
@@ -350,6 +350,7 @@ import StandardItem from '../util/StandardItem.vue';
 import Keywords from '../util/Keywords.vue';
 import SearchSortFilter from '../util/SearchSortFilter.vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import {
     TablerIconButton,
     TablerRefreshButton,
@@ -391,6 +392,7 @@ const subscribedLoading = ref(false)
 const missionPasswords = ref<Record<string, string>>({});
 const errors = ref<Record<string, string | undefined>>({})
 const router = useRouter();
+const { t } = useI18n();
 
 const paging = ref({ filter: '' });
 const list = ref<Array<Mission>>([]);
@@ -399,10 +401,12 @@ const selectedChannels = ref<string[]>([]);
 const selectedKeywords = ref<string[]>([]);
 const tab = ref<'subscribed' | 'available'>('subscribed');
 const sort = ref('');
-const sortOptions = ['Newest → Oldest', 'Oldest → Newest', 'A → Z', 'Z → A'];
+const SORT_NEWEST = t('panels.common.sortNewest');
+const SORT_OLDEST = t('panels.common.sortOldest');
+const sortOptions = [SORT_NEWEST, SORT_OLDEST, 'A → Z', 'Z → A'];
 
 const sortTypeIcon = computed(() => (sort.value === 'A → Z' || sort.value === 'Z → A') ? IconLetterCase : IconClock);
-const sortDirectionIcon = computed(() => (sort.value === 'Oldest → Newest' || sort.value === 'A → Z') ? IconArrowUp : IconArrowDown);
+const sortDirectionIcon = computed(() => (sort.value === SORT_OLDEST || sort.value === 'A → Z') ? IconArrowUp : IconArrowDown);
 
 function missionGroups(mission: Mission): string[] {
     const groups = mission.groups;
@@ -524,9 +528,9 @@ async function generateFilteredList() {
 
     if (tab.value === 'available') {
         filtered.sort((a, b) => {
-            if (sort.value === 'Newest → Oldest') {
+            if (sort.value === SORT_NEWEST) {
                 return new Date(b.createTime).getTime() - new Date(a.createTime).getTime();
-            } else if (sort.value === 'Oldest → Newest') {
+            } else if (sort.value === SORT_OLDEST) {
                 return new Date(a.createTime).getTime() - new Date(b.createTime).getTime();
             } else if (sort.value === 'A → Z') {
                 return a.name.localeCompare(b.name);
@@ -554,7 +558,7 @@ async function openMission(mission: Mission, usePassword: boolean) {
             router.push(fragment);
         } catch (err) {
             errors.value[mission.guid] = err instanceof Error && err.message.includes('Illegal attempt to access mission')
-                ? 'Invalid Password'
+                ? t('panels.missions.invalidPassword')
                 : err instanceof Error ? err.message : String(err);
         }
     } else if (mission.passwordProtected) {
@@ -579,7 +583,7 @@ async function fetchMission(mission: Mission, password?: string): Promise<Missio
     });
 
     if (error) throw new Error(error.message);
-    if (!data) throw new Error('Mission fetch failed');
+    if (!data) throw new Error(t('panels.missions.fetchFailed'));
 
     return data;
 }

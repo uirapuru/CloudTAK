@@ -2,6 +2,7 @@
  * Przesuwanie figur przytrzymaniem na mapie (base/shape-move.ts) i przeliczanie tras
  * po przesunięciu strefy niebezpiecznej (base/zone-reroute.ts), podpięte pod sklep mapy.
  */
+import { t } from '../../i18n.ts';
 import type * as mapgl from 'maplibre-gl';
 import ShapeMover from '../../base/shape-move.ts';
 import type { MovableFeature } from '../../base/shape-move.ts';
@@ -77,7 +78,7 @@ async function rerouteNear(store: Store, zones: number[][][][]): Promise<Reroute
                     threats: await collectThreats(db as unknown as ThreatSource, body.waypoints),
                 },
             }) as { features: RouteFeature[] };
-            if (!fc.features?.length) throw new Error('Usługa tras nie zwróciła trasy.');
+            if (!fc.features?.length) throw new Error(t('messages.route.noRoute'));
             return fc.features[0];
         },
         save: async (route) => {
@@ -89,10 +90,10 @@ async function rerouteNear(store: Store, zones: number[][][][]): Promise<Reroute
 async function report(result: RerouteResult): Promise<void> {
     if (!result.rerouted.length && !result.failed.length) return;
     const lines = [
-        ...(result.rerouted.length ? [`Przeliczone: ${result.rerouted.join(', ')}.`] : []),
-        ...result.failed.map((f) => `Nie udało się przeliczyć „${f.name}”: ${f.error}`),
+        ...(result.rerouted.length ? [t('messages.zoneReroute.rerouted', { names: result.rerouted.join(', ') })] : []),
+        ...result.failed.map((f) => t('messages.zoneReroute.failed', { name: f.name, error: f.error })),
     ];
-    await TAKNotification.create(NotificationType.Alert, 'Strefa zmieniona: trasy', lines.join('\n'), '', true);
+    await TAKNotification.create(NotificationType.Alert, t('messages.zoneReroute.title'), lines.join('\n'), '', true);
 }
 
 export function attachShapeMover(store: Store, map: mapgl.Map): ShapeMover {

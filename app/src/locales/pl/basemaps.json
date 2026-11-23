@@ -9,7 +9,8 @@
         "beta": "Beta",
         "basemap": "Mapa bazowa",
         "overlay": "Nakładka",
-        "changeType": "Zmień typ"
+        "changeType": "Zmień typ",
+        "cannotBeEmpty": "Nie może być puste"
     },
     "types": {
         "zxy": {
@@ -37,10 +38,10 @@
             "urlDescription": "Podaj URL warstwy ArcGIS FeatureServer razem z identyfikatorem warstwy."
         },
         "tilejson": {
-            "label": "Import TileJSON / WMTS",
-            "description": "Pobierz ustawienia z adresu TileJSON lub WMTS GetCapabilities.",
-            "urlLabel": "URL TileJSON lub WMTS Capabilities",
-            "urlDescription": "Podaj dokument TileJSON albo URL WMTS GetCapabilities, żeby wstępnie wypełnić formularz mapy bazowej. Dopisz ?layer=<identyfikator> do URL WMTS, żeby wybrać warstwę."
+            "label": "Import TileJSON",
+            "description": "Pobierz ustawienia z adresu TileJSON.",
+            "urlLabel": "URL TileJSON",
+            "urlDescription": "Podaj URL dokumentu TileJSON, żeby wstępnie wypełnić formularz mapy bazowej."
         },
         "upload": {
             "label": "Wgraj TAK XML",
@@ -108,7 +109,8 @@
         "fetching": "Pobieranie metadanych usługi"
     },
     "tilejson": {
-        "fetching": "Pobieranie metadanych"
+        "fetching": "Pobieranie metadanych",
+        "fetch": "Pobierz TileJSON"
     },
     "composite": {
         "building": "Budowanie mapy złożonej",

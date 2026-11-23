@@ -13,27 +13,27 @@
                     <TablerInput
                         v-model='editing.minzoom'
                         required
-                        label='MinZoom'
+                        :label='t("basemaps.common.minZoom")'
                     />
                 </div>
                 <div class='col-md-3'>
                     <TablerInput
                         v-model='editing.maxzoom'
                         required
-                        label='MaxZoom'
+                        :label='t("basemaps.common.maxZoom")'
                     />
                 </div>
                 <div class='col-12 col-md-3'>
                     <TablerInput
                         v-model='editing.tilesize'
-                        label='Tile Size'
+                        :label='t("basemaps.common.tileSize")'
                     />
                 </div>
                 <div class='col-12 col-md-3'>
                     <TablerEnum
                         v-model='editing.format'
                         required
-                        label='Format'
+                        :label='t("basemaps.common.format")'
                         :options='["png", "jpeg", "mvt", "webp"]'
                     />
                 </div>
@@ -46,6 +46,9 @@
 import TypeSelectorBase from './TypeSelectorBase.vue';
 import { TablerEnum, TablerInput } from '@tak-ps/vue-tabler';
 import type { EditingBasemap, VectorLayerDescriptor } from './types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const editing = defineModel<EditingBasemap>('editing', { required: true });
 

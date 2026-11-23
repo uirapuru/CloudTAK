@@ -6,7 +6,7 @@
                 stroke='1'
                 class='me-2'
             />
-            <span>Breadcrumb</span>
+            <span>{{ t('util.breadcrumb.title') }}</span>
         </div>
 
         <div class='px-3 py-2 d-flex align-items-center justify-content-between'>
@@ -16,7 +16,7 @@
                     stroke='1'
                     class='me-2 text-muted'
                 />
-                <span class='text-body'>Live Trail</span>
+                <span class='text-body'>{{ t('util.breadcrumb.liveTrail') }}</span>
             </div>
             <TablerToggle
                 v-model='liveEnabled'
@@ -28,7 +28,7 @@
 
         <TablerLoading
             v-if='loading'
-            desc='Loading…'
+            :desc='t("common.loading")'
             :inline='true'
         />
         <template v-else>
@@ -38,13 +38,13 @@
                     stroke='1'
                     class='me-2 text-muted'
                 />
-                <span class='text-body'>Load History</span>
+                <span class='text-body'>{{ t('util.breadcrumb.loadHistory') }}</span>
             </div>
 
             <div class='px-3 pb-2'>
-                <TablerEnum
+                <TranslatedEnum
                     v-model='query.relative'
-                    :options='["1 Hour", "4 Hours", "8 Hours", "24 Hours"]'
+                    :options='relativeOptions'
                 />
             </div>
 
@@ -53,7 +53,7 @@
                     class='btn-primary w-100'
                     @click.stop.prevent='loadBreadcrumb'
                 >
-                    Load
+                    {{ t('util.breadcrumb.load') }}
                 </TablerButton>
             </div>
         </template>
@@ -61,7 +61,8 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { ref, watch, computed, onMounted } from 'vue';
 import { server } from '../../../std.ts';
 import {
     IconRoute,
@@ -69,12 +70,14 @@ import {
     IconHistory,
 } from '@tabler/icons-vue';
 import {
-    TablerEnum,
     TablerButton,
     TablerLoading,
     TablerToggle
 } from '@tak-ps/vue-tabler';
+import TranslatedEnum from './TranslatedEnum.vue';
 import { useMapStore } from '../../../stores/map.ts';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 
@@ -85,6 +88,13 @@ const props = defineProps<{
 const emit = defineEmits<{
     live: [enabled: boolean]
 }>();
+
+const relativeOptions = computed(() => [
+    { value: '1 Hour', label: t('util.breadcrumb.hours1') },
+    { value: '4 Hours', label: t('util.breadcrumb.hours4') },
+    { value: '8 Hours', label: t('util.breadcrumb.hours8') },
+    { value: '24 Hours', label: t('util.breadcrumb.hours24') },
+]);
 
 const query = ref({
     relative: '1 Hour'

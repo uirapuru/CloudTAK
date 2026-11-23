@@ -7,7 +7,7 @@
     <template v-else>
         <TablerNone
             v-if='!list.items.length'
-            label='No Login Sessions'
+            :label='t("shared.loginSessionsList.none")'
             :create='false'
         />
         <div
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { server } from '../../std.ts';
 import StandardItemProfileSession from '../CloudTAK/util/StandardItemProfileSession.vue';
@@ -40,6 +41,8 @@ import {
     TablerLoading,
     TablerAlert,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     username: string;

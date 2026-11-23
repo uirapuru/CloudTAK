@@ -4,7 +4,7 @@
     >
         <div class='modal-status bg-yellow' />
         <div class='modal-header'>
-            <span class='modal-title'>Share Features</span>
+            <span class='modal-title'>{{ t('util.share.title') }}</span>
             <div class='ms-auto btn-list'>
                 <div class='d-flex align-items-center'>
                     <IconUsers
@@ -29,7 +29,7 @@
             <button
                 type='button'
                 class='btn-close'
-                aria-label='Close'
+                :aria-label='t("common.close")'
                 @click='emit("close")'
             />
         </div>
@@ -41,22 +41,22 @@
                     v-model='filter'
                     icon='search'
                     label=''
-                    placeholder='Filter...'
+                    :placeholder='t("util.common.filterPlaceholder")'
                 />
             </div>
             <TablerPillGroup
                 v-model='mode'
                 :options='[
-                    { value: "users", label: "Users" },
-                    { value: "groups", label: "Channels" },
-                    { value: "missions", label: "Data Syncs" }
+                    { value: "users", label: t("util.share.users") },
+                    { value: "groups", label: t("util.share.channels") },
+                    { value: "missions", label: t("util.share.dataSyncs") }
                 ]'
                 :disabled='loading'
             >
                 <template #option='{ option }'>
                     <span
                         v-if='option.value === "users"'
-                        title='Users'
+                        :title='t("util.share.users")'
                     >
                         <IconUsers
                             :size='24'
@@ -65,7 +65,7 @@
                     </span>
                     <span
                         v-else-if='option.value === "groups"'
-                        title='Channels'
+                        :title='t("util.share.channels")'
                     >
                         <IconAffiliate
                             :size='24'
@@ -74,7 +74,7 @@
                     </span>
                     <span
                         v-else
-                        title='Data Syncs'
+                        :title='t("util.share.dataSyncs")'
                     >
                         <IconCloudPin
                             :size='24'
@@ -183,7 +183,7 @@
                     class='col-6'
                 >
                     <TablerButton
-                        title='Share to Selected'
+                        :title='t("util.common.shareToSelected")'
                         :disabled='(selectedUsers.size === 0 && selectedGroups.size === 0 && selectedMissions.size === 0) || loading'
                         class='w-100 btn-primary'
                         @click='share'
@@ -193,12 +193,12 @@
                             stroke='1'
                             class='me-1'
                         />
-                        <span>Share</span>
+                        <span>{{ t('util.common.share') }}</span>
                     </TablerButton>
                 </div>
                 <div class='col-6'>
                     <TablerButton
-                        title='Broadcast to All Users'
+                        :title='t("util.share.broadcast")'
                         :disabled='loading'
                         class='w-100 btn-secondary'
                         @click='broadcast'
@@ -208,7 +208,7 @@
                             stroke='1'
                             class='me-1'
                         />
-                        <span>Broadcast To All Users</span>
+                        <span>{{ t('util.share.broadcast') }}</span>
                     </TablerButton>
                 </div>
             </div>
@@ -217,6 +217,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch, onMounted } from 'vue';
 import type { Ref } from 'vue';
 import { liveQuery } from '../../../database.ts';
@@ -246,6 +247,8 @@ import Subscription from '../../../base/subscription.ts';
 import type { Contact, ContactList, Feature, GroupChannel } from '../../../types.ts'
 import COTContact from '../util/Contact.vue';
 import { useMapStore } from '../../../stores/map.ts';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 

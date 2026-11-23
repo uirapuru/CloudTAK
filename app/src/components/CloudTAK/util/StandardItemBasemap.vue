@@ -56,7 +56,7 @@
                 :border-color='isPrivate ? "rgba(247, 161, 0, 0.5)" : "rgba(47, 179, 68, 0.5)"'
                 :text-color='isPrivate ? "#f7a100" : "#2fb344"'
             >
-                {{ isPrivate ? 'Private' : 'Public' }}
+                {{ isPrivate ? t('util.standardItemBasemap.private') : t('util.standardItemBasemap.public') }}
             </TablerBadge>
 
             <TablerBadge
@@ -65,7 +65,7 @@
                 border-color='rgba(214, 57, 57, 0.5)'
                 text-color='#d63939'
             >
-                Hidden
+                {{ t('util.standardItemBasemap.hidden') }}
             </TablerBadge>
 
             <slot name='actions' />
@@ -74,6 +74,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import StandardItem from './StandardItem.vue';
 import { TablerBadge } from '@tak-ps/vue-tabler';
 import { BasemapTypeConfig } from '../Menu/Basemaps/types.ts';
@@ -81,6 +82,8 @@ import type { BasemapSourceType } from '../Menu/Basemaps/types.ts';
 import type { Basemap } from '../../../types.ts';
 import { computed } from 'vue';
 import { IconGridDots, IconMap, IconMountain, IconVector, IconServer, IconClock } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 type BasemapBadgeTone = 'primary' | 'neutral' | 'muted';
 type BasemapBadgeKind = 'default' | 'frequency';

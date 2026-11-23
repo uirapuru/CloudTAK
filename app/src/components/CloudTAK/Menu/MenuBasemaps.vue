@@ -1,8 +1,8 @@
 <template>
-    <MenuTemplate name='Basemaps'>
+    <MenuTemplate :name='t("menu.basemaps.title")'>
         <template #buttons>
             <TablerIconButton
-                title='Create Basemap'
+                :title='t("menu.basemaps.create")'
                 @click='editModal = {}'
             >
                 <IconPlus
@@ -25,7 +25,7 @@
                     v-model='paging.filter'
                     v-model:sort='sort'
                     :sort-options='sortOptions'
-                    placeholder='Filter'
+                    :placeholder='t("menu.common.filter")'
                 >
                     <template #sort-icon>
                         <component
@@ -63,7 +63,7 @@
             />
             <TablerNone
                 v-else-if='!list.items.length && !list.collections.length'
-                label='No Basemaps'
+                :label='t("menu.basemaps.none")'
                 @create='editModal = {}'
             />
             <template v-else>
@@ -117,7 +117,7 @@
                         <template #actions>
                             <TablerDropdown>
                                 <TablerIconButton
-                                    title='More Options'
+                                    :title='t("menu.common.moreOptions")'
                                 >
                                     <IconDotsVertical
                                         :size='20'
@@ -130,14 +130,14 @@
                                         <div
                                             v-if='(!basemap.username && isSystemAdmin) || basemap.username'
                                             class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
-                                            title='Edit Basemap'
+                                            :title='t("menu.basemaps.edit")'
                                             @click.stop.prevent='editModal = basemap'
                                         >
                                             <IconSettings
                                                 :size='32'
                                                 stroke='1'
                                             />
-                                            <span class='mx-2'>Edit Basemap</span>
+                                            <span class='mx-2'>{{ t('menu.basemaps.edit') }}</span>
                                         </div>
                                         <div
                                             :class='[
@@ -145,14 +145,14 @@
                                                 basemapOverlayExists(basemap) ? "opacity-50 pe-none" : "cursor-pointer cloudtak-hover"
                                             ]'
                                             :aria-disabled='basemapOverlayExists(basemap)'
-                                            :title='basemapOverlayExists(basemap) ? "Overlay already added" : "Add Overlay"'
+                                            :title='basemapOverlayExists(basemap) ? t("menu.filesRow.overlayExists") : t("menu.basemaps.addOverlay")'
                                             @click.stop.prevent='!basemapOverlayExists(basemap) && addOverlay(basemap)'
                                         >
                                             <IconBoxMultiple
                                                 :size='32'
                                                 stroke='1'
                                             />
-                                            <span class='mx-2'>{{ basemapOverlayExists(basemap) ? "Overlay already added" : "Add as Overlay" }}</span>
+                                            <span class='mx-2'>{{ basemapOverlayExists(basemap) ? t("menu.filesRow.overlayExists") : t("menu.basemaps.addAsOverlay") }}</span>
                                         </div>
                                         <div
                                             v-if='basemap.sharing_enabled'
@@ -163,7 +163,7 @@
                                                 :size='32'
                                                 stroke='1'
                                             />
-                                            <span class='mx-2'>Download XML</span>
+                                            <span class='mx-2'>{{ t('menu.basemaps.downloadXml') }}</span>
                                         </div>
                                         <div
                                             v-if='basemap.sharing_enabled'
@@ -174,7 +174,7 @@
                                                 :size='32'
                                                 stroke='1'
                                             />
-                                            <span class='mx-2'>Share</span>
+                                            <span class='mx-2'>{{ t('menu.basemaps.share') }}</span>
                                         </div>
                                     </div>
                                 </template>
@@ -246,7 +246,9 @@ import {
 } from '@tabler/icons-vue'
 import type { LayerSpecification } from 'maplibre-gl'
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const overlayBasemapIds = ref<Set<string>>(new Set());
 const currentBasemapModeIds = ref<Set<string>>(new Set());
 let overlaySubscription: Subscription | undefined;

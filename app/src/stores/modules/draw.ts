@@ -1,3 +1,4 @@
+import { t } from '../../i18n.ts';
 import router from '../../router.ts';
 import { ref, reactive, shallowRef, shallowReactive } from 'vue';
 import { Preferences } from '@capacitor/preferences';
@@ -927,7 +928,7 @@ export default class DrawTool {
             });
 
             if (errorStatus.length) {
-                throw new Error('Error editing this feature: ' + errorStatus[0].reason)
+                throw new Error(t('messages.draw.editError', { reason: errorStatus[0].reason }))
             }
 
             this.draw.selectFeature(cot.id);
@@ -1060,7 +1061,7 @@ export default class DrawTool {
                 method: 'POST',
                 body: { provider: 'taklab', ...body, threats: await threatsFor(body.waypoints) },
             }) as FeatureCollection;
-            if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
+            if (!fc.features.length) throw new Error(t('messages.route.noRoute'));
             return fc.features[0];
         };
 
@@ -1076,7 +1077,7 @@ export default class DrawTool {
                     threats: await threatsFor(stops),
                 },
             }) as FeatureCollection;
-            if (!fc.features.length) throw new Error('Usługa tras nie zwróciła trasy.');
+            if (!fc.features.length) throw new Error(t('messages.route.noRoute'));
             return fc.features[0];
         };
 

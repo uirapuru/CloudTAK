@@ -51,7 +51,9 @@
         "sort": {
             "alphaAsc": "A → Z",
             "alphaDesc": "Z → A"
-        }
+        },
+        "options": "Opcje",
+        "submitOnEnter": "Wysyłaj klawiszem Enter"
     },
     "layers": {
         "title": "Warstwy misji",
@@ -85,7 +87,8 @@
         "newMessage": "Nowa wiadomość",
         "contentAdded": "Dodano zawartość",
         "contentRemoved": "Usunięto zawartość",
-        "fetchAll": "Pobierz wszystkie zmiany"
+        "fetchAll": "Pobierz wszystkie zmiany",
+        "emptyAll": "Brak zmian w misji"
     },
     "invites": {
         "title": "Zaproszenie do misji",
@@ -138,6 +141,29 @@
         "inviteQr": "Kod QR zaproszenia",
         "inviteQrTitle": "{name} – kod QR zaproszenia",
         "loadingQr": "Wczytywanie kodu QR...",
-        "childMissions": "Misje podrzędne"
+        "childMissions": "Misje podrzędne",
+        "loadOntoMapFailed": "Nie udało się wczytać Data Sync na mapę"
+    },
+    "create": {
+        "title": "Utwórz misję",
+        "saving": "Zapisywanie misji",
+        "templates": "Szablony",
+        "searchTemplates": "Szukaj szablonów",
+        "closeSearch": "Zamknij wyszukiwanie",
+        "searchPlaceholder": "Szukaj szablonów...",
+        "loadingTemplates": "Wczytywanie szablonów",
+        "noTemplates": "Nie znaleziono szablonów",
+        "channels": "Kanały",
+        "advanced": "Opcje zaawansowane",
+        "enterKeywords": "Wpisz słowa kluczowe",
+        "passwordProtected": "Chroniona hasłem",
+        "defaultRole": "Domyślna rola",
+        "roles": {
+            "readOnly": "Tylko odczyt"
+        },
+        "defaultTemplate": "Domyślny",
+        "invalidChar": "Zawiera niedozwolony znak",
+        "tooLong": "Przekracza 1024 znaki",
+        "empty": "Nie może być puste"
     }
 }

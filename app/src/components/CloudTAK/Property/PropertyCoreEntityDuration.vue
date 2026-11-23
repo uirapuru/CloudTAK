@@ -1,6 +1,6 @@
 <template>
     <PropertyFactRow
-        label='Started'
+        :label='t("property.coreEntityDuration.started")'
         class='py-1'
     >
         <CopyField
@@ -17,13 +17,13 @@
     </PropertyFactRow>
 
     <PropertyFactRow
-        label='Ended'
+        :label='t("property.coreEntityDuration.ended")'
         class='py-1'
     >
         <CopyField
             :model-value='ended ? toLocalInput(ended) : ""'
-            :display='ended ? timediff(ended) : "Open Ended"'
-            :title='ended ? new Date(ended).toLocaleString() : "Open Ended"'
+            :display='ended ? timediff(ended) : t("property.coreEntityDuration.openEnded")'
+            :title='ended ? new Date(ended).toLocaleString() : t("property.coreEntityDuration.openEnded")'
             type='datetime-local'
             :edit='edit'
             :hover='edit'
@@ -37,6 +37,9 @@
 import CopyField from '../util/CopyField.vue';
 import PropertyFactRow from '../util/PropertyFactRow.vue';
 import timediff from '../../../timediff';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 withDefaults(defineProps<{
     started: string;
@@ -63,6 +66,6 @@ function toLocalInput(iso: string): string {
 }
 
 function validateStarted(value: string | number): false | string {
-    return String(value) ? false : 'Started is required';
+    return String(value) ? false : t('property.coreEntityDuration.startedRequired');
 }
 </script>

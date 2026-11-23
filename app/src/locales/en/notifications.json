@@ -1,0 +1,17 @@
+{
+    "importTitle": "Import {status}",
+    "importBody": "{name} has been updated to status: {status}",
+    "alertCreated": "{callsign} Created",
+    "casevacTitle": "New CASEVAC",
+    "casevacBody": "A CASEVAC has been requested for {callsign}.",
+    "missionLogTitle": "{mission} Log Entry",
+    "missionLogBody": "Log Entry Added or Modified",
+    "missionFileAdded": "{mission} File Added",
+    "missionFileRemoved": "{mission} File Removed",
+    "missionFileBody": "File {file}",
+    "missionCreated": "{mission} Created",
+    "chatTitle": "New Chat Message",
+    "chatBody": "{from} to {room} says: {message}",
+    "contactOnlineTitle": "Online Contact",
+    "contactOnlineBody": "{callsign} is now Online"
+}

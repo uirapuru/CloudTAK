@@ -8,7 +8,7 @@
             <div
                 class='mx-2 text-sm text-truncate'
                 style='max-width: calc(100% - 100px);'
-                v-text='pane?.name || "Panel"'
+                v-text='pane?.name || t("util.floatingGeneric.panel")'
             />
         </template>
 
@@ -33,10 +33,13 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref } from 'vue'
 import { useFloatStore } from '../../../stores/float.ts';
 import type { Pane } from '../../../stores/float.ts';
 import FloatingPane from './FloatingPane.vue';
+
+const { t } = useI18n();
 
 const floatStore = useFloatStore();
 

@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Mission'
+            :label='t("property.coreEntityMission.missionTitle")'
         >
             <template #icon>
                 <IconCloudPin
@@ -29,20 +29,20 @@
                         v-if='error'
                         class='mb-2'
                         severity='danger'
-                        title='Mission Error'
+                        :title='t("property.coreEntityMission.missionError")'
                         :description='error.message'
                     />
 
                     <TablerLoading
                         v-if='busy'
                         :compact='true'
-                        desc='Creating Mission'
+                        :desc='t("property.coreEntityMission.creatingMission")'
                     />
 
                     <template v-else-if='mode === "select"'>
                         <div class='d-flex align-items-center mb-2 user-select-none'>
                             <TablerIconButton
-                                title='Back'
+                                :title='t("property.type.back")'
                                 @click='mode = "view"'
                             >
                                 <IconChevronLeft
@@ -51,19 +51,19 @@
                                 />
                             </TablerIconButton>
                             <div class='mx-2 subheader'>
-                                Select Mission
+                                {{ t('property.coreEntityMission.selectMission') }}
                             </div>
                         </div>
 
                         <TablerLoading
                             v-if='listLoading'
                             :compact='true'
-                            desc='Loading Missions'
+                            :desc='t("property.coreEntityMission.loadingMissions")'
                         />
                         <template v-else>
                             <TablerInput
                                 v-model='filter'
-                                placeholder='Filter Missions...'
+                                :placeholder='t("property.coreEntityMission.filterMissions")'
                                 class='pb-2'
                             />
 
@@ -75,7 +75,7 @@
                                     v-if='!filteredMissions.length'
                                     class='px-1 py-1 text-muted'
                                 >
-                                    No Missions Found
+                                    {{ t('property.coreEntityMission.noMissionsFound') }}
                                 </div>
                                 <div
                                     v-for='mission of filteredMissions'
@@ -128,7 +128,7 @@
 
                             <TablerIconButton
                                 v-if='props.edit'
-                                title='Remove Associated Mission'
+                                :title='t("property.mission.removeAssociatedMission")'
                                 @click='removeMission(mission.guid)'
                             >
                                 <IconTrash
@@ -142,7 +142,7 @@
                             v-if='!props.edit && !props.modelValue.length'
                             class='px-1 py-1 text-muted'
                         >
-                            No Associated Missions
+                            {{ t('property.coreEntityMission.noAssociatedMissions') }}
                         </div>
                         <div
                             v-else-if='props.edit'
@@ -150,7 +150,7 @@
                         >
                             <TablerButton
                                 class='w-50 d-flex align-items-center justify-content-center'
-                                title='Associate an existing Mission with the Event'
+                                :title='t("property.coreEntityMission.associateExisting")'
                                 @click='startSelect'
                             >
                                 <IconListSearch
@@ -158,11 +158,11 @@
                                     stroke='1'
                                     class='me-2 flex-shrink-0'
                                 />
-                                Existing Mission
+                                {{ t('property.coreEntityMission.existingMission') }}
                             </TablerButton>
                             <TablerButton
                                 class='w-50 d-flex align-items-center justify-content-center'
-                                title='Create a new Mission from the Event name, remarks & channels'
+                                :title='t("property.coreEntityMission.createNew")'
                                 @click='createMission'
                             >
                                 <IconPlus
@@ -170,7 +170,7 @@
                                     stroke='1'
                                     class='me-2 flex-shrink-0'
                                 />
-                                New Mission
+                                {{ t('property.coreEntityMission.newMission') }}
                             </TablerButton>
                         </div>
                     </template>
@@ -183,6 +183,7 @@
 <script setup lang='ts'>
 import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
 import Subscription from '../../../base/subscription.ts';
 import GroupManager from '../../../base/group.ts';
@@ -223,6 +224,7 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: Array<CoreEntityMission>): void
 }>();
 
+const { t } = useI18n();
 const router = useRouter();
 const mapStore = useMapStore();
 
@@ -292,7 +294,7 @@ async function createMission(): Promise<void> {
     error.value = undefined;
 
     if (!missionName) {
-        error.value = new Error('The Event must have a name before a Mission can be created from it');
+        error.value = new Error(t('property.coreEntityMission.missionNameRequired'));
         return;
     }
 

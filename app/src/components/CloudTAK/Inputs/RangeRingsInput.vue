@@ -11,20 +11,20 @@
             />
             <div
                 class='mx-2 text-sm text-truncate'
-                v-text='"Range Rings"'
+                v-text='t("tools.rangeRings.title")'
             />
         </template>
 
         <div class='mx-2 mb-2'>
             <TablerInput
                 v-model='config.name'
-                label='Name'
+                :label='t("tools.common.name")'
             />
         </div>
 
         <Coordinate
             v-model='config.coordinates'
-            label='Origin'
+            :label='t("tools.rangeRings.origin")'
             :edit='true'
             :hover='true'
             :modes='["dd"]'
@@ -51,7 +51,7 @@
                     <PropertyDistance
                         v-model='ring.distance'
                         class='py-2'
-                        label='Ring Diameter'
+                        :label='t("tools.rangeRings.diameter")'
                         :unit='distanceUnit'
                         :edit='true'
                         :hover='true'
@@ -68,7 +68,7 @@
                         :size='18'
                         stroke='1'
                     />
-                    <span class='ms-2'>Add Ring</span>
+                    <span class='ms-2'>{{ t('tools.rangeRings.addRing') }}</span>
                 </button>
             </div>
         </div>
@@ -80,29 +80,29 @@
                 :click-anywhere-collapse='true'
             >
                 <div class='d-flex align-items-center w-100'>
-                    <span>Style Options</span>
+                    <span>{{ t('tools.rangeRings.styleOptions') }}</span>
                     <div :style='previewStyle' />
                 </div>
                 <template #expanded>
                     <TablerColour
                         v-model='config.color'
-                        label='Color'
+                        :label='t("tools.common.color")'
                     />
-                    <TablerEnum
+                    <TranslatedEnum
                         v-model='config.style'
-                        label='Style'
-                        :options='["solid", "dashed", "dotted", "outlined"]'
+                        :label='t("tools.rangeRings.style")'
+                        :options='["solid", "dashed", "dotted", "outlined"].map((value) => ({ value, label: t(`tools.stroke.styles.${value}`) }))'
                     />
                     <TablerRange
                         v-model='config.width'
-                        label='Width'
+                        :label='t("tools.stroke.width")'
                         :min='1'
                         :max='10'
                         :step='1'
                     />
                     <TablerRange
                         v-model='config.opacity'
-                        label='Opacity'
+                        :label='t("tools.common.opacity")'
                         :min='0'
                         :max='1'
                         :step='0.1'
@@ -116,7 +116,7 @@
                 class='btn btn-primary w-100'
                 @click='submitRings'
             >
-                Create Range Rings
+                {{ t('tools.rangeRings.create') }}
             </button>
         </template>
     </FloatingPane>
@@ -138,12 +138,15 @@ import {
 import {
     TablerInput,
     TablerColour,
-    TablerEnum,
     TablerRange,
     TablerSlidedown
 } from '@tak-ps/vue-tabler';
 import type { LngLatLike } from 'maplibre-gl'
 import { useMapStore } from '../../../stores/map.ts';
+import TranslatedEnum from '../util/TranslatedEnum.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 defineProps({

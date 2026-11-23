@@ -28,7 +28,7 @@
                 <TablerInput
                     v-model='filter'
                     icon='search'
-                    placeholder='Filter Channels...'
+                    :placeholder='t("shared.groupSelect.filter")'
                 />
             </div>
 
@@ -38,17 +38,17 @@
                 role='alert'
             >
                 <div class='d-flex align-items-center'>
-                    <IconInfoCircle /><span class='mx-1'>Select up to&nbsp;<span v-text='props.limit' />&nbsp;Channels</span>
+                    <IconInfoCircle /><span class='mx-1'>{{ t('shared.groupSelect.selectUpTo', { limit: props.limit }) }}</span>
                 </div>
             </div>
 
             <TablerLoading
                 v-if='loading'
-                desc='Loading Channels'
+                :desc='t("shared.groupSelect.loading")'
             />
             <TablerNone
                 v-else-if='!filtered.length'
-                label='No Groups'
+                :label='t("shared.groupSelect.noGroups")'
                 :create='false'
             />
             <template v-else>
@@ -89,6 +89,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import { server } from '../../../src/std.ts';
 import type { Group, GroupChannel } from '../../../src/types.ts';
@@ -104,6 +105,8 @@ import {
     IconX
 } from '@tabler/icons-vue';
 import GroupManager from '../../base/group.ts';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     disabled?: boolean,
@@ -137,7 +140,7 @@ function updateGroup(group: string) {
         selected.value.delete(group)
     } else {
         if (props.limit && selected.value.size >= props.limit) {
-            throw new Error(`Cannot select more than ${props.limit} Channels`);
+            throw new Error(t('shared.groupSelect.tooMany', { limit: props.limit }));
         }
 
         selected.value.add(group)

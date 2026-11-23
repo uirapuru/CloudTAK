@@ -4,7 +4,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("close")'
         />
         <div class='modal-header text-body'>
@@ -13,12 +13,12 @@
                     :size='24'
                     stroke='1.5'
                 />
-                <span v-text='props.title' />
+                <span v-text='props.title ?? t("util.formWizard.title")' />
             </div>
             <div
                 v-if='props.forms.length > 1'
                 class='ms-auto text-secondary'
-                v-text='`Form ${step + 1} of ${props.forms.length}`'
+                v-text='t("util.formWizard.progress", { step: step + 1, total: props.forms.length })'
             />
         </div>
         <div class='modal-body text-body'>
@@ -36,7 +36,7 @@
                     v-if='props.eventName'
                     class='form-hint mt-1'
                 >
-                    Submitted for <span v-text='props.eventName' />
+                    {{ t('util.formWizard.submittedFor', { name: props.eventName }) }}
                 </div>
             </div>
 
@@ -69,7 +69,7 @@
                     :disabled='submitting'
                     @click='emit("close")'
                 >
-                    Cancel
+                    {{ t('common.cancel') }}
                 </button>
                 <button
                     class='btn btn-primary ms-auto'
@@ -83,7 +83,7 @@
                     />
                     <span
                         v-else
-                        v-text='step + 1 < props.forms.length ? "Submit & Continue" : "Submit"'
+                        v-text='step + 1 < props.forms.length ? t("util.formWizard.submitContinue") : t("util.formWizard.submit")'
                     />
                 </button>
             </div>
@@ -92,6 +92,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /**
  * FormWizard - modal that walks through submitting one Response per Form for
  * a Core Event, linking each Response to the Event as it goes. Used wherever
@@ -113,6 +114,8 @@ import {
     TablerLoading,
 } from '@tak-ps/vue-tabler';
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<{
     /** Core Event each Response is linked to */
     eventId: string;
@@ -123,7 +126,7 @@ const props = withDefaults(defineProps<{
     title?: string;
 }>(), {
     eventName: undefined,
-    title: 'Complete Required Forms',
+    title: undefined,
 });
 
 const emit = defineEmits<{

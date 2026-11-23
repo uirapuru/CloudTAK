@@ -8,11 +8,11 @@
         <template v-else>
             <div class='d-flex align-items-center user-select-none border-bottom'>
                 <div class='subheader mx-2 my-2'>
-                    Selected Features
+                    {{ t('util.selectFeats.title') }}
                 </div>
                 <div class='ms-auto px-2'>
                     <TablerIconButton
-                        title='Close'
+                        :title='t("common.close")'
                         @click='selected.clear()'
                     >
                         <IconX
@@ -44,13 +44,13 @@
                         :size='20'
                         stroke='1'
                     />
-                    <span class='mx-2'>Share</span>
+                    <span class='mx-2'>{{ t('util.common.share') }}</span>
                 </TablerButton>
                 <TablerDropdown
                     position='top'
                 >
                     <TablerButton
-                        title='More Options'
+                        :title='t("util.common.moreOptions")'
                         class='btn-sm'
                         style='height: 30px'
                     >
@@ -71,7 +71,7 @@
                                     stroke='1'
                                     class='me-2'
                                 />
-                                New Data Package
+                                {{ t('util.selectFeats.newPackage') }}
                             </div>
                             <div
                                 class='cursor-pointer col-12 cloudtak-hover rounded d-flex align-items-center px-2'
@@ -82,7 +82,7 @@
                                     stroke='1'
                                     class='me-2'
                                 />
-                                Move to Data Sync
+                                {{ t('util.common.moveToDataSync') }}
                             </div>
                             <div
                                 class='cursor-pointer col-12 cloudtak-hover rounded d-flex align-items-center px-2'
@@ -93,7 +93,7 @@
                                     stroke='1'
                                     class='me-2'
                                 />
-                                Delete Features
+                                {{ t('util.selectFeats.delete') }}
                             </div>
                         </div>
                     </template>
@@ -123,6 +123,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import DisplayFeature from './FeatureRow.vue';
 import COT from '../../../base/cot.ts';
@@ -144,6 +145,8 @@ import {
 import Share from './Share.vue';
 import ShareToMission from './ShareToMission.vue';
 import ShareToPackage from './ShareToPackage.vue';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 

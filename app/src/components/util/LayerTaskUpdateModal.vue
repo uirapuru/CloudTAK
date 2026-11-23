@@ -6,7 +6,7 @@
                 stroke='1'
             />
             <span class='mx-2'>
-                Update Task: v<span v-text='update.from' /> → v<span v-text='update.to' />
+                {{ t('shared.layerTaskUpdateModal.title', { from: update.from, to: update.to }) }}
             </span>
             <button
                 type='button'
@@ -21,11 +21,11 @@
         >
             <TablerLoading
                 v-if='loading'
-                desc='Loading Task Permissions'
+                :desc='t("shared.layerTaskUpdateModal.loading")'
             />
             <TablerAlert
                 v-else-if='error'
-                title='Task Update Error'
+                :title='t("shared.layerTaskUpdateModal.error")'
                 :err='error'
             />
             <template v-else>
@@ -33,13 +33,13 @@
                     v-if='!next'
                     class='alert alert-warning'
                 >
-                    The new task version does not publish a Capabilities document - existing Layer permissions will be kept as-is.
+                    {{ t('shared.layerTaskUpdateModal.noCapabilities') }}
                 </div>
                 <TablerNone
                     v-else-if='!rows.length'
                     :create='false'
                     :compact='true'
-                    label='Permissions Requested'
+                    :label='t("shared.layerTaskUpdateModal.permissionsRequested")'
                 />
                 <table
                     v-else
@@ -47,12 +47,12 @@
                 >
                     <thead>
                         <tr>
-                            <th>Permission</th>
+                            <th>{{ t('shared.layerTaskUpdateModal.permission') }}</th>
                             <th class='text-center'>
-                                Then (v<span v-text='update.from' />)
+                                {{ t('shared.layerTaskUpdateModal.then', { version: update.from }) }}
                             </th>
                             <th class='text-center'>
-                                Now (v<span v-text='update.to' />)
+                                {{ t('shared.layerTaskUpdateModal.now', { version: update.to }) }}
                             </th>
                         </tr>
                     </thead>
@@ -74,11 +74,11 @@
                                 <span
                                     v-if='row.then === "granted"'
                                     class='badge bg-green-lt'
-                                >Granted</span>
+                                >{{ t('shared.layerTaskUpdateModal.granted') }}</span>
                                 <span
                                     v-else-if='row.then === "denied"'
                                     class='badge bg-secondary-lt'
-                                >Not Granted</span>
+                                >{{ t('shared.layerTaskUpdateModal.notGranted') }}</span>
                                 <span
                                     v-else
                                     class='text-muted'
@@ -88,15 +88,15 @@
                                 <span
                                     v-if='row.now === "removed"'
                                     class='badge bg-red-lt'
-                                >Removed</span>
+                                >{{ t('shared.layerTaskUpdateModal.removed') }}</span>
                                 <span
                                     v-else-if='row.now === "required"'
                                     class='badge bg-green-lt'
-                                >Required</span>
+                                >{{ t('shared.layerTaskUpdateModal.required') }}</span>
                                 <TablerToggle
                                     v-else
                                     v-model='granted[row.resource]'
-                                    label='Grant'
+                                    :label='t("shared.layerTaskUpdateModal.grant")'
                                 />
                             </td>
                         </tr>
@@ -109,7 +109,7 @@
                 class='btn'
                 @click='emit("close")'
             >
-                Cancel
+                {{ t('common.cancel') }}
             </button>
             <div class='ms-auto'>
                 <button
@@ -122,7 +122,7 @@
                         class='spinner-border spinner-border-sm me-2'
                         role='status'
                     />
-                    Accept &amp; Update
+                    {{ t('shared.layerTaskUpdateModal.accept') }}
                 </button>
             </div>
         </div>
@@ -130,6 +130,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import { server } from '../../std.ts';
 import type { ETLLayer, ETLTaskCapabilities } from '../../types.ts';
@@ -158,6 +159,8 @@ export interface UpdateTarget {
     connection: number | null;
     permissions?: string[];
 }
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     layer: UpdateTarget;

@@ -3,8 +3,8 @@
         <img
             class='nav-header-logo me-2 cursor-pointer'
             :src='headerLogo'
-            alt='CloudTAK Logo'
-            title='CloudTAK Home'
+            :alt='t("login.login.cloudtakLogo")'
+            :title='t("shared.navHeader.home")'
             draggable='false'
             @click='home'
         >
@@ -27,7 +27,7 @@
                 v-if='appStore.user'
                 :width='170'
             >
-                <TablerIconButton title='Profile'>
+                <TablerIconButton :title='t("shared.navHeader.profile")'>
                     <IconUser
                         :size='32'
                         stroke='1'
@@ -43,7 +43,7 @@
                             :size='20'
                             stroke='1'
                         />
-                        <span class='mx-2'>Map</span>
+                        <span class='mx-2'>{{ t('shared.navHeader.map') }}</span>
                     </div>
                     <div
                         class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -53,7 +53,7 @@
                             :size='20'
                             stroke='1'
                         />
-                        <span class='mx-2'>Connections</span>
+                        <span class='mx-2'>{{ t('shared.navHeader.connections') }}</span>
                     </div>
                     <div
                         class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -63,7 +63,7 @@
                             :size='20'
                             stroke='1'
                         />
-                        <span class='mx-2'>Admin</span>
+                        <span class='mx-2'>{{ t('shared.navHeader.admin') }}</span>
                     </div>
                     <div
                         class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -73,7 +73,7 @@
                             :size='20'
                             stroke='1'
                         />
-                        <span class='mx-2'>Docs</span>
+                        <span class='mx-2'>{{ t('shared.navHeader.docs') }}</span>
                     </div>
                     <div
                         class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -83,7 +83,7 @@
                             :size='20'
                             stroke='1'
                         />
-                        <span class='mx-2'>Logout</span>
+                        <span class='mx-2'>{{ t('shared.navHeader.logout') }}</span>
                     </div>
                 </template>
             </TablerDropdown>
@@ -92,6 +92,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import Config from '../../base/config.ts';
 import { useAppStore } from '../../stores/app.ts';
@@ -113,6 +114,8 @@ withDefaults(defineProps<{
 }>(), {
     title: undefined
 });
+
+const { t } = useI18n();
 
 const appStore = useAppStore();
 

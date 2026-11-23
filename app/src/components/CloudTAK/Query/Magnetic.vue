@@ -1,11 +1,11 @@
 <template>
     <div class='col-12 row g-0'>
         <div class='col-12'>
-            <label class='subheader mx-2'>Magnetic Declination</label>
+            <label class='subheader mx-2'>{{ t('tools.query.magnetic') }}</label>
         </div>
         <TablerLoading
             v-if='loading'
-            desc='Loading magnetic data...'
+            :desc='t("tools.query.loadingMagnetic")'
         />
         <TablerAlert
             v-else-if='error'
@@ -70,7 +70,7 @@
                         {{ Math.abs(magnetic.declination).toFixed(1) }}° {{ magnetic.declination > 0 ? 'E' : 'W' }}
                     </div>
                     <div class='text-muted small'>
-                        Inclination: {{ magnetic.inclination.toFixed(1) }}°
+                        {{ t('tools.query.inclination', { value: magnetic.inclination.toFixed(1) }) }}
                     </div>
                 </div>
             </div>
@@ -86,6 +86,9 @@ import {
     TablerLoading,
     TablerAlert
 } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     longitude: number;

@@ -7,10 +7,9 @@
                 class='text-yellow mb-2'
                 stroke='1'
             />
-            <h3>Channel List Changed</h3>
+            <h3>{{ t('menu.channelChangeModal.title') }}</h3>
             <div class='text-secondary'>
-                Your available channel list has been updated by the server.
-                Would you like to review and update your channel/group assignments?
+                {{ t('menu.channelChangeModal.body') }}
             </div>
         </div>
         <div class='modal-footer'>
@@ -21,7 +20,7 @@
                             class='btn w-100'
                             @click='dismiss'
                         >
-                            Dismiss
+                            {{ t('menu.channelChangeModal.dismiss') }}
                         </button>
                     </div>
                     <div class='col'>
@@ -29,7 +28,7 @@
                             class='btn btn-warning w-100'
                             @click='updateChannels'
                         >
-                            Update Channels
+                            {{ t('menu.channelChangeModal.update') }}
                         </button>
                     </div>
                 </div>
@@ -42,6 +41,9 @@
 import { TablerModal } from '@tak-ps/vue-tabler';
 import { IconList } from '@tabler/icons-vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits(['close']);
 const router = useRouter();

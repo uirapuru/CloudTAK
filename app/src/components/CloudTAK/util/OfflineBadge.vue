@@ -4,24 +4,25 @@
         background-color='#206bc4'
         border-color='#206bc4'
         text-color='#ffffff'
-        :title='title'
+        :title='title || t("util.offlineBadge.title")'
     >
         <IconDeviceMobileCheck
             :size='14'
             stroke='2'
             class='me-1'
         />
-        Offline
+        {{ t('util.offlineBadge.offline') }}
     </TablerBadge>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { IconDeviceMobileCheck } from '@tabler/icons-vue';
 import { TablerBadge } from '@tak-ps/vue-tabler';
 
-withDefaults(defineProps<{
+const { t } = useI18n();
+
+defineProps<{
     title?: string
-}>(), {
-    title: 'Available offline on this device'
-});
+}>();
 </script>

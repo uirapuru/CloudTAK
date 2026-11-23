@@ -89,7 +89,11 @@
         "startedAt": "Rozpoczęto {time}",
         "active": "Aktywne · {elapsed}",
         "endedAt": "Zakończono {time}",
-        "ended": "Zakończone · {elapsed}"
+        "ended": "Zakończone · {elapsed}",
+        "activeLabel": "Aktywne",
+        "endedLabel": "Zakończone",
+        "end": "Zakończ",
+        "reactivate": "Wznów"
     },
     "creator": {
         "label": "Autor",
@@ -200,7 +204,11 @@
         "add": "Dodaj link",
         "none": "Brak linków",
         "edit": "Edytuj link",
-        "untitled": "Link bez nazwy"
+        "untitled": "Link bez nazwy",
+        "link": "Link",
+        "save": "Zapisz link",
+        "remove": "Usuń link",
+        "discard": "Odrzuć link"
     },
     "style": {
         "title": "Styl",
@@ -264,7 +272,20 @@
         "noneFound": "Nie znaleziono Data Sync",
         "none": "Brak Data Sync",
         "remove": "Usuń Data Sync",
-        "nameRequired": "Zdarzenie musi mieć nazwę, zanim utworzysz z niego Data Sync"
+        "nameRequired": "Zdarzenie musi mieć nazwę, zanim utworzysz z niego Data Sync",
+        "missionTitle": "Misja",
+        "missionError": "Błąd misji",
+        "creatingMission": "Tworzenie misji",
+        "selectMission": "Wybierz misję",
+        "loadingMissions": "Wczytywanie misji",
+        "filterMissions": "Filtruj misje...",
+        "noMissionsFound": "Nie znaleziono misji",
+        "noAssociatedMissions": "Brak powiązanych misji",
+        "associateExisting": "Powiąż istniejącą misję ze zdarzeniem",
+        "existingMission": "Istniejąca misja",
+        "createNew": "Utwórz nową misję z nazwy, uwag i kanałów zdarzenia",
+        "newMission": "Nowa misja",
+        "missionNameRequired": "Zdarzenie musi mieć nazwę, zanim utworzysz z niego misję"
     },
     "coreEntityAssignments": {
         "title": "Przydziały",

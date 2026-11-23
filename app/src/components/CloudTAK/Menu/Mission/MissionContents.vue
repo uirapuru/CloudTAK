@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Files'
+        :name='t("mission.contents.title")'
         :zindex='0'
         :back='false'
         :border='false'
@@ -9,7 +9,7 @@
         <template #buttons>
             <TablerIconButton
                 v-if='!upload && props.subscription.role && props.subscription.role.permissions.includes("MISSION_WRITE")'
-                title='Upload File'
+                :title='t("mission.contents.upload")'
                 @click='upload = true'
             >
                 <IconPlus
@@ -46,7 +46,7 @@
 
         <TablerNone
             v-else-if='!contents || !contents.length'
-            label='No Files'
+            :label='t("mission.contents.noFiles")'
             :create='false'
         />
         <template v-else>
@@ -57,8 +57,8 @@
                 <TablerPillGroup
                     v-model='mode'
                     :options='[
-                        { value: "photos", label: "Photos" },
-                        { value: "files", label: "Files" }
+                        { value: "photos", label: t("mission.contents.photos") },
+                        { value: "files", label: t("mission.contents.files") }
                     ]'
                 >
                     <template #option='{ option }'>
@@ -80,7 +80,7 @@
             </div>
             <TablerNone
                 v-if='!filteredContents.length'
-                :label='mode === "photos" ? "No Photos" : "No Files"'
+                :label='mode === "photos" ? t("mission.contents.noPhotos") : t("mission.contents.noFiles")'
                 :create='false'
             />
             <div
@@ -128,7 +128,7 @@
                                 @delete='deleteFile(content.hash)'
                             />
                             <TablerIconButton
-                                title='Download Asset'
+                                :title='t("mission.contents.download")'
                                 @click='props.subscription.contents.download(content.name, content.hash)'
                             >
                                 <IconDownload
@@ -176,7 +176,7 @@
                                 @delete='deleteFile(content.hash)'
                             />
                             <TablerIconButton
-                                title='Import File'
+                                :title='t("mission.contents.import")'
                                 @click='importFile(content.name, content.hash)'
                             >
                                 <IconFileImport
@@ -185,7 +185,7 @@
                                 />
                             </TablerIconButton>
                             <TablerIconButton
-                                title='Download Asset'
+                                :title='t("mission.contents.download")'
                                 @click='props.subscription.contents.download(content.name, content.hash)'
                             >
                                 <IconDownload
@@ -235,6 +235,9 @@ import {
 
 import MenuTemplate from '../../util/MenuTemplate.vue';
 import StandardItem from '../../util/StandardItem.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     subscription: Subscription

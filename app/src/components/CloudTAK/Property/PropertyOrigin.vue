@@ -5,7 +5,7 @@
             stroke='1'
             class='flex-shrink-0'
         />
-        <span class='text-secondary flex-shrink-0 user-select-none'>From</span>
+        <span class='text-secondary flex-shrink-0 user-select-none'>{{ t('property.origin.from') }}</span>
         <a
             class='cursor-pointer text-truncate'
             :title='props.subscription.meta.name'
@@ -29,14 +29,14 @@
                 background-color='rgba(255, 171, 0, 0.15)'
                 border-color='rgba(255, 171, 0, 0.35)'
                 text-color='#c98500'
-                title='Your role in this Mission does not allow editing this feature'
+                :title='t("property.origin.readOnlyTitle")'
             >
                 <IconLock
                     :size='14'
                     stroke='1'
                     class='me-1'
                 />
-                Read Only
+                {{ t('property.origin.readOnly') }}
             </TablerBadge>
         </div>
     </div>
@@ -53,6 +53,9 @@ import { from } from 'rxjs';
 import NotSyncedBadge from '../util/NotSyncedBadge.vue';
 import type Subscription from '../../../base/subscription.ts';
 import type { DBSubscriptionFeature } from '../../../database.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     /** The Mission Subscription the CoT originates from */

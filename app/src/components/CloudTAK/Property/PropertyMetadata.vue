@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Device'
+            :label='t("property.metadata.device")'
         >
             <template #icon>
                 <IconDeviceMobile
@@ -32,6 +32,9 @@ import { IconDeviceMobile } from '@tabler/icons-vue';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
 import KeyValueRow from '../util/KeyValueRow.vue';
 import type COT from '../../../base/cot';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     cot: COT

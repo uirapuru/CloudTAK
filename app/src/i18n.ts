@@ -52,6 +52,14 @@ const i18n = createI18n<false, I18nOptions>({
 
 export function setLocale(locale: Locale): void {
     i18n.global.locale.value = locale;
+    // Tell the Atlas worker, which writes notifications in this language.
+    try {
+        const channel = new BroadcastChannel('cloudtak');
+        channel.postMessage({ type: 'cloudtak:locale:change', body: { locale } });
+        channel.close();
+    } catch {
+        // BroadcastChannel unavailable - notifications stay in the previous language
+    }
     document.documentElement.setAttribute('lang', locale);
     try {
         localStorage.setItem(LOCALE_STORAGE_KEY, locale);

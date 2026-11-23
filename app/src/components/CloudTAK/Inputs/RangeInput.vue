@@ -11,14 +11,14 @@
             />
             <div
                 class='mx-2 text-sm text-truncate'
-                v-text='"Range & Bearing"'
+                v-text='t("tools.rangeInput.title")'
             />
         </template>
 
         <div class='mx-2 mb-2'>
             <TablerInput
                 v-model='config.name'
-                label='Name'
+                :label='t("tools.common.name")'
                 @submit='submitPoint'
             />
         </div>
@@ -49,7 +49,7 @@
                 class='btn btn-primary w-100'
                 @click='submitPoint'
             >
-                Create Range &amp; Bearing
+                {{ t('tools.rangeInput.create') }}
             </button>
         </template>
     </FloatingPane>
@@ -71,6 +71,9 @@ import {
 } from '@tabler/icons-vue';
 import type { LngLatLike } from 'maplibre-gl'
 import { useMapStore } from '../../../stores/map.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 defineProps({

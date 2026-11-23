@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='Callsign &amp; Device'>
+    <MenuTemplate :name='t("panels.settingsCallsign.title")'>
         <TablerLoading v-if='loading || !profile' />
         <div
             v-else
@@ -8,7 +8,7 @@
             <TablerInput
                 v-model='search'
                 icon='search'
-                placeholder='Search settings...'
+                :placeholder='t("panels.settingsCallsign.search")'
             />
 
             <div class='d-flex flex-column gap-2'>
@@ -28,7 +28,7 @@
                                 stroke='1.5'
                                 class='text-success'
                             />
-                            <span class='text-success small fw-medium'>Saved</span>
+                            <span class='text-success small fw-medium'>{{ t('common.saved') }}</span>
                         </div>
                     </Transition>
                     <div class='d-flex flex-column gap-2 px-3 py-3'>
@@ -61,10 +61,10 @@
                                 min='0'
                                 step='0.1'
                             />
-                            <TablerEnum
+                            <TranslatedEnum
                                 v-else-if='item.type === "enum"'
                                 v-model='(profile as any)[item.key]'
-                                :options='item.options'
+                                :options='item.options || []'
                             />
                             <CoordinateType
                                 v-else-if='item.type === "coordinate"'
@@ -81,7 +81,7 @@
                                 :disabled='item.key === "tak_callsign" && !!validateTextNotEmpty(profile.tak_callsign)'
                                 @click='saveField(item.key)'
                             >
-                                Save
+                                {{ t('common.save') }}
                             </button>
                         </div>
                     </div>
@@ -91,7 +91,7 @@
                     v-if='filteredSettings.length === 0'
                     class='text-center text-secondary py-4'
                 >
-                    No settings match "{{ search }}"
+                    {{ t('panels.settingsCallsign.noMatch', { search }) }}
                 </div>
             </div>
         </div>
@@ -100,6 +100,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Component } from 'vue';
 import {
     IconUser,
@@ -111,6 +112,8 @@ import {
     IconCircleCheck,
 } from '@tabler/icons-vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
+import TranslatedEnum from '../util/TranslatedEnum.vue';
+import type { EnumOption } from '../util/TranslatedEnum.vue';
 import CoordinateType from '../util/CoordinateType.vue';
 import { normalizePointType } from '../../../utils/point-type.ts';
 import StandardItem from '../util/StandardItem.vue';
@@ -119,20 +122,20 @@ import Config from '../../../base/config.ts';
 import type { FullConfig } from '../../../base/config.ts';
 import {
     TablerInput,
-    TablerEnum,
     TablerLoading
 } from '@tak-ps/vue-tabler';
 import { validateTextNotEmpty } from '../../../utils/validators.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import ProfileConfig from '../../../base/profile.ts';
 const mapStore = useMapStore();
+const { t } = useI18n();
 
 type SettingItem = {
     key: string;
     label: string;
     icon: Component;
     type: 'input' | 'enum' | 'coordinate' | 'seconds';
-    options?: string[];
+    options?: EnumOption[];
 };
 
 const loading = ref(true);
@@ -144,7 +147,10 @@ const changedFields = ref<Set<string>>(new Set());
 let previousValues: Record<string, unknown> = {};
 let saveTimeout: ReturnType<typeof setTimeout> | undefined;
 
-const roles = ['Team Member', 'Team Lead', 'HQ', 'Sniper', 'Medic', 'Forward Observer', 'RTO', 'K9'];
+const roles = computed<EnumOption[]>(() => ['Team Member', 'Team Lead', 'HQ', 'Sniper', 'Medic', 'Forward Observer', 'RTO', 'K9'].map((value) => ({
+    value,
+    label: t(`panels.settingsCallsign.roles.${value.replace(/[^a-zA-Z0-9]+/g, '_')}`)
+})));
 
 const tak_groups = computed(() => {
     const result = [];
@@ -163,39 +169,39 @@ const settings = computed<SettingItem[]>(() => {
     const items: SettingItem[] = [
         {
             key: 'tak_callsign',
-            label: 'User Callsign',
+            label: t('panels.settingsCallsign.callsign'),
             icon: IconUser,
             type: 'input',
         },
         {
             key: 'tak_phone',
-            label: 'Phone Number',
+            label: t('panels.settingsCallsign.phone'),
             icon: IconPhone,
             type: 'input',
         },
         {
             key: 'tak_group',
-            label: 'User Group',
+            label: t('panels.settingsCallsign.group'),
             icon: IconUsers,
             type: 'enum',
             options: tak_groups.value,
         },
         {
             key: 'tak_role',
-            label: 'User Role',
+            label: t('panels.settingsCallsign.role'),
             icon: IconShield,
             type: 'enum',
-            options: roles,
+            options: roles.value,
         },
         {
             key: 'tak_loc_freq',
-            label: 'Location Reporting Frequency (sec)',
+            label: t('panels.settingsCallsign.locFreq'),
             icon: IconClock,
             type: 'seconds',
         },
         {
             key: 'tak_type',
-            label: 'Default Point Type',
+            label: t('panels.settingsCallsign.pointType'),
             icon: IconMapPin,
             type: 'coordinate',
         },

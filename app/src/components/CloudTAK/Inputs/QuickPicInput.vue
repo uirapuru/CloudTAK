@@ -11,33 +11,33 @@
             />
             <div
                 class='mx-2 text-sm text-truncate'
-                v-text='"Quick Pic"'
+                v-text='t("tools.quickPic.title")'
             />
         </template>
 
         <TablerLoading
             v-if='stage === "capturing"'
-            desc='Waiting for photo...'
+            :desc='t("tools.quickPic.waiting")'
         />
         <TablerLoading
             v-else-if='stage === "uploading"'
-            desc='Uploading photo...'
+            :desc='t("tools.quickPic.uploading")'
         />
         <TablerLoading
             v-else-if='stage === "saving"'
-            desc='Creating marker...'
+            :desc='t("tools.quickPic.creating")'
         />
         <template v-else>
             <TablerInlineAlert
                 v-if='error'
-                title='An Error Occurred'
+                :title='t("tools.common.errorOccurred")'
                 :description='error.message'
             />
             <p
                 v-else
                 class='text-secondary m-0'
             >
-                Take a photo to create a marker at your current location
+                {{ t('tools.quickPic.hint') }}
             </p>
         </template>
 
@@ -60,7 +60,7 @@
                     :size='20'
                     stroke='1'
                 />
-                <span class='mx-2'>Take Photo</span>
+                <span class='mx-2'>{{ t('tools.quickPic.take') }}</span>
             </TablerButton>
         </template>
     </FloatingPane>
@@ -83,6 +83,9 @@ import { std, stdurl } from '../../../std.ts';
 import { isNativePlatform } from '../../../utils/capacitor.ts';
 import { quickPicName, quickPicFeature } from '../../../utils/quick-pic.ts';
 import { useMapStore } from '../../../stores/map.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 type Stage = 'idle' | 'capturing' | 'uploading' | 'saving';
 
@@ -129,7 +132,7 @@ async function capture(): Promise<void> {
             saveToGallery: false,
         });
 
-        if (!photo.webPath) throw new Error('Camera returned no image');
+        if (!photo.webPath) throw new Error(t('tools.quickPic.noImage'));
 
         const blob = await (await fetch(photo.webPath)).blob();
         file = new File([blob], `${quickPicName()}.${photo.format || 'jpeg'}`, {
@@ -167,7 +170,7 @@ async function submit(file: File): Promise<void> {
         body.append('file', file);
 
         const res = await std(url, { method: 'PUT', body, timeout: 120000 }) as { hash?: string };
-        if (!res.hash) throw new Error('Upload returned no attachment hash');
+        if (!res.hash) throw new Error(t('tools.quickPic.noHash'));
 
         stage.value = 'saving';
 

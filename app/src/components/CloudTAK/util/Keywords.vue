@@ -31,7 +31,7 @@
             class='d-flex flex-column gap-2'
         >
             <template v-if='unselectedRelevant.length > 0'>
-                <span class='text-secondary small fst-italic'>Suggested</span>
+                <span class='text-secondary small fst-italic'>{{ t('util.keywords.suggested') }}</span>
 
                 <div class='d-flex flex-wrap gap-2 align-items-center'>
                     <TablerBadge
@@ -61,7 +61,7 @@
                         ref='addInput'
                         v-model='addText'
                         class='kw-input form-control form-control-sm py-0'
-                        placeholder='keyword...'
+                        :placeholder='t("util.keywords.inputPlaceholder")'
                         @keyup.esc='cancelAdd'
                     >
                 </form>
@@ -71,14 +71,14 @@
                     :background-color='COLORS.success.bg'
                     :border-color='COLORS.success.border'
                     :text-color='COLORS.success.text'
-                    title='Add keyword'
+                    :title='t("util.keywords.add")'
                     @click='startAdd'
                 >
                     <IconPlus
                         :size='12'
                         stroke='2'
                     />
-                    New Keyword
+                    {{ t('util.keywords.new') }}
                 </TablerBadge>
             </template>
         </div>
@@ -91,9 +91,12 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, computed, nextTick, useTemplateRef } from 'vue';
 import { TablerBadge } from '@tak-ps/vue-tabler';
 import { IconPlus } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const FILTERED_PREFIXES = ['template:'];
 
@@ -130,11 +133,11 @@ const props = withDefaults(defineProps<{
     relevant?: string[];
 }>(), {
     keywords: () => [],
-    placeholder: 'No Keywords',
+    placeholder: undefined,
     relevant: undefined,
 });
 
-const { placeholder } = props;
+const placeholder = computed(() => props.placeholder ?? t('util.keywords.none'));
 
 const filteredKeywords = computed(() => {
     return props.keywords.filter((keyword) => {

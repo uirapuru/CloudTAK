@@ -4,7 +4,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='$emit("close")'
         />
         <div class='modal-header text-body'>
@@ -13,15 +13,15 @@
                     :size='28'
                     stroke='1'
                 />
-                <span class='mx-2'>No Channels Active</span>
+                <span class='mx-2'>{{ t('util.warnChannels.title') }}</span>
             </div>
         </div>
         <div class='modal-body text-body'>
-            <p>Channels are the basis of who and what you are able to see in TAK</p>
+            <p>{{ t('util.warnChannels.basis') }}</p>
 
-            <p>At this time you do not have any active channels and as such you will not see any Users, Data Packages, or Data Syncs associated with channels.</p>
+            <p>{{ t('util.warnChannels.noActive') }}</p>
 
-            <p>It is recommended to turn on relevant channels now</p>
+            <p>{{ t('util.warnChannels.recommended') }}</p>
 
             <div class='d-flex align-items-center'>
                 <div class='ms-auto btn-list'>
@@ -29,7 +29,7 @@
                         class='btn btn-primary'
                         @click='selectChannels'
                     >
-                        Select Channels
+                        {{ t('util.warnChannels.selectChannels') }}
                     </button>
                 </div>
             </div>
@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import {
     TablerModal,
@@ -45,6 +46,8 @@ import {
 import {
     IconInfoSquare,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const router = useRouter();
 const emit = defineEmits([ 'close' ]);

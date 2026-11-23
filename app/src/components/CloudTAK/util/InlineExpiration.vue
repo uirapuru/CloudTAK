@@ -8,14 +8,14 @@
             :gap='gap'
         >
             <template #label>
-                <small :class='labelClass'>{{ label }}</small>
+                <small :class='labelClass'>{{ label ?? t('util.inlineExpiration.label') }}</small>
             </template>
             <template
                 v-if='editable && !editing'
                 #tools
             >
                 <TablerIconButton
-                    :title='editTitle'
+                    :title='editTitle ?? t("util.inlineExpiration.edit")'
                     @click.stop.prevent='emit("edit")'
                 >
                     <IconPencil
@@ -32,7 +32,7 @@
                     <TablerIconButton
                         :disabled='saving'
                         color='rgba(var(--tblr-primary-rgb), 0.14)'
-                        :title='saving ? savingLabel : saveLabel'
+                        :title='saving ? (savingLabel ?? t("util.common.saving")) : (saveLabel ?? t("common.save"))'
                         @click.stop='commitDraft'
                     >
                         <IconDeviceFloppy
@@ -43,14 +43,14 @@
                     <TablerIconButton
                         v-if='showClear'
                         :disabled='saving'
-                        :title='clearLabel'
+                        :title='clearLabel ?? t("util.common.clear")'
                         @click.stop='emit("clear")'
                     >
                         <IconTrash stroke='1' />
                     </TablerIconButton>
                     <TablerIconButton
                         :disabled='saving'
-                        title='Cancel'
+                        :title='t("common.cancel")'
                         @click.stop='revertDraft'
                     >
                         <IconX stroke='1' />
@@ -60,7 +60,7 @@
 
             <template v-if='editing'>
                 <TablerInput
-                    :label='inputLabel'
+                    :label='inputLabel ?? t("util.inlineExpiration.inputLabel")'
                     type='datetime-local'
                     :model-value='draftValue'
                     @update:model-value='draftValue = String($event || "")'
@@ -83,16 +83,19 @@
                 v-else
                 :class='emptyClass'
             >
-                {{ emptyLabel }}
+                {{ emptyLabel ?? t('util.common.none') }}
             </p>
         </TablerBorder>
     </div>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { IconDeviceFloppy, IconPencil, IconTrash, IconX } from '@tabler/icons-vue';
 import { TablerBorder, TablerIconButton, TablerInput } from '@tak-ps/vue-tabler';
 import { ref, watch } from 'vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     value?: string | null;
@@ -121,8 +124,8 @@ const props = withDefaults(defineProps<{
 }>(), {
     value: null,
     editable: false,
-    label: 'Expiry',
-    editTitle: 'Edit expiry',
+    label: undefined,
+    editTitle: undefined,
     containerClass: 'col-12',
     borderClass: undefined,
     labelClass: 'text-uppercase text-secondary d-block mb-0',
@@ -131,15 +134,15 @@ const props = withDefaults(defineProps<{
     fillHeight: false,
     gap: 'sm',
     saving: false,
-    inputLabel: 'Expiration Time',
-    emptyLabel: 'None',
+    inputLabel: undefined,
+    emptyLabel: undefined,
     emptyClass: 'text-start fw-semibold p-0 mb-0 text-decoration-none',
     displayClass: 'text-start fw-semibold p-0 mb-0 text-decoration-none',
     interactive: false,
     showClear: true,
-    clearLabel: 'Clear',
-    saveLabel: 'Save',
-    savingLabel: 'Saving...'
+    clearLabel: undefined,
+    saveLabel: undefined,
+    savingLabel: undefined
 });
 
 const emit = defineEmits<{

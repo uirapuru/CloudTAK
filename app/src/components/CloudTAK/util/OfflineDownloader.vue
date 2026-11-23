@@ -36,6 +36,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted, toRaw } from 'vue';
 import * as Comlink from 'comlink';
 import type { ProfileFile } from '../../../types.ts';
@@ -45,6 +46,8 @@ import {
     IconCircleCheck,
     IconCloudDownload
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     asset: ProfileFile;
@@ -62,9 +65,9 @@ const progress = ref(0);
 const error = ref<string | null>(null);
 
 const label = computed(() => {
-    if (downloading.value) return 'Downloading for Offline Use';
-    if (available.value) return 'Available Offline';
-    return 'Make Available Offline';
+    if (downloading.value) return t('util.offlineDownloader.downloading');
+    if (available.value) return t('util.offlineDownloader.available');
+    return t('util.offlineDownloader.make');
 });
 
 onMounted(async () => {

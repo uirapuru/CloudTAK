@@ -4,13 +4,13 @@
             <div class='col-12 px-2 pt-2'>
                 <TablerInput
                     v-model='paging.filter'
-                    placeholder='Filter'
+                    :placeholder='t("util.common.filter")'
                 />
             </div>
 
             <TablerLoading
                 v-if='loading'
-                desc='Loading Icons'
+                :desc='t("util.icons.loadingIcons")'
             />
             <TablerAlert
                 v-else-if='error'
@@ -18,7 +18,7 @@
             />
             <TablerNone
                 v-else-if='!list.items.length'
-                label='No Icons'
+                :label='t("util.icons.noIconsLabel")'
                 :create='false'
             />
             <template v-else>
@@ -58,7 +58,7 @@
                                     />
                                     <div
                                         class='d-inline-block text-truncate text-muted'
-                                        v-text='icon.type2525b || "None"'
+                                        v-text='icon.type2525b || t("util.common.none")'
                                     />
                                 </div>
                             </div>
@@ -82,6 +82,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import IconCache from '../../../base/icon.ts';
@@ -100,6 +101,8 @@ interface DisplayIcon {
     type2525b: string | null;
     data: string;
 }
+
+const { t } = useI18n();
 
 const props = defineProps({
     iconset: {

@@ -17,20 +17,20 @@
                 <div class='d-flex align-items-center gap-2'>
                     <StatusDot
                         :status='event.active ? "Success" : "Unknown"'
-                        :title='event.active ? "Active" : "Ended"'
+                        :title='event.active ? t("util.standardCoreEntity.active") : t("util.standardCoreEntity.ended")'
                     />
                     <span class='fw-semibold text-truncate flex-grow-1'>{{ event.name }}</span>
                     <span
                         v-if='event.priority !== "none"'
                         class='badge flex-shrink-0 text-uppercase'
                         :class='priorityBadgeClass'
-                    >{{ event.priority }}</span>
+                    >{{ priorityLabel }}</span>
                 </div>
                 <div class='d-flex align-items-center gap-2 mt-1'>
                     <img
                         v-if='typeIcon'
                         :src='typeIcon'
-                        alt='Event Type'
+                        :alt='t("util.standardCoreEntity.eventType")'
                         class='flex-shrink-0'
                         style='width: 40px; height: 40px; object-fit: contain;'
                     >
@@ -61,10 +61,10 @@
                         <div class='text-muted small text-truncate'>
                             {{ creator }}
                             <template v-if='event.ended && event.active'>
-                                &middot; Ends {{ timediff(event.ended) }}
+                                &middot; {{ t('util.standardCoreEntity.endsIn', { time: timediff(event.ended) }) }}
                             </template>
                             <template v-else-if='event.ended'>
-                                &middot; Ended {{ new Date(event.ended).toLocaleString() }}
+                                &middot; {{ t('util.standardCoreEntity.endedAgo', { time: new Date(event.ended).toLocaleString() }) }}
                             </template>
                         </div>
                     </div>
@@ -135,6 +135,7 @@ export default {
 </script>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed, ref, watch } from 'vue';
 import StandardItem from './StandardItem.vue';
 import StatusDot from '../../util/StatusDot.vue';
@@ -145,6 +146,8 @@ import {
 } from '@tabler/icons-vue';
 import type { CoreEntity } from '../../../types.ts';
 import timediff from '../../../timediff';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     event: CoreEntity;
@@ -168,8 +171,15 @@ watch(() => props.event.type, async (type) => {
 
 const creator = computed(() => {
     if (props.event.username) return props.event.username;
-    if (props.event.connection !== null) return `Connection #${props.event.connection}`;
-    return 'Unknown Creator';
+    if (props.event.connection !== null) return t('util.standardCoreEntity.connection', { id: props.event.connection });
+    return t('util.standardCoreEntity.unknownCreator');
+});
+
+const PRIORITIES = ['critical', 'high', 'medium', 'low', 'none'];
+
+const priorityLabel = computed(() => {
+    const priority = String(props.event.priority);
+    return PRIORITIES.includes(priority) ? t(`util.common.priority.${priority}`) : priority;
 });
 
 const priorityClass = computed(() => {

@@ -9,7 +9,7 @@
                 :size='24'
                 stroke='1'
             />
-            <span class='fw-bold'>Pending Invites</span>
+            <span class='fw-bold'>{{ t('mission.users.pendingInvites') }}</span>
             <TablerBadge
                 class='rounded-pill small ms-auto'
                 background-color='var(--tblr-red-lt)'
@@ -49,7 +49,7 @@
                     />
                     <div class='d-flex align-items-center gap-1'>
                         <TablerIconButton
-                            title='Delete Invite'
+                            :title='t("mission.invites.delete")'
                             @click='deleteInvite(invite)'
                         >
                             <IconTrash
@@ -61,7 +61,7 @@
                             class='btn btn-success btn-sm'
                             @click='acceptInvite(invite)'
                         >
-                            Accept
+                            {{ t('mission.invites.accept') }}
                         </button>
                     </div>
                 </div>
@@ -83,6 +83,9 @@ import { TablerBadge, TablerIconButton } from '@tak-ps/vue-tabler';
 import StandardItem from '../../util/StandardItem.vue';
 import { server } from '../../../../std.ts';
 import type { MissionInvite } from '../../../../types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     invites: MissionInvite[]

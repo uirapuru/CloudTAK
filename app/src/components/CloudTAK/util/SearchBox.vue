@@ -7,7 +7,7 @@
                 :label='props.label'
                 :autofocus='props.autofocus'
                 class='mt-0 flex-grow-1'
-                :placeholder='props.placeholder'
+                :placeholder='props.placeholder || t("util.common.searchPlaceholder")'
                 icon='search'
                 @focus='selected = false'
             />
@@ -15,7 +15,7 @@
                 v-if='props.locationPicker'
                 class='location-picker-btn mb-1 d-flex align-items-center justify-content-center flex-shrink-0'
                 :color='pickingLocation ? "var(--tblr-primary)" : undefined'
-                :title='pickingLocation ? "Click on map to select location" : "Select location on map"'
+                :title='pickingLocation ? t("util.searchBox.pickingTitle") : t("util.searchBox.pickTitle")'
                 @click='pickingLocation ? cancelPickingLocation() : startPickingLocation()'
             >
                 <IconCrosshair
@@ -28,7 +28,7 @@
             v-if='pickingLocation'
             class='text-muted small mt-1 px-1'
         >
-            Click on the map to select a location
+            {{ t('util.searchBox.picking') }}
         </div>
 
         <div
@@ -39,6 +39,7 @@
         >
             <TablerNone
                 v-if='!partialLoading && !cots.size && !results.length'
+                :label='t("util.searchBox.noItems")'
                 :create='false'
             />
             <template v-else>
@@ -86,6 +87,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { convert } from 'geo-coordinates-parser'
 import { v4 as randomUUID } from 'uuid';
 import Feature from './FeatureRow.vue';
@@ -151,7 +153,7 @@ const props = defineProps({
     },
     placeholder: {
         type: String,
-        default: 'Search...'
+        default: ''
     },
     locationPicker: {
         type: Boolean,
@@ -162,6 +164,8 @@ const props = defineProps({
         default: ''
     }
 });
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 

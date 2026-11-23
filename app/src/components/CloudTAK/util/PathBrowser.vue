@@ -37,7 +37,7 @@
                         </TablerBadge>
                         <TablerIconButton
                             v-if='visibilityToggle'
-                            :title='isNodeHidden(node) ? "Show Folder" : "Hide Folder"'
+                            :title='isNodeHidden(node) ? t("util.pathBrowser.show") : t("util.pathBrowser.hide")'
                             @click.stop='emit("toggle-visibility", node)'
                         >
                             <IconEyeOff
@@ -53,7 +53,7 @@
                         </TablerIconButton>
                         <TablerIconButton
                             v-if='renamable'
-                            title='Rename Folder'
+                            :title='t("util.pathBrowser.rename")'
                             @click.stop='emit("rename", node)'
                         >
                             <IconPencil
@@ -81,6 +81,7 @@ export default {
 </script>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import type { PathNode } from '../../../utils/path-manager.ts';
 import StandardItem from './StandardItem.vue';
@@ -95,6 +96,8 @@ import {
     IconEye,
     IconEyeOff,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 withDefaults(defineProps<{
     nodes: PathNode[];

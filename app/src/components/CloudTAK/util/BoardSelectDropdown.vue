@@ -11,7 +11,7 @@
                 :class='{ "cursor-pointer": !props.disabled }'
                 role='button'
                 :tabindex='props.disabled ? -1 : 0'
-                :aria-label='props.placeholder'
+                :aria-label='placeholderText'
             >
                 <IconLayoutKanban
                     :size='18'
@@ -22,7 +22,7 @@
                     class='flex-grow-1 text-truncate user-select-none'
                     style='min-width: 0;'
                     :class='{ "text-secondary": !selected }'
-                    v-text='selected ? selected.name : props.placeholder'
+                    v-text='selected ? selected.name : placeholderText'
                 />
             </div>
         </template>
@@ -36,11 +36,11 @@
             >
                 <div class='d-flex align-items-center px-3 py-2 border-bottom'>
                     <h3 class='m-0 fw-bold'>
-                        Boards
+                        {{ t('util.boardSelectDropdown.title') }}
                     </h3>
                     <div class='ms-auto btn-list'>
                         <TablerRefreshButton
-                            title='Refresh Boards'
+                            :title='t("util.boardSelectDropdown.refresh")'
                             :size='20'
                             :loading='loading'
                             @click.stop='listBoards'
@@ -53,7 +53,7 @@
                          search field has to swallow its own -->
                     <TablerInput
                         v-model='search'
-                        placeholder='Search...'
+                        :placeholder='t("util.common.searchPlaceholder")'
                         icon='search'
                         :autofocus='true'
                         class='mb-0'
@@ -65,7 +65,7 @@
                     <TablerLoading
                         v-if='loading'
                         :compact='true'
-                        desc='Loading Boards'
+                        :desc='t("util.boardSelectDropdown.loading")'
                     />
                     <TablerAlert
                         v-else-if='error'
@@ -104,7 +104,7 @@
                             v-if='!filtered.length'
                             :compact='true'
                             :create='false'
-                            :label='boards.length ? "No Matching Boards" : "No Boards"'
+                            :label='boards.length ? t("util.boardSelectDropdown.noMatching") : t("util.boardSelectDropdown.none")'
                         />
                     </template>
                 </div>
@@ -114,6 +114,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /**
  * BoardSelectDropdown - picker for the KanBan Boards of a single TAK Channel,
  * styled to match GroupSelectDropdown. The Board list is fetched here and
@@ -138,6 +139,8 @@ import {
     IconLayoutKanban,
 } from '@tabler/icons-vue';
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<{
     /** Board id currently selected */
     modelValue?: string;
@@ -148,9 +151,11 @@ const props = withDefaults(defineProps<{
 }>(), {
     modelValue: undefined,
     channel: undefined,
-    placeholder: 'Select a Board',
+    placeholder: undefined,
     disabled: false,
 });
+
+const placeholderText = computed(() => props.placeholder ?? t('util.boardSelectDropdown.placeholder'));
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;

@@ -21,7 +21,7 @@
             >
                 <TablerIconButton
                     v-if='selected.size < props.items.length'
-                    title='Select All'
+                    :title='t("util.common.selectAll")'
                     @click='props.items.forEach(item => selected.add(item.id))'
                 >
                     <IconSelectAll
@@ -32,7 +32,7 @@
 
                 <TablerIconButton
                     v-if='selected.size > 0'
-                    title='Deselect All'
+                    :title='t("util.common.deselectAll")'
                     @click='selected.clear()'
                 >
                     <IconDeselect
@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang='ts' generic='T extends SelectableItem'>
+import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import {
     TablerIconButton
@@ -102,6 +103,8 @@ import {
 export interface SelectableItem {
     id: number | string;
 }
+
+const { t } = useI18n();
 
 defineSlots<{
     item: { item: T };

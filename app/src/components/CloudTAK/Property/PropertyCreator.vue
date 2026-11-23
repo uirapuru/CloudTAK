@@ -1,6 +1,6 @@
 <template>
     <PropertyFactRow
-        label='Creator'
+        :label='t("property.creator.label")'
         class='py-1'
     >
         <div
@@ -15,7 +15,7 @@
             <span
                 v-if='props.creator.time'
                 class='text-secondary small flex-shrink-0 cursor-pointer user-select-none'
-                title='Toggle relative & absolute time'
+                :title='t("property.creator.toggleTime")'
                 @click='relative = !relative'
                 v-text='relative ? timediff(props.creator.time) : new Date(props.creator.time).toLocaleString()'
             />
@@ -26,7 +26,7 @@
             #actions
         >
             <TablerIconButton
-                title='Chat'
+                :title='t("property.creator.chat")'
                 @click='router.push(`/menu/chats/new?callsign=${effectiveContact.callsign}&uid=${effectiveContact.uid}`)'
             >
                 <IconMessage
@@ -47,6 +47,9 @@ import { useRouter } from 'vue-router';
 import { TablerIconButton } from '@tak-ps/vue-tabler';
 import { IconMessage } from '@tabler/icons-vue';
 import PropertyFactRow from '../util/PropertyFactRow.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     creator: FeaturePropertyCreator

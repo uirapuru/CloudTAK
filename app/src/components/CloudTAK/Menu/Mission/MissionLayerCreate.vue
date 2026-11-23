@@ -9,7 +9,7 @@
             <div class='modal-body'>
                 <TablerInput
                     v-model='layer.name'
-                    label='Folder Name'
+                    :label='t("mission.layers.folderName")'
                     :autofocus='true'
                     @keyup.enter='createLayer'
                 />
@@ -19,14 +19,14 @@
                         class='btn btn-secondary'
                         @click='emit("cancel")'
                     >
-                        Cancel
+                        {{ t('common.cancel') }}
                     </button>
                     <div class='ms-auto'>
                         <button
                             class='btn btn-primary'
                             @click='createLayer'
                         >
-                            Create
+                            {{ t('mission.common.create') }}
                         </button>
                     </div>
                 </div>
@@ -44,6 +44,9 @@ import {
 } from '@tak-ps/vue-tabler';
 import Subscription from '../../../../base/subscription.ts';
 import type { MissionLayer_Create } from '../../../../types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits(['layer', 'cancel']);
 

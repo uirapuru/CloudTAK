@@ -11,7 +11,7 @@
                 :class='{ "cursor-pointer": !props.disabled }'
                 role='button'
                 :tabindex='props.disabled ? -1 : 0'
-                :aria-label='props.placeholder'
+                :aria-label='placeholderText'
             >
                 <IconUsersGroup
                     :size='18'
@@ -22,7 +22,7 @@
                     class='flex-grow-1 text-truncate user-select-none'
                     style='min-width: 0;'
                     :class='{ "text-secondary": !selected }'
-                    v-text='selected ? selected.name : props.placeholder'
+                    v-text='selected ? selected.name : placeholderText'
                 />
             </div>
         </template>
@@ -36,11 +36,11 @@
             >
                 <div class='d-flex align-items-center px-3 py-2 border-bottom'>
                     <h3 class='m-0 fw-bold'>
-                        Channels
+                        {{ t('util.groupSelectDropdown.title') }}
                     </h3>
                     <div class='ms-auto btn-list'>
                         <TablerRefreshButton
-                            title='Refresh Channels'
+                            :title='t("util.groupSelectDropdown.refresh")'
                             :size='20'
                             :loading='loading'
                             @click.stop='listChannels'
@@ -53,7 +53,7 @@
                          search field has to swallow its own -->
                     <TablerInput
                         v-model='search'
-                        placeholder='Search...'
+                        :placeholder='t("util.common.searchPlaceholder")'
                         icon='search'
                         :autofocus='true'
                         class='mb-0'
@@ -67,7 +67,7 @@
                     <TablerLoading
                         v-if='loading'
                         :compact='true'
-                        desc='Loading Channels'
+                        :desc='t("util.groupSelectDropdown.loading")'
                     />
                     <TablerAlert
                         v-else-if='error'
@@ -99,7 +99,7 @@
                             v-if='!filtered.length'
                             :compact='true'
                             :create='false'
-                            :label='channels.length ? "No Matching Channels" : "No Channels"'
+                            :label='channels.length ? t("util.groupSelectDropdown.noMatching") : t("util.groupSelectDropdown.none")'
                         />
                     </template>
                 </div>
@@ -109,6 +109,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /**
  * GroupSelectDropdown - single TAK Channel picker rendered as a searchable
  * dropdown, styled after the Drawing Tools dropdown. Unlike the multi-select
@@ -132,6 +133,8 @@ import {
     IconUsersGroup,
 } from '@tabler/icons-vue';
 
+const { t } = useI18n();
+
 export type GroupSelectChannel = {
     name: string;
     bitpos: number;
@@ -148,9 +151,11 @@ const props = withDefaults(defineProps<{
 }>(), {
     modelValue: undefined,
     active: false,
-    placeholder: 'Select a Channel',
+    placeholder: undefined,
     disabled: false,
 });
+
+const placeholderText = computed(() => props.placeholder ?? t('util.groupSelectDropdown.placeholder'));
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: number): void;

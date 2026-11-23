@@ -6,17 +6,17 @@
                     404
                 </div>
                 <p class='empty-title'>
-                    Oops… You just found an error page
+                    {{ t('login.lostUser.title') }}
                 </p>
                 <p class='empty-subtitle text-muted'>
-                    We are sorry but the page you are looking for was not found
+                    {{ t('login.lostUser.subtitle') }}
                 </p>
                 <div class='empty-action'>
                     <a
                         class='cursor-pointer btn btn-primary'
                         @click='router.push("/")'
                     >
-                        Home
+                        {{ t('login.lostUser.home') }}
                     </a>
                 </div>
             </div>
@@ -26,6 +26,8 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const router = useRouter();
 </script>

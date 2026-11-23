@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Terrain Profile'
+            :label='t("property.profile.title")'
         >
             <template #icon>
                 <IconChartLine
@@ -20,14 +20,14 @@
                     border-color='rgba(59, 130, 246, 0.4)'
                     text-color='#3b82f6'
                 >
-                    Generated
+                    {{ t('property.profile.generated') }}
                 </TablerBadge>
             </template>
 
             <div class='px-2 pt-2'>
                 <TablerLoading
                     v-if='loading'
-                    desc='Loading terrain profile'
+                    :desc='t("property.profile.loading")'
                 />
 
                 <div
@@ -37,11 +37,11 @@
                     <TablerInlineAlert
                         class='flex-grow-1 flex-shrink-1'
                         severity='danger'
-                        title='Terrain Profile Error'
+                        :title='t("property.profile.error")'
                         :description='error.message'
                     />
                     <TablerRefreshButton
-                        title='Retry Terrain Profile'
+                        :title='t("property.profile.retry")'
                         @click='loadProfile()'
                     />
                 </div>
@@ -50,7 +50,7 @@
                     v-else-if='!stats'
                     class='px-1 py-1 text-muted'
                 >
-                    No terrain samples are available for this line.
+                    {{ t('property.profile.noSamples') }}
                 </div>
 
                 <template v-else>
@@ -58,7 +58,7 @@
                         <div class='col-sm-6 col-xl-3'>
                             <div class='profile-stat rounded px-2 py-2'>
                                 <div class='subheader'>
-                                    Distance
+                                    {{ t('property.profile.distance') }}
                                 </div>
                                 <div class='fw-semibold'>
                                     {{ formatDistance(stats.distanceKm) }}
@@ -68,7 +68,7 @@
                         <div class='col-sm-6 col-xl-3'>
                             <div class='profile-stat rounded px-2 py-2'>
                                 <div class='subheader'>
-                                    Min / Max
+                                    {{ t('property.profile.minMax') }}
                                 </div>
                                 <div class='fw-semibold'>
                                     {{ formatElevation(stats.minElevation) }} / {{ formatElevation(stats.maxElevation) }}
@@ -78,7 +78,7 @@
                         <div class='col-sm-6 col-xl-3'>
                             <div class='profile-stat rounded px-2 py-2'>
                                 <div class='subheader'>
-                                    Gain
+                                    {{ t('property.profile.gain') }}
                                 </div>
                                 <div class='fw-semibold text-success d-flex align-items-center gap-1'>
                                     <IconArrowUp :size='16' />
@@ -89,7 +89,7 @@
                         <div class='col-sm-6 col-xl-3'>
                             <div class='profile-stat rounded px-2 py-2'>
                                 <div class='subheader'>
-                                    Loss
+                                    {{ t('property.profile.loss') }}
                                 </div>
                                 <div class='fw-semibold text-danger d-flex align-items-center gap-1'>
                                     <IconArrowDown :size='16' />
@@ -123,6 +123,9 @@ import { IconChartLine, IconArrowUp, IconArrowDown } from '@tabler/icons-vue';
 import { TablerBadge, TablerInlineAlert, TablerLoading, TablerRefreshButton } from '@tak-ps/vue-tabler';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
 import { server, std, stdurl } from '../../../std.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 type ElevationSample = {
     distance: number;
@@ -228,8 +231,8 @@ async function getTilesURL(): Promise<string> {
     if (tilesURL.value) return tilesURL.value;
 
     const { data, error: configError } = await server.GET('/api/config/tiles');
-    if (configError) throw new Error(configError.message || 'Failed to load tile configuration');
-    if (!data?.url) throw new Error('Tile configuration did not include a PMTiles URL');
+    if (configError) throw new Error(configError.message || t('property.profile.tileConfigFailed'));
+    if (!data?.url) throw new Error(t('property.profile.tileConfigNoUrl'));
 
     tilesURL.value = data.url;
     return tilesURL.value;
@@ -292,7 +295,7 @@ function renderChart(): void {
 
     const data: ChartData<'line'> = {
         datasets: [{
-            label: 'Elevation',
+            label: t('property.profile.elevation'),
             data: samples.value.map((sample) => {
                 return {
                     x: convertDistance(sample.distance),
@@ -325,11 +328,11 @@ function renderChart(): void {
             tooltip: {
                 callbacks: {
                     label(context: TooltipItem<'line'>) {
-                        return `Elevation: ${formatElevation(Number(context.parsed.y))}`;
+                        return t('property.profile.elevationTooltip', { value: formatElevation(Number(context.parsed.y)) });
                     },
                     title(items: TooltipItem<'line'>[]) {
                         if (!items.length) return '';
-                        return `Distance: ${formatDistanceFromDisplay(Number(items[0].parsed.x))}`;
+                        return t('property.profile.distanceTooltip', { value: formatDistanceFromDisplay(Number(items[0].parsed.x)) });
                     }
                 }
             }
@@ -339,7 +342,7 @@ function renderChart(): void {
                 type: 'linear',
                 title: {
                     display: true,
-                    text: `Distance (${distanceUnitLabel()})`
+                    text: t('property.profile.distanceAxis', { unit: distanceUnitLabel() })
                 },
                 ticks: {
                     callback(value) {
@@ -350,7 +353,7 @@ function renderChart(): void {
             y: {
                 title: {
                     display: true,
-                    text: `Elevation (${elevationUnitLabel()})`
+                    text: t('property.profile.elevationAxis', { unit: elevationUnitLabel() })
                 },
                 ticks: {
                     callback(value) {

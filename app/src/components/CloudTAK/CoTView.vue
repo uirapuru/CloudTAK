@@ -32,7 +32,7 @@
         <TablerNone
             v-if='!cot'
             :create='false'
-            label='No CoT Marker'
+            :label='t("map.cotView.none")'
         />
         <div
             v-else
@@ -46,29 +46,29 @@
             >
                 <TablerInlineAlert
                     severity='warning'
-                    title='Event Details Unavailable'
-                    description='This marker is a CloudTAK Event - the Event it was generated from could not be loaded from the server.'
+                    :title='t("map.cotView.offline.event.title")'
+                    :description='t("map.cotView.offline.event.description")'
                 />
                 <TablerButton
                     class='w-100'
                     :disabled='retrying'
                     @click='retryEvent'
                 >
-                    Retry
+                    {{ t('map.cotView.retry') }}
                 </TablerButton>
             </div>
 
             <div class='cot-actions d-flex align-items-center flex-nowrap px-2 py-1 border-bottom cloudtak-header flex-shrink-0'>
                 <IconStarFilled
                     v-if='cot.properties.archived'
-                    title='Saved Feature'
+                    :title='t("map.cotView.savedFeature")'
                     :size='actionIconSize'
                     stroke='1'
                     class='text-yellow'
                 />
                 <TablerIconButton
                     v-else-if='cot.is_archivable'
-                    title='Save Feature'
+                    :title='t("map.cotView.saveFeature")'
                     @click='cot.properties.archived = true'
                 >
                     <IconStar
@@ -78,7 +78,7 @@
                 </TablerIconButton>
 
                 <TablerIconButton
-                    title='Zoom To'
+                    :title='t("map.common.zoomTo")'
                     @click='cot.flyTo()'
                 >
                     <IconZoomPan
@@ -89,7 +89,7 @@
 
                 <TablerIconButton
                     v-if='cot.is_route || cot.geometry.type === "Point"'
-                    :title='isNavigating ? "End Navigation" : "Navigate"'
+                    :title='isNavigating ? t("map.queryView.endNavigation") : t("map.queryView.navigate")'
                     @click='toggleNavigation'
                 >
                     <IconNavigationFilled
@@ -107,7 +107,7 @@
 
                 <TablerIconButton
                     v-if='cot.geometry.type === "Point"'
-                    :title='isLocked ? "Unlock" : "Lock On"'
+                    :title='isLocked ? t("map.cotView.unlock") : t("map.cotView.lockOn")'
                     @click='toggleLock'
                 >
                     <IconLock
@@ -124,7 +124,7 @@
 
                 <TablerIconButton
                     v-if='cot.properties.video && cot.properties.video.url'
-                    title='View Video Stream'
+                    :title='t("map.cotView.viewVideo")'
                     @click='floatStore.addCOT(String(route.params.uid))'
                 >
                     <IconPlayerPlay
@@ -134,7 +134,7 @@
                 </TablerIconButton>
 
                 <TablerIconButton
-                    title='Share'
+                    :title='t("map.cotView.share")'
                     @click='share = true'
                 >
                     <IconShare2
@@ -148,7 +148,7 @@
                         v-if='cot.geometry.type === "Point"'
                         :width='260'
                     >
-                        <TablerIconButton title='Breadcrumb'>
+                        <TablerIconButton :title='t("map.cotView.breadcrumb")'>
                             <div class='position-relative d-flex'>
                                 <IconRoute
                                     :size='actionIconSize'
@@ -185,7 +185,7 @@
                         v-if='hasMoreActions'
                         :width='240'
                     >
-                        <TablerIconButton title='More Actions'>
+                        <TablerIconButton :title='t("map.cotView.moreActions")'>
                             <IconDotsVertical
                                 :size='actionIconSize'
                                 stroke='1'
@@ -195,7 +195,7 @@
                         <template #dropdown>
                             <MenuDropdownItem
                                 v-if='is_editable'
-                                label='Edit Geometry'
+                                :label='t("map.cotView.editGeometry")'
                                 @click='editGeometry'
                             >
                                 <template #icon>
@@ -208,7 +208,7 @@
 
                             <MenuDropdownItem
                                 v-if='canChat'
-                                label='Chat'
+                                :label='t("map.cotView.chat")'
                                 @click='router.push(`/menu/chats/new?callsign=${cot.properties.callsign}&uid=${cot.id}`)'
                             >
                                 <template #icon>
@@ -221,7 +221,7 @@
 
                             <MenuDropdownItem
                                 v-if='hasGeoJSONTransforms'
-                                label='Buffer'
+                                :label='t("map.cotView.buffer")'
                                 @click='openBufferInput'
                             >
                                 <template #icon>
@@ -234,7 +234,7 @@
 
                             <MenuDropdownItem
                                 v-if='cot.geometry.type === "LineString" && !cot.is_route'
-                                label='Convert to Route'
+                                :label='t("map.cotView.convertToRoute")'
                                 @click='cot.toRoute()'
                             >
                                 <template #icon>
@@ -247,7 +247,7 @@
 
                             <MenuDropdownItem
                                 v-if='hasRoutePlan'
-                                label='Warianty trasy'
+                                :label='t("map.cotView.routeVariants")'
                                 class='route-variants-button'
                                 @click='variantsOpen = true'
                             >
@@ -264,7 +264,7 @@
 
                                 <MenuDropdownItem
                                     v-if='addable.attachments'
-                                    label='Add Attachment'
+                                    :label='t("map.cotView.addAttachment")'
                                     @click='updatePropertyAttachment([])'
                                 >
                                     <template #icon>
@@ -277,7 +277,7 @@
 
                                 <MenuDropdownItem
                                     v-if='addable.links'
-                                    label='Add External Links'
+                                    :label='t("map.cotView.addLinks")'
                                     @click='updateProperty("links", [])'
                                 >
                                     <template #icon>
@@ -290,7 +290,7 @@
 
                                 <MenuDropdownItem
                                     v-if='addable.video'
-                                    label='Add Video'
+                                    :label='t("map.cotView.addVideo")'
                                     @click='updateProperty("video", { url: "" })'
                                 >
                                     <template #icon>
@@ -303,7 +303,7 @@
 
                                 <MenuDropdownItem
                                     v-if='addable.sensor'
-                                    label='Add Sensor'
+                                    :label='t("map.cotView.addSensor")'
                                     @click='updateProperty("sensor", {})'
                                 >
                                     <template #icon>
@@ -316,7 +316,7 @@
 
                                 <MenuDropdownItem
                                     v-if='addable.geofence'
-                                    label='Add Geofence'
+                                    :label='t("map.cotView.addGeofence")'
                                     @click='updateProperty("geofence", { elevationMonitored: false, tracking: false })'
                                 >
                                     <template #icon>
@@ -368,7 +368,7 @@
 
                     <Coordinate
                         :key='String(route.params.uid)'
-                        :label='cot.geometry.type === "Point" ? "Location" : "Center"'
+                        :label='cot.geometry.type === "Point" ? t("map.cotView.location") : t("map.cotView.center")'
                         :edit='is_editable'
                         :hover='is_editable'
                         :model-value='center'
@@ -378,7 +378,7 @@
                     <PropertyElevation
                         v-if='center.length > 2'
                         :key='String(route.params.uid)'
-                        label='Elevation'
+                        :label='t("map.cotView.elevation")'
                         :unit='units.display_elevation'
                         :elevation='center[2]'
                     />
@@ -400,7 +400,7 @@
                     <PropertyDistance
                         v-if='cot.properties.shape && cot.properties.shape.ellipse && cot.properties.shape.ellipse.major === cot.properties.shape.ellipse.minor'
                         :key='cot.properties.id'
-                        label='Radius'
+                        :label='t("map.cotView.radius")'
                         :unit='units.display_distance'
                         :edit='is_editable'
                         :hover='is_editable'
@@ -411,7 +411,7 @@
                     <!-- Speed & Course share one row when both are reported -->
                     <PropertyFactRow
                         v-if='hasSpeed && hasCourse'
-                        label='Speed'
+                        :label='t("map.cotView.speed")'
                         class='py-1'
                     >
                         <div class='row g-2'>
@@ -427,7 +427,7 @@
                                 <PropertyBearing
                                     :key='cot.properties.id'
                                     :inline='true'
-                                    label='Course'
+                                    :label='t("map.cotView.course")'
                                     :model-value='Number(cot.properties.course)'
                                 />
                             </div>
@@ -444,7 +444,7 @@
                     <PropertyBearing
                         v-else-if='hasCourse'
                         :key='cot.properties.id'
-                        label='Course'
+                        :label='t("map.cotView.course")'
                         :model-value='Number(cot.properties.course)'
                     />
 
@@ -462,7 +462,7 @@
 
                     <PropertyFactRow
                         v-if='battery !== undefined'
-                        label='Battery'
+                        :label='t("map.coreDeviceView.battery")'
                         class='py-1'
                     >
                         <div class='d-flex align-items-center gap-1'>
@@ -509,8 +509,8 @@
                         class='col-12 px-3 py-2 danger-zone'
                     >
                         <TablerToggle
-                            label='Strefa niebezpieczna'
-                            description='Trasy taklab omijają tę figurę. W ATAK to geofence z alarmem przy wejściu; alarm włącza się na telefonie.'
+                            :label='t("map.cotView.dangerZone")'
+                            :description='t("map.cotView.dangerZoneHint")'
                             :disabled='!is_editable'
                             :model-value='isDangerZone(cot.properties)'
                             @update:model-value='updateDangerZone($event)'
@@ -619,6 +619,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router'
 import FeatureIcon from './util/FeatureIcon.vue';
 import BufferInput from './Inputs/BufferInput.vue';
@@ -713,6 +714,7 @@ import OverlayManager from '../../base/overlay.ts';
 import { setCircleRadius } from '../../base/cot/ellipse.ts';
 
 const mapStore = useMapStore();
+const { t } = useI18n();
 
 const floatStore = useFloatStore();
 
@@ -750,10 +752,10 @@ const mode = ref('default');
 const hasStyle = computed(() => is_editable.value && !!cot.value && !cot.value.is_self);
 
 const modeOptions = computed<Array<PropertyTab>>(() => {
-    const opts: Array<PropertyTab> = [{ value: 'default', label: 'Details' }];
-    if (hasStyle.value) opts.push({ value: 'style', label: 'Style' });
-    if (cot.value?.is_skittle) opts.push({ value: 'channels', label: 'Channels' });
-    opts.push({ value: 'debug', label: 'Debug' });
+    const opts: Array<PropertyTab> = [{ value: 'default', label: t('map.common.details') }];
+    if (hasStyle.value) opts.push({ value: 'style', label: t('map.cotView.style') });
+    if (cot.value?.is_skittle) opts.push({ value: 'channels', label: t('map.common.channels') });
+    opts.push({ value: 'debug', label: t('map.cotView.debug') });
     return opts;
 });
 const breadcrumbLive = ref(false);

@@ -5,14 +5,14 @@
                 v-if='total === 0'
                 class='m-0 text-muted small'
             >
-                No entries
+                {{ t('shared.tableFooter.noEntries') }}
             </p>
             <p
                 v-else
                 class='m-0 text-muted small'
             >
                 <span v-text='limit * currentPage + 1' />–<span v-text='total < limit ? total : (currentPage * limit + limit > total ? total : currentPage * limit + limit)' />
-                <span class='d-none d-sm-inline'> of </span>
+                <span class='d-none d-sm-inline'> {{ t('shared.tableFooter.of') }} </span>
                 <span class='d-sm-none'>/</span>
                 <span v-text='total' />
             </p>
@@ -29,9 +29,12 @@
 
 <script setup lang='ts'>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     TablerPager
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     limit: number;

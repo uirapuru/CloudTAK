@@ -4,7 +4,7 @@
             <TablerInput
                 v-model='filter'
                 icon='search'
-                placeholder='Filter Channels...'
+                :placeholder='t("util.groupSelect.filter")'
             />
         </div>
 
@@ -14,7 +14,10 @@
             role='alert'
         >
             <div class='d-flex align-items-center'>
-                <IconInfoCircle /><span class='mx-1'>Select up to&nbsp;<span v-text='props.limit' />&nbsp;Channel<span v-text='props.limit > 1 ? "s" : ""' /></span>
+                <IconInfoCircle /><span
+                    class='mx-1'
+                    v-text='props.limit > 1 ? t("util.groupSelect.selectUpToMany", { limit: props.limit }) : t("util.groupSelect.selectUpToOne", { limit: props.limit })'
+                />
             </div>
         </div>
 
@@ -22,12 +25,12 @@
 
         <TablerLoading
             v-if='loading'
-            desc='Loading Channels'
+            :desc='t("util.groupSelect.loading")'
         />
         <TablerNone
             v-else-if='!filtered.length'
             :compact='true'
-            label='No Groups'
+            :label='t("util.groupSelect.none")'
             :create='false'
         />
         <template v-else>
@@ -64,6 +67,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import EmptyInfo from '../util/EmptyInfo.vue';
 import { useMapStore } from '../../../stores/map.ts';
@@ -78,6 +82,8 @@ import {
     IconInfoCircle,
     IconCircleFilled
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 
@@ -118,7 +124,7 @@ function updateGroup(group: GroupChannel) {
         selected.value.delete(group.name)
     } else {
         if (props.limit && selected.value.size >= props.limit) {
-            throw new Error(`Cannot select more than ${props.limit} Channels`);
+            throw new Error(t('util.groupSelect.tooMany', { limit: props.limit }));
         }
 
         selected.value.add(group.name)

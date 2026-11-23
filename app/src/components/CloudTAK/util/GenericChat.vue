@@ -17,12 +17,12 @@
                 displaytype='icon'
                 @delete='emitDelete'
             />
-            <span class='small text-muted'>{{ selected.size }} selected</span>
+            <span class='small text-muted'>{{ t('util.genericChat.selected', { count: selected.size }) }}</span>
             <button
                 class='btn btn-sm btn-link ms-auto p-0'
                 @click='selected.clear()'
             >
-                Clear
+                {{ t('util.common.clear') }}
             </button>
         </div>
 
@@ -35,7 +35,7 @@
             <TablerNone
                 v-if='!chats.length'
                 :create='false'
-                label='No Chat Messages'
+                :label='t("util.genericChat.none")'
             />
             <div
                 v-for='chat in chats'
@@ -62,7 +62,7 @@
                     style='max-width: 80%;'
                 >
                     <div class='fw-bold small mb-1'>
-                        <span v-text='chat.sender || "Unknown"' />
+                        <span v-text='chat.sender || t("util.common.unknown")' />
                     </div>
                     <div v-text='chat.message' />
                     <div
@@ -129,7 +129,7 @@
                 v-if='chats.length && !atBottom'
                 class='btn btn-primary rounded-circle position-absolute start-50 p-1 scroll-bottom-btn'
                 style='z-index: 10; top: -56px; width: 44px; height: 44px;'
-                title='Scroll to bottom'
+                :title='t("util.genericChat.scrollBottom")'
                 @click='scrollToBottom'
             >
                 <IconArrowDown
@@ -141,7 +141,7 @@
                 v-if='attachMap'
                 class='mx-2 mt-1 small text-primary'
             >
-                Mapa zostanie dołączona do wiadomości
+                {{ t('util.genericChat.mapAttached') }}
             </div>
             <div
                 v-if='attachError'
@@ -152,13 +152,13 @@
                 <div class='flex-grow-1 me-2'>
                     <TablerInput
                         v-model='message'
-                        :placeholder='placeholder'
+                        :placeholder='placeholder ?? t("util.genericChat.placeholder")'
                         @keyup.enter='sendMessage'
                     />
                 </div>
                 <TablerIconButton
                     v-if='canAttachMap'
-                    title='Załącz mapę'
+                    :title='t("util.genericChat.attachMap")'
                     class='me-1'
                     :class='{ "text-primary bg-primary-lt": attachMap }'
                     :aria-pressed='attachMap'
@@ -170,7 +170,7 @@
                     />
                 </TablerIconButton>
                 <TablerIconButton
-                    title='Send Message'
+                    :title='t("util.genericChat.sendMessage")'
                     @click='sendMessage'
                 >
                     <IconSend
@@ -184,6 +184,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted, nextTick } from 'vue';
 import {
     IconSend,
@@ -204,6 +205,8 @@ import {
     TablerNone,
 } from '@tak-ps/vue-tabler';
 import timeDiff from '../../../timediff.ts';
+
+const { t } = useI18n();
 
 export type ChatMessage = {
     id: string | number;
@@ -233,7 +236,7 @@ const props = withDefaults(defineProps<{
     canSend: false,
     canDelete: false,
     multiselect: false,
-    placeholder: 'Send Message...',
+    placeholder: undefined,
     canAttachMap: false,
     attachError: '',
 });
@@ -301,12 +304,12 @@ function emitDelete() {
 
 function statusLabel(status: ChatStatus): string {
     switch (status) {
-        case ChatStatus.Sending: return 'Sending';
-        case ChatStatus.Sent: return 'Sent to Server';
-        case ChatStatus.Pending: return 'Pending Delivery';
-        case ChatStatus.Failed: return 'Failed to Deliver';
-        case ChatStatus.Delivered: return 'Delivered';
-        case ChatStatus.Read: return 'Read';
+        case ChatStatus.Sending: return t('util.genericChat.status.sending');
+        case ChatStatus.Sent: return t('util.genericChat.status.sent');
+        case ChatStatus.Pending: return t('util.genericChat.status.pending');
+        case ChatStatus.Failed: return t('util.genericChat.status.failed');
+        case ChatStatus.Delivered: return t('util.genericChat.status.delivered');
+        case ChatStatus.Read: return t('util.genericChat.status.read');
         default: return '';
     }
 }

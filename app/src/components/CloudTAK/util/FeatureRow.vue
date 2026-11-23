@@ -45,7 +45,7 @@
                 :class='{
                     "ms-2": !props.gripHandle
                 }'
-                :title='props.error ? "This change is saved on this device and has not reached the server yet" : undefined'
+                :title='props.error ? t("util.notSyncedBadge.savedLocally") : undefined'
             >
                 <FeatureIcon
                     :feature='feature'
@@ -66,14 +66,14 @@
                     <span
                         v-else
                         class='fw-semibold text-truncate fst-italic text-muted'
-                    >No Callsign</span>
+                    >{{ t('util.featureRow.noCallsign') }}</span>
                 </div>
             </div>
 
             <div class='align-self-center me-2 btn-list flex-shrink-0'>
                 <TablerIconButton
                     v-if='visibilityToggle'
-                    :title='isHidden ? "Show Feature" : "Hide Feature"'
+                    :title='isHidden ? t("util.featureRow.show") : t("util.featureRow.hide")'
                     @click.stop.prevent='toggleVisibility'
                 >
                     <IconEyeOff
@@ -89,7 +89,7 @@
                 </TablerIconButton>
                 <TablerIconButton
                     v-if='infoButton'
-                    title='View Info'
+                    :title='t("util.featureRow.viewInfo")'
                     @click.stop.prevent='router.push(`/cot/${feature.id}`)'
                 >
                     <IconListDetails
@@ -106,7 +106,7 @@
                 />
                 <TablerIconButton
                     v-else-if='deleteButton'
-                    title='Remove'
+                    :title='t("util.featureRow.remove")'
                     @click.stop.prevent='deleteCOT'
                 >
                     <IconTrash
@@ -120,6 +120,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ref, computed, onMounted } from 'vue';
 import COT from '../../../base/cot.ts';
@@ -139,6 +140,8 @@ import {
     IconEyeOff,
 } from '@tabler/icons-vue';
 import { useMapStore } from '../../../stores/map.ts';
+
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const props = defineProps({

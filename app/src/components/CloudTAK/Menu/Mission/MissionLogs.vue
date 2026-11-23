@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Logs'
+        :name='t("mission.logs.title")'
         :zindex='0'
         :back='false'
         :border='false'
@@ -8,7 +8,7 @@
         :standalone='false'
     >
         <template #buttons>
-            <TablerIconButton title='Download Logs'>
+            <TablerIconButton :title='t("mission.logs.download")'>
                 <IconDownload
                     :size='24'
                     stroke='1'
@@ -26,7 +26,7 @@
                     v-model:sort='sort'
                     :sort-options='sortOptions'
                     :active-filters='selectedKeywords.length'
-                    placeholder='Filter'
+                    :placeholder='t("mission.common.filter")'
                 >
                     <template #sort-icon>
                         <template v-if='sort'>
@@ -50,26 +50,26 @@
                     <template #filters>
                         <div class='d-flex flex-column'>
                             <div class='d-flex align-items-center justify-content-between px-3 py-2'>
-                                <strong class='small text-uppercase text-secondary'>Filters</strong>
+                                <strong class='small text-uppercase text-secondary'>{{ t('mission.logs.filters') }}</strong>
                                 <button
                                     v-if='selectedKeywords.length'
                                     type='button'
                                     class='btn btn-link btn-sm p-0'
                                     @click='selectedKeywords = []'
                                 >
-                                    Clear
+                                    {{ t('mission.logs.clear') }}
                                 </button>
                             </div>
                             <div class='px-3 pb-2 d-flex flex-column gap-2'>
                                 <div>
                                     <div class='small text-uppercase text-secondary mb-1'>
-                                        Keywords
+                                        {{ t('mission.common.keywords') }}
                                     </div>
                                     <div
                                         v-if='!availableKeywords.length'
                                         class='small text-secondary'
                                     >
-                                        No keywords available
+                                        {{ t('mission.logs.noKeywords') }}
                                     </div>
                                     <label
                                         v-for='keyword in availableKeywords'
@@ -97,7 +97,7 @@
             <TablerNone
                 v-if='!filteredLogs.length'
                 :create='false'
-                label='No Logs'
+                :label='t("mission.logs.empty")'
             />
             <div
                 v-else
@@ -121,13 +121,13 @@
                         class='position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center cloudtak-scrim rounded-4 z-3'
                     >
                         <TablerLoading
-                            desc='Creating Log'
+                            :desc='t("mission.logs.creating")'
                             :compact='true'
                         />
                     </div>
 
                     <div class='d-flex justify-content-between align-items-center mb-2 pt-2'>
-                        <label class='form-label mb-0'>Create Log</label>
+                        <label class='form-label mb-0'>{{ t('mission.logs.create') }}</label>
                         <div class='d-flex align-items-center gap-2'>
                             <TablerSelect
                                 v-if='templateLogs.length'
@@ -137,7 +137,7 @@
                             <TablerDropdown>
                                 <template #default>
                                     <TablerIconButton
-                                        title='Options'
+                                        :title='t("mission.logs.options")'
                                     >
                                         <IconSettings
                                             :size='24'
@@ -148,7 +148,7 @@
                                 <template #dropdown>
                                     <TablerToggle
                                         v-model='submitOnEnter'
-                                        label='Submit on Enter'
+                                        :label='t("mission.logs.submitOnEnter")'
                                         @click.stop
                                     />
                                 </template>
@@ -174,7 +174,7 @@
                                     :loading='loading.create'
                                     @click='submitLog'
                                 >
-                                    Save Log
+                                    {{ t('mission.logs.save') }}
                                 </TablerButton>
                             </div>
                         </div>
@@ -191,7 +191,7 @@
                                     :loading='loading.create'
                                     @click='submitLog'
                                 >
-                                    Save Log
+                                    {{ t('mission.logs.save') }}
                                 </TablerButton>
                             </div>
                         </div>
@@ -236,6 +236,9 @@ import MenuTemplate from '../../util/MenuTemplate.vue';
 import Subscription from '../../../../base/subscription.ts';
 import { useObservable } from "@vueuse/rxjs";
 import { stringify } from 'yaml';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     subscription: Subscription
@@ -250,10 +253,17 @@ const logs: Ref<Array<DBSubscriptionLog>> = useObservable(
 const submitOnEnter = ref(true);
 const paging = ref({ filter: '' });
 const sort = ref('');
-const sortOptions = ['Newest \u2192 Oldest', 'Oldest \u2192 Newest', 'A \u2192 Z', 'Z \u2192 A'];
+const sortOptions = computed(() => [
+    t('mission.layers.sort.newest'),
+    t('mission.layers.sort.oldest'),
+    t('mission.logs.sort.alphaAsc'),
+    t('mission.logs.sort.alphaDesc'),
+]);
+// Index of the chosen option: 0 newest, 1 oldest, 2 A→Z, 3 Z→A, -1 none
+const sortIndex = computed(() => sortOptions.value.indexOf(sort.value));
 const selectedKeywords = ref<string[]>([]);
-const sortTypeIcon = computed(() => (sort.value === 'A → Z' || sort.value === 'Z → A') ? IconLetterCase : IconClock);
-const sortDirectionIcon = computed(() => (sort.value === 'Oldest → Newest' || sort.value === 'A → Z') ? IconArrowUp : IconArrowDown);
+const sortTypeIcon = computed(() => (sortIndex.value === 2 || sortIndex.value === 3) ? IconLetterCase : IconClock);
+const sortDirectionIcon = computed(() => (sortIndex.value === 1 || sortIndex.value === 2) ? IconArrowUp : IconArrowDown);
 const createLog = ref<{
     content: string;
     keywords: string[];
@@ -273,7 +283,7 @@ const loading = ref<{
 });
 
 const templateLogs = ref<DBMissionTemplateLog[]>([]);
-const selectedLogType = ref('Default');
+const selectedLogType = ref(t('mission.logs.defaultType'));
 
 const availableKeywords = computed<string[]>(() => {
     const set = new Set<string>();
@@ -311,7 +321,7 @@ onMounted(async () => {
 });
 
 const logTypeOptions = computed<Array<string>>(() => {
-    return ['Default', ...templateLogs.value.map(l => l.name)];
+    return [t('mission.logs.defaultType'), ...templateLogs.value.map(l => l.name)];
 });
 
 const filteredLogs: ComputedRef<Array<DBSubscriptionLog>> = computed(() => {
@@ -330,13 +340,13 @@ const filteredLogs: ComputedRef<Array<DBSubscriptionLog>> = computed(() => {
     });
 
     result = [...result].sort((a, b) => {
-        if (sort.value === 'Newest \u2192 Oldest') {
+        if (sortIndex.value === 0) {
             return new Date(b.dtg ?? 0).getTime() - new Date(a.dtg ?? 0).getTime();
-        } else if (sort.value === 'Oldest → Newest') {
+        } else if (sortIndex.value === 1) {
             return new Date(a.dtg ?? 0).getTime() - new Date(b.dtg ?? 0).getTime();
-        } else if (sort.value === 'A \u2192 Z') {
+        } else if (sortIndex.value === 2) {
             return a.content.localeCompare(b.content);
-        } else if (sort.value === 'Z \u2192 A') {
+        } else if (sortIndex.value === 3) {
             return b.content.localeCompare(a.content);
         }
         return 0;

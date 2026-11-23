@@ -4,13 +4,13 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='$emit("close")'
         />
         <div class='modal-header'>
             <div
                 class='modal-title'
-                v-text='"id" in token ? "Edit Token" : "New Token"'
+                v-text='"id" in token ? t("panels.tokenModal.edit") : t("panels.tokenModal.new")'
             />
 
             <div class='ms-auto btn-list'>
@@ -29,7 +29,7 @@
             >
                 <TablerInput
                     v-model='editToken.name'
-                    label='Token Name'
+                    :label='t("panels.tokenModal.name")'
                     @keyup.enter='saveToken'
                 />
             </div>
@@ -46,14 +46,14 @@
                 class='btn btn-primary'
                 @click='saveToken'
             >
-                Save
+                {{ t('common.save') }}
             </button>
             <button
                 v-else
                 class='btn btn-primary'
                 @click='$emit("refresh")'
             >
-                Close
+                {{ t('common.close') }}
             </button>
         </div>
     </TablerModal>
@@ -61,6 +61,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { server } from '../../../../std.ts';
 import type { ProfileToken } from '../../../../types.ts';
 import {
@@ -74,6 +75,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['close', 'refresh']);
+const { t } = useI18n();
 
 const code = ref<string | false>(false);
 const editToken = reactive<{ id?: number; name: string }>(

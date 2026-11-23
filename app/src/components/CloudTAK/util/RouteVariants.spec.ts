@@ -1,5 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const std = vi.fn();
 vi.mock('../../../std.ts', () => ({ std: (...args: unknown[]) => std(...args) }));
@@ -20,6 +20,7 @@ vi.mock('../../../stores/map.ts', () => ({
 }));
 
 import RouteVariants from './RouteVariants.vue';
+import i18n from '../../../i18n.ts';
 
 const plan = (waypoints: number[][]) => ({
     version: 1, mode: 'foot_cross_country', mode_name: 'Pieszo na przełaj', waypoints,
@@ -44,6 +45,10 @@ function mountIt(waypoints = [[21, 52], [21.05, 52.05]]) {
 }
 
 describe('RouteVariants', () => {
+    // The texts of this taklab feature are asserted in Polish.
+    beforeEach(() => { i18n.global.locale.value = 'pl'; });
+    afterEach(() => { i18n.global.locale.value = 'en'; });
+
     beforeEach(() => {
         std.mockReset(); add.mockClear(); map.sources.clear(); map.layers.clear();
     });

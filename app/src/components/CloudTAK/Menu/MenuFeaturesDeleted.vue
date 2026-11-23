@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Deleted Features'
+        :name='t("menu.featuresDeleted.title")'
     >
         <template #buttons>
             <TablerDropdown>
                 <TablerIconButton
-                    title='Export'
+                    :title='t("menu.common.export")'
                 >
                     <IconDownload
                         :size='32'
@@ -73,12 +73,12 @@
             <TablerLoading
                 v-if='loading'
                 v-model='query.filter'
-                desc='Loading Deleted Features'
+                :desc='t("menu.featuresDeleted.loading")'
             />
             <TablerNone
                 v-else-if='list.features.length === 0'
                 :create='false'
-                label='No Archived Features'
+                :label='t("menu.features.noArchived")'
             />
             <template v-else>
                 <GenericSelect
@@ -91,7 +91,7 @@
                 >
                     <template #buttons='{disabled}'>
                         <TablerIconButton
-                            title='Restore Features'
+                            :title='t("menu.featuresDeleted.restore")'
                             :disabled='disabled'
                             @click.stop='restoreFeatures'
                         >
@@ -127,6 +127,7 @@
 
 <script setup lang='ts'>
 import { ref, onMounted, onBeforeUnmount, watch, computed, useTemplateRef } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { Preferences } from '@capacitor/preferences';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import SearchSortFilter from '../util/SearchSortFilter.vue';
@@ -157,6 +158,7 @@ import {
 } from '@tabler/icons-vue';
 import { useMapStore } from '../../../stores/map.ts';
 
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const list = ref<FeatureCollection>({

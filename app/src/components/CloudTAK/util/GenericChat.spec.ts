@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import i18n from '../../../i18n.ts';
 import GenericChat from './GenericChat.vue';
 
 const NOTICE = 'Mapa zostanie dołączona do wiadomości';
@@ -28,6 +29,9 @@ async function send(wrapper: ReturnType<typeof chat>, text: string) {
 }
 
 describe('GenericChat attach map', () => {
+    beforeEach(() => { i18n.global.locale.value = 'pl' });
+    afterEach(() => { i18n.global.locale.value = 'en' });
+
     it('hides the attach button unless enabled', () => {
         expect(attachButton(chat()).exists()).toBe(false);
         expect(attachButton(chat({ canAttachMap: true })).exists()).toBe(true);

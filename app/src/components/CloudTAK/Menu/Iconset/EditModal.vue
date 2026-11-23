@@ -4,19 +4,19 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='$emit("close")'
         />
 
         <div class='modal-header'>
             <div
                 class='strong d-flex align-items-center'
-                v-text='iconset.name || "Unnamed"'
+                v-text='iconset.name || t("menu.iconsetEdit.unnamed")'
             />
             <div class='ms-auto'>
                 <TablerIconButton
                     v-if='route.params.iconset'
-                    title='Regenerate Spritesheet'
+                    :title='t("menu.iconsetEdit.regenerate")'
                     @click='regen'
                 >
                     <IconWand />
@@ -26,7 +26,7 @@
 
         <TablerLoading
             v-if='loading.iconset'
-            desc='Loading Iconset'
+            :desc='t("menu.iconsetEdit.loading")'
         />
         <div
             v-else
@@ -43,7 +43,7 @@
                         class='btn btn-primary'
                         @click='submit'
                     >
-                        Submit
+                        {{ t('menu.iconsetEdit.submit') }}
                     </div>
                 </div>
             </div>
@@ -54,6 +54,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n';
 import { server } from '../../../../std.ts';
 import type { Iconset } from '../../../../types.ts';
 import IconsetManager from '../../../../base/iconset.ts';
@@ -68,6 +69,7 @@ import { IconWand } from '@tabler/icons-vue';
 
 const emit = defineEmits([ 'close' ]);
 
+const { t } = useI18n();
 const route = useRoute();
 const loading = ref({
     iconset: true

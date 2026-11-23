@@ -49,7 +49,7 @@
 
                     <div class='ms-auto btn-list'>
                         <TablerIconButton
-                            title='View Raw Style'
+                            :title='t("panels.treeVector.viewRaw")'
                             @click='layerModal = l'
                         >
                             <IconCode
@@ -70,7 +70,7 @@
 
     <JSONModal
         v-if='layerModal'
-        title='Layer Style'
+        :title='t("panels.treeVector.layerStyle")'
         :object='layerModal'
         :pre='true'
         @close='layerModal = undefined'
@@ -79,6 +79,7 @@
 
 <script setup lang='ts'>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import StyleLayer from '../../../ETL/Styling/Layer.vue';
 import {
     TablerIconButton,
@@ -100,6 +101,8 @@ const props = defineProps({
         required: true
     }
 });
+
+const { t } = useI18n();
 
 const treeState = ref<Record<number, boolean>>({});
 

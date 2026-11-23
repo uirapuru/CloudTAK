@@ -4,12 +4,12 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='$emit("close")'
         />
         <div class='modal-header'>
             <div class='modal-title'>
-                Passkey Details
+                {{ t('panels.passkeyModal.title') }}
             </div>
             <div class='ms-auto btn-list'>
                 <TablerDelete
@@ -20,16 +20,16 @@
         </div>
         <div class='modal-body row g-2'>
             <div class='col-12'>
-                <label class='form-label'>Name</label>
-                <div v-text='passkey.name || "Unnamed Passkey"' />
+                <label class='form-label'>{{ t('panels.passkeyModal.name') }}</label>
+                <div v-text='passkey.name || t("panels.passkeyModal.unnamed")' />
             </div>
             <div class='col-12'>
-                <label class='form-label'>Created</label>
+                <label class='form-label'>{{ t('panels.passkeyModal.created') }}</label>
                 <div v-text='new Date(passkey.created).toLocaleString()' />
             </div>
             <div class='col-12'>
-                <label class='form-label'>Last Used</label>
-                <div v-text='passkey.last_used ? new Date(passkey.last_used).toLocaleString() : "Never"' />
+                <label class='form-label'>{{ t('panels.passkeyModal.lastUsed') }}</label>
+                <div v-text='passkey.last_used ? new Date(passkey.last_used).toLocaleString() : t("panels.passkeyModal.never")' />
             </div>
         </div>
         <div class='modal-footer'>
@@ -37,13 +37,14 @@
                 class='btn btn-primary'
                 @click='$emit("close")'
             >
-                Close
+                {{ t('common.close') }}
             </button>
         </div>
     </TablerModal>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { server } from '../../../../std.ts';
 import {
     TablerModal,
@@ -61,6 +62,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['close', 'refresh']);
+const { t } = useI18n();
 
 async function deletePasskey() {
     const { error } = await server.DELETE('/api/login/passkey/{:id}', {

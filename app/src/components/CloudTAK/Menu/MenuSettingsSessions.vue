@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Login Sessions'
+        :name='t("panels.settingsSessions.title")'
         :loading='loading'
     >
         <template #default>
@@ -14,10 +14,12 @@
 
 <script setup lang='ts'>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import LoginSessionsList from '../../util/LoginSessionsList.vue';
 import { server } from '../../../std.ts';
 
+const { t } = useI18n();
 const loading = ref<boolean>(true);
 const username = ref<string>('');
 

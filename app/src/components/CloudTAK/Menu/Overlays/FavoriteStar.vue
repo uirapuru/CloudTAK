@@ -1,7 +1,7 @@
 <template>
     <TablerIconButton
         class='favorite-star'
-        :title='active ? "Usuń z ulubionych" : "Dodaj do ulubionych"'
+        :title='active ? t("taklab.favoriteStar.remove") : t("taklab.favoriteStar.add")'
         :aria-pressed='active'
         @click.stop.prevent='emit("toggle")'
     >
@@ -19,8 +19,11 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { TablerIconButton } from '@tak-ps/vue-tabler';
 import { IconStar, IconStarFilled } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 defineProps<{
     /** The overlay is a favorite */

@@ -4,13 +4,13 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("close")'
         />
         <div class='modal-header text-body'>
             <div
                 class='modal-title'
-                v-text='title'
+                v-text='title || t("util.jsonModal.title")'
             />
         </div>
         <div class='modal-body overflow-auto'>
@@ -22,13 +22,14 @@
         </div>
         <div class='modal-footer'>
             <TablerButton @click='emit("close")'>
-                Done
+                {{ t('util.common.done') }}
             </TablerButton>
         </div>
     </TablerModal>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch } from 'vue';
 import CopyField from './CopyField.vue';
 import {
@@ -36,10 +37,12 @@ import {
     TablerButton
 } from '@tak-ps/vue-tabler';
 
+const { t } = useI18n();
+
 const props = defineProps({
     title: {
         type: String,
-        default: 'JSON Object'
+        default: ''
     },
     object: {
         type: Object,

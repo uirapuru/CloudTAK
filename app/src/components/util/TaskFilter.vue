@@ -8,7 +8,7 @@
                 type='button'
                 class='form-control d-flex align-items-center cursor-pointer text-start'
             >
-                <span class='flex-fill text-truncate'>{{ modelValue || 'All Tasks' }}</span>
+                <span class='flex-fill text-truncate'>{{ modelValue && modelValue !== 'All Tasks' ? modelValue : t('shared.taskFilter.allTasks') }}</span>
                 <IconChevronDown
                     :size='16'
                     stroke='1'
@@ -21,7 +21,7 @@
                 <div class='px-2 py-2 border-bottom'>
                     <TablerInput
                         v-model='search'
-                        placeholder='Search Tasks...'
+                        :placeholder='t("shared.taskFilter.search")'
                         :autofocus='true'
                         class='mb-0'
                         @click.stop
@@ -36,7 +36,7 @@
                         :class='{ "fw-bold": !modelValue || modelValue === "All Tasks" }'
                         @click='select(undefined)'
                     >
-                        All Tasks
+                        {{ t('shared.taskFilter.allTasks') }}
                     </div>
                     <div
                         v-for='task in filtered'
@@ -51,7 +51,7 @@
                         v-if='!filtered.length && search'
                         :compact='true'
                         :create='false'
-                        label='No Tasks'
+                        :label='t("shared.taskFilter.none")'
                     />
                 </div>
             </div>
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed } from 'vue';
 import { IconChevronDown } from '@tabler/icons-vue';
 import {
@@ -67,6 +68,8 @@ import {
     TablerDropdown,
     TablerNone,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     modelValue?: string;

@@ -33,7 +33,7 @@
                     <button
                         type='button'
                         class='ms-2 btn-close'
-                        title='close'
+                        :title='t("common.close")'
                         @click.stop='emit("close")'
                     />
                 </div>
@@ -51,12 +51,15 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import TAKNotification from '../../../base/notification.ts';
 import NotificationIcon from './NotificationIcon.vue';
 import { useMapStore } from '../../../stores/map.ts';
 import timediff from '../../../timediff.ts';
+
+const { t } = useI18n();
 
 const router = useRouter();
 const timer = ref<ReturnType<typeof setTimeout> | null>(null);

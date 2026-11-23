@@ -9,7 +9,8 @@
         "beta": "Beta",
         "basemap": "Basemap",
         "overlay": "Overlay",
-        "changeType": "Change Type"
+        "changeType": "Change Type",
+        "cannotBeEmpty": "Cannot be empty"
     },
     "types": {
         "zxy": {
@@ -37,10 +38,10 @@
             "urlDescription": "Provide the ArcGIS FeatureServer layer URL, including the layer id."
         },
         "tilejson": {
-            "label": "TileJSON / WMTS Import",
-            "description": "Fetch defaults from a TileJSON or WMTS capabilities URL.",
-            "urlLabel": "TileJSON or WMTS Capabilities URL",
-            "urlDescription": "Provide a TileJSON document or WMTS GetCapabilities URL to prefill the basemap form. Add ?layer=<identifier> to a WMTS URL to pick a layer."
+            "label": "TileJSON Import",
+            "description": "Fetch defaults from a TileJSON URL.",
+            "urlLabel": "TileJSON URL",
+            "urlDescription": "Provide a TileJSON document URL to prefill the basemap form."
         },
         "upload": {
             "label": "TAK XML Upload",
@@ -108,7 +109,8 @@
         "fetching": "Fetching Service Metadata"
     },
     "tilejson": {
-        "fetching": "Fetching Metadata"
+        "fetching": "Fetching Metadata",
+        "fetch": "Fetch TileJSON"
     },
     "composite": {
         "building": "Building Composite",

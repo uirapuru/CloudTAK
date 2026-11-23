@@ -14,7 +14,7 @@
             />
 
             <div class='text-red'>
-                No Channels are active
+                {{ t('util.emptyInfo.noChannels') }}
             </div>
 
             <div
@@ -22,7 +22,7 @@
                 class='ms-auto'
             >
                 <TablerIconButton
-                    title='Channel Selection'
+                    :title='t("util.emptyInfo.channelSelection")'
                     @click='router.push("/menu/channels")'
                 >
                     <IconAffiliate
@@ -40,13 +40,14 @@
             />
 
             <div class='text-red'>
-                No Data Syncs have been subscribed to that have Write Access
+                {{ t('util.emptyInfo.noMissions') }}
             </div>
         </template>
     </div>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import {
     IconAffiliate,
@@ -55,6 +56,8 @@ import {
 import {
     TablerIconButton
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const router = useRouter();
 

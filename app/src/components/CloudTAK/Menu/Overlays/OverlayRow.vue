@@ -18,7 +18,7 @@
                 <span
                     v-if='draggable'
                     class='drag-handle flex-shrink-0 align-self-stretch d-flex align-items-center cursor-move text-white-50'
-                    title='Przeciągnij, aby zmienić kolejność lub grupę'
+                    :title='t("taklab.overlayRow.drag")'
                     @click.stop
                 >
                     <IconGripVertical
@@ -29,7 +29,7 @@
                 <span
                     v-if='card.overlay.type === "raster"'
                     class='flex-shrink-0 text-white-50'
-                    title='Raster'
+                    :title='t("panels.overlays.badge.raster")'
                 >
                     <IconMap
                         :size='20'
@@ -39,7 +39,7 @@
                 <span
                     v-else-if='card.overlay.type === "raster-dem"'
                     class='flex-shrink-0 text-white-50'
-                    title='Terrain'
+                    :title='t("panels.overlays.badge.terrain")'
                 >
                     <IconMap
                         :size='20'
@@ -49,7 +49,7 @@
                 <span
                     v-else-if='card.overlay.type === "geojson" && card.overlay.mode === "mission"'
                     class='flex-shrink-0 text-white-50'
-                    title='Data Sync'
+                    :title='t("panels.overlays.badge.dataSync")'
                 >
                     <IconCloudPin
                         :size='20'
@@ -59,7 +59,7 @@
                 <span
                     v-else-if='card.overlay.type === "3dtiles"'
                     class='flex-shrink-0 text-white-50'
-                    title='3D Buildings'
+                    :title='t("taklab.overlayRow.buildings3d")'
                 >
                     <IconBuildingSkyscraper
                         :size='20'
@@ -69,7 +69,7 @@
                 <span
                     v-else
                     class='flex-shrink-0 text-white-50'
-                    title='Vector'
+                    :title='t("panels.overlays.badge.vector")'
                 >
                     <IconVector
                         :size='20'
@@ -89,7 +89,7 @@
                             <a
                                 v-else-if='card.overlay.mode === "internal"'
                                 class='fw-semibold text-primary text-decoration-underline d-inline-flex align-items-center text-break cursor-pointer'
-                                title='Open Features Menu'
+                                :title='t("panels.overlays.openFeatures")'
                                 @click.stop='router.push("/menu/features")'
                                 v-text='card.overlay.name'
                             />
@@ -114,7 +114,7 @@
                         </span>
                         <OfflineBadge
                             v-if='card.offline'
-                            title='Tiles are available offline on this device'
+                            :title='t("panels.overlays.offline")'
                         />
                     </div>
                 </div>
@@ -159,7 +159,7 @@
 
                     <TablerIconButton
                         v-if='card.overlay.hasBounds()'
-                        title='Zoom To Overlay'
+                        :title='t("panels.overlays.zoom")'
                         @click.stop.prevent='card.overlay.zoomTo()'
                     >
                         <IconMaximize
@@ -170,7 +170,7 @@
 
                     <TablerIconButton
                         v-if='card.visible'
-                        title='Hide Layer'
+                        :title='t("panels.overlays.hide")'
                         @click.stop.prevent='emit("update", { visible: !card.visible })'
                     >
                         <IconEye
@@ -181,7 +181,7 @@
 
                     <TablerIconButton
                         v-else
-                        title='Show Layer'
+                        :title='t("panels.overlays.show")'
                         @click.stop.prevent='emit("update", { visible: !card.visible })'
                     >
                         <IconEyeOff
@@ -192,7 +192,7 @@
 
                     <TablerIconButton
                         v-if='!OverlayManager.isPinned(card.overlay)'
-                        title='Delete Overlay'
+                        :title='t("panels.overlays.delete")'
                         @click.stop.prevent='emit("remove")'
                     >
                         <IconTrash
@@ -215,7 +215,7 @@
             >
                 <TablerRange
                     :model-value='card.overlay.opacity'
-                    label='Opacity'
+                    :label='t("panels.overlays.opacity")'
                     :min='0'
                     :max='1'
                     :step='0.1'
@@ -232,6 +232,7 @@
 
 <script setup lang='ts'>
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { TablerIconButton, TablerRange } from '@tak-ps/vue-tabler';
 import {
     IconGripVertical,
@@ -273,6 +274,7 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const { t } = useI18n();
 
 /** Whether an overlay has an expandable details panel. Mission overlays are managed from MenuMission and are not expandable here. */
 function hasOverlayDetails(overlay: Overlay): boolean {

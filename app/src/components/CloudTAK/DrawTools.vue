@@ -2,7 +2,7 @@
     <TablerDropdown>
         <template #default>
             <TablerIconButton
-                title='Geometry Editing'
+                :title='t("map.drawTools.geometryEditing")'
                 class='mx-2 cloudtak-hover'
                 :hover='false'
             >
@@ -18,11 +18,11 @@
             >
                 <div class='d-flex align-items-center px-3 py-2 border-bottom'>
                     <h3 class='m-0 fw-bold'>
-                        Drawing Tools
+                        {{ t('map.drawTools.title') }}
                     </h3>
                     <div class='ms-auto btn-list'>
                         <TablerIconButton
-                            title='Search Tools'
+                            :title='t("map.drawTools.searchTools")'
                             @click.stop='toggleSearch'
                         >
                             <IconSearch
@@ -38,7 +38,7 @@
                 >
                     <TablerInput
                         v-model='search'
-                        placeholder='Search...'
+                        :placeholder='t("map.drawTools.searchPlaceholder")'
                         icon='search'
                         :autofocus='true'
                         class='mb-0'
@@ -63,7 +63,7 @@
                         v-if='!filteredDrawTools.length'
                         :compact='true'
                         :create='false'
-                        label='No Tools'
+                        :label='t("map.drawTools.noTools")'
                     />
                 </div>
             </div>
@@ -73,6 +73,7 @@
 
 <script setup lang='ts'>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Component } from 'vue';
 import { DrawToolMode } from '../../stores/modules/draw.ts';
 import CoordInput from './Inputs/CoordInput.vue';
@@ -108,6 +109,7 @@ import {
 } from '@tak-ps/vue-tabler';
 
 const mapStore = useMapStore();
+const { t } = useI18n();
 const floatStore = useFloatStore();
 
 const search = ref<string>('');
@@ -120,26 +122,26 @@ type DrawToolItem = {
     action: () => void;
 };
 
-const drawTools: DrawToolItem[] = [
-    { key: 'coordinate', label: 'Coordinate Input', icon: IconCursorText, action: () => { openPane('coordinate-input', 'Coordinate Entry', CoordInput, 420); } },
-    { key: 'event', label: 'Create Event', icon: IconCalendarEvent, action: () => { openPane('create-event', 'Create Event', CreateCoreEntity, 640, 600); } },
-    { key: 'quick_pic', label: 'Quick Pic', icon: IconCamera, action: () => { openPane('quick-pic', 'Quick Pic', QuickPicInput, 300); } },
-    { key: 'range', label: 'Range & Bearing', icon: IconCompass, action: () => { openPane('range-bearing-input', 'Range & Bearing', RangeInput, 560); } },
-    { key: 'range_rings', label: 'Range Rings', icon: IconTarget, action: () => { openPane('range-rings-input', 'Range Rings', RangeRingsInput, 640); } },
-    { key: 'point', label: 'Draw Point', icon: IconPoint, action: () => { mapStore.draw.start(DrawToolMode.POINT); } },
-    { key: 'line', label: 'Draw Line', icon: IconLine, action: () => { mapStore.draw.start(DrawToolMode.LINESTRING); } },
-    { key: 'polygon', label: 'Draw Polygon', icon: IconPolygon, action: () => { mapStore.draw.start(DrawToolMode.POLYGON); } },
-    { key: 'rectangle', label: 'Draw Rectangle', icon: IconVector, action: () => { mapStore.draw.start(DrawToolMode.RECTANGLE); } },
-    { key: 'circle', label: 'Draw Circle', icon: IconCircle, action: () => { mapStore.draw.start(DrawToolMode.CIRCLE); } },
-    { key: 'sector', label: 'Draw Sector', icon: IconCone, action: () => { mapStore.draw.start(DrawToolMode.SECTOR); } },
-    { key: 'lasso', label: 'Lasso Select', icon: IconLasso, action: () => { mapStore.draw.start(DrawToolMode.FREEHAND); } },
-    { key: 'import', label: 'GeoJSON Import', icon: IconFileImport, action: () => { openPane('geojson-import', 'GeoJSON Import', GeoJSONInput, 500, 500); } },
-];
+const drawTools = computed<DrawToolItem[]>(() => [
+    { key: 'coordinate', label: t('map.drawTools.coordinateInput'), icon: IconCursorText, action: () => { openPane('coordinate-input', t('map.drawTools.coordinateEntry'), CoordInput, 420); } },
+    { key: 'event', label: t('map.drawTools.createEvent'), icon: IconCalendarEvent, action: () => { openPane('create-event', t('map.drawTools.createEvent'), CreateCoreEntity, 640, 600); } },
+    { key: 'quick_pic', label: t('map.drawTools.quickPic'), icon: IconCamera, action: () => { openPane('quick-pic', t('map.drawTools.quickPic'), QuickPicInput, 300); } },
+    { key: 'range', label: t('map.drawTools.rangeBearing'), icon: IconCompass, action: () => { openPane('range-bearing-input', t('map.drawTools.rangeBearing'), RangeInput, 560); } },
+    { key: 'range_rings', label: t('map.drawTools.rangeRings'), icon: IconTarget, action: () => { openPane('range-rings-input', t('map.drawTools.rangeRings'), RangeRingsInput, 640); } },
+    { key: 'point', label: t('map.drawTools.drawPoint'), icon: IconPoint, action: () => { mapStore.draw.start(DrawToolMode.POINT); } },
+    { key: 'line', label: t('map.drawTools.drawLine'), icon: IconLine, action: () => { mapStore.draw.start(DrawToolMode.LINESTRING); } },
+    { key: 'polygon', label: t('map.drawTools.drawPolygon'), icon: IconPolygon, action: () => { mapStore.draw.start(DrawToolMode.POLYGON); } },
+    { key: 'rectangle', label: t('map.drawTools.drawRectangle'), icon: IconVector, action: () => { mapStore.draw.start(DrawToolMode.RECTANGLE); } },
+    { key: 'circle', label: t('map.drawTools.drawCircle'), icon: IconCircle, action: () => { mapStore.draw.start(DrawToolMode.CIRCLE); } },
+    { key: 'sector', label: t('map.drawTools.drawSector'), icon: IconCone, action: () => { mapStore.draw.start(DrawToolMode.SECTOR); } },
+    { key: 'lasso', label: t('map.drawTools.lassoSelect'), icon: IconLasso, action: () => { mapStore.draw.start(DrawToolMode.FREEHAND); } },
+    { key: 'import', label: t('map.drawTools.geojsonImport'), icon: IconFileImport, action: () => { openPane('geojson-import', t('map.drawTools.geojsonImport'), GeoJSONInput, 500, 500); } },
+]);
 
 const filteredDrawTools = computed<DrawToolItem[]>(() => {
     const query = search.value.trim().toLowerCase();
-    if (!query) return drawTools;
-    return drawTools.filter((tool) => tool.label.toLowerCase().includes(query));
+    if (!query) return drawTools.value;
+    return drawTools.value.filter((tool) => tool.label.toLowerCase().includes(query));
 });
 
 function openPane(uid: string, name: string, component: Component, height: number, width = 400): void {

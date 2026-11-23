@@ -1,12 +1,12 @@
 <template>
     <MenuTemplate
-        name='Głos'
+        :name='t("taklab.voice.title")'
         :loading='loading'
     >
         <template #buttons>
             <TablerIconButton
                 v-if='enabled && items.length'
-                :title='selecting ? "Zakończ zaznaczanie" : "Zaznacz nagrania do usunięcia"'
+                :title='selecting ? t("taklab.voice.endSelecting") : t("taklab.voice.startSelecting")'
                 @click='toggleSelecting'
             >
                 <IconListCheck
@@ -16,7 +16,7 @@
             </TablerIconButton>
             <TablerIconButton
                 v-if='enabled'
-                title='Pobierz cały raport (nagrania i transkrypcje)'
+                :title='t("taklab.voice.downloadReport")'
                 @click='downloadReport'
             >
                 <IconFileZip
@@ -26,7 +26,7 @@
             </TablerIconButton>
             <TablerIconButton
                 v-if='enabled'
-                title='Odśwież'
+                :title='t("taklab.common.refresh")'
                 @click='refresh'
             >
                 <IconRefresh
@@ -42,7 +42,7 @@
             />
             <TablerNone
                 v-else-if='!enabled'
-                label='Rejestr głosu nie jest włączony w tym środowisku'
+                :label='t("taklab.voice.disabled")'
                 :create='false'
             />
             <template v-else>
@@ -60,29 +60,39 @@
                             stroke='1'
                             class='text-red'
                         />
-                        <span>Teraz mówi <strong v-text='s.user' /> na kanale <span v-text='s.channel' /></span>
+                        <i18n-t
+                            keypath='taklab.voice.speakingNow'
+                            tag='span'
+                        >
+                            <template #user>
+                                <strong v-text='s.user' />
+                            </template>
+                            <template #channel>
+                                <span v-text='s.channel' />
+                            </template>
+                        </i18n-t>
                     </span>
                 </div>
 
                 <div class='row g-2 px-2 pt-2'>
                     <div class='col-12'>
-                        <TablerEnum
+                        <TranslatedEnum
                             v-model='channel'
-                            label='Kanał'
+                            :label='t("taklab.voice.channel")'
                             :options='channelOptions'
                         />
                     </div>
                     <div class='col-6'>
                         <TablerInput
                             v-model='from'
-                            label='Od'
+                            :label='t("taklab.voice.from")'
                             type='datetime-local'
                         />
                     </div>
                     <div class='col-6'>
                         <TablerInput
                             v-model='to'
-                            label='Do'
+                            :label='t("taklab.voice.to")'
                             type='datetime-local'
                         />
                     </div>
@@ -97,7 +107,7 @@
                                 stroke='1'
                                 class='me-1'
                             />
-                            Pobierz zakres (ZIP)
+                            {{ t('taklab.voice.downloadRange') }}
                         </button>
                     </div>
                 </div>
@@ -108,13 +118,13 @@
                 >
                     <span
                         class='small flex-grow-1'
-                        v-text='`Zaznaczone: ${selected.size}`'
+                        v-text='t("taklab.voice.selectedCount", { count: selected.size })'
                     />
                     <button
                         class='btn btn-sm'
                         @click='selectAllVisible'
                     >
-                        Zaznacz widoczne
+                        {{ t('taklab.voice.selectVisible') }}
                     </button>
                     <button
                         class='btn btn-sm btn-danger'
@@ -126,13 +136,13 @@
                             stroke='1'
                             class='me-1'
                         />
-                        Usuń zaznaczone
+                        {{ t('taklab.voice.deleteSelected') }}
                     </button>
                 </div>
 
                 <TablerNone
                     v-if='!items.length'
-                    label='Brak nagrań w tym zakresie'
+                    :label='t("taklab.voice.noRecordings")'
                     :create='false'
                 />
                 <div
@@ -150,7 +160,7 @@
                                 type='checkbox'
                                 class='form-check-input flex-shrink-0 m-0'
                                 :checked='selected.has(rec.id)'
-                                :aria-label='`Zaznacz nagranie ${rec.author} z ${when(rec.started_ts)}`'
+                                :aria-label='t("taklab.voice.selectRecording", { author: rec.author, when: when(rec.started_ts) })'
                                 @change='toggleSelected(rec.id)'
                             >
                             <div class='flex-grow-1 d-flex flex-column overflow-hidden'>
@@ -173,7 +183,7 @@
                                 </span>
                             </div>
                             <TablerIconButton
-                                :title='playing === rec.id ? "Ukryj odtwarzacz" : "Odsłuchaj"'
+                                :title='playing === rec.id ? t("taklab.voice.hidePlayer") : t("taklab.voice.play")'
                                 @click='playing = playing === rec.id ? null : rec.id'
                             >
                                 <IconPlayerPlay
@@ -182,7 +192,7 @@
                                 />
                             </TablerIconButton>
                             <TablerIconButton
-                                title='Zapisz nagranie'
+                                :title='t("taklab.voice.saveRecording")'
                                 @click='downloadOne(rec)'
                             >
                                 <IconDownload
@@ -192,7 +202,7 @@
                             </TablerIconButton>
                             <TablerIconButton
                                 v-if='!selecting'
-                                title='Usuń nagranie'
+                                :title='t("taklab.voice.deleteRecording")'
                                 @click='askDelete([rec.id])'
                             >
                                 <IconTrash
@@ -217,7 +227,7 @@
                         <div
                             v-else
                             class='small text-muted fst-italic'
-                            v-text='transcriptState(rec)'
+                            v-text='transcriptLabel(rec)'
                         />
                     </StandardItem>
 
@@ -230,7 +240,7 @@
                             :disabled='loadingMore'
                             @click='loadOlder'
                         >
-                            Starsze nagrania
+                            {{ t('taklab.voice.olderRecordings') }}
                         </button>
                     </div>
                 </div>
@@ -240,17 +250,17 @@
                 <button
                     type='button'
                     class='btn-close'
-                    aria-label='Anuluj'
+                    :aria-label='t("common.cancel")'
                     @click='confirmIds = null'
                 />
                 <div class='modal-status bg-red' />
                 <div class='modal-header'>
-                    Usuwanie nagrań
+                    {{ t('taklab.voice.deleteTitle') }}
                 </div>
                 <div class='modal-body'>
-                    <div v-text='deleteQuestion(confirmIds.length)' />
+                    <div v-text='deleteLabel(confirmIds.length)' />
                     <div class='text-muted small mt-2'>
-                        Nagranie i jego transkrypcja znikną z serwera. Tego nie da się cofnąć.
+                        {{ t('taklab.voice.deleteWarning') }}
                     </div>
                 </div>
                 <div class='modal-footer'>
@@ -259,7 +269,7 @@
                         :disabled='deleting'
                         @click='confirmIds = null'
                     >
-                        Anuluj
+                        {{ t('common.cancel') }}
                     </button>
                     <button
                         class='btn btn-danger'
@@ -271,7 +281,7 @@
                             stroke='1'
                             class='me-1'
                         />
-                        Usuń
+                        {{ t('common.delete') }}
                     </button>
                 </div>
             </TablerModal>
@@ -281,6 +291,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     IconDownload,
     IconFileZip,
@@ -293,7 +304,6 @@ import {
 import {
     TablerAlert,
     TablerBadge,
-    TablerEnum,
     TablerIconButton,
     TablerInput,
     TablerModal,
@@ -301,6 +311,7 @@ import {
 } from '@tak-ps/vue-tabler';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
+import TranslatedEnum from '../util/TranslatedEnum.vue';
 import { std, stdurl, downloadUrl, getRuntimeToken } from '../../../std.ts';
 import {
     ALL_CHANNELS,
@@ -308,11 +319,11 @@ import {
     type VoiceStatus,
     rangeQuery,
     mergeNewest,
-    transcriptState,
     speakingNow,
-    deleteQuestion,
     withoutIds,
 } from './voice.ts';
+
+const { t, locale } = useI18n();
 
 const PAGE = 50;
 const REFRESH_MS = 10_000;
@@ -341,7 +352,10 @@ let timer: ReturnType<typeof setInterval> | undefined;
 const channelOptions = computed(() => {
     const names = new Set<string>((status.value.channels || []).map((c) => c.name));
     for (const rec of items.value) names.add(rec.channel);
-    return [ALL_CHANNELS, ...[...names].sort()];
+    return [
+        { value: ALL_CHANNELS, label: t('taklab.voice.allChannels') },
+        ...[...names].sort().map((name) => ({ value: name, label: name })),
+    ];
 });
 
 const speaking = computed(() => speakingNow(status.value));
@@ -466,13 +480,35 @@ async function downloadReport(): Promise<void> {
 function when(ts: number): string {
     const d = new Date(ts * 1000);
     const today = new Date().toDateString() === d.toDateString();
+    const tag = locale.value === 'pl' ? 'pl-PL' : 'en-GB';
     return today
-        ? d.toLocaleTimeString('pl-PL')
-        : d.toLocaleString('pl-PL', { dateStyle: 'short', timeStyle: 'medium' });
+        ? d.toLocaleTimeString(tag)
+        : d.toLocaleString(tag, { dateStyle: 'short', timeStyle: 'medium' });
 }
 
 function seconds(s: number): string {
-    return `${s.toFixed(1).replace('.', ',')} s`;
+    const value = s.toFixed(1);
+    return t('taklab.voice.seconds', { value: locale.value === 'pl' ? value.replace('.', ',') : value });
+}
+
+// transcriptState and deleteQuestion in voice.ts keep the Polish text for their spec;
+// the screen shows the translated text.
+function transcriptLabel(rec: VoiceRecording): string {
+    switch (rec.transcript_status) {
+        case 'pending': return t('taklab.voice.transcriptPending');
+        case 'failed': return t('taklab.voice.transcriptFailed');
+        case 'disabled': return t('taklab.voice.transcriptDisabled');
+        case 'done': return t('taklab.voice.transcriptEmpty');
+        default: return rec.transcript_status;
+    }
+}
+
+function deleteLabel(n: number): string {
+    if (n === 1) return t('taklab.voice.deleteOne');
+    const last = n % 10;
+    const lastTwo = n % 100;
+    const few = last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14);
+    return t(few ? 'taklab.voice.deleteFew' : 'taklab.voice.deleteMany', { count: n });
 }
 </script>
 

@@ -11,13 +11,13 @@
                                     style='margin-bottom: 24px;'
                                 >
                                     <img
-                                        alt='Agency Logo'
+                                        :alt='t("login.loading.agencyLogo")'
                                         :src='logo'
                                         draggable='false'
                                         style='height: 150px;'
                                     >
                                 </div>
-                                <TablerLoading desc='Loading CloudTAK' />
+                                <TablerLoading :desc='t("login.loading.loadingCloudtak")' />
                                 <Transition
                                     name='stage-fade'
                                     mode='out-in'
@@ -39,13 +39,13 @@
                                             class='btn btn-danger'
                                             @click='hardReset'
                                         >
-                                            Hard Reset
+                                            {{ t('login.loading.hardReset') }}
                                         </button>
                                         <div
                                             class='text-muted mt-1'
                                             style='font-size: 0.8rem;'
                                         >
-                                            If loading has stalled, click to clear the cache and reload.
+                                            {{ t('login.loading.hardResetHint') }}
                                         </div>
                                     </div>
                                 </Transition>
@@ -62,6 +62,7 @@
 import Config from '../base/config.ts';
 import { supportsServiceWorker } from '../utils/capacitor.ts';
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{
     stage?: string;
@@ -69,6 +70,8 @@ const props = defineProps<{
 import {
     TablerLoading
 } from '@tak-ps/vue-tabler'
+
+const { t } = useI18n();
 
 const logo = ref('/CloudTAKLogo.svg');
 const showReset = ref(false);

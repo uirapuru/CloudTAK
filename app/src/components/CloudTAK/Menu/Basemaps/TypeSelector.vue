@@ -4,7 +4,7 @@
             <TablerInput
                 v-model='filter'
                 icon='search'
-                placeholder='Filter basemap types'
+                :placeholder='t("basemaps.typeSelector.filter")'
             />
         </div>
 
@@ -47,6 +47,9 @@ import type { BasemapSourceType } from './types.ts';
 import {
     TablerInput
 } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     modelValue?: string | null;
@@ -68,8 +71,8 @@ const options = computed(() => {
         .filter((id) => id !== 'hosted' || props.isSystemAdmin)
         .map((id) => ({
             id,
-            label: BasemapTypeConfig[id].label,
-            description: BasemapTypeConfig[id].description,
+            label: t(`basemaps.types.${id}.label`),
+            description: t(`basemaps.types.${id}.description`),
             icon: BasemapTypeConfig[id].icon,
         }));
 });

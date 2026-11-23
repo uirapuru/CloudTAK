@@ -1,5 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { reactive } from 'vue';
 import { DrawToolMode } from '../../../stores/modules/draw.ts';
 
@@ -37,6 +37,7 @@ vi.mock('../../../stores/app.ts', () => ({ useAppStore: () => reactive({ isMobil
 vi.mock('../../../base/overlay.ts', () => ({ default: { queryableOverlayNames: () => [] } }));
 
 import DrawOverlay from './DrawOverlay.vue';
+import i18n from '../../../i18n.ts';
 
 function mountOverlay() {
     return mount(DrawOverlay, {
@@ -45,6 +46,9 @@ function mountOverlay() {
 }
 
 describe('DrawOverlay - edytor trasy', () => {
+    beforeEach(() => { i18n.global.locale.value = 'pl' });
+    afterEach(() => { i18n.global.locale.value = 'en' });
+
     it('pokazuje podsumowanie i podpowiedź trybu edycji', () => {
         const wrapper = mountOverlay();
         expect(wrapper.text()).toContain('Edycja trasy');

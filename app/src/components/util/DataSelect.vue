@@ -14,7 +14,7 @@
                     />
                 </template>
                 <template v-else>
-                    <span>No Data Sync Selected - Data will output as CoTs directly to the Connection</span>
+                    <span>{{ t('shared.dataSelect.noneSelected') }}</span>
                 </template>
 
                 <div
@@ -41,7 +41,7 @@
                                 <table class='table table-hover'>
                                     <thead>
                                         <tr>
-                                            <th>(Status) Name</th>
+                                            <th>{{ t('shared.dataSelect.statusName') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody class='table-tbody'>
@@ -72,6 +72,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { server } from '../../std.ts';
 import type { ETLData, APIList } from '../../types.ts';
@@ -83,6 +84,8 @@ import {
     TablerLoading,
     TablerDropdown
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     connection?: number;

@@ -1,6 +1,6 @@
 <template>
     <PropertyFactRow
-        label='Email'
+        :label='t("property.email.label")'
         class='py-1'
     >
         <a
@@ -13,6 +13,9 @@
 
 <script setup lang='ts'>
 import PropertyFactRow from '../util/PropertyFactRow.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     email: string;

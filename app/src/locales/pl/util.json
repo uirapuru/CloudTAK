@@ -322,7 +322,9 @@
         "none": "Brak zestawów ikon",
         "open": "Otwórz zestaw ikon",
         "noIcons": "Nie ma jeszcze ikon.",
-        "showAll": "Pokaż wszystkie ikony ({count})"
+        "showAll": "Pokaż wszystkie ikony ({count})",
+        "loadingIcons": "Wczytywanie ikon",
+        "noIconsLabel": "Brak ikon"
     },
     "createCoreEntity": {
         "title": "Utwórz zdarzenie",
@@ -374,7 +376,10 @@
             "failed": "Nie doręczono",
             "delivered": "Doręczono",
             "read": "Przeczytano"
-        }
+        },
+        "mapAttached": "Mapa zostanie dołączona do wiadomości",
+        "attachMap": "Załącz mapę",
+        "sendMessage": "Wyślij wiadomość"
     },
     "iconSelectOffline": {
         "iconName": "Ikona: {name}",
@@ -424,7 +429,18 @@
         "noSnapping": "Bez przyciągania",
         "layerSelection": "Wybór warstwy",
         "layerSelectionHelp": "Obiekty zostaną zaznaczone z wybranej warstwy.",
-        "mapFeatures": "Obiekty na mapie"
+        "mapFeatures": "Obiekty na mapie",
+        "routeBuild": "Wyznaczanie trasy",
+        "routeEdit": "Edycja trasy",
+        "saveRoute": "Zapisz trasę",
+        "routeCalculating": "Przeliczam trasę…",
+        "routePoint": "Punkt {label}",
+        "removePoint": "Usuń punkt",
+        "hideRouteSettings": "Ukryj tryb i opcje",
+        "routeSettings": "Tryb i opcje",
+        "routeMode": "Tryb trasy",
+        "routeBuildHint": "Kliknij mapę, aby dodać kolejny punkt. Przeciągnij punkt albo odcinek, aby zmienić trasę.",
+        "routeEditHint": "Kliknij mapę, aby dodać punkt do najbliższego odcinka. Przeciągnij punkt albo odcinek, aby zmienić trasę."
     },
     "warnConfiguration": {
         "detailsIntro": "Zanim zaczniesz, powiedz innym użytkownikom TAK, kim jesteś. Możesz to w każdej chwili zmienić w ustawieniach.",
@@ -456,7 +472,9 @@
         "reRequest": "Poproś ponownie o uprawnienie",
         "request": "Poproś o uprawnienie",
         "refreshFailed": "Nie udało się odświeżyć stanu uprawnień",
-        "requestFailed": "Nie udało się poprosić o uprawnienie: {type}"
+        "requestFailed": "Nie udało się poprosić o uprawnienie: {type}",
+        "nextAndroid": "Teraz Android zapyta o dostęp do lokalizacji. Wybierz „Zezwalaj zawsze”, żeby dalej udostępniać pozycję w tle. Możesz to w każdej chwili zmienić w ustawieniach.",
+        "nextIOS": "Teraz iOS zapyta o dostęp do lokalizacji. Wybierz „Zezwalaj podczas używania aplikacji”, a potem „Zmień na Zawsze”, żeby dalej udostępniać pozycję w tle. Możesz to w każdej chwili zmienić w ustawieniach."
     },
     "searchBox": {
         "pickingTitle": "Kliknij mapę, aby wybrać położenie",
@@ -493,6 +511,7 @@
             "terrain": "Teren"
         },
         "overlayHidden": "{kind} · ukryta",
-        "goToCoordinate": "Przejdź do współrzędnych"
+        "goToCoordinate": "Przejdź do współrzędnych",
+        "noItems": "Brak wyników"
     }
 }

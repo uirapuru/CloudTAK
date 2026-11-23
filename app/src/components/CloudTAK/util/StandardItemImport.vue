@@ -7,7 +7,7 @@
             />
 
             <div
-                :title='`${imp.source} Import`'
+                :title='t("util.standardItemImport.sourceImport", { source: imp.source })'
                 class='d-flex align-items-center justify-content-center rounded-circle bg-black bg-opacity-25 flex-shrink-0'
                 style='width: 36px; height: 36px;'
             >
@@ -50,7 +50,7 @@
             >
                 <TablerIconButton
                     v-if='buttonRetry && imp.status === "Fail"'
-                    title='Retry Import'
+                    :title='t("util.standardItemImport.retry")'
                     @click='$emit("retry")'
                 >
                     <IconRestore
@@ -60,7 +60,7 @@
                 </TablerIconButton>
                 <TablerIconButton
                     v-if='buttonDownload'
-                    title='Download File'
+                    :title='t("util.standardItemImport.download")'
                     @click='$emit("download")'
                 >
                     <IconDownload
@@ -74,6 +74,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import StandardItem from './StandardItem.vue';
 import StatusDot from '../../util/StatusDot.vue';
 import { TablerIconButton } from '@tak-ps/vue-tabler';
@@ -86,6 +87,8 @@ import {
 } from '@tabler/icons-vue';
 import type { Import } from '../../../types.ts';
 import timeDiff from '../../../timediff.ts';
+
+const { t } = useI18n();
 
 withDefaults(defineProps<{
     imp: Import;

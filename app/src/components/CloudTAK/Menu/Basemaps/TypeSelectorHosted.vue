@@ -11,19 +11,19 @@
                 <TablerInput
                     v-model='paging.filter'
                     icon='search'
-                    placeholder='Filter tilesets'
+                    :placeholder='t("basemaps.hosted.filter")'
                     class='mb-3'
                 />
 
                 <TablerLoading
                     v-if='loading.list'
                     :inline='true'
-                    desc='Loading Tilesets'
+                    :desc='t("basemaps.hosted.loading")'
                 />
                 <TablerNone
                     v-else-if='!list.items.length'
                     :create='false'
-                    label='No Hosted Tilesets'
+                    :label='t("basemaps.hosted.empty")'
                 />
                 <template v-else>
                     <div class='d-flex flex-column gap-2'>
@@ -74,6 +74,9 @@ import {
 import {
     IconDatabase,
 } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
     'change-type': [];

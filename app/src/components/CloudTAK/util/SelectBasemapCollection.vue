@@ -1,6 +1,6 @@
 <template>
     <div class='col-12 mt-3'>
-        <label class='form-label'>Collection Folder</label>
+        <label class='form-label'>{{ t('util.selectBasemapCollection.label') }}</label>
 
         <StandardItem
             class='d-flex align-items-center gap-2 px-2 py-2'
@@ -30,12 +30,12 @@
         >
             <TablerInput
                 v-model='newFolder'
-                label='Create Folder in Path'
-                placeholder='New folder name'
+                :label='t("util.selectBasemapCollection.create")'
+                :placeholder='t("util.selectBasemapCollection.newName")'
                 @keydown.enter.prevent='appendFolder()'
             >
                 <TablerIconButton
-                    title='Add Folder'
+                    :title='t("util.selectBasemapCollection.add")'
                     @click='appendFolder()'
                 >
                     <IconPlus
@@ -46,12 +46,12 @@
             </TablerInput>
 
             <div class='small text-white-50 mt-2 mb-2'>
-                Select Existing Folder
+                {{ t('util.selectBasemapCollection.existing') }}
             </div>
 
             <TablerLoading
                 v-if='loading'
-                desc='Loading folders'
+                :desc='t("util.selectBasemapCollection.loading")'
             />
 
             <TablerAlert
@@ -62,7 +62,7 @@
             <TablerNone
                 v-else-if='!childFolders.length'
                 :create='false'
-                label='No folders'
+                :label='t("util.selectBasemapCollection.none")'
             />
 
             <div
@@ -81,6 +81,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed, ref, watch } from 'vue';
 import { server } from '../../../std.ts';
 import {
@@ -94,6 +95,8 @@ import { IconPlus, IconChevronDown, IconChevronRight } from '@tabler/icons-vue';
 import PathBreadcrumb from './PathBreadcrumb.vue';
 import StandardItem from './StandardItem.vue';
 import StandardItemFolder from './StandardItemFolder.vue';
+
+const { t } = useI18n();
 
 const collection = defineModel<string>({ required: true });
 

@@ -6,10 +6,10 @@
     <TablerLoading
         v-else-if='loading'
         :compact='true'
-        desc='Loading Event Types'
+        :desc='t("util.coreEntityType.loading")'
     />
     <template v-else-if='presets.length && !custom'>
-        <label class='form-label required'>Type</label>
+        <label class='form-label required'>{{ t('util.coreEntityType.type') }}</label>
         <div class='row g-2'>
             <div
                 v-for='(preset, index) in presets'
@@ -48,7 +48,7 @@
                         :size='32'
                         stroke='1'
                     />
-                    <span class='text-truncate w-100 text-center'>Other</span>
+                    <span class='text-truncate w-100 text-center'>{{ t('util.coreEntityType.other') }}</span>
                 </div>
             </div>
         </div>
@@ -64,12 +64,13 @@
             class='btn btn-sm w-100 mt-2'
             @click='backToPresets'
         >
-            Back to Preconfigured Types
+            {{ t('util.coreEntityType.back') }}
         </button>
     </template>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted } from 'vue';
 import { server } from '../../../std.ts';
 import FeatureIcon from './FeatureIcon.vue';
@@ -79,6 +80,8 @@ import {
     TablerAlert,
     TablerLoading,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 type CoreEntityTypePreset = {
     name: string;

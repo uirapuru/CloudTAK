@@ -9,7 +9,7 @@
             <div class='ms-auto btn-list mx-3'>
                 <TablerRefreshButton
                     v-if='!disabled && !err'
-                    title='Refresh'
+                    :title='t("shared.common.refresh")'
                     :size='32'
                     :loading='loading'
                     @click='getList'
@@ -17,7 +17,7 @@
 
                 <TablerIconButton
                     v-if='!disabled && !err && !loading'
-                    title='Back'
+                    :title='t("shared.common.back")'
                     @click='back'
                 >
                     <IconArrowBack
@@ -27,7 +27,7 @@
                 </TablerIconButton>
                 <TablerIconButton
                     v-if='!disabled'
-                    title='Close Explorer'
+                    :title='t("shared.esri.closeExplorer")'
                     @click='$emit("close")'
                 >
                     <IconX
@@ -40,26 +40,26 @@
 
         <template v-if='err'>
             <TablerAlert
-                title='ESRI Connection Error'
+                :title='t("shared.esri.connectionError")'
                 :err='err'
                 :compact='true'
             />
         </template>
         <template v-else-if='loading'>
-            <TablerLoading desc='Connecting to ESRI Server' />
+            <TablerLoading :desc='t("shared.esriServer.connecting")' />
         </template>
         <template v-else-if='!container'>
             <template v-if='list.length === 0'>
                 <TablerNone
                     :compact='true'
                     :create='false'
-                    label='No Services'
+                    :label='t("shared.esriServer.noServices")'
                 />
             </template>
             <template v-else>
                 <div class='table-responsive'>
                     <table class='table table-hover card-table table-vcenter cursor-pointer'>
-                        <thead><tr><th>Name</th></tr></thead>
+                        <thead><tr><th>{{ t('shared.common.name') }}</th></tr></thead>
                         <tbody>
                             <tr
                                 v-for='l in list'
@@ -121,7 +121,7 @@
                         <template v-else>
                             <div
                                 class='datagrid-content'
-                                v-text='container[ele] || "Unknown"'
+                                v-text='container[ele] || t("shared.common.unknown")'
                             />
                         </template>
                     </div>
@@ -132,7 +132,7 @@
                 <TablerNone
                     :compact='true'
                     :create='!disabled'
-                    label='No Layers'
+                    :label='t("shared.esriServer.noLayers")'
                     @create='createLayer'
                 />
             </template>
@@ -144,7 +144,7 @@
                             "table-hover cursor-pointer": !disabled
                         }'
                     >
-                        <thead><tr><th>Name</th></tr></thead>
+                        <thead><tr><th>{{ t('shared.common.name') }}</th></tr></thead>
                         <tbody>
                             <tr
                                 v-for='lyr in container.layers'
@@ -185,7 +185,7 @@
                                             <TablerDelete
                                                 v-if='!readonly && !disabled'
                                                 displaytype='icon'
-                                                label='Delete Layer'
+                                                :label='t("shared.esriServer.deleteLayer")'
                                                 @delete='deleteLayer(lyr)'
                                             />
                                         </div>
@@ -201,6 +201,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { std, stdurl } from '../../std.ts';
 import {
@@ -251,6 +252,8 @@ interface ContainerType {
     spatialReference?: { wkid?: number; latestWkid?: number };
     [key: string]: unknown;
 }
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     disabled?: boolean;
@@ -340,7 +343,7 @@ function stdurl_local(use_layer=true): string | undefined {
 }
 
 async function createLayer() {
-    if (!props.token) throw new Error('Auth Token is required to create a service');
+    if (!props.token) throw new Error(t('shared.esri.tokenRequiredCreate'));
 
     loading.value = true;
     try {
@@ -359,7 +362,7 @@ async function createLayer() {
 }
 
 async function deleteLayer(l: LayerItem) {
-    if (!props.token) throw new Error('Auth Token is required to create a service');
+    if (!props.token) throw new Error(t('shared.esri.tokenRequiredCreate'));
 
     loading.value = true;
     try {

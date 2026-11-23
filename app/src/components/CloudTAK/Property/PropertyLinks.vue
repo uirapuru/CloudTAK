@@ -3,7 +3,7 @@
         <div class='col-12'>
             <SlideDownHeader
                 v-model='expandedLinks'
-                label='Links'
+                :label='t("property.links.title")'
             >
                 <template #icon>
                     <IconLink
@@ -16,7 +16,7 @@
                 <template #right>
                     <TablerIconButton
                         v-if='props.edit'
-                        title='Add External Link'
+                        :title='t("property.links.add")'
                         class='me-2'
                         @click.stop='addExternalLink'
                     >
@@ -39,7 +39,7 @@
                     <div class='rounded mx-2 mt-2 px-2 py-2'>
                         <TablerNone
                             v-if='!external_links.length && !isCreatingLink'
-                            label='No External Links'
+                            :label='t("property.links.none")'
                             :compact='true'
                             :create='false'
                         />
@@ -53,11 +53,11 @@
                             <template v-if='isEditing(item.index)'>
                                 <div class='d-flex align-items-center mb-2'>
                                     <div class='subheader user-select-none'>
-                                        External Link
+                                        {{ t('property.links.externalLink') }}
                                     </div>
                                     <div class='ms-auto d-flex align-items-center flex-nowrap'>
                                         <TablerIconButton
-                                            title='Save Link'
+                                            :title='t("property.links.save")'
                                             @click='saveExternalLink(item.index)'
                                         >
                                             <IconCheck
@@ -66,7 +66,7 @@
                                             />
                                         </TablerIconButton>
                                         <TablerIconButton
-                                            title='Remove Link'
+                                            :title='t("property.links.remove")'
                                             @click='removeExternalLink(item.index)'
                                         >
                                             <IconTrash
@@ -79,8 +79,8 @@
 
                                 <TablerInput
                                     :model-value='draftLinks[item.index]?.remarks || ""'
-                                    label='Label'
-                                    placeholder='External Link'
+                                    :label='t("property.links.label")'
+                                    :placeholder='t("property.links.externalLink")'
                                     class='pb-2'
                                     @update:model-value='updateDraftLink(item.index, "remarks", String($event || ""))'
                                 />
@@ -104,7 +104,7 @@
                                         stroke='1'
                                         class='me-1'
                                     />
-                                    <span class='text-truncate'>Open Link</span>
+                                    <span class='text-truncate'>{{ t('property.links.openLink') }}</span>
                                 </a>
                             </template>
 
@@ -130,12 +130,12 @@
                                     v-else
                                     class='text-muted flex-fill'
                                 >
-                                    Untitled Link
+                                    {{ t('property.links.untitled') }}
                                 </div>
 
                                 <TablerIconButton
                                     v-if='props.edit'
-                                    title='Edit Link'
+                                    :title='t("property.links.edit")'
                                     @click='startEditing(item.index)'
                                 >
                                     <IconPencil
@@ -152,11 +152,11 @@
                         >
                             <div class='d-flex align-items-center mb-2'>
                                 <div class='subheader user-select-none'>
-                                    External Link
+                                    {{ t('property.links.externalLink') }}
                                 </div>
                                 <div class='ms-auto d-flex align-items-center flex-nowrap'>
                                     <TablerIconButton
-                                        title='Save Link'
+                                        :title='t("property.links.save")'
                                         @click='saveNewLink'
                                     >
                                         <IconCheck
@@ -165,7 +165,7 @@
                                         />
                                     </TablerIconButton>
                                     <TablerIconButton
-                                        title='Discard Link'
+                                        :title='t("property.links.discard")'
                                         @click='cancelNewLink'
                                     >
                                         <IconTrash
@@ -178,8 +178,8 @@
 
                             <TablerInput
                                 :model-value='newLink.remarks'
-                                label='Label'
-                                placeholder='External Link'
+                                :label='t("property.links.label")'
+                                :placeholder='t("property.links.externalLink")'
                                 class='pb-2'
                                 @update:model-value='newLink.remarks = String($event || "")'
                             />
@@ -202,7 +202,7 @@
         >
             <SlideDownHeader
                 v-model='expandedResponders'
-                label='Tasked Personnel'
+                :label='t("property.links.taskedPersonnel")'
             >
                 <template #icon>
                     <IconUsers
@@ -233,7 +233,7 @@
                             :key='entry.status'
                             class='d-flex align-items-center gap-1'
                         >
-                            <span>{{ entry.status || 'Unknown' }}:</span>
+                            <span>{{ t('property.links.statusCount', { status: entry.status || t('property.links.unknown') }) }}</span>
                             <span class='fw-bold'>{{ entry.count }}</span>
                         </TablerBadge>
                     </div>
@@ -284,6 +284,9 @@ import { TablerBadge, TablerInput, TablerIconButton, TablerNone } from '@tak-ps/
 import { IconUsers, IconLink, IconExternalLink, IconPlus, IconTrash, IconPencil, IconCheck } from '@tabler/icons-vue';
 import type COT from '../../../base/cot';
 import timediff from '../../../timediff';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const expandedResponders = ref(false);
 const expandedLinks = ref(false);
@@ -336,7 +339,7 @@ const responder_links = computed(() => {
 const statusSummary = computed(() => {
     const counts = new Map<string, number>();
     for (const link of responder_links.value) {
-        const status = link.remarks || 'Unknown';
+        const status = link.remarks || '';
         counts.set(status, (counts.get(status) || 0) + 1);
     }
     return Array.from(counts.entries())

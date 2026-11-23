@@ -4,7 +4,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("close")'
         />
         <div class='modal-header text-body'>
@@ -16,11 +16,11 @@
                 <span
                     v-if='props.action === "add"'
                     class='mx-2'
-                >Add to Data Sync</span>
+                >{{ t('util.common.addToDataSync') }}</span>
                 <span
                     v-if='props.action === "move"'
                     class='mx-2'
-                >Move to Data Sync</span>
+                >{{ t('util.common.moveToDataSync') }}</span>
             </div>
         </div>
 
@@ -69,16 +69,16 @@
         </div>
         <div class='modal-footer'>
             <TablerButton
-                title='Cancel Share'
+                :title='t("util.common.cancelShare")'
                 @click='emit("close")'
             >
-                Cancel
+                {{ t('common.cancel') }}
             </TablerButton>
 
             <div class='ms-auto'>
                 <TablerButton
                     class='btn-primary'
-                    title='Share to Selected'
+                    :title='t("util.common.shareToSelected")'
                     :disabled='selected.size === 0'
                     @click='share'
                 >
@@ -88,8 +88,8 @@
                         class='me-2'
                     />
 
-                    <span v-if='props.action === "add"'>Add to Data Sync</span>
-                    <span v-else-if='props.action === "move"'>Move to Data Sync</span>
+                    <span v-if='props.action === "add"'>{{ t('util.common.addToDataSync') }}</span>
+                    <span v-else-if='props.action === "move"'>{{ t('util.common.moveToDataSync') }}</span>
                 </TablerButton>
             </div>
         </div>
@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted } from 'vue';
 import { OriginMode } from '../../../base/cot.ts';
 import type { PropType } from 'vue';
@@ -116,6 +117,8 @@ import type { Feature } from '../../../types.ts';
 import Subscription from '../../../base/subscription.ts';
 import { server } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 

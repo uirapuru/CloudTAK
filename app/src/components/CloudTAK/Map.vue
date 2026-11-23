@@ -59,7 +59,7 @@
                                 class='me-2'
                                 :size='20'
                             />
-                            <span>Click on the map to {{ mapStore.location === LocationState.Preset ? 'update' : 'set' }} your location</span>
+                            <span>{{ mapStore.location === LocationState.Preset ? t('map.map.clickToUpdateLocation') : t('map.map.clickToSetLocation') }}</span>
                         </div>
                         <div class='col-4 d-flex align-items-center'>
                             <div class='ms-auto btn-list'>
@@ -71,10 +71,10 @@
                                         :size='16'
                                         class='me-1'
                                     />
-                                    Use GPS
+                                    {{ t('map.map.useGps') }}
                                 </button>
                                 <TablerIconButton
-                                    title='Cancel Manual Location'
+                                    :title='t("map.map.cancelManualLocation")'
                                     @click='cancelLocationSetting'
                                 >
                                     <IconX
@@ -130,7 +130,7 @@
                     <div
                         role='button'
                         tabindex='0'
-                        title='Search Button'
+                        :title='t("map.map.search")'
                         class='cloudtak-ctrl-btn'
                         @click='searchBoxShown = !searchBoxShown'
                     >
@@ -145,7 +145,7 @@
                         role='button'
                         tabindex='0'
                         class='cloudtak-ctrl-btn'
-                        :title='mapStore.userOrientationMode ? "Orient North" : "Snap to North"'
+                        :title='mapStore.userOrientationMode ? t("map.map.orientNorth") : t("map.map.snapNorth")'
                         @click='toggleCompass'
                     >
                         <IconCompass
@@ -156,7 +156,7 @@
                         />
                         <template v-else>
                             <IconCircleArrowUp
-                                :alt='`Map Rotated to ${humanBearing}`'
+                                :alt='t("map.map.rotatedTo", { bearing: humanBearing })'
                                 :transform='`rotate(${360 - mapStore.bearing})`'
                                 :size='24'
                                 stroke='2'
@@ -174,11 +174,11 @@
                         role='button'
                         tabindex='0'
                         class='cloudtak-ctrl-btn'
-                        title='Snap Flat'
+                        :title='t("map.map.snapFlat")'
                         @click='mapStore.map.setPitch(0)'
                     >
                         <IconAngle
-                            :alt='`Map Pitch to ${humanPitch}`'
+                            :alt='t("map.map.pitchTo", { pitch: humanPitch })'
                             :size='24'
                             stroke='2'
                         />
@@ -192,7 +192,7 @@
                         <div
                             role='button'
                             tabindex='0'
-                            title='Zoom In Button'
+                            :title='t("map.map.zoomIn")'
                             class='cloudtak-ctrl-btn'
                             @click='mapStore.map.setZoom(mapStore.map.getZoom() + 1);'
                         >
@@ -204,7 +204,7 @@
                         <div
                             role='button'
                             tabindex='0'
-                            title='Zoom Out Button'
+                            :title='t("map.map.zoomOut")'
                             class='cloudtak-ctrl-btn'
                             @click='mapStore.map.setZoom(mapStore.map.getZoom() - 1);'
                         >
@@ -219,7 +219,7 @@
                         v-if='hasTerrain'
                         role='button'
                         tabindex='0'
-                        :title='mapStore.terrainEnabled ? "Disable 3D Terrain" : "Enable 3D Terrain"'
+                        :title='mapStore.terrainEnabled ? t("map.map.disableTerrain") : t("map.map.enableTerrain")'
                         class='cloudtak-ctrl-btn'
                         @click='mapStore.toggleTerrain()'
                     >
@@ -235,7 +235,7 @@
                             (mapStore.radial.cot && mapStore.locked.length >= 2)
                                 || (!mapStore.radial.cot && mapStore.locked.length >= 1)
                         '
-                        title='Map is locked to marker - Click to Unlock'
+                        :title='t("map.map.lockedToMarker")'
                         role='button'
                         tabindex='0'
                         class='cloudtak-ctrl-btn'
@@ -258,12 +258,12 @@
             >
                 <div class='modal-header'>
                     <div class='modal-title'>
-                        Search
+                        {{ t('common.search') }}
                     </div>
                     <button
                         type='button'
                         class='btn-close'
-                        aria-label='Close'
+                        :aria-label='t("common.close")'
                         @click='searchBoxShown = false'
                     />
                 </div>
@@ -335,7 +335,7 @@
                     <button
                         type='button'
                         class='btn-close'
-                        aria-label='Close'
+                        :aria-label='t("common.close")'
                         @click='upload.shown = false'
                     />
                     <div class='modal-body text-body'>
@@ -363,6 +363,7 @@
 import GeoJSONInput from './Inputs/GeoJSONInput.vue';
 import BufferInput from './Inputs/BufferInput.vue';
 import { ref, watch, computed, toRaw, nextTick, onMounted, onBeforeUnmount, useTemplateRef } from 'vue';
+import { useI18n } from 'vue-i18n';
 import GPSPanel from './GPSPanel/GPSPanel.vue';
 import PluginPane from './PluginPane.vue';
 import PttButton from './PttButton.vue';
@@ -425,6 +426,7 @@ import { copyFeatureToClipboard, readFeatureFromClipboard } from '../../stores/d
 import MissionInviteModal from './Menu/Mission/MissionInviteModal.vue';
 
 const mapStore = useMapStore();
+const { t } = useI18n();
 const deviceStore = useDeviceStore();
 const appStore = useAppStore();
 const floatStore = useFloatStore();
@@ -542,7 +544,7 @@ watch(() => mapStore.toImport.length, async (length) => {
 
     floatStore.add({
         uid,
-        name: 'GeoJSON Import',
+        name: t('map.drawTools.geojsonImport'),
         component: GeoJSONInput,
         config: { features },
         height: 500,
@@ -615,7 +617,7 @@ onMounted(async () => {
         width.value = window.innerWidth;
     });
 
-    if (!mapRef.value) throw new Error('Map Element could not be found - Please refresh the page and try again');
+    if (!mapRef.value) throw new Error(t('map.map.errors.noMapElement'));
 
     if (isNativePlatform()) {
         removeAppLifecycleListeners = await addAppLifecycleListeners({
@@ -664,7 +666,7 @@ onMounted(async () => {
             }
 
             await mapStore.destroy();
-            mapStore.loadingStage = 'Load failed - retrying…';
+            mapStore.loadingStage = t('map.map.loadFailedRetrying');
             await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
         }
     }
@@ -771,7 +773,7 @@ async function toLocation() {
             zoom: 14
         });
     } else {
-        throw new Error('No Location Set or Location could not be retrieved');
+        throw new Error(t('map.map.errors.noLocation'));
     }
 }
 
@@ -873,7 +875,7 @@ async function handleRadial(event: string): Promise<void> {
             mission: true
         })
 
-        if (!cot) throw new Error('Cannot Find COT Marker');
+        if (!cot) throw new Error(t('map.map.errors.noMarker'));
         await mapStore.draw.edit(cot);
 
         closeRadial()
@@ -899,7 +901,7 @@ async function handleRadial(event: string): Promise<void> {
         );
 
         closeRadial();
-        if (!cotFeat) throw new Error('Cannot find COT to copy');
+        if (!cotFeat) throw new Error(t('map.map.errors.noCopyMarker'));
 
         await copyFeatureToClipboard({
             id: cotFeat.id,
@@ -912,10 +914,10 @@ async function handleRadial(event: string): Promise<void> {
         const lngLat = mapStore.radial.lngLat;
         closeRadial();
 
-        if (!lngLat) throw new Error('Cannot determine paste location');
+        if (!lngLat) throw new Error(t('map.map.errors.noPasteLocation'));
 
         const feat = await readFeatureFromClipboard();
-        if (!feat) throw new Error('Clipboard does not contain a GeoJSON Point Feature');
+        if (!feat) throw new Error(t('map.map.errors.clipboardNoPoint'));
 
         const id = randomUUID();
         feat.id = id;
@@ -948,8 +950,8 @@ async function handleRadial(event: string): Promise<void> {
             { mission: true }
         );
 
-        if (!cotFeat) throw new Error('Cannot find COT to split');
-        if (cotFeat.geometry.type !== 'LineString') throw new Error('Can only split LineString geometries');
+        if (!cotFeat) throw new Error(t('map.map.errors.noSplitMarker'));
+        if (cotFeat.geometry.type !== 'LineString') throw new Error(t('map.map.errors.splitLineOnly'));
 
         const line = turfLineString(cotFeat.geometry.coordinates as [number, number][]);
         const click = turfPoint([mapStore.radial.lngLat!.lng, mapStore.radial.lngLat!.lat]);
@@ -959,7 +961,7 @@ async function handleRadial(event: string): Promise<void> {
 
         if (split.features.length < 2) {
             closeRadial();
-            throw new Error('Cannot split: click point is too close to a line endpoint');
+            throw new Error(t('map.map.errors.splitTooClose'));
         }
 
         const coordsA = split.features[0].geometry.coordinates as [number, number][];

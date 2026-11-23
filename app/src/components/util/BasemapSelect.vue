@@ -3,7 +3,7 @@
         <div v-if='loading.init'>
             <TablerLoading
                 :inline='true'
-                desc='Loading Basemap'
+                :desc='t("shared.basemapSelect.loadingBasemap")'
             />
         </div>
         <div v-else-if='modelValue && !err'>
@@ -17,7 +17,7 @@
                         #actions
                     >
                         <TablerIconButton
-                            title='Remove Basemap'
+                            :title='t("shared.basemapSelect.removeBasemap")'
                             @click='emit("update:modelValue", null)'
                         >
                             <IconTrash
@@ -31,13 +31,13 @@
                     v-else
                     class='card-body d-flex align-items-center'
                 >
-                    <div>Unknown Basemap</div>
+                    <div>{{ t('shared.basemapSelect.unknownBasemap') }}</div>
                     <div
                         v-if='!disabled'
                         class='ms-auto'
                     >
                         <TablerIconButton
-                            title='Remove Basemap'
+                            :title='t("shared.basemapSelect.removeBasemap")'
                             @click='emit("update:modelValue", null)'
                         >
                             <IconTrash
@@ -53,7 +53,7 @@
             <TablerNone
                 :compact='true'
                 :create='false'
-                :label='noValueLabel'
+                :label='noValueLabel ?? t("shared.basemapSelect.noDefaultBasemap")'
             />
         </div>
         <div
@@ -64,7 +64,7 @@
                 v-if='loading.list && list.items.length === 0'
                 class='card-body'
             >
-                <TablerLoading desc='Loading Basemaps' />
+                <TablerLoading :desc='t("shared.basemapSelect.loadingBasemaps")' />
             </div>
             <div
                 v-else
@@ -75,26 +75,26 @@
                     class='pb-2'
                 >
                     <TablerInlineAlert
-                        title='Failed to load provided basemap'
+                        :title='t("shared.basemapSelect.failedToLoad")'
                         :description='String(err)'
                         severity='danger'
                     />
                 </div>
                 <TablerInput
                     v-model='paging.filter'
-                    placeholder='Filter Basemaps...'
+                    :placeholder='t("shared.basemapSelect.filter")'
                     class='mb-2'
                 />
                 
                 <TablerLoading
                     v-if='loading.list'
-                    desc='Loading Basemaps'
+                    :desc='t("shared.basemapSelect.loadingBasemaps")'
                 />
                 <TablerNone
                     v-else-if='list.total === 0'
                     :compact='true'
                     :create='false'
-                    label='No Basemaps Found'
+                    :label='t("shared.basemapSelect.noBasemaps")'
                 />
                 <template v-else>
                     <div class='d-flex flex-column gap-2'>
@@ -126,6 +126,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { server } from '../../std.ts';
 import {
@@ -142,6 +143,8 @@ import {
 import type { Basemap, BasemapList } from '../../types.ts';
 import StandardItemBasemap from '../CloudTAK/util/StandardItemBasemap.vue';
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<{
     modelValue?: number | string | null;
     disabled?: boolean;
@@ -153,7 +156,7 @@ const props = withDefaults(defineProps<{
     disabled: false,
     type: undefined,
     scope: 'server',
-    noValueLabel: 'No Default Basemap'
+    noValueLabel: undefined
 });
 
 const emit = defineEmits<{

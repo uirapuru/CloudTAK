@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Changes'
+        :name='t("mission.changes.title")'
         :zindex='0'
         :back='false'
         :border='false'
@@ -14,7 +14,7 @@
         <TablerNone
             v-else-if='changes && !changes.length'
             :create='false'
-            label='No Mission Changes'
+            :label='t("mission.changes.emptyAll")'
         />
         <div
             v-if='changes && changes.length'
@@ -33,7 +33,7 @@
                     />
                     <span
                         class='mx-2'
-                        v-text='`Mission Created: ${change.missionName}`'
+                        v-text='t("mission.changes.created", { name: change.missionName })'
                     />
                 </template>
                 <template v-else-if='change.type === "ADD_CONTENT" && change.contentResource'>
@@ -53,7 +53,7 @@
                     />
                     <span
                         class='mx-2'
-                        v-text='"New Message"'
+                        v-text='t("mission.changes.newMessage")'
                     />
                 </template>
                 <template v-else-if='change.type === "ADD_CONTENT" && change.details'>
@@ -74,7 +74,7 @@
                     <span
                         class='mx-2'
                         :title='change.contentUid'
-                    >Content Added</span>
+                    >{{ t('mission.changes.contentAdded') }}</span>
                 </template>
                 <template v-else-if='change.type === "REMOVE_CONTENT" && change.contentResource'>
                     <IconFileX
@@ -94,7 +94,7 @@
                     <span
                         class='mx-2'
                         :title='change.contentUid'
-                    >Content Removed</span>
+                    >{{ t('mission.changes.contentRemoved') }}</span>
                 </template>
                 <template v-else>
                     <span v-text='change' />
@@ -136,6 +136,9 @@ import {
 } from '@tak-ps/vue-tabler';
 import MenuTemplate from '../../util/MenuTemplate.vue';
 import StandardItem from '../../util/StandardItem.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     subscription: Subscription

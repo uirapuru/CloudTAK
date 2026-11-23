@@ -51,6 +51,7 @@ import type {
 import * as Comlink from 'comlink';
 import AtlasBreadcrumb from './atlas-breadcrumb.ts';
 import { isOwnFeature, forceDeleteFeature } from '../base/delete-for-all.ts';
+import { wt } from '../base/worker-i18n.ts';
 
 type NestedArray = {
     path: string;
@@ -1291,8 +1292,8 @@ export default class AtlasDatabase {
                     if (this.atlas.profile.uid() !== exists.id) {
                         await TAKNotification.create(
                             NotificationType.Contact,
-                            'Online Contact',
-                            `${exists.properties.callsign} is now Online`,
+                            wt('contactOnlineTitle'),
+                            wt('contactOnlineBody', { callsign: exists.properties.callsign }),
                             `/cot/${exists.id}`,
                             false
                         );

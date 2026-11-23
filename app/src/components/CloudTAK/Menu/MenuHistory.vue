@@ -1,15 +1,15 @@
 <template>
-    <MenuTemplate name='History'>
+    <MenuTemplate :name='t("menu.history.title")'>
         <template #default>
             <TablerNone
                 v-if='entries.length === 0'
-                label='No Breadcrumb Trails'
+                :label='t("menu.history.none")'
                 :create='false'
             />
             <template v-else>
                 <div class='col-12 pt-2 pb-1'>
                     <span class='text-muted small'>
-                        CoT markers with live breadcrumb recording.
+                        {{ t('menu.history.recordingDescription') }}
                     </span>
                 </div>
                 <div class='d-flex flex-column gap-2 py-2'>
@@ -42,7 +42,7 @@
                                     border-color='rgba(107, 114, 128, 0.3)'
                                     text-color='#6b7280'
                                 >
-                                    {{ `${entry.coordinates.length} pts` }}
+                                    {{ t('menu.history.pts', { count: entry.coordinates.length }) }}
                                 </TablerBadge>
                             </div>
                         </div>
@@ -53,12 +53,12 @@
                         >
                             <TablerToggle
                                 :model-value='liveEnabled.has(entry.uid)'
-                                title='Live Trail'
+                                :title='t("menu.history.liveTrail")'
                                 @update:model-value='(val: boolean) => toggleLive(entry.uid, val)'
                             />
 
                             <TablerIconButton
-                                title='View CoT'
+                                :title='t("menu.history.viewCot")'
                                 @click.stop.prevent='router.push(`/cot/${entry.uid}`)'
                             >
                                 <IconListDetails
@@ -68,7 +68,7 @@
                             </TablerIconButton>
 
                             <TablerIconButton
-                                title='Clear Trail'
+                                :title='t("menu.history.clearTrail")'
                                 @click.stop.prevent='clearTrail(entry)'
                             >
                                 <IconTrash
@@ -87,6 +87,7 @@
 <script setup lang='ts'>
 import { ref, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import {
     IconRoute,
     IconListDetails,
@@ -103,6 +104,7 @@ import StandardItem from '../util/StandardItem.vue';
 import { db, type DBBreadcrumb, liveQuery } from '../../../database.ts';
 import { useMapStore } from '../../../stores/map.ts';
 
+const { t } = useI18n();
 const mapStore = useMapStore();
 const router = useRouter();
 

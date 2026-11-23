@@ -4,14 +4,14 @@
             v-if='loading'
             class='col-12 d-flex align-items-center justify-content-center h-100'
         >
-            <TablerLoading desc='Loading Stream' />
+            <TablerLoading :desc='t("shared.videoPlayer.loading")' />
         </div>
         <template v-else-if='error'>
             <div class='video-player-error d-flex flex-column align-items-center justify-content-center text-center gap-3 h-100 w-100'>
                 <div class='row g-2 w-100'>
                     <TablerAlert
                         class='video-player-error-alert w-100'
-                        title='Video Error'
+                        :title='t("shared.videoPlayer.error")'
                         :compact='true'
                         :err='error'
                     />
@@ -23,7 +23,7 @@
                             class='w-100'
                             @click='requestStream'
                         >
-                            Retry
+                            {{ t('shared.videoPlayer.retry') }}
                         </TablerButton>
                     </div>
                 </div>
@@ -31,7 +31,7 @@
         </template>
         <template v-else-if='!protocolQueue.length'>
             <TablerNone
-                label='No Supported Streaming Protocol'
+                :label='t("shared.videoPlayer.noProtocol")'
                 :create='false'
             />
         </template>
@@ -57,7 +57,7 @@
                     <div class='buffering-icon'>
                         <IconPlayerPauseFilled :size='64' />
                         <div class='mt-2 fw-bold'>
-                            Buffering...
+                            {{ t('shared.videoPlayer.buffering') }}
                         </div>
                     </div>
                 </div>
@@ -67,6 +67,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /**
  * VideoPlayer - Unified live-stream player used by the Floating Video Pane
  * and the Video Wall, with retry and MediaMTX muxer-restart recovery.
@@ -112,6 +113,8 @@ export type VideoPlayerMetadata = {
     source_type?: string;
     source_model?: string;
 };
+
+const { t } = useI18n();
 
 const props = defineProps<{
     url?: string;
@@ -506,7 +509,7 @@ function startEngine(): void {
         emit('protocol', protocol);
         createHls();
     } else {
-        setError(new Error('No supported streaming protocol is available for this stream'));
+        setError(new Error(t('shared.videoPlayer.noProtocolForStream')));
     }
 }
 
@@ -519,7 +522,7 @@ function createWebRTC(): void {
     if (!video || !videoProtocols.value?.webrtc) return;
 
     if (!WhepReader.isSupported()) {
-        handleProtocolExhausted(new Error('WebRTC is not supported in this browser'));
+        handleProtocolExhausted(new Error(t('shared.videoPlayer.noWebrtc')));
         return;
     }
 
@@ -680,7 +683,7 @@ function createHls(): void {
                         console.log("Fatal media error:", data);
 
                         if (data.details === 'bufferAddCodecError' && data.error instanceof Error && data.error.name === 'NotSupportedError') {
-                            setError(new Error(`Your browser does not support the required video codec for this stream${data.mimeType ? ` (${data.mimeType})` : ''}`));
+                            setError(new Error(data.mimeType ? t('shared.videoPlayer.codecUnsupportedType', { type: data.mimeType }) : t('shared.videoPlayer.codecUnsupported')));
                         } else {
                             try {
                                 engine.recoverMediaError();
@@ -714,7 +717,7 @@ function createHls(): void {
 function handleStreamRestart(): void {
     if (activeProtocol() === 'webrtc') {
         console.log('Handling WebRTC stream restart (stalled stream detected)');
-        handleStreamError(new Error('WebRTC stream stalled'));
+        handleStreamError(new Error(t('shared.videoPlayer.stalled')));
         return;
     }
 
@@ -847,7 +850,7 @@ async function requestUrlStream(url: string): Promise<void> {
 
         loading.value = false;
     } else {
-        setError(new Error(active.message || 'Could not start stream'));
+        setError(new Error(active.message || t('shared.videoPlayer.couldNotStart')));
     }
 }
 
@@ -896,7 +899,7 @@ async function requestStream(): Promise<void> {
     destroyEngine();
 
     if (!WhepReader.isSupported() && !Hls.isSupported()) {
-        setError(new Error('Neither WebRTC nor HLS.js is supported in this browser.'));
+        setError(new Error(t('shared.videoPlayer.noPlayback')));
         return;
     }
 
@@ -910,7 +913,7 @@ async function requestStream(): Promise<void> {
         } else if (props.url) {
             await requestUrlStream(props.url);
         } else {
-            setError(new Error('Video URL could not be loaded'));
+            setError(new Error(t('shared.videoPlayer.urlFailed')));
             return;
         }
 

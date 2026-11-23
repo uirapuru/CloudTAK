@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Subscribers'
+        :name='t("mission.users.title")'
         :back='false'
         :border='false'
         :loading='loading'
@@ -11,7 +11,7 @@
                 v-if='canInvite'
             >
                 <TablerIconButton
-                    title='Invite User'
+                    :title='t("mission.users.invite")'
                 >
                     <IconPlus
                         :size='32'
@@ -23,11 +23,11 @@
                         class='px-2 py-2'
                         style='min-width: 250px;'
                     >
-                        <span class='strong'>Invite User</span>
+                        <span class='strong'>{{ t('mission.users.invite') }}</span>
                         <UserClientSelect
                             v-model='inviteUsername'
                             :input='true'
-                            placeholder='Username'
+                            :placeholder='t("mission.users.username")'
                             :groups='typeof subscription.meta.groups === "string" ? [subscription.meta.groups] : subscription.meta.groups'
                             @click.stop
                             @select='inviteUser($event)'
@@ -37,7 +37,7 @@
                             :disabled='!inviteUsername'
                             @click.stop='inviteUser()'
                         >
-                            Invite
+                            {{ t('mission.users.inviteButton') }}
                         </button>
                     </div>
                 </template>
@@ -48,7 +48,7 @@
             <TablerInput
                 v-model='filter'
                 icon='search'
-                placeholder='Filter'
+                :placeholder='t("mission.common.filter")'
             />
         </div>
 
@@ -67,7 +67,7 @@
                             :size='24'
                             stroke='1'
                         />
-                        <span class='fw-bold'>Pending Invites</span>
+                        <span class='fw-bold'>{{ t('mission.users.pendingInvites') }}</span>
                         <TablerBadge
                             class='rounded-pill small ms-auto'
                             background-color='var(--tblr-red-lt)'
@@ -105,11 +105,11 @@
                                     <div v-text='invite.invitee' />
                                     <div
                                         class='small text-muted'
-                                        v-text='invite.role ? invite.role.name : "Unknown Role"'
+                                        v-text='invite.role ? invite.role.name : t("mission.users.unknownRole")'
                                     />
                                 </div>
                                 <TablerDelete
-                                    label='Revoke Invite'
+                                    :label='t("mission.users.revokeInvite")'
                                     displaytype='icon'
                                     @delete='removeInvite(invite)'
                                 />
@@ -122,7 +122,7 @@
             <TablerNone
                 v-if='!filteredSubscriptions.length'
                 :create='false'
-                label='No Mission Subscribers'
+                :label='t("mission.users.empty")'
             />
             <div
                 v-for='sub of filteredSubscriptions'
@@ -141,7 +141,7 @@
                         <div class='d-flex align-items-center gap-2'>
                             <TablerIconButton
                                 v-if='canManageRoles'
-                                title='Edit User'
+                                :title='t("mission.users.editUser")'
                                 @click.stop='toggleEdit(sub.clientUid)'
                             >
                                 <IconPencil
@@ -151,7 +151,7 @@
                             </TablerIconButton>
                             <TablerDelete
                                 v-if='canInvite'
-                                label='Remove User'
+                                :label='t("mission.users.removeUser")'
                                 displaytype='icon'
                                 @delete='removeUser(sub)'
                             />
@@ -170,13 +170,13 @@
                                 @change='changeRole(sub, ($event.target as HTMLSelectElement).value as MissionRoleType)'
                             >
                                 <option value='MISSION_OWNER'>
-                                    Owner
+                                    {{ t('mission.roles.owner') }}
                                 </option>
                                 <option value='MISSION_SUBSCRIBER'>
-                                    Subscriber
+                                    {{ t('mission.roles.subscriber') }}
                                 </option>
                                 <option value='MISSION_READONLY_SUBSCRIBER'>
-                                    Read Only
+                                    {{ t('mission.roles.readOnly') }}
                                 </option>
                             </select>
                         </div>
@@ -200,6 +200,9 @@ import UserClientSelect from '../../util/UserClientSelect.vue';
 import Contact from '../../util/Contact.vue';
 import Offline from '../../../util/Offline.vue';
 import { useDeviceStore } from '../../../../stores/device.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     subscription: Subscription

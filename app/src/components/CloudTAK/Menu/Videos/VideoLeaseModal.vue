@@ -4,13 +4,13 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("refresh")'
         />
         <div class='modal-header'>
             <div
                 v-if='wizard > 0'
-                v-text='`Configuration Wizard Step #${wizard}`'
+                v-text='t("panels.videoLeaseModal.wizardStep", { step: wizard })'
             />
             <div
                 v-else-if='disabled'
@@ -32,20 +32,20 @@
             <div
                 v-else
                 class='modal-title'
-                v-text='editLease.id ? "Edit Lease" : "New Lease"'
+                v-text='editLease.id ? t("panels.videoLeaseModal.editLease") : t("panels.videoLeaseModal.newLease")'
             />
 
             <div class='ms-auto btn-list'>
                 <TablerRefreshButton
                     v-if='disabled && editLease.id'
-                    title='Refresh'
+                    :title='t("panels.videoLeaseModal.refresh")'
                     :loading='loading'
                     @click='fetchLease'
                 />
 
                 <TablerIconButton
                     v-if='disabled && editLease.id'
-                    title='Edit'
+                    :title='t("panels.videoLeaseModal.edit")'
                     @click='disabled = false'
                 >
                     <IconPencil
@@ -68,14 +68,14 @@
                 <div class='py-2'>
                     <img
                         style='max-width: 100%; height: auto; max-height: 600px;'
-                        alt='UAS Tool Wizard Image'
+                        :alt='t("panels.videoLeaseModal.wizardImage")'
                         :src='`/wizard/Step${wizard}.png`'
                         class='rounded'
                     >
 
                     <div v-if='wizard === 8'>
                         <div class='subheader pt-4'>
-                            RTSP Path
+                            {{ t('panels.videoLeaseModal.rtspPath') }}
                         </div>
                         <CopyField
                             v-if='protocols.rtsp'
@@ -98,11 +98,11 @@
                         <span
                             v-if='wizard === 1'
                             class='mx-2'
-                        >Close</span>
+                        >{{ t('common.close') }}</span>
                         <span
                             v-else
                             class='mx-2'
-                        >Back</span>
+                        >{{ t('panels.videoLeaseModal.back') }}</span>
                     </button>
 
                     <div class='ms-auto'>
@@ -113,11 +113,11 @@
                             <span
                                 v-if='wizard < 10'
                                 class='mx-2'
-                            >Next</span>
+                            >{{ t('panels.videoLeaseModal.next') }}</span>
                             <span
                                 v-else
                                 class='mx-2'
-                            >Done</span>
+                            >{{ t('panels.videoLeaseModal.done') }}</span>
                             <IconChevronRight
                                 :size='20'
                                 stroke='1'
@@ -132,7 +132,7 @@
                 <template v-if='Object.keys(protocols).length'>
                     <div class='col-12 d-flex align-items-center'>
                         <div class='subheader user-select-none'>
-                            Video Streaming Protocols
+                            {{ t('panels.videoLeaseModal.protocols') }}
                         </div>
 
                         <div class='ms-auto'>
@@ -144,7 +144,7 @@
                                     :size='24'
                                     stroke='1'
                                 />
-                                <span class='ms-2'>External Stream URL</span>
+                                <span class='ms-2'>{{ t('panels.videoLeaseModal.externalUrl') }}</span>
                             </div>
                             <div
                                 v-else
@@ -154,15 +154,15 @@
                                 <TablerPillGroup
                                     v-model='mode'
                                     :options='[
-                                        { value: "read", label: secure ? "Read User" : "Read" },
-                                        { value: "publish", label: secure ? "Write User" : "Publish" }
+                                        { value: "read", label: secure ? t("panels.videoLeaseModal.readUser") : t("panels.videoLeaseModal.read") },
+                                        { value: "publish", label: secure ? t("panels.videoLeaseModal.writeUser") : t("panels.videoLeaseModal.publish") }
                                     ]'
                                     padding='p-1'
                                 >
                                     <template #option='{ option }'>
                                         <span
                                             v-if='option.value === "read"'
-                                            :title='secure ? "Read User" : "Read"'
+                                            :title='secure ? t("panels.videoLeaseModal.readUser") : t("panels.videoLeaseModal.read")'
                                         >
                                             <IconBook2
                                                 :size='24'
@@ -171,7 +171,7 @@
                                         </span>
                                         <span
                                             v-else
-                                            :title='secure ? "Write User" : "Publish"'
+                                            :title='secure ? t("panels.videoLeaseModal.writeUser") : t("panels.videoLeaseModal.publish")'
                                         >
                                             <IconPencil
                                                 :size='24'
@@ -186,15 +186,15 @@
                     </div>
                     <template v-if='expired(editLease.expiration)'>
                         <TablerAlert
-                            title='Expired Lease'
-                            :err='new Error("Renew the lease to continue using the video stream")'
+                            :title='t("panels.videoLeaseModal.expiredLease")'
+                            :err='new Error(t("panels.videoLeaseModal.renewHint"))'
                             :advanced='false'
                         />
 
                         <div class='col-12 d-flex justify-content-center pb-3'>
-                            <TablerEnum
+                            <TranslatedEnum
                                 v-model='editLease.duration'
-                                :options='durations'
+                                :options='durationOptions'
                                 style='width: 300px;'
                             />
                         </div>
@@ -204,7 +204,7 @@
                                 style='width: 280px'
                                 @click='saveLease'
                             >
-                                Renew Lease
+                                {{ t('panels.videoLeaseModal.renew') }}
                             </button>
                         </div>
                     </template>
@@ -212,13 +212,13 @@
                         <template v-if='secure && mode === "publish"'>
                             <div class='col-md-6'>
                                 <CopyField
-                                    label='Write Username'
+                                    :label='t("panels.videoLeaseModal.writeUsername")'
                                     :model-value='editLease.stream_user || ""'
                                 />
                             </div>
                             <div class='col-md-6'>
                                 <CopyField
-                                    label='Write Password'
+                                    :label='t("panels.videoLeaseModal.writePassword")'
                                     :model-value='editLease.stream_pass || ""'
                                 />
                             </div>
@@ -226,13 +226,13 @@
                         <template v-else-if='secure && mode === "read"'>
                             <div class='col-12 col-md-6'>
                                 <CopyField
-                                    label='Read Username'
+                                    :label='t("panels.videoLeaseModal.readUsername")'
                                     :model-value='editLease.read_user || ""'
                                 />
                             </div>
                             <div class='col-12 col-md-6'>
                                 <CopyField
-                                    label='Read Password'
+                                    :label='t("panels.videoLeaseModal.readPassword")'
                                     :model-value='editLease.read_pass || ""'
                                 />
                             </div>
@@ -266,17 +266,17 @@
                         class='col-12 pt-2'
                     >
                         <div class='col-12 d-flex align-items-center mb-1'>
-                            <label>Expiration</label>
+                            <label>{{ t('panels.videoLeaseModal.expiration') }}</label>
 
                             <div class='ms-auto'>
                                 <span
                                     v-if='expired(editLease.expiration)'
                                     class='badge bg-red text-white mt-2'
-                                >Expired</span>
+                                >{{ t('panels.videoLeaseModal.expired') }}</span>
                                 <span
                                     v-else-if='editLease.expiration === null'
                                     class='badge bg-blue text-white mt-2'
-                                >Permanent</span>
+                                >{{ t('panels.videoLeaseModal.permanent') }}</span>
                             </div>
                         </div>
 
@@ -294,11 +294,11 @@
                     class='col-12 pt-4'
                 >
                     <div class='subheader user-select-none'>
-                        External Stream Config
+                        {{ t('panels.videoLeaseModal.externalConfig') }}
                     </div>
                     <div class='pt-2'>
                         <CopyField
-                            label='External Stream URL'
+                            :label='t("panels.videoLeaseModal.externalUrl")'
                             :model-value='editLease.proxy'
                         />
                     </div>
@@ -314,7 +314,7 @@
                         :size='20'
                         stroke='1'
                     />
-                    <span class='mx-2'>UAS Tool Wizard</span>
+                    <span class='mx-2'>{{ t('panels.videoLeaseModal.wizard') }}</span>
                 </button>
             </div>
         </template>
@@ -326,8 +326,8 @@
                     <TablerPillGroup
                         :model-value='typeof editLease.proxy === "string" ? "proxy" : "host"'
                         :options='[
-                            { value: "host", label: "Hosted Stream URL" },
-                            { value: "proxy", label: "External Stream URL" }
+                            { value: "host", label: t("panels.videoLeaseModal.hostedUrl") },
+                            { value: "proxy", label: t("panels.videoLeaseModal.externalUrl") }
                         ]'
                         padding='p-1'
                         @update:model-value='(v: string) => editLease.proxy = v === "proxy" ? "" : null'
@@ -335,7 +335,7 @@
                         <template #option='{ option }'>
                             <span
                                 v-if='option.value === "host"'
-                                title='Provide a stream URL to push data to'
+                                :title='t("panels.videoLeaseModal.hostedHint")'
                             >
                                 <IconDrone
                                     :size='24'
@@ -344,7 +344,7 @@
                             </span>
                             <span
                                 v-else
-                                title='Pull from existing external Stream URL'
+                                :title='t("panels.videoLeaseModal.externalHint")'
                             >
                                 <IconServer
                                     :size='24'
@@ -358,47 +358,37 @@
                 <div class='col-12 col-md-8'>
                     <TablerInput
                         v-model='editLease.name'
-                        description='The human readable name of the Lease'
+                        :description='t("panels.videoLeaseModal.nameDesc")'
                         :disabled='disabled'
                         :required='true'
-                        label='Name'
+                        :label='t("panels.videoLeaseModal.name")'
                     />
                 </div>
                 <div class='col-12 col-md-4'>
-                    <TablerEnum
+                    <TranslatedEnum
                         v-model='editLease.duration'
-                        :options='durations'
+                        :options='durationOptions'
                         :disabled='disabled'
-                        label='Duration'
-                        description='Leases remain active on the server for the duration specified. Once the lease expires the lease can be renewed without the Lease URL changing'
+                        :label='t("panels.videoLeaseModal.duration")'
+                        :description='t("panels.videoLeaseModal.durationDesc")'
                     />
                 </div>
                 <div class='col-12 col-md-6'>
-                    <TablerEnum
+                    <TranslatedEnum
                         v-model='editLease.source_type'
                         default='unknown'
-                        :options='[
-                            "unknown",
-                            "fixed",
-                            "vehicle",
-                            "screenshare",
-                            "personal",
-                            "rotor",
-                            "fixedwing",
-                            "uas-rotor",
-                            "uas-fixedwing"
-                        ]'
+                        :options='sourceTypeOptions'
                         :disabled='disabled'
-                        label='Source Type'
-                        description='The type of sensor that is broadcasting'
+                        :label='t("panels.videoLeaseModal.sourceType")'
+                        :description='t("panels.videoLeaseModal.sourceTypeDesc")'
                     />
                 </div>
                 <div class='col-12 col-md-6'>
                     <TablerInput
                         v-model='editLease.source_model'
                         :disabled='disabled'
-                        label='Source Model'
-                        description='Model Information about the sensor or source'
+                        :label='t("panels.videoLeaseModal.sourceModel")'
+                        :description='t("panels.videoLeaseModal.sourceModelDesc")'
                     />
                 </div>
                 <div
@@ -408,26 +398,26 @@
                     <TablerInput
                         v-model='editLease.proxy'
                         :disabled='disabled'
-                        label='Media URL'
+                        :label='t("panels.videoLeaseModal.mediaUrl")'
                         :required='true'
                         :error='validateURL(editLease.proxy, { protocols: ["http", "https", "rtsp", "rtsps", "rtmp", "rtmps", "srt"] })'
-                        description='Pull media into the Video Manager from an existing URL.'
+                        :description='t("panels.videoLeaseModal.mediaUrlDesc")'
                     />
                 </div>
                 <div class='col-12 col-md-6'>
                     <TablerToggle
                         v-model='editLease.publish'
-                        label='Publish to TAK Server'
+                        :label='t("panels.videoLeaseModal.publishTak")'
                         :disabled='disabled'
-                        description='Publish the non-geolocated Video Stream to the Video Manager'
+                        :description='t("panels.videoLeaseModal.publishTakDesc")'
                     />
                 </div>
                 <div class='col-12 col-md-6'>
                     <TablerToggle
                         v-model='editLease.recording'
-                        label='Record Stream'
+                        :label='t("panels.videoLeaseModal.record")'
                         :disabled='disabled'
-                        description='Record stream when it is broadcasting'
+                        :description='t("panels.videoLeaseModal.recordDesc")'
                     />
                 </div>
                 <div
@@ -436,17 +426,17 @@
                 >
                     <TablerToggle
                         v-model='secure'
-                        label='Read/Write Security'
+                        :label='t("panels.videoLeaseModal.security")'
                         :disabled='disabled'
-                        description='Create a seperate Read/Write user to ensure unauthorized users cannot publish to a stream'
+                        :description='t("panels.videoLeaseModal.securityDesc")'
                     />
                 </div>
                 <div class='col-12'>
                     <TablerToggle
                         v-model='editLease.share'
-                        description='By default only the user that created a Lease can manage it. If you are operating as part of an agency, turn on Lease Sharing to allow all users in your Channel to manage the lease'
+                        :description='t("panels.videoLeaseModal.shareDesc")'
                         :disabled='disabled'
-                        label='Shared Lease'
+                        :label='t("panels.videoLeaseModal.share")'
                     />
                 </div>
                 <div
@@ -479,7 +469,7 @@
                     class='btn btn-secondary'
                     @click='emit("close")'
                 >
-                    Cancel
+                    {{ t('common.cancel') }}
                 </button>
 
                 <div class='ms-auto btn-list'>
@@ -492,21 +482,21 @@
                             :size='20'
                             stroke='1'
                         />
-                        <span class='mx-2'>UAS Tool Wizard</span>
+                        <span class='mx-2'>{{ t('panels.videoLeaseModal.wizard') }}</span>
                     </button>
                     <button
                         v-if='!disabled'
                         class='btn btn-primary'
                         @click='saveLease'
                     >
-                        Save
+                        {{ t('common.save') }}
                     </button>
                     <button
                         v-if='disabled'
                         class='btn btn-primary'
                         @click='emit("close")'
                     >
-                        Done
+                        {{ t('panels.videoLeaseModal.done') }}
                     </button>
                 </div>
             </div>
@@ -518,7 +508,9 @@
 import { server } from '../../../../std.ts';
 import { validateURL } from '../../../../utils/validators.ts';
 import CopyField from '../../util/CopyField.vue';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import TranslatedEnum from '../../util/TranslatedEnum.vue';
 import type { paths } from '@cloudtak/api-types';
 import type { VideoLease, VideoLeaseProtocols } from '../../../../types.ts';
 import VideoLeaseSourceType from '../../util/VideoLeaseSourceType.vue'
@@ -541,7 +533,6 @@ import {
     TablerAlert,
     TablerModal,
     TablerInput,
-    TablerEnum,
     TablerDelete,
     TablerPillGroup
 } from '@tak-ps/vue-tabler'
@@ -555,6 +546,8 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits([ 'close', 'refresh' ])
 
+const { t } = useI18n();
+
 const mode = ref('read');
 const loading = ref(true);
 const secure = ref(false);
@@ -565,6 +558,24 @@ const protocols = ref<VideoLeaseProtocols>({});
 const channels = ref<string[]>([]);
 
 const durations = ref<Array<string>>(["16 Hours", "12 Hours", "6 Hours", "1 Hour"]);
+const durationOptions = computed(() => durations.value.map((value) => ({
+    value,
+    label: t(`panels.videoLeaseModal.durations.${value.replace(/[^a-zA-Z0-9]+/g, '_')}`)
+})));
+const sourceTypeOptions = computed(() => [
+    "unknown",
+    "fixed",
+    "vehicle",
+    "screenshare",
+    "personal",
+    "rotor",
+    "fixedwing",
+    "uas-rotor",
+    "uas-fixedwing"
+].map((value) => ({
+    value,
+    label: t(`panels.videoLeaseModal.sourceTypes.${value.replace(/[^a-zA-Z0-9]+/g, '_')}`)
+})));
 
 type VideoLeaseCreateBody = paths['/api/video/lease']['post']['requestBody']['content']['application/json'];
 type VideoLeaseUpdateBody = paths['/api/video/lease/{:lease}']['patch']['requestBody']['content']['application/json'];

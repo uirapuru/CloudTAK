@@ -1,33 +1,33 @@
 <template>
     <div class='datagrid-item'>
         <div class='datagrid-title'>
-            Certificate Valid From
+            {{ t('shared.certificateInfo.validFrom') }}
         </div>
         <div
             class='datagrid-content'
-            v-text='certificate?.validFrom || "Unknown"'
+            v-text='certificate?.validFrom || t("shared.common.unknown")'
         />
     </div>
     <div class='datagrid-item'>
         <div class='datagrid-title'>
-            Certificate Valid To
+            {{ t('shared.certificateInfo.validTo') }}
         </div>
         <div class='datagrid-content d-flex align-items-center gap-2'>
-            <div v-text='certificate?.validTo || "Unknown"' />
+            <div v-text='certificate?.validTo || t("shared.common.unknown")' />
             <CertificateBadge
                 class='ms-auto'
                 :certificate='certificate'
-                expired-label='Expired Certificate'
+                :expired-label='t("shared.certificateInfo.expiredCertificate")'
             />
         </div>
     </div>
     <div class='datagrid-item'>
         <div class='datagrid-title'>
-            Certificate Subject
+            {{ t('shared.certificateInfo.subject') }}
         </div>
         <div
             class='datagrid-content'
-            v-text='certificate?.subject || "Unknown"'
+            v-text='certificate?.subject || t("shared.common.unknown")'
         />
     </div>
 </template>
@@ -37,6 +37,7 @@
  * Generic certificate datagrid items (Valid From / Valid To + expiry badge / Subject)
  * Must be rendered inside a `.datagrid` container
  */
+import { useI18n } from 'vue-i18n';
 import CertificateBadge from './CertificateBadge.vue';
 import type { CertificateMetadata } from '../../utils/certificate.ts';
 
@@ -45,4 +46,6 @@ withDefaults(defineProps<{
 }>(), {
     certificate: null,
 });
+
+const { t } = useI18n();
 </script>

@@ -2,7 +2,7 @@
     <PropertyStatusStrip>
         <StatusDot
             :status='active ? "Success" : "Unknown"'
-            :title='active ? "Active" : "Ended"'
+            :title='active ? t("property.coreEntityStatus.activeLabel") : t("property.coreEntityStatus.endedLabel")'
         />
         <TablerBadge
             v-if='priority !== "none"'
@@ -30,7 +30,7 @@
                 stroke='1.5'
                 class='me-1'
             />
-            {{ active ? 'End' : 'Reactivate' }}
+            {{ active ? t("property.coreEntityStatus.end") : t("property.coreEntityStatus.reactivate") }}
         </button>
     </PropertyStatusStrip>
 </template>
@@ -41,6 +41,7 @@
  * header: whether it is active and its priority
  */
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TablerBadge } from '@tak-ps/vue-tabler';
 import { IconPlayerStop, IconPlayerPlay } from '@tabler/icons-vue';
 import StatusDot from '../../util/StatusDot.vue';
@@ -56,6 +57,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update:active', value: boolean): void
 }>();
+
+const { t } = useI18n();
 
 const badge = computed(() => priorityBadge(props.priority));
 </script>

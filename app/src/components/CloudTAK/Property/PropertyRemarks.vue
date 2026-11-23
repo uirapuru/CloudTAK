@@ -2,7 +2,7 @@
     <div class='px-2 pt-2'>
         <label
             class='subheader user-select-none'
-            v-text='label'
+            v-text='label ?? t("property.remarks.label")'
         />
         <CopyField
             :model-value='modelValue'
@@ -19,6 +19,9 @@
 <script setup lang='ts'>
 /** PropertyRemarks - the free text remarks of a feature, rendered as Markdown */
 import CopyField from '../util/CopyField.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 withDefaults(defineProps<{
     modelValue: string;
@@ -27,7 +30,7 @@ withDefaults(defineProps<{
     display?: string;
     edit?: boolean;
 }>(), {
-    label: 'Remarks',
+    label: undefined,
     display: undefined,
     edit: false,
 });

@@ -1,9 +1,9 @@
 <template>
     <PropertyMeasureRow
-        :label='label'
+        :label='label ?? t("property.bearing.label")'
         :model-value='config.bearing'
         :unit='mode'
-        :units='UNITS'
+        :units='units'
         :inline='inline'
         :edit='edit'
         :hover='hover'
@@ -13,15 +13,18 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import PropertyMeasureRow from '../util/PropertyMeasureRow.vue';
 import type { UnitOption } from '../util/UnitSwitcher.vue';
+import { useI18n } from 'vue-i18n';
 
-const UNITS: Array<UnitOption> = [
-    { value: 'deg', label: 'deg', title: 'Degrees' },
-    { value: 'rad', label: 'rad', title: 'Radians' },
-    { value: 'mil', label: 'mil', title: 'Mil-Radians' },
-];
+const { t } = useI18n();
+
+const units = computed<Array<UnitOption>>(() => [
+    { value: 'deg', label: 'deg', title: t('property.bearing.degrees') },
+    { value: 'rad', label: 'rad', title: t('property.bearing.radians') },
+    { value: 'mil', label: 'mil', title: t('property.bearing.milRadians') },
+]);
 
 const emit = defineEmits([
     'update:modelValue'
@@ -30,7 +33,7 @@ const emit = defineEmits([
 const props = defineProps({
     label: {
         type: String,
-        default: 'Bearing'
+        default: undefined
     },
     modelValue: {
         type: Number,

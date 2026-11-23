@@ -12,7 +12,7 @@
             />
             <div
                 class='mx-2 text-sm text-truncate'
-                v-text='"Create Event"'
+                v-text='t("util.createCoreEntity.title")'
             />
         </template>
 
@@ -22,7 +22,7 @@
         />
         <TablerLoading
             v-else-if='loading'
-            desc='Creating Event'
+            :desc='t("util.createCoreEntity.creating")'
         />
         <div
             v-else
@@ -31,15 +31,15 @@
             <div class='col-12 col-md-8'>
                 <TablerInput
                     v-model='config.name'
-                    label='Name'
+                    :label='t("util.common.name")'
                     :required='true'
                 />
             </div>
             <div class='col-12 col-md-4'>
-                <TablerEnum
+                <TranslatedEnum
                     v-model='config.priority'
-                    label='Priority'
-                    :options='["none", "low", "medium", "high", "critical"]'
+                    :label='t("util.createCoreEntity.priority")'
+                    :options='priorityOptions'
                 />
             </div>
 
@@ -59,22 +59,22 @@
             <div class='col-12'>
                 <TablerInput
                     v-model='config.location'
-                    label='Location'
-                    placeholder='Address or place name'
+                    :label='t("util.createCoreEntity.location")'
+                    :placeholder='t("util.createCoreEntity.locationPlaceholder")'
                 />
             </div>
 
             <div class='col-12'>
-                <label class='form-label'>Remarks</label>
+                <label class='form-label'>{{ t('util.createCoreEntity.remarks') }}</label>
                 <TablerMarkdownEditor
                     v-model='config.remarks'
-                    label='Remarks'
+                    :label='t("util.createCoreEntity.remarks")'
                     @submit='submit'
                 />
             </div>
 
             <div class='col-12'>
-                <label class='form-label required'>Share to Channels</label>
+                <label class='form-label required'>{{ t('util.createCoreEntity.shareToChannels') }}</label>
                 <div
                     class='overflow-auto'
                     style='max-height: 250px;'
@@ -88,7 +88,7 @@
                     v-if='!config.channels.length'
                     class='form-hint text-warning'
                 >
-                    Select at least one Channel to share the Event with
+                    {{ t('util.createCoreEntity.selectChannel') }}
                 </div>
             </div>
         </div>
@@ -99,17 +99,19 @@
                 :disabled='!valid || loading || !!error'
                 @click='submit'
             >
-                Create Event
+                {{ t('util.createCoreEntity.title') }}
             </button>
         </template>
     </FloatingPane>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { server } from '../../../std.ts';
 import Coordinate from './Coordinate.vue';
+import TranslatedEnum from './TranslatedEnum.vue';
 import FloatingPane from './FloatingPane.vue';
 import CoreEntityType from './CoreEntityType.vue';
 import GroupSelect from '../../util/GroupSelect.vue';
@@ -121,11 +123,16 @@ import type { CoreEntity, InputFeature } from '../../../types.ts';
 import { IconCalendarEvent } from '@tabler/icons-vue';
 import {
     TablerAlert,
-    TablerEnum,
     TablerInput,
     TablerLoading,
     TablerMarkdownEditor,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
+
+const priorityOptions = computed(() => ['none', 'low', 'medium', 'high', 'critical'].map((value) => {
+    return { value, label: t(`util.common.priority.${value}`) };
+}));
 
 const props = withDefaults(defineProps<{
     uid?: string;

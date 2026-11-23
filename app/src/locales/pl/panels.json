@@ -69,7 +69,8 @@
         "noDevices": "Brak zarejestrowanych urządzeń. Dotknij przycisku +, aby zarejestrować to urządzenie.",
         "registeredDevice": "Zarejestrowane urządzenie",
         "registeredOn": "Zarejestrowano {date}",
-        "tokenFailed": "Nie udało się uzyskać tokenu powiadomień push."
+        "tokenFailed": "Nie udało się uzyskać tokenu powiadomień push.",
+        "permissionDenied": "Nie przyznano uprawnienia do powiadomień push."
     },
     "pagingModal": {
         "isVerified": "To źródło jest zweryfikowane",
@@ -130,7 +131,8 @@
                 "storage": "CloudTAK może trwale przechowywać dane lokalne, co poprawia pracę offline.",
                 "camera": "CloudTAK ma dostęp do aparatu, gdy jest potrzebny.",
                 "wakeLock": "CloudTAK może utrzymywać włączony ekran podczas działań.",
-                "fileSystem": "CloudTAK może otwierać pliki lokalne do importu i eksportu."
+                "fileSystem": "CloudTAK może otwierać pliki lokalne do importu i eksportu.",
+                "notificationBrowser": "CloudTAK może wyświetlać powiadomienia przeglądarki."
             },
             "denied": {
                 "location": "Dostęp do położenia jest zablokowany. Użyj przycisku poniżej, aby spróbować ponownie.",
@@ -140,7 +142,8 @@
                 "storage": "Nie przyznano trwałej pamięci. Użyj przycisku poniżej, aby spróbować ponownie.",
                 "camera": "Dostęp do aparatu jest zablokowany. Użyj przycisku poniżej, aby spróbować ponownie.",
                 "wakeLock": "Blokada wygaszania ekranu jest zablokowana. Użyj przycisku poniżej, aby spróbować ponownie.",
-                "fileSystem": "Dostęp do plików jest zablokowany. Użyj przycisku poniżej, aby spróbować ponownie."
+                "fileSystem": "Dostęp do plików jest zablokowany. Użyj przycisku poniżej, aby spróbować ponownie.",
+                "backgroundLocationBlocked": "Dostęp do położenia jest zablokowany, więc udostępnianie położenia w tle jest niedostępne."
             },
             "prompt": {
                 "location": "Nie przyznano jeszcze dostępu do położenia.",
@@ -179,7 +182,9 @@
             "denied": "Odmowa",
             "notAsked": "Nie pytano",
             "unsupported": "Nieobsługiwane",
-            "unknown": "Nieznane"
+            "unknown": "Nieznane",
+            "reRequest": "Poproś ponownie",
+            "request": "Poproś"
         },
         "whenInUse": "Położenie jest udostępniane tylko przy otwartym CloudTAK. Ustaw w ustawieniach położenie na „Zawsze”, aby zespół widział Cię także, gdy aplikacja działa w tle.",
         "action": {
@@ -191,7 +196,8 @@
             "request": "Poproś o uprawnienie"
         },
         "refreshFailed": "Nie udało się odświeżyć stanu uprawnień",
-        "requestFailed": "Nie udało się poprosić o uprawnienie: {permission}"
+        "requestFailed": "Nie udało się poprosić o uprawnienie: {permission}",
+        "openSettingsFailed": "Nie udało się otworzyć ustawień systemu"
     },
     "settingsSessions": {
         "title": "Sesje logowania"
@@ -295,7 +301,8 @@
         "items": "Elementy: {count}",
         "noSubscribed": "Brak subskrybowanych Data Sync",
         "invalidPassword": "Nieprawidłowe hasło",
-        "fetchFailed": "Nie udało się pobrać misji"
+        "fetchFailed": "Nie udało się pobrać misji",
+        "qrCode": "Kod QR dla ATAK Data Sync"
     },
     "overlayExplorer": {
         "title": "Przeglądarka nakładek",
@@ -303,7 +310,24 @@
         "yourFiles": "Twoje pliki",
         "yourFilesDesc": "Nakładki, które przesłałeś",
         "openFiles": "Otwórz pliki",
-        "none": "Brak nakładek"
+        "none": "Brak nakładek",
+        "working": "Pracuję…",
+        "addVisible": "Dodaj widoczne do nakładek",
+        "removeVisible": "Usuń widoczne z nakładek",
+        "sectionCount": "Warstwy w sekcji: {count}",
+        "favoritesHint": "Kliknij gwiazdkę przy warstwie, aby mieć ją tutaj pod ręką.",
+        "stale": "(nieaktualna)",
+        "bulkHint": "Działa na warstwach w rozwiniętych sekcjach, a podczas wyszukiwania na wszystkich wynikach.",
+        "favorites": "Ulubione",
+        "buildings3d": "Budynki 3D",
+        "favoriteFailed": "Nie udało się zmienić ulubionych: {error}",
+        "allAdded": "Wszystkie widoczne warstwy są już w nakładkach.",
+        "added": "Dodano do nakładek: {count}.",
+        "addedPartial": "Dodano do nakładek: {count} z {total}, reszta się nie udała.",
+        "noneAdded": "Żadna widoczna pozycja nie jest w nakładkach.",
+        "removed": "Usunięto z nakładek: {count}.",
+        "removedPartial": "Usunięto z nakładek: {count} z {total}, reszta się nie udała.",
+        "catalogFailed": "Nie udało się wczytać katalogu warstw: {error}"
     },
     "overlays": {
         "title": "Nakładki",
@@ -344,7 +368,46 @@
             "data": "Dane",
             "profile": "Profil",
             "hidden": "Ukryta"
-        }
+        },
+        "addGroup": "Dodaj grupę",
+        "hideAll": "Ukryj wszystkie",
+        "showAll": "Pokaż wszystkie",
+        "arrangeHint": "Przenieś nakładki bez grupy do grup ich kategorii",
+        "arranging": "Układam…",
+        "arrange": "Ułóż w kategorie",
+        "groupName": "Nazwa grupy",
+        "addGroupSubmit": "Dodaj",
+        "expandFavorites": "Rozwiń ulubione",
+        "collapseFavorites": "Zwiń ulubione",
+        "favorites": "Ulubione",
+        "favoritesCount": "Ulubione nakładki: {count}",
+        "dragGroup": "Przeciągnij, aby zmienić kolejność grup",
+        "expandGroup": "Rozwiń grupę",
+        "collapseGroup": "Zwiń grupę",
+        "hideGroup": "Ukryj nakładki grupy",
+        "showGroup": "Pokaż nakładki grupy",
+        "saveName": "Zapisz nazwę",
+        "groupCount": "Nakładki w grupie: {count}",
+        "renameGroup": "Zmień nazwę grupy",
+        "deleteGroup": "Usuń grupę",
+        "deleteGroupConfirm": "Usunąć grupę? Jej nakładki zostaną na liście bez grupy.",
+        "dropHere": "Przeciągnij tutaj nakładki",
+        "dropUngroup": "Przeciągnij tutaj nakładkę, aby wyjąć ją z grupy",
+        "errors": {
+            "favorite": "Nie udało się zmienić ulubionych",
+            "arrange": "Nie udało się ułożyć nakładek w kategorie",
+            "moveOverlay": "Nie udało się przenieść nakładki",
+            "moveGroup": "Nie udało się przenieść grupy",
+            "addGroup": "Nie udało się dodać grupy",
+            "renameGroup": "Nie udało się zmienić nazwy grupy",
+            "deleteGroup": "Nie udało się usunąć grupy"
+        },
+        "arrangeNothingUnknown": "Nic do ułożenia. Nakładki spoza katalogu zostały bez grupy: {count}.",
+        "arrangeNothing": "Nic do ułożenia: wszystkie nakładki są już w grupach.",
+        "arranged": "Ułożono w kategorie {count}.",
+        "arrangedNewGroups": "Nowe grupy: {groups}.",
+        "arrangedUnknown": "Nakładki spoza katalogu zostały bez grupy: {count}.",
+        "groupNameLength": "Nazwa grupy musi mieć od 1 do {max} znaków."
     },
     "treeVector": {
         "viewRaw": "Pokaż surowy styl",
@@ -391,7 +454,16 @@
         "travelMode": "Sposób przemieszczania",
         "generate": "Wyznacz trasę",
         "addFailed": "Nie udało się dodać trasy",
-        "notFound": "Nie znaleziono trasy"
+        "notFound": "Nie znaleziono trasy",
+        "buildHint": "Kliknij mapę, aby dodać kolejny punkt. Ostatni punkt jest celem.",
+        "removePoint": "Usuń punkt",
+        "myLocation": "Moja pozycja",
+        "viaLabel": "Punkt pośredni {n}",
+        "via": "Punkt pośredni",
+        "removeVia": "Usuń punkt pośredni",
+        "addVia": "Dodaj punkt pośredni",
+        "threatsHint": "Na przełaju trasa omija też pole widzenia wrogich znaczników do 3 km.",
+        "locationUnknown": "Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie."
     },
     "videos": {
         "title": "Wideo",

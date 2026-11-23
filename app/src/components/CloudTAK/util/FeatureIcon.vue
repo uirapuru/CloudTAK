@@ -10,7 +10,7 @@
         <img
             v-else-if='standaloneIcon'
             :src='standaloneIcon'
-            alt='Feature Icon'
+            :alt='t("util.featureIcon.alt")'
             :width='props.size'
             :height='props.size'
             style='object-fit: contain;'
@@ -93,6 +93,7 @@ export default {
 </script>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, useTemplateRef, watch, computed } from 'vue';
 import ContactPuck from './ContactPuck.vue'
 import {
@@ -109,6 +110,8 @@ import {
 import { renderedIconImage } from '../../../base/cot.ts';
 import { isMilsymIcon, symbolDataURL } from '../../../utils/milsymbol.ts';
 import { useMapStore } from '../../../stores/map.ts';
+
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const props = defineProps({

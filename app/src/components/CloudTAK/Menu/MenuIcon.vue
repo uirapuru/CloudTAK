@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='Icon'>
+    <MenuTemplate :name='t("menu.icon.title")'>
         <template #buttons>
             <div class='d-flex align-items-center gap-2'>
                 <TablerRefreshButton
@@ -16,7 +16,7 @@
 
                 <TablerIconButton
                     v-if='(iconset.username || isSystemAdmin) && disabled && !!icon.id'
-                    title='Edit'
+                    :title='t("menu.common.edit")'
                     @click='disabled = false'
                 >
                     <IconPencil
@@ -45,14 +45,14 @@
                     <div class='col-12'>
                         <TablerInput
                             v-model='icon.name'
-                            label='Name'
+                            :label='t("menu.common.name")'
                         />
                     </div>
 
                     <div class='col-12'>
                         <TablerUploadLogo
                             v-model='icon.data'
-                            label='Icon Data'
+                            :label='t("menu.icon.data")'
                             @file-name='updateName'
                         />
                     </div>
@@ -60,7 +60,7 @@
                     <div class='col-12'>
                         <TablerInput
                             :model-value='icon.type2525b ?? ""'
-                            label='2525B Type'
+                            :label='t("menu.icon.type2525b")'
                             @update:model-value='icon.type2525b = $event ? String($event) : null'
                         />
                     </div>
@@ -72,13 +72,13 @@
                                 class='btn btn-secondary'
                                 @click='refresh'
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </div>
                             <div
                                 class='btn btn-primary'
                                 @click='submit'
                             >
-                                Submit
+                                {{ t('menu.iconsetEdit.submit') }}
                             </div>
                         </div>
                     </div>
@@ -105,7 +105,7 @@
                                     </div>
                                     <div class='flex-grow-1'>
                                         <p class='text-uppercase text-white-50 small mb-1'>
-                                            Icon
+                                            {{ t('menu.icon.title') }}
                                         </p>
                                         <h2
                                             class='h4 mb-0 text-break'
@@ -116,7 +116,7 @@
 
                                 <div class='row gy-3 gx-0 gx-sm-3'>
                                     <div class='col-12'>
-                                        <small class='text-uppercase text-white-50 d-block mb-1'>Iconset</small>
+                                        <small class='text-uppercase text-white-50 d-block mb-1'>{{ t('menu.icon.iconset') }}</small>
                                         <p
                                             class='text-start text-blue fw-semibold cursor-pointer p-0 text-decoration-none'
                                             @click='router.push(`/menu/iconset/${icon.iconset}`)'
@@ -124,10 +124,10 @@
                                         />
                                     </div>
                                     <div class='col-12'>
-                                        <small class='text-uppercase text-white-50 d-block mb-1'>Type 2525b</small>
+                                        <small class='text-uppercase text-white-50 d-block mb-1'>{{ t('menu.icon.type2525b') }}</small>
                                         <p
                                             class='text-start text-white fw-semibold p-0 text-decoration-none'
-                                            v-text='icon.type2525b || "None"'
+                                            v-text='icon.type2525b || t("menu.common.none")'
                                         />
                                     </div>
                                 </div>
@@ -143,6 +143,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { server } from '../../../std.ts';
 import IconCache from '../../../base/icon.ts';
 import IconsetCache from '../../../base/iconset.ts';
@@ -171,6 +172,7 @@ interface IconDraft {
     type2525b: string | null;
 }
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const mapStore = useMapStore();
@@ -287,7 +289,7 @@ async function fetch(): Promise<void> {
     }
 
     if (!isLegacyNumericRoute()) {
-        throw new Error('Icon not available offline. Refresh to sync this iconset.');
+        throw new Error(t('menu.icon.iconOffline'));
     }
 
     const result = await server.GET('/api/iconset/{:iconset}/icon/{:icon}', {
@@ -307,7 +309,7 @@ async function fetch(): Promise<void> {
 
 async function fetchIconset(): Promise<void> {
     const cached = await IconsetCache.from(String(route.params.iconset));
-    if (!cached) throw new Error('Iconset not available offline. Refresh to sync this iconset.');
+    if (!cached) throw new Error(t('menu.icon.iconsetOffline'));
 
     iconset.value = {
         name: cached.name,
@@ -316,7 +318,7 @@ async function fetchIconset(): Promise<void> {
 }
 
 async function deleteIcon(): Promise<void> {
-    if (!icon.value.id) throw new Error('Icon cannot be deleted until it has been synced from the server.');
+    if (!icon.value.id) throw new Error(t('menu.icon.deleteUnsynced'));
 
     loading.value = true;
     const res = await server.DELETE('/api/iconset/{:iconset}/icon/{:icon}', {

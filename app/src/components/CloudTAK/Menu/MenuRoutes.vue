@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Routes'
+        :name='t("panels.routes.title")'
     >
         <template #buttons>
             <TablerIconButton
                 v-if='routeCreation'
-                title='New Route'
+                :title='t("panels.routes.newRoute")'
                 @click='router.push("/menu/routes/new")'
             >
                 <IconPlus
@@ -25,12 +25,12 @@
             <TablerLoading
                 v-if='loading'
                 v-model='query.filter'
-                desc='Loading Features'
+                :desc='t("panels.routes.loading")'
             />
             <TablerNone
                 v-else-if='routes.size === 0'
                 :create='false'
-                label='No Routes'
+                :label='t("panels.routes.none")'
             />
             <template v-else>
                 <div class='col-12 d-flex flex-column gap-2 py-3'>
@@ -79,6 +79,7 @@
 <script setup lang='ts'>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import COT from '../../../base/cot.ts';
 import { server } from '../../../std.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
@@ -100,6 +101,7 @@ import {
 import { useMapStore } from '../../../stores/map.ts';
 
 const router = useRouter();
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const channel = new BroadcastChannel("cloudtak");

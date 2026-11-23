@@ -4,7 +4,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("close")'
         />
 
@@ -16,7 +16,7 @@
             />
             <div class='d-flex flex-column'>
                 <div class='strong d-flex align-items-center'>
-                    Basemaps &amp; Overlays
+                    {{ t('basemaps.edit.title') }}
                 </div>
                 <div
                     v-if='basemap.id'
@@ -27,7 +27,7 @@
                     v-else
                     class='small text-white-50'
                 >
-                    New Entry
+                    {{ t('basemaps.edit.newEntry') }}
                 </div>
             </div>
 
@@ -36,7 +36,7 @@
                 class='ms-auto btn-list'
             >
                 <TablerIconButton
-                    title='Download TAK XML'
+                    :title='t("basemaps.edit.downloadXml")'
                     @click='download'
                 >
                     <IconDownload
@@ -80,7 +80,7 @@
         >
             <div v-if='basemap.id'>
                 <TablerDelete
-                    label='Delete Basemap / Overlay'
+                    :label='t("basemaps.edit.delete")'
                     @delete='deleteBasemap'
                 />
             </div>
@@ -89,7 +89,7 @@
                 <a
                     class='cursor-pointer btn btn-primary'
                     @click='create'
-                >Save Basemap / Overlay</a>
+                >{{ t('basemaps.edit.save') }}</a>
             </div>
         </div>
     </TablerModal>
@@ -121,6 +121,9 @@ import {
     TablerLoading,
     TablerIconButton,
 } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const emit = defineEmits(['close']);
 
@@ -354,8 +357,8 @@ async function fetchBasemap(): Promise<void> {
 }
 
 async function create(): Promise<void> {
-    errors.value.name = editing.value.name ? '' : 'Cannot be empty';
-    errors.value.url = editing.value.url ? '' : 'Cannot be empty';
+    errors.value.name = editing.value.name ? '' : t('basemaps.common.cannotBeEmpty');
+    errors.value.url = editing.value.url ? '' : t('basemaps.common.cannotBeEmpty');
 
     if (errors.value.name || errors.value.url) return;
 

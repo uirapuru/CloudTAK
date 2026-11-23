@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Radiation Sensor'
+            :label='t("property.radSensor.title")'
         >
             <template #icon>
                 <IconRadioactive
@@ -21,12 +21,12 @@
                             stroke='1'
                             class='me-2 text-muted'
                         />
-                        <label class='subheader m-0'>Sensor Information</label>
+                        <label class='subheader m-0'>{{ t('property.sensorData.information') }}</label>
                     </div>
                     <div class='datagrid'>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Manufacturer
+                                {{ t('property.sensorData.manufacturer') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -35,7 +35,7 @@
                         </div>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Model
+                                {{ t('property.sensorData.model') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -44,7 +44,7 @@
                         </div>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Serial Number
+                                {{ t('property.sensorData.serialNumber') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -56,7 +56,7 @@
                             class='datagrid-item'
                         >
                             <div class='datagrid-title'>
-                                Battery
+                                {{ t('property.sensorData.battery') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -65,7 +65,7 @@
                         </div>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Gamma Status
+                                {{ t('property.radSensor.gammaStatus') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -74,7 +74,7 @@
                         </div>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Neutron Status
+                                {{ t('property.radSensor.neutronStatus') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -86,7 +86,7 @@
                             class='datagrid-item'
                         >
                             <div class='datagrid-title'>
-                                Callsign
+                                {{ t('property.sensorData.callsign') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -105,15 +105,15 @@
                                 stroke='1'
                                 class='me-2 text-muted'
                             />
-                            <label class='subheader m-0'>Measurements</label>
+                            <label class='subheader m-0'>{{ t('property.sensorData.measurements') }}</label>
                         </div>
                         <div class='table-responsive rounded mt-1'>
                             <table class='table card-table table-hover table-vcenter datatable table-sm'>
                                 <thead>
                                     <tr>
-                                        <th>Type</th>
-                                        <th>Value</th>
-                                        <th>Alarm</th>
+                                        <th>{{ t('property.sensorData.type') }}</th>
+                                        <th>{{ t('property.sensorData.value') }}</th>
+                                        <th>{{ t('property.sensorData.alarm') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -129,7 +129,7 @@
                                         <td>
                                             <span
                                                 :class='measurement.alarm === 1 ? "text-danger fw-bold" : "text-muted"'
-                                                v-text='measurement.alarm === 1 ? "ALARM" : "Normal"'
+                                                v-text='measurement.alarm === 1 ? t("property.sensorData.alarmActive") : t("property.sensorData.normal")'
                                             />
                                         </td>
                                     </tr>
@@ -148,15 +148,15 @@
                                 stroke='1'
                                 class='me-2 text-muted'
                             />
-                            <label class='subheader m-0'>Identified Isotopes</label>
+                            <label class='subheader m-0'>{{ t('property.radSensor.identifiedIsotopes') }}</label>
                         </div>
                         <div class='table-responsive rounded mt-1'>
                             <table class='table card-table table-hover table-vcenter datatable table-sm'>
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Type</th>
-                                        <th>Confidence</th>
+                                        <th>{{ t('property.sensorData.name') }}</th>
+                                        <th>{{ t('property.sensorData.type') }}</th>
+                                        <th>{{ t('property.radSensor.confidence') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -183,6 +183,9 @@ import { ref, onMounted } from 'vue';
 import { IconRadioactive, IconInfoCircle, IconChartBar, IconAtom } from '@tabler/icons-vue';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
 import ProfileConfig from '../../../base/profile.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface RadSensorData {
     manufacturer: string;

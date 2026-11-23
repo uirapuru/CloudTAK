@@ -8,7 +8,7 @@
         <div class='col-md-12 mt-3'>
             <TablerInput
                 :model-value='url'
-                label='TileJSON URL'
+                :label='t("basemaps.types.tilejson.urlLabel")'
                 @update:model-value='emit("update:url", $event)'
             />
         </div>
@@ -18,13 +18,13 @@
                     class='cursor-pointer btn btn-secondary'
                     @click='emit("change-type")'
                 >
-                    Cancel
+                    {{ t('common.cancel') }}
                 </button>
                 <div class='ms-auto'>
                     <a
                         class='cursor-pointer btn btn-primary'
                         @click='emit("fetch")'
-                    >Fetch TileJSON</a>
+                    >{{ t('basemaps.tilejson.fetch') }}</a>
                 </div>
             </div>
         </div>
@@ -34,6 +34,9 @@
 <script setup lang='ts'>
 import TypeSelectorSelected from './TypeSelectorSelected.vue';
 import { TablerInput } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     url: string;

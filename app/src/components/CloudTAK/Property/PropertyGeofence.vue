@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Geofence'
+            :label='t("property.geofence.title")'
         >
             <template #icon>
                 <IconFence
@@ -17,7 +17,7 @@
                     <div class='row g-2'>
                         <div class='col-12'>
                             <TablerToggle
-                                label='Elevation Monitored'
+                                :label='t("property.geofence.elevationMonitored")'
                                 :model-value='geofence.elevationMonitored ?? false'
                                 :disabled='true'
                             />
@@ -32,7 +32,7 @@
                                 stroke='1'
                                 class='mx-2'
                             />
-                            <span>Alarm on Enter</span>
+                            <span>{{ t('property.geofence.alarmOnEnter') }}</span>
                         </div>
                         <div
                             v-if='geofence.trigger === "Both" || geofence.trigger === "Exit"'
@@ -43,7 +43,7 @@
                                 stroke='1'
                                 class='mx-2'
                             />
-                            <span>Alarm on Exit</span>
+                            <span>{{ t('property.geofence.alarmOnExit') }}</span>
                         </div>
                     </div>
                 </div>
@@ -57,6 +57,9 @@ import { ref } from 'vue';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
 import { IconFence, IconDoorEnter, IconDoorExit } from '@tabler/icons-vue';
 import { TablerToggle } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps<{
     geofence: {

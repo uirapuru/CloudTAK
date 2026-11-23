@@ -1,8 +1,8 @@
 <template>
-    <MenuTemplate name='Iconsets'>
+    <MenuTemplate :name='t("menu.iconsets.title")'>
         <template #buttons>
             <TablerIconButton
-                title='Create Iconset'
+                :title='t("menu.iconsets.create")'
                 @click='editModal = true'
             >
                 <IconPlus
@@ -13,7 +13,7 @@
 
             <TablerIconButton
                 v-if='!upload'
-                title='Zip Upload'
+                :title='t("menu.iconsets.zipUpload")'
                 @click='upload = true'
             >
                 <IconFileUpload
@@ -43,14 +43,14 @@
                 <TablerPillGroup
                     v-model='mode'
                     :options='[
-                        { value: "iconsets", label: "Iconsets" },
-                        { value: "icons", label: "Icons" }
+                        { value: "iconsets", label: t("menu.iconsets.title") },
+                        { value: "icons", label: t("menu.iconsets.icons") }
                     ]'
                 >
                     <template #option='{ option }'>
                         <span
                             v-if='option.value === "iconsets"'
-                            title='Iconsets'
+                            :title='t("menu.iconsets.title")'
                         >
                             <IconAlbum
                                 :size='32'
@@ -59,7 +59,7 @@
                         </span>
                         <span
                             v-else
-                            title='Icons'
+                            :title='t("menu.iconsets.icons")'
                         >
                             <IconPhoto
                                 :size='32'
@@ -74,13 +74,13 @@
                         <TablerInput
                             v-model='paging.filter'
                             icon='search'
-                            placeholder='Filter'
+                            :placeholder='t("menu.common.filter")'
                         />
                     </div>
 
                     <TablerLoading
                         v-if='loading'
-                        desc='Loading Iconsets'
+                        :desc='t("menu.iconsets.loading")'
                     />
                     <TablerAlert
                         v-else-if='loadError'
@@ -94,7 +94,7 @@
                         />
                         <TablerNone
                             v-if='!list.items.length'
-                            label='No Iconsets'
+                            :label='t("menu.iconsets.none")'
                             :create='false'
                         />
                         <template v-else>
@@ -124,7 +124,7 @@
                                                 border-color='rgba(59, 130, 246, 0.5)'
                                                 text-color='#2563eb'
                                             >
-                                                Public
+                                                {{ t('menu.iconsets.public') }}
                                             </TablerBadge>
                                             <TablerBadge
                                                 v-else
@@ -133,10 +133,10 @@
                                                 border-color='rgba(239, 68, 68, 0.5)'
                                                 text-color='#dc2626'
                                             >
-                                                Private
+                                                {{ t('menu.iconsets.private') }}
                                             </TablerBadge>
                                             <TablerIconButton
-                                                title='Download TAK Zip'
+                                                :title='t("menu.iconset.downloadTakZip")'
                                                 @click.stop='IconsetCache.download(iconset.uid)'
                                             >
                                                 <IconDownload
@@ -182,6 +182,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import IconsetCache from '../../../base/iconset.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
@@ -220,6 +221,7 @@ interface ImportUploadResponse {
     }[];
 }
 
+const { t } = useI18n();
 const router = useRouter();
 const mapStore = useMapStore();
 

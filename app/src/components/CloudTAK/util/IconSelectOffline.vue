@@ -15,7 +15,7 @@
                 />
                 <TablerHelp
                     v-if='help'
-                    :label='label'
+                    :label='label ?? t("util.iconSelectOffline.label")'
                     :description='description'
                     @click='help = false'
                 />
@@ -32,11 +32,11 @@
 
         <TablerLoading
             v-if='loading.iconset'
-            desc='Loading Iconsets'
+            :desc='t("util.icons.loading")'
         />
         <TablerNone
             v-else-if='sets.length === 0'
-            label='No Iconsets Loaded'
+            :label='t("util.iconSelectOffline.noIconsets")'
             :compact='true'
             :create='false'
         />
@@ -44,7 +44,7 @@
             <TablerInlineAlert
                 v-if='err'
                 severity='danger'
-                title='Icon Not Found'
+                :title='t("util.iconSelectOffline.notFound")'
                 :description='err.message'
             />
             <div class='d-flex align-items-center'>
@@ -64,7 +64,7 @@
                     </div>
                 </template>
                 <template v-else>
-                    <span class='text-center my-2 mx-2'>No Icon Selected</span>
+                    <span class='text-center my-2 mx-2'>{{ t('util.iconSelectOffline.noneSelected') }}</span>
                 </template>
 
                 <div
@@ -73,7 +73,7 @@
                 >
                     <TablerIconButton
                         v-if='selected'
-                        title='Remove Icon'
+                        :title='t("util.iconSelectOffline.remove")'
                         @click='removeIcon'
                     >
                         <IconTrash
@@ -83,7 +83,7 @@
                     </TablerIconButton>
 
                     <TablerIconButton
-                        title='Select Icon'
+                        :title='t("util.iconSelectOffline.select")'
                         @click='modal = true'
                     >
                         <IconPhotoSearch
@@ -104,7 +104,7 @@
             <div class='modal-body'>
                 <div class='d-flex align-items-center justify-content-between mb-3'>
                     <h3 class='modal-title'>
-                        Select Icon
+                        {{ t('util.iconSelectOffline.select') }}
                     </h3>
                     <button
                         type='button'
@@ -123,7 +123,7 @@
                     <div class='col-12'>
                         <TablerInput
                             v-model='params.filter'
-                            placeholder='Icon Search'
+                            :placeholder='t("util.iconSelectOffline.search")'
                             :icon='IconSearch'
                             @click.stop
                         />
@@ -131,7 +131,7 @@
                     <div class='col-12'>
                         <TablerToggle
                             v-model='params.showNames'
-                            label='Show Icon Names'
+                            :label='t("util.iconSelectOffline.showNames")'
                             :off-value='false'
                             :on-value='true'
                         />
@@ -139,7 +139,7 @@
                 </div>
                 <TablerLoading
                     v-if='loading.icons'
-                    desc='Loading Icons'
+                    :desc='t("util.iconSelectOffline.loadingIcons")'
                 />
                 <div
                     v-else
@@ -180,6 +180,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import Icon from '../../../base/icon.ts';
 import Iconset from '../../../base/iconset.ts';
@@ -202,6 +203,8 @@ import {
     TablerIconButton
 } from '@tak-ps/vue-tabler';
 
+const { t } = useI18n();
+
 interface Props {
     modelValue: string;
     description?: string;
@@ -214,7 +217,7 @@ const props = withDefaults(defineProps<Props>(), {
     description: '',
     required: false,
     disabled: false,
-    label: 'Icon Select',
+    label: undefined,
 });
 
 const emit = defineEmits<{
@@ -334,7 +337,7 @@ async function fetchSelected(): Promise<void> {
 
     const icon = await Icon.get(key);
     if (!icon) {
-        err.value = new Error(`Icon not found: ${props.modelValue}`);
+        err.value = new Error(t('util.iconSelectOffline.notFoundMessage', { icon: props.modelValue }));
         return;
     }
 

@@ -1,3 +1,4 @@
+import { t } from '../i18n.ts';
 import { convert } from 'geo-coordinates-parser';
 
 export type CoordMode = 'dd' | 'dm' | 'dms' | 'mgrs' | 'utm';
@@ -55,7 +56,7 @@ export function parseCoordPair(text: string, mode?: CoordMode): [number, number]
     const raw = text.trim();
 
     if (!raw) {
-        throw new Error('Coordinates are required');
+        throw new Error(t('messages.coordinates.required'));
     }
 
     if (mode === 'utm') {
@@ -76,7 +77,7 @@ export function parseCoordPair(text: string, mode?: CoordMode): [number, number]
         }
     }
 
-    throw new Error('Unable to parse coordinates');
+    throw new Error(t('messages.coordinates.unparsable'));
 }
 
 export function validateCoordPair(text: string, mode?: CoordMode): string {
@@ -110,7 +111,7 @@ function parseDegrees(text: string): [number, number] {
 
         return [parsed.decimalLatitude, parsed.decimalLongitude];
     } catch {
-        throw new Error('Expected a valid decimal, DM, or DMS coordinate pair');
+        throw new Error(t('messages.coordinates.expectedDecimal'));
     }
 }
 
@@ -146,7 +147,7 @@ function parseUTM(text: string): [number, number] {
     const match = text.trim().toUpperCase().match(/^(\d{1,2})([C-HJ-NP-X])\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/i);
 
     if (!match) {
-        throw new Error('Expected UTM coordinates like "13S 500000 4400000"');
+        throw new Error(t('messages.coordinates.expectedUtm'));
     }
 
     const zoneNum = Number(match[1]);
@@ -155,7 +156,7 @@ function parseUTM(text: string): [number, number] {
     const northing = Number(match[4]);
 
     if (!Number.isFinite(easting) || !Number.isFinite(northing) || zoneNum < 1 || zoneNum > 60) {
-        throw new Error('Expected UTM coordinates like "13S 500000 4400000"');
+        throw new Error(t('messages.coordinates.expectedUtm'));
     }
 
     return utmToLatLng(zoneNum, zoneLetter, easting, northing);
@@ -166,7 +167,7 @@ function parseMGRS(text: string): [number, number] {
     const match = normalized.match(/^(\d{1,2})([C-HJ-NP-X])([A-HJ-NP-Z]{2})(\d{0,10})$/i);
 
     if (!match) {
-        throw new Error('Expected MGRS coordinates like "13S EC 12345 67890"');
+        throw new Error(t('messages.coordinates.expectedMgrs'));
     }
 
     const zoneNum = Number(match[1]);
@@ -175,7 +176,7 @@ function parseMGRS(text: string): [number, number] {
     const digits = match[4] || '';
 
     if (digits.length % 2 !== 0 || zoneNum < 1 || zoneNum > 60) {
-        throw new Error('Expected MGRS coordinates like "13S EC 12345 67890"');
+        throw new Error(t('messages.coordinates.expectedMgrs'));
     }
 
     const eastingSet = EASTING_SETS[(zoneNum - 1) % EASTING_SETS.length];
@@ -185,7 +186,7 @@ function parseMGRS(text: string): [number, number] {
     const rowIndex = northingSet.indexOf(rowLetter);
 
     if (columnIndex === -1 || rowIndex === -1) {
-        throw new Error('Expected MGRS coordinates like "13S EC 12345 67890"');
+        throw new Error(t('messages.coordinates.expectedMgrs'));
     }
 
     const precision = digits.length / 2;
@@ -220,7 +221,7 @@ function latLngToUTM(latitude: number, longitude: number): {
     const zoneLetter = latitudeToZoneLetter(latitude);
 
     if (!zoneLetter) {
-        throw new Error('Latitude is outside supported UTM bounds');
+        throw new Error(t('messages.coordinates.utmBounds'));
     }
 
     const lonRad = toRadians(longitude);
@@ -313,7 +314,7 @@ function minimumNorthingForZoneLetter(zoneLetter: string, zoneNum: number): numb
     const index = bands.indexOf(zoneLetter);
 
     if (index === -1) {
-        throw new Error('Expected a valid MGRS zone letter');
+        throw new Error(t('messages.coordinates.mgrsZone'));
     }
 
     const minLatitude = zoneLetter === 'X' ? 72 : -80 + index * 8;

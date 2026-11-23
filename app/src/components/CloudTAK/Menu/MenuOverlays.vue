@@ -1,8 +1,8 @@
 <template>
-    <MenuTemplate name='Overlays'>
+    <MenuTemplate :name='t("panels.overlays.title")'>
         <template #buttons>
             <TablerIconButton
-                title='Dodaj grupę'
+                :title='t("panels.overlays.addGroup")'
                 @click='startCreateGroup'
             >
                 <IconFolderPlus
@@ -12,7 +12,7 @@
             </TablerIconButton>
 
             <TablerIconButton
-                title='Add Overlay'
+                :title='t("panels.overlays.add")'
                 @click='router.push("/menu/datas")'
             >
                 <IconPlus
@@ -27,7 +27,7 @@
                 <div class='mt-2 d-flex align-items-center gap-3 flex-wrap'>
                     <TablerInput
                         v-model='overlayFilter'
-                        placeholder='Search overlays...'
+                        :placeholder='t("panels.overlays.search")'
                         icon='search'
                         class='flex-grow-1'
                     />
@@ -47,7 +47,7 @@
                         >
                         <span
                             class='form-check-label'
-                            v-text='allState === "all" ? "Ukryj wszystkie" : "Pokaż wszystkie"'
+                            v-text='allState === "all" ? t("panels.overlays.hideAll") : t("panels.overlays.showAll")'
                         />
                     </label>
 
@@ -61,14 +61,14 @@
                             :size='16'
                             stroke='1'
                         />
-                        Dodaj grupę
+                        {{ t('panels.overlays.addGroup') }}
                     </button>
 
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1'
                         :class='{ "ms-auto": creatingGroup }'
-                        title='Przenieś nakładki bez grupy do grup ich kategorii'
+                        :title='t("panels.overlays.arrangeHint")'
                         :disabled='arrangeBusy || !groupsLoaded'
                         @click='void arrangeIntoCategories()'
                     >
@@ -76,7 +76,7 @@
                             :size='16'
                             stroke='1'
                         />
-                        <span v-text='arrangeBusy ? "Układam…" : "Ułóż w kategorie"' />
+                        <span v-text='arrangeBusy ? t("panels.overlays.arranging") : t("panels.overlays.arrange")' />
                     </button>
                 </div>
 
@@ -96,7 +96,7 @@
                         v-model='newGroupName'
                         type='text'
                         class='form-control form-control-sm'
-                        placeholder='Nazwa grupy'
+                        :placeholder='t("panels.overlays.groupName")'
                         :maxlength='GROUP_NAME_MAX'
                         @keydown.esc.prevent='cancelCreateGroup'
                     >
@@ -105,14 +105,14 @@
                         class='btn btn-sm btn-primary'
                         :disabled='!normalizeGroupName(newGroupName) || groupBusy'
                     >
-                        Dodaj
+                        {{ t('panels.overlays.addGroupSubmit') }}
                     </button>
                     <button
                         type='button'
                         class='btn btn-sm btn-secondary'
                         @click='cancelCreateGroup'
                     >
-                        Anuluj
+                        {{ t('common.cancel') }}
                     </button>
                 </form>
 
@@ -126,12 +126,12 @@
                     v-if='showDragHint'
                     class='small mb-0 text-white-50'
                 >
-                    Reordering available once you clear the search.
+                    {{ t('panels.overlays.dragHint') }}
                 </p>
 
                 <TablerLoading
                     v-if='loading || !mapStore.isMapLoadedFully'
-                    :desc='mapStore.isMapLoadedFully ? "Loading Overlays" : "Loading Map Overlays"'
+                    :desc='mapStore.isMapLoadedFully ? t("panels.overlays.loading") : t("panels.overlays.loadingMap")'
                 />
 
                 <template v-else>
@@ -146,7 +146,7 @@
                         >
                             <div class='d-flex align-items-center gap-2'>
                                 <TablerIconButton
-                                    :title='favoritesCollapsed ? "Rozwiń ulubione" : "Zwiń ulubione"'
+                                    :title='favoritesCollapsed ? t("panels.overlays.expandFavorites") : t("panels.overlays.collapseFavorites")'
                                     @click='void toggleFavoritesCollapsed()'
                                 >
                                     <IconChevronRight
@@ -164,10 +164,10 @@
                                     class='text-warning flex-shrink-0'
                                     :size='18'
                                 />
-                                <span class='fw-semibold flex-grow-1'>Ulubione</span>
+                                <span class='fw-semibold flex-grow-1'>{{ t('panels.overlays.favorites') }}</span>
                                 <span
                                     class='badge rounded-pill text-bg-secondary'
-                                    :title='`Ulubione nakładki: ${favoriteCards.length}`'
+                                    :title='t("panels.overlays.favoritesCount", { count: favoriteCards.length })'
                                     v-text='favoriteCards.length'
                                 />
                             </div>
@@ -191,7 +191,7 @@
                                                 @toggle='void toggleFavorite(card.overlay)'
                                             />
                                             <TablerIconButton
-                                                :title='card.visible ? "Hide Layer" : "Show Layer"'
+                                                :title='card.visible ? t("panels.overlays.hide") : t("panels.overlays.show")'
                                                 @click.stop.prevent='void updateOverlay(card.overlay, { visible: !card.visible })'
                                             >
                                                 <IconEye
@@ -243,7 +243,7 @@
                                     <span
                                         v-if='dragEnabled'
                                         class='group-drag-handle flex-shrink-0 d-flex align-items-center cursor-move text-white-50'
-                                        title='Przeciągnij, aby zmienić kolejność grup'
+                                        :title='t("panels.overlays.dragGroup")'
                                     >
                                         <IconGripVertical
                                             :size='20'
@@ -252,7 +252,7 @@
                                     </span>
 
                                     <TablerIconButton
-                                        :title='section.group.collapsed ? "Rozwiń grupę" : "Zwiń grupę"'
+                                        :title='section.group.collapsed ? t("panels.overlays.expandGroup") : t("panels.overlays.collapseGroup")'
                                         @click='void toggleCollapsed(section.group)'
                                     >
                                         <IconChevronRight
@@ -270,7 +270,7 @@
                                     <input
                                         type='checkbox'
                                         class='form-check-input mt-0 flex-shrink-0'
-                                        :title='section.state === "all" ? "Ukryj nakładki grupy" : "Pokaż nakładki grupy"'
+                                        :title='section.state === "all" ? t("panels.overlays.hideGroup") : t("panels.overlays.showGroup")'
                                         :checked='section.state === "all"'
                                         :indeterminate.prop='section.state === "some"'
                                         :disabled='!section.members.length'
@@ -288,7 +288,7 @@
                                             @keydown.esc.prevent='cancelRename'
                                         >
                                         <TablerIconButton
-                                            title='Zapisz nazwę'
+                                            :title='t("panels.overlays.saveName")'
                                             @click='void saveRename(section.group)'
                                         >
                                             <IconCheck
@@ -297,7 +297,7 @@
                                             />
                                         </TablerIconButton>
                                         <TablerIconButton
-                                            title='Anuluj'
+                                            :title='t("common.cancel")'
                                             @click='cancelRename'
                                         >
                                             <IconX
@@ -313,11 +313,11 @@
                                         />
                                         <span
                                             class='badge rounded-pill text-bg-secondary'
-                                            :title='`Nakładki w grupie: ${section.members.length}`'
+                                            :title='t("panels.overlays.groupCount", { count: section.members.length })'
                                             v-text='section.members.length'
                                         />
                                         <TablerIconButton
-                                            title='Zmień nazwę grupy'
+                                            :title='t("panels.overlays.renameGroup")'
                                             @click='startRename(section.group)'
                                         >
                                             <IconPencil
@@ -326,7 +326,7 @@
                                             />
                                         </TablerIconButton>
                                         <TablerIconButton
-                                            title='Usuń grupę'
+                                            :title='t("panels.overlays.deleteGroup")'
                                             @click='confirmDeleteGroupId = section.group.id'
                                         >
                                             <IconTrash
@@ -342,7 +342,7 @@
                                     class='d-flex align-items-center gap-2 mt-2 p-2 rounded-2 bg-danger bg-opacity-25'
                                 >
                                     <span class='small flex-grow-1'>
-                                        Usunąć grupę? Jej nakładki zostaną na liście bez grupy.
+                                        {{ t('panels.overlays.deleteGroupConfirm') }}
                                     </span>
                                     <button
                                         type='button'
@@ -350,14 +350,14 @@
                                         :disabled='groupBusy'
                                         @click='void deleteGroup(section.group)'
                                     >
-                                        Usuń
+                                        {{ t('common.delete') }}
                                     </button>
                                     <button
                                         type='button'
                                         class='btn btn-sm btn-secondary'
                                         @click='confirmDeleteGroupId = null'
                                     >
-                                        Anuluj
+                                        {{ t('common.cancel') }}
                                     </button>
                                 </div>
 
@@ -367,7 +367,7 @@
                                         v-sortable-list='dragEnabled'
                                         class='overlay-list d-flex flex-column gap-3 mt-2'
                                         :data-list-key='listKeyAttr(section.key)'
-                                        data-empty='Przeciągnij tutaj nakładki'
+                                        :data-empty='t("panels.overlays.dropHere")'
                                     >
                                         <OverlayRow
                                             v-for='card in section.cards'
@@ -391,7 +391,7 @@
                             v-sortable-list='dragEnabled'
                             class='overlay-list d-flex flex-column gap-3'
                             :data-list-key='listKeyAttr(null)'
-                            data-empty='Przeciągnij tutaj nakładkę, aby wyjąć ją z grupy'
+                            :data-empty='t("panels.overlays.dropUngroup")'
                         >
                             <OverlayRow
                                 v-for='card in ungroupedSection.cards'
@@ -426,7 +426,7 @@
 
                     <TablerNone
                         v-else
-                        :label='hasSearchTerm ? "No overlays match your search" : "No overlays"'
+                        :label='hasSearchTerm ? t("panels.overlays.noMatch") : t("panels.overlays.none")'
                         :create='false'
                     />
                 </template>
@@ -439,6 +439,7 @@
 import { ref, useTemplateRef, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import type { Directive } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import type { Subscription } from 'dexie';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import {
@@ -509,6 +510,7 @@ type OverlaySection = {
 };
 
 const router = useRouter();
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 /** Sortables by element - created and destroyed with their element by the directives below */
@@ -728,7 +730,7 @@ async function toggleFavorite(overlay: Overlay): Promise<void> {
     try {
         await OverlayFavoriteManager.toggle(key);
     } catch (err) {
-        groupError.value = errorText('Nie udało się zmienić ulubionych', err);
+        groupError.value = errorText(t('panels.overlays.errors.favorite'), err);
     }
 }
 
@@ -777,8 +779,8 @@ async function arrangeIntoCategories(): Promise<void> {
 
         if (!moves.length) {
             arrangeNotice.value = unknown
-                ? `Nic do ułożenia. Nakładki spoza katalogu zostały bez grupy: ${unknown}.`
-                : 'Nic do ułożenia: wszystkie nakładki są już w grupach.';
+                ? t('panels.overlays.arrangeNothingUnknown', { count: unknown })
+                : t('panels.overlays.arrangeNothing');
             return;
         }
 
@@ -787,13 +789,13 @@ async function arrangeIntoCategories(): Promise<void> {
         groups.value = await OverlayGroupManager.list();
         overlayRenderTick.value += 1;
 
-        const parts = [`Ułożono w kategorie ${overlayCountText(moves.length)}.`];
-        if (placer.created.length) parts.push(`Nowe grupy: ${placer.created.join(', ')}.`);
-        if (unknown) parts.push(`Nakładki spoza katalogu zostały bez grupy: ${unknown}.`);
+        const parts = [t('panels.overlays.arranged', { count: overlayCountText(moves.length), n: moves.length })];
+        if (placer.created.length) parts.push(t('panels.overlays.arrangedNewGroups', { groups: placer.created.join(', ') }));
+        if (unknown) parts.push(t('panels.overlays.arrangedUnknown', { count: unknown }));
         arrangeNotice.value = parts.join(' ');
     } catch (err) {
         console.error('Failed to arrange overlays into categories:', err);
-        groupError.value = errorText('Nie udało się ułożyć nakładek w kategorie', err);
+        groupError.value = errorText(t('panels.overlays.errors.arrange'), err);
         void loadGroups();
         OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
     } finally {
@@ -886,18 +888,18 @@ function resolveOverlayStatus(overlay: Overlay): OverlayStatus {
     if (!overlay.healthy()) {
         return {
             kind: 'error',
-            label: 'Issue',
+            label: t('panels.overlays.status.issue'),
             variant: 'danger',
-            tooltip: overlay._error?.message ?? 'Unknown error'
+            tooltip: overlay._error?.message ?? t('panels.overlays.status.unknownError')
         };
     }
 
     if (overlay.loading) {
         return {
             kind: 'pending',
-            label: 'Pending',
+            label: t('panels.overlays.status.pending'),
             variant: 'warning',
-            tooltip: 'Overlay is still loading data from the server.'
+            tooltip: t('panels.overlays.status.loading')
         };
     }
 
@@ -905,15 +907,15 @@ function resolveOverlayStatus(overlay: Overlay): OverlayStatus {
     if (!overlay.styles?.length && overlay.type !== 'raster-dem') {
         return {
             kind: 'pending',
-            label: 'Pending',
+            label: t('panels.overlays.status.pending'),
             variant: 'warning',
-            tooltip: 'Overlay does not contain any styles yet.'
+            tooltip: t('panels.overlays.status.noStyles')
         };
     }
 
     return {
         kind: 'ready',
-        label: 'Ready',
+        label: t('panels.overlays.status.ready'),
         variant: 'success'
     };
 }
@@ -934,19 +936,19 @@ function getOverlayBadges(overlay: Overlay): OverlayBadge[] {
     };
 
     if (overlay.mode === 'mission') {
-        addBadge({ label: 'Mission', variant: 'primary' });
+        addBadge({ label: t('panels.overlays.badge.mission'), variant: 'primary' });
     } else if (overlay.mode === 'data') {
-        addBadge({ label: 'Data', variant: 'info' });
+        addBadge({ label: t('panels.overlays.badge.data'), variant: 'info' });
     } else if (overlay.mode === 'profile') {
-        addBadge({ label: 'Profile', variant: 'info' });
+        addBadge({ label: t('panels.overlays.badge.profile'), variant: 'info' });
     }
 
     if (overlay.type === 'raster') {
-        addBadge({ label: 'Raster', variant: 'secondary' });
+        addBadge({ label: t('panels.overlays.badge.raster'), variant: 'secondary' });
     } else if (overlay.type === 'raster-dem') {
-        addBadge({ label: 'Terrain', variant: 'secondary' });
+        addBadge({ label: t('panels.overlays.badge.terrain'), variant: 'secondary' });
     } else if (overlay.type === 'vector') {
-        addBadge({ label: 'Vector', variant: 'secondary' });
+        addBadge({ label: t('panels.overlays.badge.vector'), variant: 'secondary' });
     } else if (overlay.type === 'geojson') {
         addBadge({ label: 'GeoJSON', variant: 'secondary' });
     } else if (overlay.type === '3dtiles') {
@@ -954,7 +956,7 @@ function getOverlayBadges(overlay: Overlay): OverlayBadge[] {
     }
 
     if (!overlay.visible) {
-        addBadge({ label: 'Hidden', variant: 'dark' });
+        addBadge({ label: t('panels.overlays.badge.hidden'), variant: 'dark' });
     }
 
     return badges;
@@ -998,7 +1000,7 @@ async function handleDrop(ev: SortableEvent): Promise<void> {
         await reorder;
     } catch (err) {
         console.error('Failed to sync overlay order:', err);
-        groupError.value = errorText('Nie udało się przenieść nakładki', err);
+        groupError.value = errorText(t('panels.overlays.errors.moveOverlay'), err);
         // The group may be gone on another device - reload groups and overlays from the server
         void loadGroups();
         OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
@@ -1041,7 +1043,7 @@ async function handleGroupDrop(ev: SortableEvent): Promise<void> {
         ]);
     } catch (err) {
         console.error('Failed to sync overlay group order:', err);
-        groupError.value = errorText('Nie udało się przenieść grupy', err);
+        groupError.value = errorText(t('panels.overlays.errors.moveGroup'), err);
         void loadGroups();
         OverlayManager.sync().catch((syncErr: unknown) => console.error('Failed to resync overlays:', syncErr));
     } finally {
@@ -1124,7 +1126,7 @@ async function createGroup(): Promise<void> {
         groups.value = sortGroups([...groups.value, group]);
         cancelCreateGroup();
     } catch (err) {
-        groupError.value = errorText('Nie udało się dodać grupy', err);
+        groupError.value = errorText(t('panels.overlays.errors.addGroup'), err);
     } finally {
         groupBusy.value = false;
     }
@@ -1149,7 +1151,7 @@ function cancelRename(): void {
 async function saveRename(group: ProfileOverlayGroup): Promise<void> {
     const name = normalizeGroupName(renameValue.value);
     if (!name) {
-        groupError.value = `Nazwa grupy musi mieć od 1 do ${GROUP_NAME_MAX} znaków.`;
+        groupError.value = t('panels.overlays.groupNameLength', { max: GROUP_NAME_MAX });
         return;
     }
 
@@ -1164,7 +1166,7 @@ async function saveRename(group: ProfileOverlayGroup): Promise<void> {
         groupError.value = '';
         cancelRename();
     } catch (err) {
-        groupError.value = errorText('Nie udało się zmienić nazwy grupy', err);
+        groupError.value = errorText(t('panels.overlays.errors.renameGroup'), err);
     }
 }
 
@@ -1190,7 +1192,7 @@ async function deleteGroup(group: ProfileOverlayGroup): Promise<void> {
         groups.value = groups.value.filter((current) => current.id !== group.id);
         confirmDeleteGroupId.value = null;
     } catch (err) {
-        groupError.value = errorText('Nie udało się usunąć grupy', err);
+        groupError.value = errorText(t('panels.overlays.errors.deleteGroup'), err);
     } finally {
         groupBusy.value = false;
     }

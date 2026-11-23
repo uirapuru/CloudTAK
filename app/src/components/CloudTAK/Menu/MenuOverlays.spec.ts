@@ -1,5 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { shallowReactive } from 'vue';
 import Sortable from 'sortablejs';
 
@@ -131,6 +131,7 @@ vi.mock('../../../base/overlay.ts', () => {
 });
 
 import MenuOverlays from './MenuOverlays.vue';
+import i18n from '../../../i18n.ts';
 import { favoriteKeys } from '../../../base/overlay-favorite-manager.ts';
 
 async function mountMenu() {
@@ -156,7 +157,22 @@ function drop(from: HTMLElement, to: HTMLElement, item: HTMLElement, oldIndex: n
     sortable.options.onEnd?.({ item, from, to, oldIndex, newIndex } as unknown as Sortable.SortableEvent);
 }
 
+// Tests asserting the Polish text of the taklab group/category features run in Polish
+const POLISH_TESTS = [
+    'makes a group created at runtime a drop target and lists it first',
+    'hides a collapsed group list despite Bootstrap display utilities',
+    'arranges the ungrouped overlays into their category groups',
+];
+
 describe('MenuOverlays drag and drop', () => {
+    beforeEach(({ task }) => {
+        if (POLISH_TESTS.includes(task.name)) i18n.global.locale.value = 'pl';
+    });
+
+    afterEach(() => {
+        i18n.global.locale.value = 'en';
+    });
+
     beforeEach(() => {
         document.body.innerHTML = '';
         vi.clearAllMocks();

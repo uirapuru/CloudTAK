@@ -12,7 +12,7 @@
         >
             <TablerMarkdownEditor
                 :model-value='String(text ?? "")'
-                :label='label || "Editor"'
+                :label='label || t("util.copyField.editor")'
                 :autofocus='true'
                 @update:model-value='validUpdate($event)'
                 @submit='validUpdate($event, {
@@ -40,7 +40,7 @@
                         stroke='1.5'
                         class='me-1'
                     />
-                    Save
+                    {{ t('common.save') }}
                 </button>
             </div>
         </div>
@@ -70,7 +70,7 @@
                     #end
                 >
                     <TablerIconButton
-                        title='Done Editing'
+                        :title='t("util.copyField.doneEditing")'
                         @click.stop.prevent='validUpdate(text, {
                             submit: true,
                             editing: false
@@ -131,7 +131,7 @@
 
                 <TablerIconButton
                     v-if='edit'
-                    title='Edit Field'
+                    :title='t("util.copyField.editField")'
                     class='position-absolute'
                     :class='{
                         "cloudtak-hover-hidden": hover,
@@ -172,7 +172,7 @@
 
                 <TablerIconButton
                     v-if='edit'
-                    title='Edit'
+                    :title='t("util.copyField.edit")'
                     class='position-absolute'
                     :class='{
                         "cloudtak-hover-hidden": hover,
@@ -198,7 +198,10 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, computed, useTemplateRef } from 'vue';
+
+const { t } = useI18n();
 
 defineOptions({ inheritAttrs: false });
 import CopyButton from './CopyButton.vue';

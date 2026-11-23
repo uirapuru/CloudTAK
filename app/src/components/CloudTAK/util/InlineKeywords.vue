@@ -8,14 +8,14 @@
             :gap='gap'
         >
             <template #label>
-                <small :class='labelClass'>{{ label }}</small>
+                <small :class='labelClass'>{{ label ?? t('util.inlineKeywords.label') }}</small>
             </template>
             <template
                 v-if='editable && !editing'
                 #tools
             >
                 <TablerIconButton
-                    :title='editTitle'
+                    :title='editTitle ?? t("util.inlineKeywords.edit")'
                     @click.stop.prevent='emit("edit")'
                 >
                     <IconPencil
@@ -32,7 +32,7 @@
                     <TablerIconButton
                         :disabled='saving'
                         color='rgba(var(--tblr-primary-rgb), 0.14)'
-                        :title='saving ? savingLabel : saveLabel'
+                        :title='saving ? (savingLabel ?? t("util.common.saving")) : (saveLabel ?? t("common.save"))'
                         @click.stop='commitDraft'
                     >
                         <IconDeviceFloppy
@@ -42,7 +42,7 @@
                     </TablerIconButton>
                     <TablerIconButton
                         :disabled='saving'
-                        title='Cancel'
+                        :title='t("common.cancel")'
                         @click.stop='revertDraft'
                     >
                         <IconX stroke='1' />
@@ -53,7 +53,7 @@
             <Keywords
                 :keywords='editing ? draftValue : value'
                 :relevant='editing ? [] : undefined'
-                :placeholder='editing ? inputPlaceholder : placeholder'
+                :placeholder='editing ? (inputPlaceholder ?? t("util.inlineKeywords.add")) : (placeholder ?? t("util.inlineKeywords.none"))'
                 :tone='tone'
                 @update:keywords='draftValue = $event'
             />
@@ -62,10 +62,13 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { IconDeviceFloppy, IconPencil, IconX } from '@tabler/icons-vue';
 import { TablerBorder, TablerIconButton } from '@tak-ps/vue-tabler';
 import { ref, watch } from 'vue';
 import Keywords from './Keywords.vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     value: string[];
@@ -89,8 +92,8 @@ const props = withDefaults(defineProps<{
     savingLabel?: string;
 }>(), {
     editable: false,
-    label: 'Keywords',
-    editTitle: 'Edit keywords',
+    label: undefined,
+    editTitle: undefined,
     containerClass: 'col-12',
     borderClass: undefined,
     labelClass: 'text-uppercase text-secondary d-block mb-0',
@@ -99,11 +102,11 @@ const props = withDefaults(defineProps<{
     fillHeight: false,
     gap: 'sm',
     saving: false,
-    placeholder: 'No keywords provided',
-    inputPlaceholder: 'Add keywords',
+    placeholder: undefined,
+    inputPlaceholder: undefined,
     tone: 'accent',
-    saveLabel: 'Save',
-    savingLabel: 'Saving...'
+    saveLabel: undefined,
+    savingLabel: undefined
 });
 
 const emit = defineEmits<{

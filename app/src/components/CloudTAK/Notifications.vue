@@ -11,12 +11,12 @@
     >
         <div class='d-flex align-items-center px-3 py-2 border-bottom'>
             <h3 class='m-0 fw-bold'>
-                Notifications
+                {{ t('map.notifications.title') }}
             </h3>
             <div class='ms-auto btn-list'>
                 <TablerIconButton
                     v-if='list && list.length'
-                    title='Search'
+                    :title='t("common.search")'
                     @click.stop.prevent='paging.shown = !paging.shown'
                 >
                     <IconSearch
@@ -26,7 +26,7 @@
                 </TablerIconButton>
                 <TablerIconButton
                     v-if='list && list.length'
-                    title='Delete All'
+                    :title='t("map.notifications.deleteAll")'
                     @click='TAKNotification.clear()'
                 >
                     <IconTrash
@@ -56,7 +56,7 @@
                     style='font-size: 0.65rem;'
                     class='mt-1'
                 >
-                    {{ type }}
+                    {{ t(`map.notifications.types.${type}`) }}
                 </div>
             </div>
         </div>
@@ -72,7 +72,7 @@
         </div>
         <TablerNone
             v-if='!filteredList || filteredList.length === 0'
-            label='No Notifications'
+            :label='t("map.notifications.none")'
             :create='false'
         />
         <div
@@ -110,7 +110,7 @@
                     </div>
                     <div class='ms-auto'>
                         <TablerIconButton
-                            title='Delete'
+                            :title='t("common.delete")'
                             @click.stop.prevent='TAKNotification.delete(n.id)'
                         >
                             <IconTrash
@@ -130,6 +130,7 @@ import { from } from 'rxjs';
 import { ref, computed } from 'vue';
 import { liveQuery } from '../../database.ts';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useObservable } from '@vueuse/rxjs';
 import TAKNotification_, { NotificationType } from '../../base/notification.ts';
 const TAKNotification = TAKNotification_;
@@ -146,6 +147,7 @@ import {
 } from '@tabler/icons-vue';
 
 const router = useRouter();
+const { t } = useI18n();
 
 const selectedTypes = ref<NotificationType[]>(Object.values(NotificationType));
 

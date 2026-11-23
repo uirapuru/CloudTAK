@@ -6,20 +6,23 @@
             class='mx-2'
         />
         <div>
-            <span v-text='props.label' /> are only shown if the channel in which they belong is turned on
+            {{ t('util.channelInfo.onlyShown', { label: props.label || t('util.channelInfo.dataSyncs') }) }}
         </div>
     </div>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import {
     IconInfoSquareRounded
 } from '@tabler/icons-vue';
 
+const { t } = useI18n();
+
 const props = defineProps({
     label: {
         type: String,
-        default: 'Data Syncs'
+        default: ''
     }
 });
 </script>

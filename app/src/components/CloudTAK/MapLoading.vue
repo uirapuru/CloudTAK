@@ -10,12 +10,12 @@
                 style='margin-bottom: 24px;'
             >
                 <img
-                    alt='Agency Logo'
+                    :alt='t("map.mapLoading.agencyLogo")'
                     :src='logo'
                     style='height: 150px;'
                 >
             </div>
-            <TablerLoading desc='Loading Map State' />
+            <TablerLoading :desc='t("map.mapLoading.loadingState")' />
             <Transition
                 name='stage-fade'
                 mode='out-in'
@@ -37,13 +37,13 @@
                         class='btn btn-danger'
                         @click='hardReset'
                     >
-                        Hard Reset
+                        {{ t('map.mapLoading.hardReset') }}
                     </button>
                     <div
                         class='text-muted mt-1'
                         style='font-size: 0.8rem;'
                     >
-                        If loading has stalled, click to clear the cache and reload.
+                        {{ t('map.mapLoading.hardResetHint') }}
                     </div>
                 </div>
             </Transition>
@@ -55,6 +55,7 @@
 import Config from '../../base/config.ts';
 import { supportsServiceWorker, addBackgroundStateListener } from '../../utils/capacitor.ts';
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     TablerModal,
     TablerLoading
@@ -63,6 +64,8 @@ import {
 const props = defineProps<{
     stage?: string;
 }>();
+
+const { t } = useI18n();
 
 const RESET_PROMPT_MS = 20000;
 

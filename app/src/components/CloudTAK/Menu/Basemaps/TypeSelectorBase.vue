@@ -8,8 +8,8 @@
     <TablerInlineAlert
         v-if='warnSharing'
         severity='danger'
-        title='You are disabling sharing'
-        description='Disabling sharing will prevent other users from sharing the basemap and will also disable their access if the basemap has already been shared'
+        :title='t("basemaps.base.sharingWarnTitle")'
+        :description='t("basemaps.base.sharingWarnDescription")'
         :dismissable='true'
     />
 
@@ -17,12 +17,12 @@
         <TablerInput
             v-model='editing.name'
             required
-            label='Name'
+            :label='t("basemaps.base.name")'
             :error='errors.name'
         >
             <TablerToggle
                 v-model='editing.sharing_enabled'
-                label='Enable Sharing'
+                :label='t("basemaps.base.enableSharing")'
                 @change='emit("update:warnSharing", !editing.sharing_enabled)'
             />
         </TablerInput>
@@ -34,8 +34,8 @@
         <TablerPillGroup
             :model-value='editing.overlay ? "overlay" : "basemap"'
             :options='[
-                { value: "basemap", label: "Basemap" },
-                { value: "overlay", label: "Overlay" }
+                { value: "basemap", label: t("basemaps.common.basemap") },
+                { value: "overlay", label: t("basemaps.common.overlay") }
             ]'
             @update:model-value='(v: string) => editing.overlay = v === "overlay"'
         >
@@ -58,8 +58,8 @@
         <TablerInput
             v-model='editing.url'
             required
-            :label='config.urlLabel'
-            :description='config.urlDescription'
+            :label='t(`basemaps.types.${type}.urlLabel`)'
+            :description='t(`basemaps.types.${type}.urlDescription`)'
             :placeholder='config.urlPlaceholder'
             :error='errors.url'
         >
@@ -70,7 +70,7 @@
                 <TablerBadge
                     v-for='token in config.urlTokens'
                     :key='token.value'
-                    :title='token.tooltip'
+                    :title='t(`basemaps.tokens.${token.value.replace(/[^a-zA-Z0-9]+/g, "")}`)'
                     class='cursor-pointer'
                     background-color='rgba(6, 182, 212, 0.15)'
                     border-color='rgba(6, 182, 212, 0.4)'
@@ -97,7 +97,7 @@
             :size='32'
             stroke='1'
         />
-        Advanced Options
+        {{ t('basemaps.base.advanced') }}
     </label>
 
     <div
@@ -112,7 +112,7 @@
                 <TablerEnum
                     v-model='editing.type'
                     required
-                    label='Type'
+                    :label='t("basemaps.base.type")'
                     :options='["raster", "raster-dem", "vector"]'
                 />
             </div>
@@ -122,7 +122,7 @@
             >
                 <TablerEnum
                     v-model='editing.encoding'
-                    label='Terrain Encoding'
+                    :label='t("basemaps.base.terrainEncoding")'
                     :options='["mapbox", "terrarium"]'
                 />
             </div>
@@ -130,12 +130,15 @@
                 v-if='isSystemAdmin'
                 class='col-12 mt-3'
             >
-                <TablerEnum
+                <TranslatedEnum
                     :model-value='scope'
                     required
-                    label='Access Scope'
-                    :options='["user", "server"]'
-                    @update:model-value='emit("update:scope", $event)'
+                    :label='t("basemaps.base.accessScope")'
+                    :options='[
+                        { value: "user", label: t("basemaps.base.scopeUser") },
+                        { value: "server", label: t("basemaps.base.scopeServer") }
+                    ]'
+                    @update:model-value='emit("update:scope", $event as "user" | "server")'
                 />
             </div>
             <SelectBasemapCollection
@@ -145,8 +148,8 @@
             <div class='col-12'>
                 <TablerInput
                     v-model='editing.attribution'
-                    label='Attribution'
-                    placeholder='Optional Attribution'
+                    :label='t("basemaps.base.attribution")'
+                    :placeholder='t("basemaps.base.attributionPlaceholder")'
                 />
             </div>
 
@@ -156,8 +159,8 @@
             >
                 <HandleForm
                     v-model='vectorTitleField'
-                    label='Feature Title Field'
-                    description='Feature property used as the vector title. Type {{ to browse fields discovered from vector_layers.'
+                    :label='t("basemaps.base.titleField")'
+                    :description='t("basemaps.base.titleFieldDescription")'
                     :schema='vectorTitleSchema'
                 />
             </div>
@@ -168,8 +171,8 @@
                 <div class='col-12'>
                     <TablerToggle
                         v-model='editing.hidden'
-                        label='Hidden'
-                        description='Hide this layer from the default list'
+                        :label='t("basemaps.base.hidden")'
+                        :description='t("basemaps.base.hiddenDescription")'
                     >
                         <TablerBadge>admin</TablerBadge>
                     </TablerToggle>
@@ -178,21 +181,21 @@
                     <TablerInput
                         v-if='editing.frequency !== undefined && editing.frequency !== null'
                         v-model='editing.frequency'
-                        label='Update Frequency (Seconds)'
-                        description='How often to refresh the tiles in seconds'
+                        :label='t("basemaps.base.frequency")'
+                        :description='t("basemaps.base.frequencyDescription")'
                     >
                         <TablerBadge>admin</TablerBadge>
                         <TablerToggle
                             :model-value='true'
-                            label='Enabled'
+                            :label='t("basemaps.base.enabled")'
                             @click='editing.frequency = null'
                         />
                     </TablerInput>
                     <div v-else>
                         <TablerToggle
                             :model-value='false'
-                            label='Enable Auto-Update Frequency'
-                            description='Automatically refresh the tiles periodically'
+                            :label='t("basemaps.base.enableFrequency")'
+                            :description='t("basemaps.base.enableFrequencyDescription")'
                             @click='editing.frequency = 60'
                         >
                             <TablerBadge>admin</TablerBadge>
@@ -207,8 +210,8 @@
                         <div class='col-12'>
                             <TablerToggle
                                 v-model='editing.snapping_enabled'
-                                label='Enable Snapping'
-                                description='Allow drawing tools to snap to the underlying vector features'
+                                :label='t("basemaps.base.enableSnapping")'
+                                :description='t("basemaps.base.enableSnappingDescription")'
                             >
                                 <TablerBadge>admin</TablerBadge>
                             </TablerToggle>
@@ -220,15 +223,15 @@
                             <TablerEnum
                                 v-if='vectorLayerOptions.length'
                                 v-model='editing.snapping_layer'
-                                label='Snapping Layer'
-                                description='Choose the vector layer to snap drawing tools to'
+                                :label='t("basemaps.base.snappingLayer")'
+                                :description='t("basemaps.base.snappingLayerChoose")'
                                 :options='vectorLayerOptions'
                             />
                             <TablerInput
                                 v-else
                                 v-model='editing.snapping_layer'
-                                label='Snapping Layer'
-                                description='The specific layer name within the vector tiles to snap to'
+                                :label='t("basemaps.base.snappingLayer")'
+                                :description='t("basemaps.base.snappingLayerName")'
                             />
                         </div>
                     </div>
@@ -252,8 +255,12 @@ import { IconChevronDown, IconMap, IconSquareChevronRight, IconStack2 } from '@t
 import HandleForm from '../../../util/HandleForm.vue';
 import SelectBasemapCollection from '../../util/SelectBasemapCollection.vue';
 import TypeSelectorSelected from './TypeSelectorSelected.vue';
+import TranslatedEnum from '../../util/TranslatedEnum.vue';
 import { BasemapTypeConfig } from './types.ts';
 import type { BasemapSourceType, EditingBasemap, VectorLayerDescriptor } from './types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const editing = defineModel<EditingBasemap>('editing', { required: true });
 

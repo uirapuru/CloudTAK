@@ -1,12 +1,12 @@
 <template>
     <PropertySection
-        label='Assignments'
+        :label='t("property.coreEntityAssignments.title")'
         :count='assignments.length'
     >
         <template #actions>
             <TablerIconButton
                 v-if='props.edit'
-                title='Add Assignment'
+                :title='t("property.coreEntityAssignments.add")'
                 @click.stop='addAssignment'
             >
                 <IconPlus
@@ -19,7 +19,7 @@
         <TablerLoading
             v-if='loading'
             :compact='true'
-            desc='Loading Assignments'
+            :desc='t("property.coreEntityAssignments.loading")'
         />
         <template v-else>
             <TablerAlert
@@ -29,7 +29,7 @@
 
             <TablerNone
                 v-if='!assignments.length && !creating'
-                label='No Assignments'
+                :label='t("property.coreEntityAssignments.none")'
                 class='pb-4'
                 :compact='true'
                 :create='false'
@@ -44,11 +44,11 @@
                 <template v-if='editing === assignment.id'>
                     <div class='d-flex align-items-center mb-2'>
                         <div class='subheader user-select-none'>
-                            Assignment
+                            {{ t('property.coreEntityAssignments.assignment') }}
                         </div>
                         <div class='ms-auto d-flex align-items-center flex-nowrap'>
                             <TablerIconButton
-                                title='Save Assignment'
+                                :title='t("property.coreEntityAssignments.save")'
                                 :disabled='saving'
                                 @click='saveAssignment(assignment.id)'
                             >
@@ -58,7 +58,7 @@
                                 />
                             </TablerIconButton>
                             <TablerIconButton
-                                title='Remove Assignment'
+                                :title='t("property.coreEntityAssignments.remove")'
                                 :disabled='saving'
                                 @click='removeAssignment(assignment.id)'
                             >
@@ -115,7 +115,7 @@
 
                     <TablerIconButton
                         v-if='props.edit'
-                        title='Edit Assignment'
+                        :title='t("property.coreEntityAssignments.edit")'
                         @click='startEditing(assignment)'
                     >
                         <IconPencil
@@ -132,11 +132,11 @@
             >
                 <div class='d-flex align-items-center mb-2'>
                     <div class='subheader user-select-none'>
-                        Assignment
+                        {{ t('property.coreEntityAssignments.assignment') }}
                     </div>
                     <div class='ms-auto d-flex align-items-center flex-nowrap'>
                         <TablerIconButton
-                            title='Save Assignment'
+                            :title='t("property.coreEntityAssignments.save")'
                             :disabled='saving'
                             @click='saveNewAssignment'
                         >
@@ -146,7 +146,7 @@
                             />
                         </TablerIconButton>
                         <TablerIconButton
-                            title='Discard Assignment'
+                            :title='t("property.coreEntityAssignments.discard")'
                             :disabled='saving'
                             @click='cancelNewAssignment'
                         >
@@ -165,6 +165,10 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 /**
  * PropertyCoreEntityAssignments - the people managing a Core Event in a
  * role (ie: IC, JAG). Each row is its own API resource so edits save

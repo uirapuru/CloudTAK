@@ -3,6 +3,8 @@
  * each an address or an `@domain`. Mirrors the validation rules of the API
  */
 
+import { t } from '../i18n.ts';
+
 export const MAX_SENDERS = 25;
 
 export function parseSenders(text: string): string[] {
@@ -16,11 +18,11 @@ export function parseSenders(text: string): string[] {
 
 /** Return a human readable error or an empty string if the senders are valid */
 export function validateSenders(senders: string[]): string {
-    if (senders.length > MAX_SENDERS) return `No more than ${MAX_SENDERS} senders are allowed`;
+    if (senders.length > MAX_SENDERS) return t('messages.senders.tooMany', { max: MAX_SENDERS });
 
     for (const sender of senders) {
         if (sender.length > 128 || !/^[^\s@<>]*@[^\s@<>]+$/.test(sender)) {
-            return `${sender} is not an address or @domain`;
+            return t('messages.senders.invalid', { sender });
         }
     }
 

@@ -13,7 +13,7 @@
             class='ptt-note btn btn-sm btn-dark'
             @click='voice.unlock()'
         >
-            Kliknij, żeby włączyć dźwięk
+            {{ t('taklab.ptt.unlockAudio') }}
         </button>
 
         <button
@@ -43,7 +43,7 @@
                 class='form-select form-select-sm'
                 :value='voice.state.channel || ""'
                 :disabled='!voice.state.channels.length || view.state === "transmitting"'
-                title='Kanał głosowy'
+                :title='t("taklab.ptt.channel")'
                 @change='voice.setChannel(($event.target as HTMLSelectElement).value || null)'
             >
                 <option
@@ -54,7 +54,7 @@
                 />
             </select>
             <TablerIconButton
-                :title='voice.state.listening ? "Wyłącz odsłuch kanału" : "Włącz odsłuch kanału"'
+                :title='voice.state.listening ? t("taklab.ptt.listenOff") : t("taklab.ptt.listenOn")'
                 class='bg-dark rounded'
                 @click='voice.setListening(!voice.state.listening)'
             >
@@ -77,11 +77,14 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IconMicrophone, IconVolume, IconVolumeOff } from '@tabler/icons-vue';
 import { TablerIconButton } from '@tak-ps/vue-tabler';
 import { std } from '../../std.ts';
 import VoiceLive from '../../base/voice-live.ts';
 import { pttState } from '../../base/voice-audio.ts';
+
+const { t } = useI18n();
 
 const voice = new VoiceLive();
 const enabled = ref(false);
@@ -98,22 +101,22 @@ const view = computed(() => pttState({
 
 const label = computed(() => {
     switch (view.value.state) {
-        case 'transmitting': return 'NADAJESZ';
-        case 'requesting': return 'CZEKAJ';
-        case 'busy': return view.value.speaker || 'ZAJĘTE';
+        case 'transmitting': return t('taklab.ptt.transmitting');
+        case 'requesting': return t('taklab.ptt.wait');
+        case 'busy': return view.value.speaker || t('taklab.ptt.busy');
         default: return 'PTT';
     }
 });
 
 const title = computed(() => {
     switch (view.value.state) {
-        case 'busy': return `Teraz mówi ${view.value.speaker}. Przycisk odblokuje się, gdy skończy.`;
+        case 'busy': return t('taklab.ptt.busyTitle', { speaker: view.value.speaker });
         case 'unavailable':
-            if (!voice.state.connected) return 'Brak połączenia z serwerem głosu';
-            if (!voice.state.ptt) return 'Nadawanie z CloudTAK jest wyłączone w tym środowisku';
-            return 'Wybierz kanał';
-        case 'transmitting': return 'Nadajesz. Puść przycisk, żeby skończyć.';
-        default: return 'Przytrzymaj, żeby mówić na kanale';
+            if (!voice.state.connected) return t('taklab.ptt.noConnection');
+            if (!voice.state.ptt) return t('taklab.ptt.pttDisabled');
+            return t('taklab.ptt.selectChannel');
+        case 'transmitting': return t('taklab.ptt.transmittingTitle');
+        default: return t('taklab.ptt.idleTitle');
     }
 });
 

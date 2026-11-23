@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Info'
+        :name='t("mission.info.title")'
         :zindex='0'
         :back='false'
         :border='false'
@@ -36,7 +36,7 @@
                             </div>
                             <div class='flex-grow-1'>
                                 <p class='text-uppercase text-secondary small mb-1'>
-                                    Mission
+                                    {{ t('mission.info.mission') }}
                                 </p>
                                 <h2
                                     class='h4 mb-0 text-truncate'
@@ -48,13 +48,13 @@
 
                         <div class='row gy-3 gx-0 gx-sm-3'>
                             <div class='col-12 col-lg-6'>
-                                <small class='text-uppercase text-secondary d-block'>Created</small>
+                                <small class='text-uppercase text-secondary d-block'>{{ t('mission.info.created') }}</small>
                                 <p class='fw-semibold p-0 mb-0'>
                                     {{ props.subscription.meta.createTime.replace(/T/, " ").replace(/:[0-9]+\..*/, "") + " UTC" }}
                                 </p>
                             </div>
                             <div class='col-12 col-lg-6'>
-                                <small class='text-uppercase text-secondary d-block'>Subscribers</small>
+                                <small class='text-uppercase text-secondary d-block'>{{ t('mission.info.subscribers') }}</small>
                                 <TablerLoading
                                     v-if='loading.users'
                                     :inline='true'
@@ -68,14 +68,14 @@
                                 <p
                                     v-else
                                     class='fw-semibold p-0 mb-0'
-                                    v-text='subscriptions.length + " Users"'
+                                    v-text='t("mission.info.users", { count: subscriptions.length })'
                                 />
                             </div>
                             <div class='col-12'>
-                                <small class='text-uppercase text-secondary d-block mb-1'>Contents</small>
+                                <small class='text-uppercase text-secondary d-block mb-1'>{{ t('mission.info.contents') }}</small>
                                 <p
                                     class='fw-semibold mb-0'
-                                    v-text='(Array.isArray(props.subscription.meta.contents) ? props.subscription.meta.contents.length : 0) + " Files"'
+                                    v-text='t("mission.info.files", { count: Array.isArray(props.subscription.meta.contents) ? props.subscription.meta.contents.length : 0 })'
                                 />
                             </div>
                             <InlineGroupSelect
@@ -85,7 +85,7 @@
                                 :editable='canEditGroups'
                                 :saving='savingGroups'
                                 border-class='mission-editable-border'
-                                label='Groups (Channels)'
+                                :label='t("mission.info.groups")'
                                 @edit='startEditingGroups'
                                 @cancel='cancelEditingGroups'
                                 @save='saveGroups'
@@ -97,16 +97,16 @@
                                 :editable='canEditMission'
                                 :saving='savingKeywords'
                                 border-class='mission-editable-border'
-                                label='Keywords'
-                                placeholder='No keywords provided'
-                                input-placeholder='Add keywords'
+                                :label='t("mission.common.keywords")'
+                                :placeholder='t("mission.info.noKeywords")'
+                                :input-placeholder='t("mission.info.addKeywords")'
                                 tone='accent'
                                 @edit='startEditingKeywords'
                                 @cancel='cancelEditingKeywords'
                                 @save='saveKeywords'
                             />
                             <div class='col-12'>
-                                <small class='text-uppercase text-secondary d-block mb-1'>Description</small>
+                                <small class='text-uppercase text-secondary d-block mb-1'>{{ t('mission.info.description') }}</small>
                                 <CopyField
                                     :model-value='props.subscription.meta.description'
                                     :edit='props.subscription.subscribed && props.subscription.role.permissions.includes("MISSION_WRITE")'
@@ -116,7 +116,7 @@
                                     <span
                                         v-if='!props.subscription.meta.description'
                                         class='text-secondary fst-italic'
-                                    >No Feed Description</span>
+                                    >{{ t('mission.info.noDescription') }}</span>
                                 </CopyField>
                             </div>
                         </div>
@@ -127,14 +127,14 @@
                     <TablerBorder class='cloudtak-accent'>
                         <template #label>
                             <p class='text-uppercase text-secondary small mb-0'>
-                                Quick Actions
+                                {{ t('mission.info.quickActions') }}
                             </p>
                         </template>
 
                         <TablerLoading
                             v-if='loading.subscribe'
                             :inline='true'
-                            desc='Updating Subscription...'
+                            :desc='t("mission.info.updatingSubscription")'
                         />
                         <template v-else>
                             <button
@@ -146,7 +146,7 @@
                                     :size='20'
                                     stroke='1'
                                 />
-                                <span>Subscribe</span>
+                                <span>{{ t('mission.info.subscribe') }}</span>
                             </button>
                             <template v-else>
                                 <button
@@ -157,7 +157,7 @@
                                         :size='20'
                                         stroke='1'
                                     />
-                                    <span>Unsubscribe</span>
+                                    <span>{{ t('mission.info.unsubscribe') }}</span>
                                 </button>
 
                                 <button
@@ -170,7 +170,7 @@
                                         :size='20'
                                         stroke='1'
                                     />
-                                    <span>Make Active</span>
+                                    <span>{{ t('mission.info.makeActive') }}</span>
                                 </button>
                                 <button
                                     v-else
@@ -182,7 +182,7 @@
                                         :size='20'
                                         stroke='1'
                                     />
-                                    <span>Deactivate</span>
+                                    <span>{{ t('mission.info.deactivate') }}</span>
                                 </button>
                             </template>
                         </template>
@@ -195,7 +195,7 @@
                                 :size='20'
                                 stroke='1'
                             />
-                            <span>Invite QR Code</span>
+                            <span>{{ t('mission.info.inviteQr') }}</span>
                         </button>
                     </TablerBorder>
                 </div>
@@ -204,7 +204,7 @@
                     <TablerBorder class='cloudtak-accent'>
                         <template #label>
                             <p class='text-uppercase text-secondary small mb-0'>
-                                Child Missions
+                                {{ t('mission.info.childMissions') }}
                             </p>
                         </template>
                         <TablerNone
@@ -225,7 +225,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='showQR = false'
         />
         <div class='modal-header invite-qr-header'>
@@ -236,7 +236,7 @@
                 />
                 <span
                     class='mx-2'
-                    v-text='props.subscription.meta.name + " Invite QR"'
+                    v-text='t("mission.info.inviteQrTitle", { name: props.subscription.meta.name })'
                 />
             </div>
         </div>
@@ -283,6 +283,9 @@ import OverlayManager from '../../../../base/overlay.ts';
 import { useMapStore } from '../../../../stores/map.ts';
 import { useDeviceStore } from '../../../../stores/device.ts';
 import { useAppStore } from '../../../../stores/app.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const mapStore = useMapStore();
 const deviceStore = useDeviceStore();
 const appStore = useAppStore();
@@ -468,7 +471,7 @@ async function subscribe(next: boolean) {
             try {
                 // loadMission returns null on most failures
                 if (!await mapStore.loadMission(props.subscription.guid)) {
-                    throw new Error('Failed to load the Data Sync onto the map');
+                    throw new Error(t('mission.info.loadOntoMapFailed'));
                 }
 
                 await props.subscription.update({ subscribed: true });

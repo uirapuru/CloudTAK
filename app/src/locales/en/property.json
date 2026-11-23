@@ -89,7 +89,11 @@
         "startedAt": "Started {time}",
         "active": "Active · {elapsed}",
         "endedAt": "Ended {time}",
-        "ended": "Ended · {elapsed}"
+        "ended": "Ended · {elapsed}",
+        "activeLabel": "Active",
+        "endedLabel": "Ended",
+        "end": "End",
+        "reactivate": "Reactivate"
     },
     "creator": {
         "label": "Creator",
@@ -200,7 +204,11 @@
         "add": "Add Link",
         "none": "No Links",
         "edit": "Edit Link",
-        "untitled": "Untitled Link"
+        "untitled": "Untitled Link",
+        "link": "Link",
+        "save": "Save Link",
+        "remove": "Remove Link",
+        "discard": "Discard Link"
     },
     "style": {
         "title": "Style",
@@ -264,7 +272,20 @@
         "noneFound": "No Data Syncs Found",
         "none": "No Data Syncs",
         "remove": "Remove Data Sync",
-        "nameRequired": "The Event must have a name before a Data Sync can be created from it"
+        "nameRequired": "The Event must have a name before a Data Sync can be created from it",
+        "missionTitle": "Mission",
+        "missionError": "Mission Error",
+        "creatingMission": "Creating Mission",
+        "selectMission": "Select Mission",
+        "loadingMissions": "Loading Missions",
+        "filterMissions": "Filter Missions...",
+        "noMissionsFound": "No Missions Found",
+        "noAssociatedMissions": "No Associated Missions",
+        "associateExisting": "Associate an existing Mission with the Event",
+        "existingMission": "Existing Mission",
+        "createNew": "Create a new Mission from the Event name, remarks & channels",
+        "newMission": "New Mission",
+        "missionNameRequired": "The Event must have a name before a Mission can be created from it"
     },
     "coreEntityAssignments": {
         "title": "Assignments",

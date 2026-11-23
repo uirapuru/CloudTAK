@@ -1,7 +1,7 @@
 <template>
     <div
         class='d-flex align-items-center gap-1 px-3 py-2 border-top text-secondary small user-select-none cursor-pointer flex-shrink-0'
-        title='Toggle relative & absolute time'
+        :title='t("util.timesFooter.toggle")'
         @click='relative = !relative'
     >
         <template
@@ -19,9 +19,12 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /** TimesFooter - the audit footer of a sidebar: a row of labelled timestamps toggling between relative and absolute */
 import { ref, onMounted, onUnmounted } from 'vue';
 import timediff from '../../../timediff';
+
+const { t } = useI18n();
 
 export type TimesFooterEntry = {
     label: string;

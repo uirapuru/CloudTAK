@@ -2,19 +2,19 @@
     <TablerModal>
         <div class='modal-header'>
             <div class='modal-title'>
-                Buffer Geometry
+                {{ t('tools.buffer.title') }}
             </div>
             <button
                 type='button'
                 class='btn-close'
-                aria-label='Close'
+                :aria-label='t("common.close")'
                 @click='emit("close")'
             />
         </div>
         <div class='modal-body'>
             <PropertyDistance
                 v-model='radius'
-                label='Radius'
+                :label='t("tools.buffer.radius")'
                 :unit='displayUnit'
                 :edit='true'
             />
@@ -25,14 +25,14 @@
                 class='btn'
                 @click='emit("close")'
             >
-                Cancel
+                {{ t('common.cancel') }}
             </button>
             <button
                 type='button'
                 class='btn btn-primary'
                 @click='applyBuffer'
             >
-                Apply
+                {{ t('tools.buffer.apply') }}
             </button>
         </div>
     </TablerModal>
@@ -47,6 +47,9 @@ import { useMapStore } from '../../../stores/map.ts';
 import type { Feature } from '../../../types.ts';
 import ProfileConfig from '../../../base/profile.ts';
 import PropertyDistance from '../Property/PropertyDistance.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     cotId: string;

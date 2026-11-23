@@ -108,9 +108,9 @@
         "username": "Nazwa użytkownika",
         "items": {
             "features": {
-                "label": "Obiekty",
-                "tooltip": "Obiekty",
-                "description": "Zapisane obiekty, zdarzenia i urządzenia"
+                "label": "Twoje obiekty",
+                "tooltip": "Twoje obiekty",
+                "description": "Zarządzaj zapisanymi obiektami"
             },
             "overlays": {
                 "label": "Nakładki",
@@ -191,8 +191,19 @@
                 "label": "Ustawienia",
                 "tooltip": "Ustawienia wyświetlania",
                 "description": "Dostosuj własne ustawienia wyświetlania."
+            },
+            "voice": {
+                "label": "Głos",
+                "tooltip": "Głos",
+                "description": "Historia rozmów głosowych z transkrypcją"
+            },
+            "ots_accounts": {
+                "label": "Konta serwera",
+                "tooltip": "Konta serwera",
+                "description": "Konta serwera OTS z kodami QR dla ATAK i OpenTAK ICU"
             }
-        }
+        },
+        "sourceCode": "Kod źródłowy (AGPL-3.0)"
     },
     "cotAppearance": {
         "title": "Wygląd",
@@ -260,7 +271,11 @@
         "radius": "Promień",
         "speed": "Prędkość",
         "course": "Kurs",
-        "debug": "Debugowanie"
+        "debug": "Debugowanie",
+        "routeVariants": "Warianty trasy",
+        "dangerZone": "Strefa niebezpieczna",
+        "dangerZoneHint": "Trasy taklab omijają tę figurę. W ATAK to geofence z alarmem przy wejściu; alarm włącza się na telefonie.",
+        "style": "Styl"
     },
     "map": {
         "clickToSetLocation": "Kliknij na mapie, aby ustawić swoją pozycję",

@@ -2,7 +2,7 @@
     <div class='col-12'>
         <TablerLoading
             v-if='loading'
-            desc='Updating Log'
+            :desc='t("mission.log.updating")'
         />
         <template v-else>
             <div
@@ -19,7 +19,7 @@
                     <div class='d-flex flex-column lh-sm overflow-hidden'>
                         <span
                             class='fw-semibold text-truncate'
-                            v-text='log.creatorUid || "Unknown Author"'
+                            v-text='log.creatorUid || t("mission.log.unknownAuthor")'
                         />
                         <span
                             v-if='!editing'
@@ -34,14 +34,14 @@
                             <span
                                 v-if='!log.read'
                                 class='unread-dot rounded-circle flex-shrink-0'
-                                title='Unread'
+                                :title='t("mission.log.unread")'
                             />
                             <div
                                 v-if='canWrite'
                                 class='btn-list'
                             >
                                 <TablerIconButton
-                                    title='Edit Log'
+                                    :title='t("mission.log.edit")'
                                     @click='startEditing'
                                 >
                                     <IconPencil
@@ -63,7 +63,7 @@
                     <template v-if='editing'>
                         <TablerInput
                             type='datetime-local'
-                            label='Log Time'
+                            :label='t("mission.log.time")'
                             :model-value='editDtg'
                             @update:model-value='editDtg = String($event)'
                         />
@@ -85,13 +85,13 @@
                                 class='btn-sm btn-secondary'
                                 @click='cancelEditing'
                             >
-                                Cancel
+                                {{ t('common.cancel') }}
                             </TablerButton>
                             <TablerButton
                                 class='btn-sm btn-primary'
                                 @click='saveEditing'
                             >
-                                Save
+                                {{ t('common.save') }}
                             </TablerButton>
                         </div>
                     </template>
@@ -126,6 +126,9 @@ import {
     TablerInput
 } from '@tak-ps/vue-tabler';
 import { IconPencil } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     log: DBSubscriptionLog;
@@ -161,7 +164,7 @@ function fromDatetimeLocal(local: string) {
 }
 
 function formatDtg(dtg?: string) {
-    if (!dtg) return 'No DTG';
+    if (!dtg) return t('mission.log.noDtg');
 
     const parsed = new Date(dtg);
 

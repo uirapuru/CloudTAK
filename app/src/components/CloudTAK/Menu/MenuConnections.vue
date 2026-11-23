@@ -1,12 +1,12 @@
 <template>
-    <MenuTemplate name='Connections'>
+    <MenuTemplate :name='t("menu.connections.title")'>
         <template #buttons>
             <TablerRefreshButton
                 :loading='loading'
                 @click='fetchList'
             />
             <TablerIconButton
-                title='Create Connection'
+                :title='t("menu.connections.create")'
                 @click='external("/connection/new")'
             >
                 <IconPlus
@@ -21,7 +21,7 @@
                     v-model='paging.filter'
                     v-model:sort='sort'
                     :sort-options='sortOptions'
-                    placeholder='Filter'
+                    :placeholder='t("menu.common.filter")'
                 >
                     <template #sort-icon>
                         <template v-if='sort'>
@@ -52,7 +52,7 @@
             />
             <TablerNone
                 v-else-if='!list.items.length'
-                label='No Connections'
+                :label='t("menu.connections.none")'
                 :create='false'
             />
             <template v-else>
@@ -113,6 +113,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { ETLConnectionList } from '../../../types.ts';
 import { server } from '../../../std.ts';
 import {
@@ -138,6 +139,8 @@ import StandardItem from '../util/StandardItem.vue';
 import ConnectionStatus from './../../ETL/Connection/StatusDot.vue';
 import AgencyBadge from './../../ETL/Connection/AgencyBadge.vue';
 import timeDiff from '../../../timediff.ts';
+
+const { t } = useI18n();
 
 const error = ref<Error | undefined>();
 const loading = ref(true);
@@ -191,8 +194,8 @@ async function fetchList() {
             }
         });
 
-        if (res.error) throw new Error(res.error.message || 'Failed to load connections');
-        if (!res.data) throw new Error('Failed to load connections');
+        if (res.error) throw new Error(res.error.message || t('menu.connections.loadError'));
+        if (!res.data) throw new Error(t('menu.connections.loadError'));
 
         list.value = res.data;
     } catch (err) {

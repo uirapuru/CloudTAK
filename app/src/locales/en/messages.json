@@ -73,5 +73,19 @@
         "utmBounds": "Latitude is outside supported UTM bounds",
         "mgrsZone": "Expected a valid MGRS zone letter",
         "bngBounds": "Coordinates are outside the British National Grid"
+    },
+    "route": {
+        "noRoute": "The route service did not return a route.",
+        "noPlan": "The route service returned a route without a plan.",
+        "minTwoPoints": "A route needs at least two points.",
+        "maxWaypoints": "At most 25 waypoints."
+    },
+    "zoneReroute": {
+        "title": "Zone changed: routes",
+        "rerouted": "Rerouted: {names}.",
+        "failed": "Could not reroute \"{name}\": {error}"
+    },
+    "voice": {
+        "micDenied": "No microphone access. Allow the microphone in your browser settings."
     }
 }

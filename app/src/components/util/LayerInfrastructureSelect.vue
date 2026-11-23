@@ -1,6 +1,6 @@
 <template>
     <CollapsibleCard
-        label='Infrastructure'
+        :label='t("shared.layerInfrastructureSelect.title")'
         :summary='summary'
     >
         <template #icon>
@@ -15,7 +15,7 @@
             <div class='col-md-6'>
                 <TablerInput
                     v-model='infra.memory'
-                    label='Memory (Mb)'
+                    :label='t("shared.layerInfrastructureSelect.memory")'
                     :disabled='disabled'
                     type='number'
                     min='1'
@@ -25,7 +25,7 @@
             <div class='col-md-6'>
                 <TablerInput
                     v-model='infra.timeout'
-                    label='Timeout (s)'
+                    :label='t("shared.layerInfrastructureSelect.timeout")'
                     :disabled='disabled'
                     type='number'
                     min='1'
@@ -35,7 +35,7 @@
             <div class='col-md-12'>
                 <TablerToggle
                     v-model='infra.vpc'
-                    label='Private Network Access'
+                    :label='t("shared.layerInfrastructureSelect.vpc")'
                     :description='vpcDescription'
                     :disabled='disabled || !systemAdmin || (!vpcConfig.enabled && !infra.vpc)'
                 />
@@ -45,7 +45,7 @@
                 class='col-md-12'
             >
                 <div class='text-muted small mb-1'>
-                    Static Egress Addresses
+                    {{ t('shared.layerInfrastructureSelect.egress') }}
                 </div>
                 <div class='d-flex flex-wrap gap-2'>
                     <code
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch, onMounted } from 'vue';
 import type { ETLLayer } from '../../types.ts';
 import { IconServer } from '@tabler/icons-vue';
@@ -68,6 +69,8 @@ import CollapsibleCard from './CollapsibleCard.vue';
 import { TablerInput, TablerToggle } from '@tak-ps/vue-tabler';
 import { server } from '../../std.ts';
 import ProfileConfig from '../../base/profile.ts';
+
+const { t } = useI18n();
 
 type InfraConfig = Pick<ETLLayer, 'memory' | 'timeout' | 'vpc'>;
 
@@ -87,14 +90,15 @@ const systemAdmin = ref(false);
 const vpcConfig = ref<{ enabled: boolean; addresses: string[] }>({ enabled: false, addresses: [] });
 
 const summary = computed(() => {
-    const base = `${infra.value.memory} Mb Memory - ${infra.value.timeout}s Timeout`;
-    return infra.value.vpc ? `${base} - Private Network` : base;
+    const params = { memory: infra.value.memory, timeout: infra.value.timeout };
+    return infra.value.vpc
+        ? t('shared.layerInfrastructureSelect.summaryVpc', params)
+        : t('shared.layerInfrastructureSelect.summary', params);
 });
 
 const vpcDescription = computed(() => {
-    const base = 'Run inside the private network so requests leave from the static addresses below and internal resources are reachable.';
-    if (systemAdmin.value) return `${base} Grants a higher degree of trust to this ETL.`;
-    return `${base} Only a System Administrator can change this setting.`;
+    if (systemAdmin.value) return t('shared.layerInfrastructureSelect.vpcDescriptionAdmin');
+    return t('shared.layerInfrastructureSelect.vpcDescription');
 });
 
 onMounted(async () => {

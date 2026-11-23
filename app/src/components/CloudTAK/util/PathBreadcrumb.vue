@@ -8,7 +8,7 @@
             @drop='onDrop(0, $event)'
         >
             <TablerIconButton
-                title='Home'
+                :title='t("util.common.home")'
                 @click='navigateTo(0)'
             >
                 <IconFolder
@@ -46,9 +46,12 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed } from 'vue';
 import { TablerIconButton } from '@tak-ps/vue-tabler';
 import { IconFolder, IconChevronRight } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     /** Explicit segment labels - when provided navigation is emitted as a depth instead of writing to the collection model */

@@ -4,7 +4,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("close")'
         />
         <div class='modal-header text-body'>
@@ -13,7 +13,7 @@
                     :size='28'
                     stroke='1'
                 />
-                <span class='mx-2'>Create Data Package</span>
+                <span class='mx-2'>{{ t('util.shareToPackage.title') }}</span>
             </div>
         </div>
         <div class='modal-body text-body'>
@@ -25,11 +25,11 @@
                 <div class='col-12'>
                     <TablerInput
                         v-model='body.name'
-                        label='Name'
+                        :label='t("util.common.name")'
                     />
                 </div>
                 <div class='col-12 pt-3'>
-                    <label class='mx-2 user-select-none'>Contents:</label>
+                    <label class='mx-2 user-select-none'>{{ t('util.shareToPackage.contents') }}</label>
 
                     <div
                         v-if='props.upload'
@@ -75,7 +75,7 @@
                         v-else
                         :compact='true'
                         :create='false'
-                        label='No Contents'
+                        :label='t("util.shareToPackage.noContents")'
                     />
                 </div>
 
@@ -86,7 +86,7 @@
                 />
 
                 <Keywords
-                    placeholder='Hashtags'
+                    :placeholder='t("util.shareToPackage.hashtags")'
                     :keywords='body.keywords'
                     :relevant='[]'
                     @update:keywords='body.keywords = $event'
@@ -98,7 +98,7 @@
                         :disabled='createDisabled'
                         @click='share'
                     >
-                        Create
+                        {{ t('util.common.create') }}
                     </TablerButton>
                 </div>
             </div>
@@ -107,6 +107,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, useTemplateRef } from 'vue';
 import type { PropType } from 'vue';
 import Keywords from './Keywords.vue';
@@ -128,6 +129,8 @@ import { useRouter } from 'vue-router';
 import FeatureRow from './FeatureRow.vue';
 import type { Feature, Content } from '../../../types.ts';
 import GroupSelect from './GroupSelect.vue';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 const router = useRouter();

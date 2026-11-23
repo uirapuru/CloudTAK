@@ -15,7 +15,7 @@
                 />
                 <TablerHelp
                     v-if='help'
-                    :label='label'
+                    :label='label ?? t("shared.iconSelect.label")'
                     :description='description'
                     @click='help = false'
                 />
@@ -23,7 +23,7 @@
             <div
                 class='align-self-center subheader'
                 :class='{ "required": required }'
-                v-text='label'
+                v-text='label ?? t("shared.iconSelect.label")'
             />
             <div class='ms-auto align-self-center'>
                 <slot />
@@ -32,11 +32,11 @@
 
         <TablerLoading
             v-if='loading.iconset'
-            desc='Loading Iconsets'
+            :desc='t("shared.iconSelect.loadingIconsets")'
         />
         <TablerNone
             v-else-if='sets.length === 0'
-            label='No Iconsets Loaded'
+            :label='t("shared.iconSelect.noIconsets")'
             :compact='true'
             :create='false'
         />
@@ -44,7 +44,7 @@
             <TablerInlineAlert
                 v-if='err'
                 severity='danger'
-                title='Icon Not Found'
+                :title='t("shared.iconSelect.notFound")'
                 :description='err.message'
             />
             <div class='d-flex align-items-center'>
@@ -64,7 +64,7 @@
                     </div>
                 </template>
                 <template v-else>
-                    <span class='text-center my-2 mx-2'>No Icon Selected</span>
+                    <span class='text-center my-2 mx-2'>{{ t('shared.iconSelect.noneSelected') }}</span>
                 </template>
 
                 <div
@@ -73,7 +73,7 @@
                 >
                     <TablerIconButton
                         v-if='selected.name'
-                        title='Remove Icon'
+                        :title='t("shared.iconSelect.remove")'
                         @click='removeIcon'
                     >
                         <IconTrash
@@ -83,7 +83,7 @@
                     </TablerIconButton>
 
                     <TablerIconButton
-                        title='Select Icon'
+                        :title='t("shared.iconSelect.select")'
                         @click='modal = true'
                     >
                         <IconPhotoSearch
@@ -104,7 +104,7 @@
             <div class='modal-body'>
                 <div class='d-flex align-items-center justify-content-between mb-3'>
                     <h3 class='modal-title'>
-                        Select Icon
+                        {{ t('shared.iconSelect.select') }}
                     </h3>
                     <button
                         type='button'
@@ -123,14 +123,14 @@
                     <div class='col-12'>
                         <TablerInput
                             v-model='params.filter'
-                            placeholder='Icon Search'
+                            :placeholder='t("shared.iconSelect.search")'
                             @click.stop
                         />
                     </div>
                     <div class='col-12'>
                         <TablerToggle
                             v-model='params.showNames'
-                            label='Show Icon Names'
+                            :label='t("shared.iconSelect.showNames")'
                             :off-value='false'
                             :on-value='true'
                         />
@@ -138,7 +138,7 @@
                 </div>
                 <TablerLoading
                     v-if='loading.icons'
-                    desc='Loading Icons'
+                    :desc='t("shared.iconSelect.loadingIcons")'
                 />
                 <div
                     v-else
@@ -179,6 +179,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { ref, watch, computed, onMounted } from 'vue';
 import { server } from '../../std.ts';
 import {
@@ -207,11 +208,13 @@ interface Props {
     label?: string;
 }
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<Props>(), {
     description: '',
     required: false,
     disabled: false,
-    label: 'Icon Select',
+    label: undefined,
 });
 
 const emit = defineEmits<{

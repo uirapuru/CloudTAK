@@ -9,7 +9,7 @@
             <div class='modal-header d-flex align-items-center py-2 px-2 flex-shrink-0'>
                 <TablerIconButton
                     v-if='backType === "back"'
-                    title='Back'
+                    :title='t("util.common.back")'
                     @click='routerBack'
                 >
                     <IconCircleArrowLeft
@@ -39,7 +39,7 @@
                     <slot name='buttons' />
 
                     <TablerIconButton
-                        title='Close Menu'
+                        :title='t("util.menuTemplate.close")'
                         @click='router.push("/")'
                     >
                         <IconCircleX
@@ -57,7 +57,7 @@
             >
                 <TablerLoading
                     v-if='loading'
-                    :desc='`Loading ${name}`'
+                    :desc='t("util.menuTemplate.loading", { name })'
                 />
                 <TablerNone
                     v-else-if='none'
@@ -97,7 +97,7 @@
                 >
                     <TablerIconButton
                         v-if='backType === "back"'
-                        title='Back'
+                        :title='t("util.common.back")'
                         icon='IconCircleArrowLeft'
                         @click='routerBack'
                     >
@@ -137,7 +137,7 @@
         >
             <TablerLoading
                 v-if='loading'
-                :desc='`Loading ${name}`'
+                :desc='t("util.menuTemplate.loading", { name })'
             />
             <TablerNone
                 v-else-if='none'
@@ -156,6 +156,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 
 import {
     TablerNone,
@@ -172,6 +173,8 @@ import {
 import { useRouter } from 'vue-router'
 import { computed } from 'vue';
 import { useAppStore } from '../../../stores/app.ts';
+
+const { t } = useI18n();
 
 const router = useRouter()
 const appStore = useAppStore();

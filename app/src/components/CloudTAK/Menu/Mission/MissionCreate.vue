@@ -16,14 +16,14 @@
                 </div>
                 <div class='col-auto row'>
                     <div class='col-12'>
-                        <span>Create Mission</span>
+                        <span>{{ t('mission.create.title') }}</span>
                     </div>
                 </div>
             </div>
         </div>
         <TablerLoading
             v-if='loading'
-            desc='Saving Mission'
+            :desc='t("mission.create.saving")'
         />
         <template v-else>
             <div class='modal-body row g-2'>
@@ -31,7 +31,7 @@
                     <TablerInput
                         v-model='mission.name'
                         :error='missionNameValidity'
-                        label='Name'
+                        :label='t("mission.common.name")'
                     />
                 </div>
 
@@ -40,11 +40,11 @@
                     class='col-12'
                 >
                     <div class='d-flex align-items-center mb-2'>
-                        <label class='subheader my-0'>Templates</label>
+                        <label class='subheader my-0'>{{ t('mission.create.templates') }}</label>
                         <div class='ms-auto'>
                             <TablerIconButton
                                 v-if='!showSearch'
-                                title='Search Templates'
+                                :title='t("mission.create.searchTemplates")'
                                 @click='showSearch = true'
                             >
                                 <IconSearch
@@ -54,7 +54,7 @@
                             </TablerIconButton>
                             <TablerIconButton
                                 v-else
-                                title='Close Search'
+                                :title='t("mission.create.closeSearch")'
                                 @click='showSearch = false; templatesPaging.filter = "";'
                             >
                                 <IconX
@@ -71,14 +71,14 @@
                     >
                         <TablerInput
                             v-model='templatesPaging.filter'
-                            placeholder='Search Templates...'
+                            :placeholder='t("mission.create.searchPlaceholder")'
                             :autofocus='true'
                         />
                     </div>
 
                     <TablerLoading
                         v-if='templatesLoading'
-                        desc='Loading Templates'
+                        :desc='t("mission.create.loadingTemplates")'
                     />
                     <div
                         v-else-if='templates.length'
@@ -117,19 +117,19 @@
                         v-else
                         class='text-center fst-italic text-muted'
                     >
-                        No Templates Found
+                        {{ t('mission.create.noTemplates') }}
                     </div>
                 </div>
 
                 <div class='col-12'>
                     <TablerInput
                         v-model='mission.description'
-                        label='Description'
+                        :label='t("mission.info.description")'
                     />
                 </div>
 
                 <div class='col-12'>
-                    <label class='px-2 w-100'>Channels</label>
+                    <label class='px-2 w-100'>{{ t('mission.create.channels') }}</label>
 
                     <GroupSelect
                         v-model='mission.groups'
@@ -152,7 +152,7 @@
                         :size='32'
                         stroke='1'
                     />
-                    Advanced Options
+                    {{ t('mission.create.advanced') }}
                 </label>
 
                 <div
@@ -161,9 +161,9 @@
                 >
                     <div class='row g-2'>
                         <div class='col-12'>
-                            <label class='px-2 w-100'>Keywords</label>
+                            <label class='px-2 w-100'>{{ t('mission.common.keywords') }}</label>
                             <Keywords
-                                placeholder='Enter Keywords'
+                                :placeholder='t("mission.create.enterKeywords")'
                                 :keywords='mission.keywords'
                                 :relevant='[]'
                                 @update:keywords='mission.keywords = $event'
@@ -173,7 +173,7 @@
                         <div class='col-12'>
                             <TablerToggle
                                 v-model='mission.passwordProtected'
-                                label='Password Protected'
+                                :label='t("mission.create.passwordProtected")'
                             />
                             <TablerInput
                                 v-if='mission.passwordProtected'
@@ -181,15 +181,19 @@
                                 :disabled='!mission.passwordProtected'
                                 type='password'
                                 autocomplete='new-password'
-                                label='Password'
+                                :label='t("mission.info.password")'
                             />
                         </div>
 
                         <div class='col-12'>
-                            <TablerEnum
+                            <TranslatedEnum
                                 v-model='mission.role'
-                                label='Default Role'
-                                :options='["Read-Only", "Subscriber", "Owner"]'
+                                :label='t("mission.create.defaultRole")'
+                                :options='[
+                                    { value: "Read-Only", label: t("mission.create.roles.readOnly") },
+                                    { value: "Subscriber", label: t("mission.roles.subscriber") },
+                                    { value: "Owner", label: t("mission.roles.owner") }
+                                ]'
                             />
                         </div>
                     </div>
@@ -201,7 +205,7 @@
                             class='btn btn-primary'
                             @click='createMission'
                         >
-                            Create Mission
+                            {{ t('mission.create.title') }}
                         </button>
                     </div>
                 </div>
@@ -227,13 +231,16 @@ import {
 import GroupSelect from '../../util/GroupSelect.vue';
 import Keywords from '../../util/Keywords.vue';
 import OverlayManager from '../../../../base/overlay.ts';
+import TranslatedEnum from '../../util/TranslatedEnum.vue';
+import { useI18n } from 'vue-i18n';
 import {
     TablerInput,
-    TablerEnum,
     TablerToggle,
     TablerLoading,
     TablerIconButton
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 const emit = defineEmits(['mission']);
@@ -307,7 +314,7 @@ async function listTemplates() {
     } else {
         templates.value = [{
             id: 'default',
-            name: 'Default',
+            name: t('mission.create.defaultTemplate'),
             icon: '',
             description: '',
             created: '',
@@ -323,11 +330,11 @@ async function listTemplates() {
 const missionNameValidity = computed<string>(() => {
     // eslint-disable-next-line no-useless-escape
     if (!mission.value.name.match(/^[\p{L}\p{N}\w\d\s\.\(\)!=@#$&^*_\-\+\[\]\{\}:,\.\/\|\\]*$/u)) {
-        return 'Contains Invalid Character'
+        return t('mission.create.invalidChar')
     } else if (mission.value.name.length > 1024) {
-        return 'Exceeds 1024 Characters'
+        return t('mission.create.tooLong')
     } else if (attempted.value && mission.value.name.length === 0) {
-        return 'Cannot be empty'
+        return t('mission.create.empty')
     }
 
     return '';

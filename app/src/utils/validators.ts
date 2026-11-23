@@ -3,6 +3,8 @@
  * and as such should generally expect to recieve user entered strings
  */
 
+import { t } from '../i18n.ts';
+
 export interface Validator {
     (text: string): string;
 }
@@ -20,7 +22,7 @@ export function validateJSON(text: string): string {
 }
 
 export function validateTextNotEmpty(text: string): string {
-    if (!text || !text.trim()) return 'This field cannot be empty';
+    if (!text || !text.trim()) return t('messages.validators.notEmpty');
     return '';
 }
 
@@ -34,7 +36,7 @@ export function validateURL(text: string, opts: {
     if (!opts.protocols.some((p) => {
         return text.startsWith(p + '://')
     })) {
-        return `URL must start with one of ${opts.protocols.map(p => `${p}://`).join(', ')}`;
+        return t('messages.validators.urlProtocol', { protocols: opts.protocols.map(p => `${p}://`).join(', ') });
     }
 
     try {
@@ -52,15 +54,15 @@ export function validateLatLng(text: string): string {
     });
 
     const errors = [];
-    if (dd.length !== 2) errors.push('Must have contain latitude,longitude');
-    if (isNaN(dd[0])) errors.push('First number (latitude) is not a number');
-    if (isNaN(dd[1])) errors.push('Second number (longitude) is not a number');
+    if (dd.length !== 2) errors.push(t('messages.validators.latLngPair'));
+    if (isNaN(dd[0])) errors.push(t('messages.validators.latNaN'));
+    if (isNaN(dd[1])) errors.push(t('messages.validators.lngNaN'));
 
-    if (dd[0] < -90) errors.push('Latitude cannot be less than -90°');
-    if (dd[0] > 90) errors.push('Latitude cannot exceed 90°');
+    if (dd[0] < -90) errors.push(t('messages.validators.latMin'));
+    if (dd[0] > 90) errors.push(t('messages.validators.latMax'));
 
-    if (dd[1] < -180) errors.push('Longitude cannot be less than -180°');
-    if (dd[1] > 180) errors.push('Longitude cannot exceed 180°');
+    if (dd[1] < -180) errors.push(t('messages.validators.lngMin'));
+    if (dd[1] > 180) errors.push(t('messages.validators.lngMax'));
 
     return errors.length ? errors[0] : '';
 }

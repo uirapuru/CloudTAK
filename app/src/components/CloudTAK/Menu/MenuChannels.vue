@@ -1,9 +1,9 @@
 <template>
-    <MenuTemplate name='Channels'>
+    <MenuTemplate :name='t("menu.channels.title")'>
         <template #buttons>
             <TablerIconButton
                 v-if='channels.length && mapStore.hasNoChannels'
-                title='All Channels On'
+                :title='t("menu.channels.allOn")'
                 @click='setAllStatus(true)'
             >
                 <IconEyePlus
@@ -13,7 +13,7 @@
             </TablerIconButton>
             <TablerIconButton
                 v-if='channels.length && !mapStore.hasNoChannels'
-                title='All Channels Off'
+                :title='t("menu.channels.allOff")'
                 @click='setAllStatus(false)'
             >
                 <IconEyeX
@@ -34,7 +34,7 @@
                     v-model:sort='sort'
                     :sort-options='sortOptions'
                     :active-filters='activeFilterCount'
-                    placeholder='Filter'
+                    :placeholder='t("menu.common.filter")'
                 >
                     <template #sort-icon>
                         <component
@@ -51,19 +51,19 @@
                     <template #filters>
                         <div class='d-flex flex-column'>
                             <div class='d-flex align-items-center justify-content-between px-3 py-2'>
-                                <strong class='small text-uppercase text-white-50'>Filters</strong>
+                                <strong class='small text-uppercase text-white-50'>{{ t('menu.common.filters') }}</strong>
                                 <button
                                     v-if='activeFilterCount > 0'
                                     type='button'
                                     class='btn btn-link btn-sm p-0'
                                     @click='clearFilters'
                                 >
-                                    Clear
+                                    {{ t('menu.common.clear') }}
                                 </button>
                             </div>
                             <div class='px-3 pb-2 d-flex flex-column gap-2'>
                                 <div class='small text-uppercase text-white-50 mb-1'>
-                                    Status
+                                    {{ t('menu.common.status') }}
                                 </div>
                                 <label class='form-check mb-1'>
                                     <input
@@ -72,7 +72,7 @@
                                         :checked='filterActive === true'
                                         @change='toggleStatusFilter(true)'
                                     >
-                                    <span class='form-check-label'>Active</span>
+                                    <span class='form-check-label'>{{ t('menu.channels.active') }}</span>
                                 </label>
                                 <label class='form-check mb-1'>
                                     <input
@@ -81,7 +81,7 @@
                                         :checked='filterActive === false'
                                         @change='toggleStatusFilter(false)'
                                     >
-                                    <span class='form-check-label'>Inactive</span>
+                                    <span class='form-check-label'>{{ t('menu.channels.inactive') }}</span>
                                 </label>
                             </div>
                         </div>
@@ -116,6 +116,7 @@
 <script setup lang='ts'>
 import { ref, computed, onMounted } from 'vue';
 import type { Ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { from } from 'rxjs';
 import { useObservable } from '@vueuse/rxjs';
 import type { GroupChannel } from '../../../../src/types.ts';
@@ -137,6 +138,7 @@ import {
     IconArrowDown,
 } from '@tabler/icons-vue';
 import { useMapStore } from '../../../stores/map.ts';
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const syncing = ref(false);

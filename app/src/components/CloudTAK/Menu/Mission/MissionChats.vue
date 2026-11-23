@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Chats'
+        :name='t("mission.chats.title")'
         :zindex='0'
         :back='false'
         :border='false'
@@ -39,6 +39,9 @@ import Subscription from '../../../../base/subscription.ts';
 import type { DBSubscriptionChat } from '../../../../database.ts';
 import { TablerRefreshButton } from '@tak-ps/vue-tabler';
 import { useMapStore } from '../../../../stores/map.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 

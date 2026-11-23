@@ -8,19 +8,19 @@
                 <TablerLoading
                     v-if='typeLoading'
                     :inline='true'
-                    desc='Loading Feature Type'
+                    :desc='t("property.type.loadingType")'
                 />
                 <template v-else-if='typeError'>
                     <div
                         class='mx-2 text-truncate'
-                        v-text='affiliationLabel'
+                        v-text='affiliationText'
                     />
 
-                    <span class='text-truncate'>Loading Feature Type Failed</span>
+                    <span class='text-truncate'>{{ t('property.type.loadingTypeFailed') }}</span>
 
                     <div class='ms-auto'>
                         <TablerIconButton
-                            title='Retry'
+                            :title='t("property.type.retry")'
                             @click.stop='fetchType'
                         >
                             <IconRefresh
@@ -45,7 +45,7 @@
                         v-if='statusIsSet'
                         :class='statusBadge'
                         class='ms-auto me-1 text-truncate'
-                        v-text='status'
+                        v-text='statusText'
                     />
                 </template>
             </div>
@@ -60,7 +60,7 @@
                 color='#6b7990'
                 class='ms-2 me-1'
             />
-            <label class='subheader user-select-none'>Type</label>
+            <label class='subheader user-select-none'>{{ t('property.type.type') }}</label>
             <div class='mx-2 mt-1'>
                 <div
                     class='rounded py-2 px-2 text-truncate d-flex align-items-center user-select-none'
@@ -69,19 +69,19 @@
                     <TablerLoading
                         v-if='typeLoading'
                         :inline='true'
-                        desc='Loading Feature Type'
+                        :desc='t("property.type.loadingType")'
                     />
                     <template v-else-if='typeError'>
                         <div
                             class='mx-2 text-truncate'
-                            v-text='affiliationLabel'
+                            v-text='affiliationText'
                         />
 
-                        <span class='text-truncate'>Loading Feature Type Failed</span>
+                        <span class='text-truncate'>{{ t('property.type.loadingTypeFailed') }}</span>
 
                         <div class='ms-auto'>
                             <TablerIconButton
-                                title='Retry'
+                                :title='t("property.type.retry")'
                                 @click.stop='fetchType'
                             >
                                 <IconRefresh
@@ -106,7 +106,7 @@
                             v-if='statusIsSet'
                             :class='statusBadge'
                             class='ms-auto me-1 text-truncate'
-                            v-text='status'
+                            v-text='statusText'
                         />
                     </template>
                 </div>
@@ -116,8 +116,8 @@
                 <template v-if='config.type.startsWith("u-") && config.type !== "u-d-p"'>
                     <div class='mb-2'>
                         <TablerInlineAlert
-                            title='User Drawn Feature'
-                            description='Cannot be changed'
+                            :title='t("property.type.userDrawn")'
+                            :description='t("property.type.cannotChange")'
                         />
                     </div>
                 </template>
@@ -156,17 +156,17 @@
                             <TablerInput
                                 v-model='paging.filter'
                                 icon='search'
-                                placeholder='Filter'
+                                :placeholder='t("property.type.filter")'
                             />
                         </div>
                         <div
                             v-if='standard === "2525E" || config.type.startsWith("a-")'
                             class='col-4'
                         >
-                            <TablerEnum
+                            <TranslatedEnum
                                 :model-value='StandardAffiliationInverse[config.affiliation]'
                                 :default='StandardAffiliation.Friendly'
-                                :options='Object.keys(StandardAffiliation)'
+                                :options='affiliationOptions'
                                 @update:model-value='updateAffiliation($event)'
                             />
                         </div>
@@ -177,11 +177,11 @@
                         class='row g-2 mt-1'
                     >
                         <div class='col-12'>
-                            <label class='subheader user-select-none'>Status</label>
-                            <TablerEnum
+                            <label class='subheader user-select-none'>{{ t('property.type.status') }}</label>
+                            <TranslatedEnum
                                 :model-value='status'
                                 :default='statusOptions[0]'
-                                :options='statusOptions'
+                                :options='statusEnumOptions'
                                 @update:model-value='updateStatus($event)'
                             />
                         </div>
@@ -198,11 +198,11 @@
                             v-else-if='listError'
                             class='d-flex align-items-center px-2 py-2 user-select-none'
                         >
-                            <span class='text-truncate'>Loading Feature Types Failed</span>
+                            <span class='text-truncate'>{{ t('property.type.loadingTypesFailed') }}</span>
 
                             <div class='ms-auto'>
                                 <TablerIconButton
-                                    title='Retry'
+                                    :title='t("property.type.retry")'
                                     @click.stop='fetchList'
                                 >
                                     <IconRefresh
@@ -215,7 +215,7 @@
                         <template v-else-if='standard === "2525B"'>
                             <TablerNone
                                 v-if='list.total === 0'
-                                label='No Types Found'
+                                :label='t("property.type.noTypes")'
                                 :create='false'
                             />
                             <template v-else>
@@ -245,7 +245,7 @@
                                 <div class='d-flex align-items-center px-2 py-1 user-select-none'>
                                     <TablerIconButton
                                         v-if='crumbs.length'
-                                        title='Back'
+                                        :title='t("property.type.back")'
                                         @click='popCrumb'
                                     >
                                         <IconChevronLeft
@@ -288,7 +288,7 @@
                                 <template v-else>
                                     <TablerNone
                                         v-if='list2525E.total === 0'
-                                        label='No Symbols Found'
+                                        :label='t("property.type.noSymbols")'
                                         :create='false'
                                     />
                                     <template v-else>
@@ -312,7 +312,7 @@
                                             <TablerIconButton
                                                 v-if='item.children'
                                                 class='ms-auto'
-                                                :title='`${item.children} Subtypes`'
+                                                :title='t("property.type.subtypes", { count: item.children })'
                                                 @click.stop='pushCrumb({ id: entityCode(item), name: item.title })'
                                             >
                                                 <IconChevronRight
@@ -328,7 +328,7 @@
                             <template v-else>
                                 <TablerNone
                                     v-if='list2525E.total === 0'
-                                    label='No Types Found'
+                                    :label='t("property.type.noTypes")'
                                     :create='false'
                                 />
                                 <template v-else>
@@ -376,13 +376,16 @@ import {
 } from '@tabler/icons-vue';
 import {
     TablerNone,
-    TablerEnum,
     TablerInput,
     TablerLoading,
     TablerSlidedown,
     TablerIconButton,
     TablerInlineAlert,
 } from '@tak-ps/vue-tabler';
+import TranslatedEnum from '../util/TranslatedEnum.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const StandardAffiliation: Record<string, string> = {
     'Pending': 'p',
@@ -460,6 +463,18 @@ const affiliationLabel = computed<string>(() => {
     return StandardAffiliationInverse[config.value.affiliation] || 'Unknown';
 });
 
+// Stored values stay English - only the labels are translated
+function slug(value: string): string {
+    return value.replace(/[^a-zA-Z0-9]+/g, '_');
+}
+
+const affiliationText = computed<string>(() => t(`property.type.affiliations.${slug(affiliationLabel.value)}`));
+
+const affiliationOptions = computed(() => Object.keys(StandardAffiliation).map((value) => ({
+    value,
+    label: t(`property.type.affiliations.${slug(value)}`),
+})));
+
 // 2525E Status/Operational Condition - digit index 6 of the numeric SIDC
 // (see node-cot STATUS_MAP). Index 0 (Present) is the default/unset state.
 const statusOptions = ['Present', 'Planned', 'Fully Capable', 'Damaged', 'Destroyed', 'Full to Capacity'];
@@ -468,6 +483,13 @@ const status = computed<string>(() => {
     if (!Type2525.isNumericSIDCConvertable(config.value.type)) return statusOptions[0];
     return statusOptions[Number(config.value.type[6])] || statusOptions[0];
 });
+
+const statusText = computed<string>(() => t(`property.type.statuses.${slug(status.value)}`));
+
+const statusEnumOptions = computed(() => statusOptions.map((value) => ({
+    value,
+    label: t(`property.type.statuses.${slug(value)}`),
+})));
 
 // A "set" status is any non-default (non-Present) condition - only these are
 // surfaced in the collapsed header
@@ -500,7 +522,7 @@ const list2525E = ref<COT2525EList>({
 const crumbs = ref<Array<{ id: string; name: string }>>([]);
 
 const crumbLabel = computed(() => {
-    if (!crumbs.value.length) return 'Symbol Sets';
+    if (!crumbs.value.length) return t('property.type.symbolSets');
     return crumbs.value.map((crumb) => crumb.name).join(' / ');
 });
 

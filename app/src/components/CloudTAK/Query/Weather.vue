@@ -1,11 +1,11 @@
 <template>
     <div class='col-12 row g-0'>
         <div class='col-12'>
-            <label class='subheader mx-2'>{{ weather?.properties.forecastGenerator || 'National Weather Service' }}</label>
+            <label class='subheader mx-2'>{{ weather?.properties.forecastGenerator || t('tools.weather.nws') }}</label>
         </div>
         <TablerLoading
             v-if='loading'
-            desc='Loading weather...'
+            :desc='t("tools.weather.loading")'
         />
         <TablerAlert
             v-else-if='error'
@@ -52,7 +52,7 @@
                                 :size='20'
                                 stroke='1'
                             />
-                            <span class='ms-2 small'>Wind</span>
+                            <span class='ms-2 small'>{{ t('tools.weather.wind') }}</span>
                         </div>
                         <div class='ms-4'>
                             {{ weather.properties.periods[0].windSpeed }} {{ weather.properties.periods[0].windDirection }}
@@ -64,7 +64,7 @@
                                 :size='20'
                                 stroke='1'
                             />
-                            <span class='ms-2 small'>Humidity</span>
+                            <span class='ms-2 small'>{{ t('tools.weather.humidity') }}</span>
                         </div>
                         <div class='ms-4'>
                             {{ weather.properties.periods[0].relativeHumidity.value }}%
@@ -76,7 +76,7 @@
                                 :size='20'
                                 stroke='1'
                             />
-                            <span class='ms-2 small'>Dewpoint</span>
+                            <span class='ms-2 small'>{{ t('tools.weather.dewpoint') }}</span>
                         </div>
                         <div class='ms-4'>
                             {{ Math.round(weather.properties.periods[0].dewpoint.value) }}°C
@@ -88,7 +88,7 @@
                                 :size='20'
                                 stroke='1'
                             />
-                            <span class='ms-2 small'>Precipitation</span>
+                            <span class='ms-2 small'>{{ t('tools.weather.precipitation') }}</span>
                         </div>
                         <div class='ms-4'>
                             {{ weather.properties.periods[0].probabilityOfPrecipitation.value || 0 }}%
@@ -151,7 +151,7 @@
                 class='mx-2'
                 style='font-size: 20px;'
             >
-                No Forecast Found
+                {{ t('tools.weather.none') }}
             </div>
         </div>
     </div>
@@ -179,6 +179,9 @@ import {
     IconTemperature,
     IconUmbrella
 } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     longitude: number;

@@ -6,12 +6,12 @@
             class='text-muted mb-3'
         />
         <h3 class='text-center mb-2'>
-            You're Offline
+            {{ t('shared.offline.title') }}
         </h3>
         <p class='text-center text-muted mb-0'>
-            This feature requires a network connection.
+            {{ t('shared.offline.requiresNetwork') }}
             <br>
-            Please check your connection and try again.
+            {{ t('shared.offline.checkConnection') }}
         </p>
     </div>
 </template>
@@ -20,4 +20,7 @@
 import {
     IconCloudOff
 } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 </script>

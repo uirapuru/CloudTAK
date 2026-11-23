@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Feature'
+        :name='t("menu.featView.title")'
         :none='!feature'
         :scroll='false'
     >
@@ -33,7 +33,7 @@
         >
             <div class='feat-actions d-flex align-items-center flex-nowrap px-2 py-1 border-bottom cloudtak-header flex-shrink-0'>
                 <TablerIconButton
-                    title='Zoom To'
+                    :title='t("menu.common.zoomTo")'
                     @click='zoomTo'
                 >
                     <IconZoomPan
@@ -43,7 +43,7 @@
                 </TablerIconButton>
 
                 <TablerIconButton
-                    :title='isNavigating ? "End Navigation" : "Navigate"'
+                    :title='isNavigating ? t("menu.featView.endNavigation") : t("menu.featView.navigate")'
                     @click='toggleNavigation'
                 >
                     <IconNavigationFilled
@@ -61,7 +61,7 @@
 
                 <TablerIconButton
                     v-if='overlay && ["basemap", "overlay"].includes(overlay.mode) && overlay.actions.feature.includes("fetch")'
-                    title='Cut to Marker'
+                    :title='t("menu.featView.cut")'
                     @click='cutFeature'
                 >
                     <IconScissors
@@ -78,14 +78,14 @@
                 <div class='pt-1'>
                     <Coordinate
                         :key='featureKey'
-                        :label='feature.geometry.type === "Point" ? "Location" : "Center"'
+                        :label='feature.geometry.type === "Point" ? t("menu.featView.location") : t("menu.featView.center")'
                         :model-value='center'
                     />
 
                     <PropertyElevation
                         v-if='center.length > 2'
                         :key='featureKey'
-                        label='Elevation'
+                        :label='t("menu.featView.elevation")'
                         :elevation='center[2]'
                     />
 
@@ -104,13 +104,13 @@
 
                 <PropertyRemarks
                     v-if='htmlDescription'
-                    label='Description'
+                    :label='t("menu.featView.description")'
                     :model-value='htmlDescription'
                     :display='htmlDisplay'
                 />
                 <PropertyRemarks
                     v-else-if='description'
-                    label='Description'
+                    :label='t("menu.featView.description")'
                     :model-value='description'
                 />
 
@@ -127,7 +127,7 @@
 
                 <div v-if='mode === "default"'>
                     <PropertySection
-                        label='Attributes'
+                        :label='t("menu.featView.attributes")'
                         :count='attributes.length'
                     >
                         <KeyValueRow
@@ -144,7 +144,7 @@
                                     :href='entry.url'
                                     target='_blank'
                                     rel='noopener'
-                                    title='Open Link'
+                                    :title='t("menu.featView.openLink")'
                                     class='d-flex align-items-center flex-shrink-0 text-reset'
                                 >
                                     <IconExternalLink
@@ -159,7 +159,7 @@
                             v-if='!attributes.length'
                             class='text-muted text-center user-select-none py-2'
                         >
-                            No Attributes
+                            {{ t('menu.featView.noAttributes') }}
                         </div>
                     </PropertySection>
 
@@ -169,7 +169,7 @@
                     >
                         <TablerLoading
                             v-if='detailLoading'
-                            desc='Pobieranie szczegółów'
+                            :desc='t("menu.featView.loadingDetails")'
                         />
                         <div
                             v-if='detailError'
@@ -235,6 +235,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useMapStore } from '../../../stores/map.ts';
 import type { LngLatLike, MapGeoJSONFeature } from 'maplibre-gl';
 import type { Feature } from 'geojson';
@@ -268,6 +269,7 @@ import {
     IconNavigationFilled
 } from '@tabler/icons-vue';
 
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const props = defineProps<{
@@ -282,10 +284,10 @@ const feature = computed(() => {
 const mode = ref('default');
 const actionIconSize = 28;
 
-const modeOptions: Array<PropertyTab> = [
-    { value: 'default', label: 'Details' },
-    { value: 'debug', label: 'Debug' },
-];
+const modeOptions = computed<Array<PropertyTab>>(() => [
+    { value: 'default', label: t('menu.featView.details') },
+    { value: 'debug', label: t('menu.featView.debug') },
+]);
 
 const token = ref<string | null | undefined>(undefined);
 
@@ -311,7 +313,7 @@ watch(overlay, async (ov) => {
 }, { immediate: true });
 
 const featureTitle = computed(() => {
-    if (!feature.value) return 'No Name';
+    if (!feature.value) return t('menu.featView.noName');
     const props = feature.value.properties || {};
 
     if (titleTemplate.value) {
@@ -328,7 +330,7 @@ const featureTitle = computed(() => {
         }
     }
 
-    return props.name || props.callsign || liveFeatureTitle(props) || 'No Name';
+    return props.name || props.callsign || liveFeatureTitle(props) || t('menu.featView.noName');
 });
 
 const featureKey = computed(() => String(feature.value?.id ?? featureTitle.value));

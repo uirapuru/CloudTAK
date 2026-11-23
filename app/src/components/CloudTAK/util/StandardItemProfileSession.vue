@@ -10,7 +10,7 @@
                         stroke='1.5'
                         class='flex-shrink-0'
                     />
-                    <span class='text-truncate'>{{ session.browser || 'Unknown Browser' }}</span>
+                    <span class='text-truncate'>{{ session.browser || t('util.standardItemProfileSession.unknownBrowser') }}</span>
                 </div>
                 <div class='text-muted small text-truncate'>
                     {{ session.os }}
@@ -24,7 +24,7 @@
                 </div>
             </div>
             <TablerIconButton
-                title='Terminate Session'
+                :title='t("util.standardItemProfileSession.terminate")'
                 class='flex-shrink-0'
                 @click.stop='emit("terminate", session.id)'
             >
@@ -38,6 +38,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import StandardItem from './StandardItem.vue';
 import StatusDot from '../../util/StatusDot.vue';
@@ -48,6 +49,8 @@ import {
     IconDeviceTablet,
     IconTrash,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
     terminate: [id: string];

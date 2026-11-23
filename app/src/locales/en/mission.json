@@ -51,7 +51,9 @@
         "sort": {
             "alphaAsc": "A → Z",
             "alphaDesc": "Z → A"
-        }
+        },
+        "options": "Options",
+        "submitOnEnter": "Submit on Enter"
     },
     "layers": {
         "title": "Mission Layers",
@@ -85,7 +87,8 @@
         "newMessage": "New Message",
         "contentAdded": "Content Added",
         "contentRemoved": "Content Removed",
-        "fetchAll": "Fetch All Changes"
+        "fetchAll": "Fetch All Changes",
+        "emptyAll": "No Mission Changes"
     },
     "invites": {
         "title": "Mission Invitation",
@@ -138,6 +141,29 @@
         "inviteQr": "Invite QR Code",
         "inviteQrTitle": "{name} Invite QR",
         "loadingQr": "Loading QR Code...",
-        "childMissions": "Child Missions"
+        "childMissions": "Child Missions",
+        "loadOntoMapFailed": "Failed to load the Data Sync onto the map"
+    },
+    "create": {
+        "title": "Create Mission",
+        "saving": "Saving Mission",
+        "templates": "Templates",
+        "searchTemplates": "Search Templates",
+        "closeSearch": "Close Search",
+        "searchPlaceholder": "Search Templates...",
+        "loadingTemplates": "Loading Templates",
+        "noTemplates": "No Templates Found",
+        "channels": "Channels",
+        "advanced": "Advanced Options",
+        "enterKeywords": "Enter Keywords",
+        "passwordProtected": "Password Protected",
+        "defaultRole": "Default Role",
+        "roles": {
+            "readOnly": "Read-Only"
+        },
+        "defaultTemplate": "Default",
+        "invalidChar": "Contains Invalid Character",
+        "tooLong": "Exceeds 1024 Characters",
+        "empty": "Cannot be empty"
     }
 }

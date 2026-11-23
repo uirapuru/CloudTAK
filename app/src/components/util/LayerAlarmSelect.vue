@@ -1,6 +1,6 @@
 <template>
     <CollapsibleCard
-        label='Alarm Configuration'
+        :label='t("shared.layerAlarmSelect.title")'
         :summary='summary'
     >
         <template #icon>
@@ -13,26 +13,26 @@
 
         <div class='row g-2'>
             <div class='col-12'>
-                <TablerEnum
+                <TranslatedEnum
                     v-model='alarm.priority'
-                    label='Alarm Urgency'
+                    :label='t("shared.layerAlarmSelect.urgency")'
                     :disabled='disabled'
-                    :options='["off", "high", "low"]'
+                    :options='priorityOptions'
                 />
             </div>
 
             <TablerInlineAlert
                 v-if='alarm.priority === "high"'
                 severity='danger'
-                title='High Urgency Alarms'
-                description='Use only for mission-critical layers that require immediate attention'
+                :title='t("shared.layerAlarmSelect.highTitle")'
+                :description='t("shared.layerAlarmSelect.highDescription")'
                 :dismissable='false'
             />
             <TablerInlineAlert
                 v-else-if='alarm.priority === "low"'
                 severity='info'
-                title='Low Urgency Alarms'
-                description='Use for layers that are important but not mission-critical'
+                :title='t("shared.layerAlarmSelect.lowTitle")'
+                :description='t("shared.layerAlarmSelect.lowDescription")'
                 :dismissable='false'
             />
 
@@ -40,7 +40,7 @@
                 <div class='col-md-4'>
                     <TablerInput
                         v-model='alarm.alarm_evals'
-                        label='Evaluation Periods'
+                        :label='t("shared.layerAlarmSelect.evaluationPeriods")'
                         :disabled='disabled'
                         type='number'
                         min='1'
@@ -50,7 +50,7 @@
                 <div class='col-md-4'>
                     <TablerInput
                         v-model='alarm.alarm_points'
-                        label='Data Points to Alarm'
+                        :label='t("shared.layerAlarmSelect.dataPoints")'
                         :disabled='disabled'
                         type='number'
                         min='1'
@@ -60,7 +60,7 @@
                 <div class='col-md-4'>
                     <TablerInput
                         v-model='alarm.alarm_period'
-                        label='Period (seconds)'
+                        :label='t("shared.layerAlarmSelect.period")'
                         :disabled='disabled'
                         type='number'
                         min='2'
@@ -73,15 +73,18 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch } from 'vue';
 import type { ETLLayer } from '../../types.ts';
 import { IconAlarm } from '@tabler/icons-vue';
 import CollapsibleCard from './CollapsibleCard.vue';
+import TranslatedEnum from '../CloudTAK/util/TranslatedEnum.vue';
 import {
-    TablerEnum,
     TablerInput,
     TablerInlineAlert,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 type AlarmConfig = Pick<ETLLayer, 'priority' | 'alarm_evals' | 'alarm_points' | 'alarm_period'>;
 
@@ -96,13 +99,21 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: ETLLayer): void;
 }>();
 
+const priorityOptions = computed(() => [
+    { value: 'off', label: t('shared.layerAlarmSelect.priority_off') },
+    { value: 'high', label: t('shared.layerAlarmSelect.priority_high') },
+    { value: 'low', label: t('shared.layerAlarmSelect.priority_low') },
+]);
+
 const alarm = ref<AlarmConfig>(fromLayer(props.modelValue));
 
 const summary = computed(() => {
-    if (alarm.value.priority === 'off') return 'Alarms Disabled';
+    if (alarm.value.priority === 'off') return t('shared.layerAlarmSelect.disabled');
 
-    const urgency = alarm.value.priority === 'high' ? 'High' : 'Low';
-    return `${urgency} Urgency - ${alarm.value.alarm_points} of ${alarm.value.alarm_evals} periods of ${alarm.value.alarm_period}s`;
+    const params = { points: alarm.value.alarm_points, evals: alarm.value.alarm_evals, period: alarm.value.alarm_period };
+    return alarm.value.priority === 'high'
+        ? t('shared.layerAlarmSelect.summaryHigh', params)
+        : t('shared.layerAlarmSelect.summaryLow', params);
 });
 
 watch(() => props.modelValue, (layer) => {

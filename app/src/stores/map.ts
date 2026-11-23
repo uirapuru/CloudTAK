@@ -7,6 +7,7 @@
 * - Source - MapLibre - Ref: https://maplibre.org/maplibre-style-spec/sources/
 */
 
+import { t, currentLocale } from '../i18n.ts';
 import { v4 as randomUUID } from 'uuid';
 import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia'
@@ -410,7 +411,7 @@ export const useMapStore = defineStore('cloudtak', {
             if (!control) return;
 
             const cot = await this.worker.db.get(cotId, { mission: true });
-            if (!cot) throw new Error('Unable to load feature for navigation');
+            if (!cot) throw new Error(t('messages.map.navigationFeatureMissing'));
 
             const feature = cot.as_feature();
 
@@ -423,7 +424,7 @@ export const useMapStore = defineStore('cloudtak', {
                     geometry: feature.geometry as import('geojson').LineString
                 });
             } else {
-                throw new Error('Navigation is only supported for Point and Route (b-m-r LineString) features');
+                throw new Error(t('messages.map.navigationUnsupported'));
             }
 
             this.commitNavigation(control, cotId, feature.properties.callsign);
@@ -1036,12 +1037,12 @@ export const useMapStore = defineStore('cloudtak', {
 
             this.container = container;
 
-            this.loadingStage = 'Waiting for app to resume…';
+            this.loadingStage = t('messages.loading.waitingResume');
             await whenForegrounded();
 
             // Start the worker here (not in state()) so the worker's std.ts
             // resolves serverUrl from KV only after initializeApp() writes it.
-            this.loadingStage = 'Starting worker…';
+            this.loadingStage = t('messages.loading.startingWorker');
             this.startWorker();
 
             this._removeOrientationListener = await deviceStore.orientation.addListener((heading) => {
@@ -1061,8 +1062,9 @@ export const useMapStore = defineStore('cloudtak', {
 
             const { value: token } = await Preferences.get({ key: 'token' });
 
-            this.loadingStage = 'Initializing worker…';
+            this.loadingStage = t('messages.loading.initializingWorker');
             await withTimeout(this._workerReady!, WORKER_READY_TIMEOUT_MS, 'Atlas worker startup');
+            await this.worker.setLocale(currentLocale());
             await withTimeout(this.worker.init(token || ''), WORKER_INIT_TIMEOUT_MS, 'Atlas worker init');
 
             try {
@@ -1180,7 +1182,7 @@ export const useMapStore = defineStore('cloudtak', {
                 }
             }
 
-            this.loadingStage = 'Checking permissions…';
+            this.loadingStage = t('messages.loading.checkingPermissions');
             await deviceStore.initializePermissionSubscriptions(() => {
                 void this.startLocationWatch();
             });
@@ -1197,7 +1199,7 @@ export const useMapStore = defineStore('cloudtak', {
 
             const sprites = IconManager.defaultSprite();
 
-            this.loadingStage = 'Loading map configuration…';
+            this.loadingStage = t('messages.loading.mapConfig');
             let initCenter = '-100,40';
             let initZoom = 4;
             let initPitch = 0;
@@ -1269,7 +1271,7 @@ export const useMapStore = defineStore('cloudtak', {
 
             if (!init.style || typeof init.style === 'string') throw new Error('init.style must be an object');
 
-            this.loadingStage = 'Creating map…';
+            this.loadingStage = t('messages.loading.creatingMap');
             mapgl.setWorkerUrl(maplibreWorkerUrl);
             const map = new mapgl.Map(init);
 
@@ -1327,7 +1329,7 @@ export const useMapStore = defineStore('cloudtak', {
                     map.setProjection({ type: "globe" });
                 }
 
-                this.loadingStage = 'Loading overlays…';
+                this.loadingStage = t('messages.loading.overlays');
                 await this.initOverlays();
 
                 this.isMapLoadedFully = true;
@@ -1342,12 +1344,12 @@ export const useMapStore = defineStore('cloudtak', {
             this._draw = markRaw(new DrawTool(this));
             this._icons = markRaw(new IconManager(map));
             this._menu = markRaw(new MenuManager(this));
-            this.loadingStage = 'Building menus…';
+            this.loadingStage = t('messages.loading.menus');
             await (this._menu as MenuManager).init();
             this._bottomBar = this._bottomBar || markRaw(new BottomBarManager());
 
             // If we missed the initial location update make sure it gets synced
-            this.loadingStage = 'Loading your profile…';
+            this.loadingStage = t('messages.loading.profile');
             const loc = await this.worker.profile.location;
             this.location = loc.source;
             this.locationAccuracy = loc.accuracy;

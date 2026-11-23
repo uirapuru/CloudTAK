@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Mission Layers'
+        :name='t("mission.layers.title")'
         :zindex='0'
         :back='false'
         :border='false'
@@ -9,7 +9,7 @@
         <template #buttons>
             <TablerIconButton
                 v-if='!createLayer && !loading && writable'
-                title='New Mission Layer'
+                :title='t("mission.layers.newLayer")'
                 :size='24'
                 @click='createLayer = true'
             >
@@ -28,7 +28,7 @@
             <TablerLoading
                 v-if='loading'
                 class='mx-2'
-                desc='Loading Layers...'
+                :desc='t("mission.layers.loading")'
             />
             <template v-else>
                 <div
@@ -79,7 +79,7 @@
                         />
                         <TablerIconButton
                             v-else
-                            title='Retry Sync'
+                            :title='t("mission.layers.retrySync")'
                             @click='push'
                         >
                             <IconCloudUpload
@@ -95,7 +95,7 @@
                         v-model='featureSearch'
                         v-model:sort='sort'
                         :sort-options='sortOptions'
-                        placeholder='Search features by callsign...'
+                        :placeholder='t("mission.layers.search")'
                     >
                         <template #sort-icon>
                             <component
@@ -117,7 +117,7 @@
                         v-if='!searchResults.length'
                         :create='false'
                         :compact='true'
-                        label='No matching features'
+                        :label='t("mission.layers.noMatch")'
                     />
                     <div
                         v-else
@@ -148,7 +148,7 @@
                         v-if='!currentFolders.length && !currentItems.length'
                         :create='false'
                         :compact='true'
-                        :label='pathStack.length ? "Folder is empty" : "No Layers"'
+                        :label='pathStack.length ? t("mission.layers.folderEmpty") : t("mission.layers.empty")'
                     />
                     <template v-else>
                         <PathBrowser
@@ -224,6 +224,9 @@ import FeatureRow from '../../util/FeatureRow.vue';
 import SearchSortFilter from '../../util/SearchSortFilter.vue';
 import MissionLayerCreate from './MissionLayerCreate.vue';
 import MissionLayerEdit from './MissionLayerEdit.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     subscription: Subscription
@@ -236,8 +239,15 @@ const refreshing = ref(false);
 const pushing = ref(false);
 const currentUid = ref<string | null>(null);
 const featureSearch = ref('');
-const sortOptions = ['Newest → Oldest', 'Oldest → Newest', 'Alphabetical A→Z', 'Alphabetical Z→A'];
-const sort = ref('Newest → Oldest');
+const sortOptions = computed(() => [
+    t('mission.layers.sort.newest'),
+    t('mission.layers.sort.oldest'),
+    t('mission.layers.sort.alphaAsc'),
+    t('mission.layers.sort.alphaDesc'),
+]);
+const sort = ref(sortOptions.value[0]);
+// Index of the chosen option: 0 newest, 1 oldest, 2 A→Z, 3 Z→A
+const sortIndex = computed(() => sortOptions.value.indexOf(sort.value));
 const pathStack = ref<Array<{ uid: string, name: string }>>([]);
 
 const sortableItemsRef = useTemplateRef<HTMLElement>('sortableItemsRef');
@@ -302,10 +312,10 @@ const pendingLabel = computed<string>(() => {
     const deletes = pendingCount.value - pending.value.size;
 
     const parts: string[] = [];
-    if (pending.value.size) parts.push(`${pending.value.size} ${pending.value.size === 1 ? 'feature' : 'features'}`);
-    if (deletes) parts.push(`${deletes} ${deletes === 1 ? 'delete' : 'deletes'}`);
+    if (pending.value.size) parts.push(pending.value.size === 1 ? t('mission.layers.pendingFeature') : t('mission.layers.pendingFeatures', { count: pending.value.size }));
+    if (deletes) parts.push(deletes === 1 ? t('mission.layers.pendingDelete') : t('mission.layers.pendingDeletes', { count: deletes }));
 
-    return `${parts.join(' & ')} not synced`;
+    return t('mission.layers.notSynced', { parts: parts.join(t('mission.layers.pendingJoin')) });
 });
 
 /** Adapt the recursive Mission Layer tree into PathBrowser's PathNode tree; a sidecar map preserves the original layer for mutation handlers. */
@@ -384,18 +394,18 @@ const orphanedFeats = computed<Feature[]>(() => {
     return result;
 });
 
-const sortTypeIcon = computed(() => sort.value.startsWith('Alphabetical') ? IconLetterCase : IconClock);
-const sortDirectionIcon = computed(() => (sort.value === 'Oldest → Newest' || sort.value === 'Alphabetical A→Z') ? IconArrowUp : IconArrowDown);
+const sortTypeIcon = computed(() => sortIndex.value >= 2 ? IconLetterCase : IconClock);
+const sortDirectionIcon = computed(() => (sortIndex.value === 1 || sortIndex.value === 2) ? IconArrowUp : IconArrowDown);
 
 function sortFeatures(features: Feature[]): Feature[] {
     const time = (feat: Feature): number => feat.properties.time ? new Date(feat.properties.time).getTime() : 0;
     const callsign = (feat: Feature): string => (feat.properties.callsign ?? '').toLowerCase();
 
-    if (sort.value === 'Oldest → Newest') {
+    if (sortIndex.value === 1) {
         return features.sort((a, b) => time(a) - time(b));
-    } else if (sort.value === 'Alphabetical A→Z') {
+    } else if (sortIndex.value === 2) {
         return features.sort((a, b) => callsign(a).localeCompare(callsign(b)));
-    } else if (sort.value === 'Alphabetical Z→A') {
+    } else if (sortIndex.value === 3) {
         return features.sort((a, b) => callsign(b).localeCompare(callsign(a)));
     } else {
         return features.sort((a, b) => time(b) - time(a));
@@ -474,7 +484,7 @@ function assertHoldsFeatures(layeruid: string): void {
     const layer = tree.value.layerMap.get(layeruid);
 
     if (!layer || layer.type !== 'UID') {
-        throw new Error('This folder cannot contain features');
+        throw new Error(t('mission.layers.folderNoFeatures'));
     }
 }
 

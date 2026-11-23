@@ -9,14 +9,14 @@
         <div class='modal-status bg-yellow' />
         <div class='modal-header'>
             <div class='modal-title'>
-                Create Feature Service
+                {{ t('shared.esriPortalCreate.title') }}
             </div>
         </div>
         <div class='modal-body row'>
             <div class='col-12'>
                 <TablerInput
                     v-model='data.name'
-                    label='Service Name'
+                    :label='t("shared.esriPortalCreate.serviceName")'
                     @keyup.enter='create'
                 />
             </div>
@@ -25,7 +25,7 @@
                     <a
                         class='cursor-pointer btn w-100'
                         @click='create'
-                    >Create</a>
+                    >{{ t('shared.common.create') }}</a>
                 </div>
             </div>
         </div>
@@ -33,11 +33,14 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref } from 'vue';
 import {
     TablerModal,
     TablerInput,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 defineProps<{
     token: string;

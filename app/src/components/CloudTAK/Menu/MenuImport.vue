@@ -1,10 +1,10 @@
 <template>
-    <MenuTemplate name='Import'>
+    <MenuTemplate :name='t("panels.import.title")'>
         <template #buttons>
             <div class='d-flex align-items-center gap-2'>
                 <TablerIconButton
                     v-if='imported && imported.status === "Fail"'
-                    title='Retry Import'
+                    :title='t("panels.import.retry")'
                     @click='retryImport'
                 >
                     <IconRestore
@@ -18,7 +18,7 @@
                     @delete='deleteImport'
                 />
                 <TablerIconButton
-                    title='Download File'
+                    :title='t("panels.import.download")'
                     @click='downloadImport'
                 >
                     <IconDownload
@@ -35,7 +35,7 @@
         <template #default>
             <TablerAlert
                 v-if='error'
-                title='Import Error'
+                :title='t("panels.import.error")'
                 :err='error'
             />
             <TablerLoading v-else-if='!imported || loading.initial' />
@@ -52,7 +52,7 @@
                             <div class='d-flex align-items-center gap-3'>
                                 <div class='flex-grow-1'>
                                     <p class='text-uppercase text-white-50 small mb-1'>
-                                        Import
+                                        {{ t('panels.import.title') }}
                                     </p>
                                     <div class='d-flex align-items-center gap-3'>
                                         <Status
@@ -69,7 +69,7 @@
 
                             <div class='row gy-3 gx-0 gx-sm-3'>
                                 <div class='col-12'>
-                                    <small class='text-uppercase text-white-50 d-block mb-1'>Import Type</small>
+                                    <small class='text-uppercase text-white-50 d-block mb-1'>{{ t('panels.import.type') }}</small>
                                     <p
                                         class='text-start text-white p-0 text-decoration-none text-break'
                                         v-text='imported.source + ": " + imported.source_id'
@@ -77,14 +77,14 @@
                                 </div>
 
                                 <div class='col-12 col-lg-6'>
-                                    <small class='text-uppercase text-white-50 d-block'>Created</small>
+                                    <small class='text-uppercase text-white-50 d-block'>{{ t('panels.import.created') }}</small>
                                     <p
                                         class='text-white mb-0 text-break'
                                         v-text='timeDiff(imported.created)'
                                     />
                                 </div>
                                 <div class='col-12 col-lg-6'>
-                                    <small class='text-uppercase text-white-50 d-block'>Updated</small>
+                                    <small class='text-uppercase text-white-50 d-block'>{{ t('panels.import.updated') }}</small>
                                     <p
                                         class='text-white mb-0 text-break'
                                         v-text='timeDiff(imported.updated)'
@@ -102,7 +102,7 @@
                                     v-else-if='loading.run'
                                     class='col-12'
                                 >
-                                    <TablerLoading desc='Running Import' />
+                                    <TablerLoading :desc='t("panels.import.running")' />
                                 </div>
 
                                 <div
@@ -116,7 +116,7 @@
                                         <IconAlertTriangle class='me-2' />
                                         <div>
                                             <h4 class='alert-heading h5'>
-                                                Import Error
+                                                {{ t('panels.import.error') }}
                                             </h4>
                                             <p class='mb-0 text-break text-danger-emphasis'>
                                                 {{ imported.error }}
@@ -132,12 +132,12 @@
                         <div class='card bg-black bg-opacity-10 border border-light-subtle rounded overflow-hidden'>
                             <div class='card-header border-bottom border-light-subtle py-2 d-flex align-items-center gap-2 bg-white bg-opacity-10'>
                                 <IconDatabaseImport :size='16' />
-                                <small class='text-uppercase fw-bold'>Import Results</small>
+                                <small class='text-uppercase fw-bold'>{{ t('panels.import.results') }}</small>
                             </div>
                             <div class='card-body p-2 d-flex flex-column gap-2'>
                                 <TablerNone
                                     v-if='!imported.results || !imported.results.length'
-                                    label='No Results'
+                                    :label='t("panels.import.noResults")'
                                     :create='false'
                                 />
                                 <template v-else>
@@ -193,6 +193,7 @@
 <script setup lang='ts'>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { downloadUrl, server } from '../../../../src/std.ts';
 import type { Import } from '../../../../src/types.ts';
 import Status from '../../util/StatusDot.vue';
@@ -222,6 +223,7 @@ import StandardItem from '../util/StandardItem.vue';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
 const error = ref<Error | undefined>()
 const loading = ref({

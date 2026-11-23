@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Remote Video Connection'
+        :name='t("panels.videosRemote.title")'
         :loading='loading'
         :err='err'
     >
@@ -16,11 +16,11 @@
                 <div class='col-12'>
                     <TablerInput
                         v-model='connection.alias'
-                        label='Alias'
+                        :label='t("panels.videosRemote.alias")'
                     >
                         <TablerToggle
                             v-model='connection.active'
-                            label='Active'
+                            :label='t("panels.videosRemote.active")'
                         />
                     </TablerInput>
                 </div>
@@ -28,7 +28,7 @@
                     v-if='route.params.connectionid === "new"'
                     class='col-12'
                 >
-                    <label class='px-2 w-100'>Channels</label>
+                    <label class='px-2 w-100'>{{ t('panels.videosRemote.channels') }}</label>
 
                     <div style='max-height: 20vh; min-height: 200px; overflow-y: auto;'>
                         <GroupSelect
@@ -39,11 +39,11 @@
                     </div>
                 </div>
                 <div class='col-12 d-flex'>
-                    <label>Feeds</label>
+                    <label>{{ t('panels.videosRemote.feeds') }}</label>
 
                     <div class='ms-auto'>
                         <TablerIconButton
-                            title='Add Feed'
+                            :title='t("panels.videosRemote.addFeed")'
                             @click='newFeed'
                         >
                             <IconPlus
@@ -58,7 +58,7 @@
                         v-if='connection.feeds.length === 0'
                         :create='false'
                         :compact='true'
-                        label='No Feeds'
+                        :label='t("panels.videosRemote.noFeeds")'
                     />
                     <template v-else>
                         <template
@@ -78,7 +78,7 @@
                             class='btn btn-primary'
                             @click='saveConnection'
                         >
-                            Save Connection
+                            {{ t('panels.videosRemote.save') }}
                         </button>
                     </div>
                 </div>
@@ -95,6 +95,7 @@ import type { VideoConnection, VideoConnectionFeed, VideoConnection_Create } fro
 import VideosRemoteFeed from './Videos/VideosRemoteFeed.vue';
 import { server } from '../../../std.ts';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import GroupSelect from '../../util/GroupSelect.vue';
 import {
     TablerInput,
@@ -112,6 +113,7 @@ import { ref, onMounted } from 'vue'
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const loading = ref(String(route.params.connectionid) !== "new");
 const err = ref<Error | undefined>(undefined);
 

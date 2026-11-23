@@ -9,13 +9,13 @@
         <div class='modal-status bg-yellow' />
         <div class='modal-header'>
             <div class='modal-title'>
-                ESRI Layer Filter
+                {{ t('shared.esriFilter.title') }}
             </div>
         </div>
         <div class='modal-body row g-2'>
             <TablerInput
                 v-model='filter.query'
-                label='SQL Query'
+                :label='t("shared.esriFilter.sqlQuery")'
                 :disabled='disabled'
             />
 
@@ -25,7 +25,7 @@
                         class='btn btn-secondary'
                         @click='fetch'
                     >
-                        Test Query
+                        {{ t('shared.esriFilter.testQuery') }}
                     </button>
                 </div>
             </div>
@@ -33,11 +33,11 @@
             <TablerAlert
                 v-if='err'
                 :err='err'
-                title='Query Error'
+                :title='t("shared.esriFilter.queryError")'
             />
             <TablerLoading
                 v-if='loading.count'
-                desc='Loading Features'
+                :desc='t("shared.esriFilter.loadingFeatures")'
             />
             <template v-else-if='list.features.features'>
                 <pre v-text='features' />
@@ -48,19 +48,20 @@
                 class='btn me-auto'
                 @click='$emit("close")'
             >
-                Close
+                {{ t('common.close') }}
             </button>
             <button
                 class='btn btn-primary'
                 @click='save'
             >
-                Save Filter
+                {{ t('shared.esriFilter.saveFilter') }}
             </button>
         </div>
     </TablerModal>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed } from 'vue';
 import { std, stdurl } from '../../std.ts';
 import {
@@ -69,6 +70,8 @@ import {
     TablerInput,
     TablerLoading
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     disabled?: boolean;

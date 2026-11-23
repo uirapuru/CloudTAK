@@ -11,10 +11,10 @@
 
             <div>
                 <div class='fw-semibold'>
-                    {{ config.label }}
+                    {{ t(`basemaps.types.${type}.label`) }}
                 </div>
                 <div class='small text-white-50'>
-                    {{ config.description }}
+                    {{ t(`basemaps.types.${type}.description`) }}
                 </div>
             </div>
 
@@ -24,7 +24,7 @@
                     class='btn btn-sm btn-secondary'
                     @click='emit("change-type")'
                 >
-                    Change Type
+                    {{ t('basemaps.common.changeType') }}
                 </button>
             </div>
         </StandardItem>
@@ -35,6 +35,9 @@
 import StandardItem from '../../util/StandardItem.vue';
 import type { BasemapSourceType } from './types.ts';
 import { BasemapTypeConfig } from './types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     type: BasemapSourceType;

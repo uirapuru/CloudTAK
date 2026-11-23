@@ -22,7 +22,7 @@
                 />
                 <div
                     class='text-white-50 small text-truncate'
-                    v-text='channel.description || "No Description"'
+                    v-text='channel.description || t("util.common.noDescription")'
                 />
             </div>
 
@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import StandardItem from './StandardItem.vue';
 import type { GroupChannel } from '../../../types.ts';
@@ -53,6 +54,8 @@ import {
     IconLocation,
     IconLocationOff,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 export type StandardChannel = Pick<GroupChannel, 'name' | 'description'>
     & Partial<Pick<GroupChannel, 'direction' | 'active'>>;
@@ -68,9 +71,9 @@ defineEmits<{
 const direction = computed(() => {
     const dir = props.channel.direction;
     if (!dir) return null;
-    if (dir.length === 2) return { label: 'Bi-Directional', icon: IconLocation };
-    if (dir.includes('IN')) return { label: 'Location Sharing', icon: IconLocation };
-    if (dir.includes('OUT')) return { label: 'No Location Sharing', icon: IconLocationOff };
+    if (dir.length === 2) return { label: t('util.common.biDirectional'), icon: IconLocation };
+    if (dir.includes('IN')) return { label: t('util.common.locationSharing'), icon: IconLocation };
+    if (dir.includes('OUT')) return { label: t('util.common.noLocationSharing'), icon: IconLocationOff };
     return null;
 });
 </script>

@@ -15,7 +15,7 @@
 
         <template #actions>
             <TablerIconButton
-                title='Download'
+                :title='t("util.common.download")'
                 @click='downloadAsset(pane.config.attachment)'
             >
                 <IconDownload
@@ -50,7 +50,7 @@
                         class='mb-2'
                     />
                     <div
-                        v-text='`No preview available for ${pane.config.attachment.ext} files.`'
+                        v-text='t("util.floatingAttachment.noPreview", { ext: pane.config.attachment.ext })'
                     />
                 </div>
             </template>
@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted } from 'vue'
 import { Preferences } from '@capacitor/preferences';
 import { std, stdurl } from '../../../std.ts';
@@ -73,6 +74,8 @@ import {
 import {
     TablerIconButton,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const floatStore = useFloatStore();
 

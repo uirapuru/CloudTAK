@@ -2,7 +2,7 @@
     <div class='row col-12'>
         <template v-if='err'>
             <TablerAlert
-                title='ESRI Connection Error'
+                :title='t("shared.esri.connectionError")'
                 :err='err'
                 :compact='true'
             />
@@ -13,13 +13,13 @@
                             v-if='pane'
                             class='cursor-pointer btn btn-primary'
                             @click='$emit("close")'
-                        >Close Viewer</a>
+                        >{{ t('shared.esriPortal.closeViewer') }}</a>
                     </div>
                 </div>
             </div>
         </template>
         <template v-else-if='loading.main'>
-            <TablerLoading desc='Connecting to ESRI Portal' />
+            <TablerLoading :desc='t("shared.esriPortal.connecting")' />
         </template>
         <template v-else-if='!url && server'>
             <!-- If no url is given assume auth is directly with a Server-->
@@ -41,7 +41,7 @@
             >
                 <div class='d-flex'>
                     <h1 class='subheader px-3'>
-                        ESRI Portal Explorer
+                        {{ t('shared.esriPortal.title') }}
                         <span
                             v-if='portal && portal.name'
                             v-text='" - " + portal.name'
@@ -51,7 +51,7 @@
                     <div class='ms-auto btn-list mx-3'>
                         <TablerRefreshButton
                             v-if='!disabled && !err'
-                            title='Refresh'
+                            :title='t("shared.common.refresh")'
                             :size='32'
                             :loading='loading.main'
                             @click='generateToken'
@@ -59,7 +59,7 @@
 
                         <TablerIconButton
                             v-if='!readonly && !disabled && !err && !loading.main'
-                            title='Create Hosted Service'
+                            :title='t("shared.esriPortal.createHostedService")'
                             @click='createModal = true'
                         >
                             <IconPlus
@@ -69,7 +69,7 @@
                         </TablerIconButton>
                         <TablerIconButton
                             v-if='pane && !disabled'
-                            title='Close Explorer'
+                            :title='t("shared.esri.closeExplorer")'
                             @click='$emit("close")'
                         >
                             <IconX
@@ -86,13 +86,13 @@
                             <TablerNone
                                 :compact='true'
                                 :create='false'
-                                label='No ArcGIS Servers'
+                                :label='t("shared.esriPortal.noServers")'
                             />
                         </template>
                         <template v-else>
                             <div class='table-responsive'>
                                 <table class='table table-hover card-table table-vcenter cursor-pointer'>
-                                    <thead><tr><th>ID</th><th>Name</th><th>Url</th></tr></thead>
+                                    <thead><tr><th>ID</th><th>{{ t('shared.common.name') }}</th><th>URL</th></tr></thead>
                                     <tbody>
                                         <tr
                                             v-for='serv in servers'
@@ -141,17 +141,17 @@
                 <template v-else-if='type === &apos;AGOL&apos;'>
                     <TablerInput
                         v-model='contentFilter.title'
-                        placeholder='Filter by Title'
+                        :placeholder='t("shared.esriPortal.filterByTitle")'
                     />
 
                     <TablerLoading
                         v-if='loading.content'
-                        desc='Searching Content'
+                        :desc='t("shared.esriPortal.searchingContent")'
                     />
                     <TablerNone
                         v-else-if='content.total === 0'
                         :create='false'
-                        label='No Content Items'
+                        :label='t("shared.esriPortal.noContent")'
                     />
                     <div
                         v-else
@@ -160,8 +160,8 @@
                         <table class='table table-hover card-table table-vcenter cursor-pointer'>
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Attributes</th>
+                                    <th>{{ t('shared.common.name') }}</th>
+                                    <th>{{ t('shared.esriPortal.attributes') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -228,6 +228,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { std, stdurl } from '../../std.ts';
 import {
@@ -267,6 +268,8 @@ interface ContentItem {
     url?: string;
     [key: string]: unknown;
 }
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     disabled?: boolean;
@@ -382,7 +385,7 @@ async function fetchPortal() {
 
         portal.value = res;
 
-        if (portal.value.isReadOnly) throw new Error('Portal is Read Only');
+        if (portal.value.isReadOnly) throw new Error(t('shared.esriPortal.readOnly'));
     } catch (error) {
         err.value = error instanceof Error ? error : new Error(String(error));
     }
@@ -421,7 +424,7 @@ async function fetchServers() {
 
         const res = await std(url) as { servers?: EsriServerItem[] };
 
-        if (!res.servers) throw new Error('No Servers Present');
+        if (!res.servers) throw new Error(t('shared.esriPortal.noServersPresent'));
         servers.value = res.servers;
     } catch (error) {
         err.value = error instanceof Error ? error : new Error(String(error));
@@ -430,7 +433,7 @@ async function fetchServers() {
 }
 
 async function createService(body: Record<string, unknown>) {
-    if (!token.value) throw new Error('Auth Token is required to create a service');
+    if (!token.value) throw new Error(t('shared.esri.tokenRequiredCreate'));
 
     loading.value.main = true;
     try {

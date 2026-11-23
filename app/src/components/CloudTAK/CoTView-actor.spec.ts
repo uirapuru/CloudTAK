@@ -1,14 +1,19 @@
 import { mount, flushPromises } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const from = vi.fn();
 vi.mock('../../base/contact.ts', () => ({ default: { from: (...args: unknown[]) => from(...args) } }));
 
 import RouteActorNote from './util/RouteActorNote.vue';
+import i18n from '../../i18n.ts';
 
 const actor = { uid: 'ai_buddy', on_behalf: 'ANDROID-1', log: 'a1' };
 
 describe('RouteActorNote', () => {
+    // The texts of this taklab feature are asserted in Polish.
+    beforeEach(() => { i18n.global.locale.value = 'pl'; });
+    afterEach(() => { i18n.global.locale.value = 'en'; });
+
     beforeEach(() => from.mockReset());
 
     it('pokazuje znak kontaktu o uid równym on_behalf', async () => {

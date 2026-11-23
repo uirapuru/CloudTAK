@@ -2,13 +2,13 @@
     <!-- Inline renders only the field so a caller can place it in a row of its own -->
     <component
         :is='inline || labelPosition === "top" ? "div" : PropertyFactRow'
-        :label='inline || labelPosition === "top" ? undefined : label'
+        :label='inline || labelPosition === "top" ? undefined : (label || t("util.coordinate.label"))'
         :class='{ "py-1": !inline }'
     >
         <label
             v-if='!inline && labelPosition === "top"'
             class='form-label'
-            v-text='label'
+            v-text='label || t("util.coordinate.label")'
         />
         <div>
             <CopyField
@@ -31,16 +31,19 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import CopyField from './CopyField.vue';
 import UnitSwitcher from './UnitSwitcher.vue';
 import PropertyFactRow from './PropertyFactRow.vue';
 import { COORD_MODES, formatCoordPair, parseCoordPair, validateCoordPair, type CoordMode } from '../../../utils/coordinateFormat.ts';
 import { ref, computed, watch, type PropType } from 'vue';
 
+const { t } = useI18n();
+
 const props = defineProps({
     label: {
         type: String,
-        default: 'Coordinates'
+        default: ''
     },
     hover: {
         type: Boolean,

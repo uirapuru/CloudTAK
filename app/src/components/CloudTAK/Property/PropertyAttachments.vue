@@ -1,12 +1,12 @@
 <template>
     <PropertySection
-        label='Attachments'
+        :label='t("property.attachments.title")'
         :count='files.length'
     >
         <template #actions>
             <TablerIconButton
                 v-if='edit && !upload'
-                title='Add Attachment'
+                :title='t("property.attachments.add")'
                 @click='upload = true'
             >
                 <IconPlus
@@ -45,7 +45,7 @@
             v-else-if='!files.length'
             class='attachments-empty d-flex align-items-center justify-content-center rounded text-secondary small user-select-none'
         >
-            No Attachments
+            {{ t('property.attachments.none') }}
         </div>
         <div
             v-else
@@ -81,12 +81,12 @@
                     <TablerDelete
                         v-if='canRemove'
                         displaytype='icon'
-                        title='Remove Attachment'
+                        :title='t("property.attachments.remove")'
                         :size='16'
                         @delete='deleteAttachment(file)'
                     />
                     <TablerIconButton
-                        title='Download Attachment'
+                        :title='t("property.attachments.download")'
                         @click='downloadAsset(file)'
                     >
                         <IconDownload
@@ -127,6 +127,9 @@ import {
     TablerLoading,
     TablerDelete,
 } from '@tak-ps/vue-tabler'
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
 

@@ -54,7 +54,7 @@
             >
                 <TablerIconButton
                     v-if='props.buttonChat && chatable'
-                    title='Start Chat'
+                    :title='t("util.contact.startChat")'
                     @click.stop='emit("chat", contact)'
                 >
                     <IconMessage
@@ -83,6 +83,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watchEffect } from 'vue';
 import {
     IconCheck,
@@ -93,6 +94,8 @@ import ContactPuck from './ContactPuck.vue';
 import StandardItem from './StandardItem.vue';
 import { useMapStore } from '../../../stores/map.ts';
 import type { Contact } from '../../../types.ts';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 

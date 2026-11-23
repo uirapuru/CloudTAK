@@ -9,7 +9,7 @@
             <div class='col-md-12 mt-3'>
                 <TablerInput
                     :model-value='props.url'
-                    :label='config.urlLabel'
+                    :label='t("basemaps.types.imageserver.urlLabel")'
                     :placeholder='config.urlPlaceholder'
                     @update:model-value='emit("update:url", $event)'
                 />
@@ -20,13 +20,13 @@
                         class='cursor-pointer btn btn-secondary'
                         @click='emit("change-type")'
                     >
-                        Cancel
+                        {{ t('common.cancel') }}
                     </button>
                     <div class='ms-auto'>
                         <a
                             class='cursor-pointer btn btn-primary'
                             @click='emit("fetch")'
-                        >Fetch Metadata</a>
+                        >{{ t('basemaps.common.fetchMetadata') }}</a>
                     </div>
                 </div>
             </div>
@@ -45,14 +45,14 @@
                         <TablerInput
                             v-model='editing.minzoom'
                             required
-                            label='MinZoom'
+                            :label='t("basemaps.common.minZoom")'
                         />
                     </div>
                     <div class='col-md-6'>
                         <TablerInput
                             v-model='editing.maxzoom'
                             required
-                            label='MaxZoom'
+                            :label='t("basemaps.common.maxZoom")'
                         />
                     </div>
                 </template>
@@ -67,7 +67,10 @@ import TypeSelectorBase from './TypeSelectorBase.vue';
 import TypeSelectorSelected from './TypeSelectorSelected.vue';
 import { BasemapTypeConfig } from './types.ts';
 import { TablerInput } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
 import type { EditingBasemap, VectorLayerDescriptor } from './types.ts';
+
+const { t } = useI18n();
 
 const editing = defineModel<EditingBasemap>('editing', { required: true });
 

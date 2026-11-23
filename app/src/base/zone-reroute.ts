@@ -4,6 +4,7 @@
  * (ignore_danger_zones), są liczone od nowa przez te same punkty usera, w tym
  * samym trybie i z tymi samymi opcjami. Nazwa, styl i id trasy zostają.
  */
+import { t } from '../i18n.ts';
 import { readRoutePlan } from './route-plan.ts';
 import type { LngLat, RouteOptions } from './route-plan.ts';
 
@@ -117,7 +118,7 @@ export async function rerouteRoutes(routes: RouteFeature[], deps: RerouteDeps): 
                 ...(plan.options ? { options: plan.options } : {}),
             });
             const freshPlan = readRoutePlan(fresh);
-            if (!freshPlan) throw new Error('Usługa tras zwróciła trasę bez planu.');
+            if (!freshPlan) throw new Error(t('messages.route.noPlan'));
 
             const properties: Record<string, unknown> = {
                 ...route.properties,

@@ -1,12 +1,12 @@
 <template>
     <MenuTemplate
-        name='Login Passkeys'
+        :name='t("panels.settingsPasskeys.title")'
         :loading='loading'
         :none='!creating && !passkeys.items.length'
     >
         <template #buttons>
             <TablerIconButton
-                title='New Passkey'
+                :title='t("panels.settingsPasskeys.new")'
                 @click='creating = true; newName = ""'
             >
                 <IconPlus
@@ -27,7 +27,7 @@
                 >
                     <TablerInput
                         v-model='newName'
-                        placeholder='Passkey Name'
+                        :placeholder='t("panels.settingsPasskeys.namePlaceholder")'
                         :autofocus='true'
                         @keyup='(e: KeyboardEvent) => { if (e.key === "Enter") registerPasskey(); else if (e.key === "Escape") creating = false; }'
                     />
@@ -35,13 +35,13 @@
                         class='btn btn-primary'
                         @click='registerPasskey'
                     >
-                        Create
+                        {{ t('panels.settingsPasskeys.create') }}
                     </button>
                 </div>
                 <template v-if='selected'>
                     <div class='d-flex align-items-center px-2 py-2'>
                         <TablerIconButton
-                            title='Back to Passkeys'
+                            :title='t("panels.settingsPasskeys.back")'
                             @click='selected = null'
                         >
                             <IconArrowLeft
@@ -49,7 +49,7 @@
                                 stroke='1'
                             />
                         </TablerIconButton>
-                        <span class='fw-bold ms-2'>Passkey Details</span>
+                        <span class='fw-bold ms-2'>{{ t('panels.passkeyModal.title') }}</span>
                         <div class='ms-auto'>
                             <TablerDelete
                                 displaytype='icon'
@@ -59,16 +59,16 @@
                     </div>
                     <div class='row g-2'>
                         <div class='col-12'>
-                            <label class='form-label'>Name</label>
-                            <div v-text='selected.name || "Unnamed Passkey"' />
+                            <label class='form-label'>{{ t('panels.passkeyModal.name') }}</label>
+                            <div v-text='selected.name || t("panels.passkeyModal.unnamed")' />
                         </div>
                         <div class='col-12'>
-                            <label class='form-label'>Created</label>
+                            <label class='form-label'>{{ t('panels.passkeyModal.created') }}</label>
                             <div v-text='new Date(selected.created).toLocaleString()' />
                         </div>
                         <div class='col-12'>
-                            <label class='form-label'>Last Used</label>
-                            <div v-text='selected.last_used ? new Date(selected.last_used).toLocaleString() : "Never"' />
+                            <label class='form-label'>{{ t('panels.passkeyModal.lastUsed') }}</label>
+                            <div v-text='selected.last_used ? new Date(selected.last_used).toLocaleString() : t("panels.passkeyModal.never")' />
                         </div>
                     </div>
                 </template>
@@ -85,12 +85,12 @@
                             />
                             <div class='ms-2 flex-grow-1'>
                                 <div class='fw-bold'>
-                                    {{ p.name || 'Unnamed Passkey' }}
+                                    {{ p.name || t('panels.passkeyModal.unnamed') }}
                                 </div>
                                 <div class='text-muted small'>
-                                    Created {{ new Date(p.created).toLocaleDateString() }}
+                                    {{ t('panels.settingsPasskeys.createdOn', { date: new Date(p.created).toLocaleDateString() }) }}
                                     <template v-if='p.last_used'>
-                                        &middot; Last used {{ new Date(p.last_used).toLocaleDateString() }}
+                                        &middot; {{ t('panels.settingsPasskeys.lastUsedOn', { date: new Date(p.last_used).toLocaleDateString() }) }}
                                     </template>
                                 </div>
                             </div>
@@ -104,6 +104,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
 import { server } from '../../../std.ts';
@@ -121,6 +122,7 @@ import {
     IconFingerprint,
 } from '@tabler/icons-vue';
 
+const { t } = useI18n();
 const loading = ref<boolean>(true);
 const creating = ref<boolean>(false);
 const newName = ref<string>('');

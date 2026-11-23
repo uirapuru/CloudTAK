@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Permissions'
+        :name='t("panels.settingsPermissions.title")'
         :loading='loading'
     >
         <template #buttons>
             <TablerIconButton
-                title='Refresh Permissions'
+                :title='t("panels.settingsPermissions.refresh")'
                 :disabled='Boolean(working)'
                 @click='refreshStatuses'
             >
@@ -80,6 +80,7 @@
 <script setup lang='ts'>
 import { computed, onMounted, ref } from 'vue';
 import type { Component } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
     IconBell,
     IconCamera,
@@ -101,13 +102,12 @@ import type { BrowserPermissionState } from '../../../stores/device.ts';
 
 const mapStore = useMapStore();
 const deviceStore = useDeviceStore();
+const { t } = useI18n();
 type PermissionKey = 'location' | 'backgroundLocation' | 'notification' | 'orientation' | 'storage' | 'camera' | 'wakeLock' | 'fileSystem';
 type PermissionDescriptor = {
     key: PermissionKey;
-    title: string;
     icon: Component;
 };
-type PermissionStatusText = Record<PermissionKey, string>;
 
 const loading = ref(true);
 const error = ref('');
@@ -115,90 +115,39 @@ const working = ref<PermissionKey | undefined>();
 
 const permissionDescriptors: PermissionDescriptor[] = [{
     key: 'notification',
-    title: 'Notifications',
     icon: IconBell,
 }, {
     key: 'camera',
-    title: 'Camera',
     icon: IconCamera,
 }, {
     key: 'location',
-    title: 'Location',
     icon: IconMapPin,
 }, {
     key: 'backgroundLocation',
-    title: 'Background Location',
     icon: IconCurrentLocation,
 }, {
     key: 'orientation',
-    title: 'Device Orientation',
     icon: IconCompass,
 }, {
     key: 'storage',
-    title: 'Persistent Storage',
     icon: IconDatabase,
 }, {
     key: 'fileSystem',
-    title: 'File System Access',
     icon: IconFolderOpen,
 }, {
     key: 'wakeLock',
-    title: 'Wake Lock',
     icon: IconSun,
 }];
 
-const permissionDescriptions: Record<'granted' | 'denied' | 'prompt' | 'unsupported' | 'unknown', PermissionStatusText> = {
-    granted: {
-        location: 'CloudTAK can access your live position.',
-        backgroundLocation: 'CloudTAK can keep sharing your location while the app is in the background.',
-        notification: 'CloudTAK can deliver browser notifications.',
-        orientation: 'CloudTAK can access your device orientation for compass-based map rotation.',
-        storage: 'CloudTAK can persist local data storage for more reliable offline access.',
-        camera: 'CloudTAK can access your camera when needed.',
-        wakeLock: 'CloudTAK can keep the screen awake during active operations.',
-        fileSystem: 'CloudTAK can open local files for import and export workflows.'
-    },
-    denied: {
-        location: 'Location access is currently blocked. Use the button below to try again.',
-        backgroundLocation: 'Location access is currently blocked, so background location sharing is unavailable.',
-        notification: 'Notification access is currently blocked. Use the button below to try again.',
-        orientation: 'Device orientation access is currently blocked. Use the button below to try again.',
-        storage: 'Persistent storage was not granted. Use the button below to try again.',
-        camera: 'Camera access is currently blocked. Use the button below to try again.',
-        wakeLock: 'Wake lock access is currently blocked. Use the button below to try again.',
-        fileSystem: 'File system access is currently blocked. Use the button below to try again.'
-    },
-    prompt: {
-        location: 'Location access has not been granted yet.',
-        backgroundLocation: 'Background location access has not been granted yet.',
-        notification: 'Notification access has not been granted yet.',
-        orientation: 'Device orientation access has not been granted yet.',
-        storage: 'Persistent storage has not been requested yet.',
-        camera: 'Camera access has not been granted yet.',
-        wakeLock: 'Wake lock access has not been granted yet.',
-        fileSystem: 'File system access has not been granted yet.'
-    },
-    unsupported: {
-        location: 'This browser does not support geolocation permissions.',
-        backgroundLocation: 'Background location sharing is only available in the mobile app.',
-        notification: 'This browser does not support notification permissions.',
-        orientation: 'This browser does not support device orientation events.',
-        storage: 'This browser does not support persistent storage requests.',
-        camera: 'This browser does not support camera access requests.',
-        wakeLock: 'This browser does not support wake lock requests.',
-        fileSystem: 'This browser does not support file system access requests.'
-    },
-    unknown: {
-        location: 'CloudTAK could not determine the current location permission state.',
-        backgroundLocation: 'CloudTAK could not determine the current background location permission state.',
-        notification: 'CloudTAK could not determine the current notification permission state.',
-        orientation: 'CloudTAK could not determine the current device orientation permission state.',
-        storage: 'CloudTAK could not determine the current persistent storage state.',
-        camera: 'CloudTAK could not determine the current camera permission state.',
-        wakeLock: 'CloudTAK could not determine the current wake lock state.',
-        fileSystem: 'CloudTAK could not determine the current file system access state.'
-    }
-};
+function permissionText(status: 'granted' | 'denied' | 'prompt' | 'unsupported' | 'unknown', type: PermissionKey): string {
+    if (status === 'granted' && type === 'notification') return t('panels.settingsPermissions.desc.granted.notificationBrowser');
+    if (status === 'denied' && type === 'backgroundLocation') return t('panels.settingsPermissions.desc.denied.backgroundLocationBlocked');
+    return t(`panels.settingsPermissions.desc.${status}.${type}`);
+}
+
+function permissionTitle(type: PermissionKey): string {
+    return t(`panels.settingsPermissions.titles.${type}`);
+}
 
 const permissionItems = computed(() => {
     return permissionDescriptors
@@ -208,6 +157,7 @@ const permissionItems = computed(() => {
 
             return {
                 ...permission,
+                title: permissionTitle(permission.key),
                 status,
                 description: descriptionFor(permission.key, status)
             };
@@ -221,12 +171,12 @@ onMounted(async () => {
 
 function badgeLabel(status: BrowserPermissionState): string {
     switch (status) {
-        case 'granted': return 'Allowed';
-        case 'when_in_use': return 'While Using';
-        case 'denied': return 'Re-request';
-        case 'prompt': return 'Request';
-        case 'unsupported': return 'Unsupported';
-        default: return 'Request';
+        case 'granted': return t('panels.settingsPermissions.badge.allowed');
+        case 'when_in_use': return t('panels.settingsPermissions.badge.whileUsing');
+        case 'denied': return t('panels.settingsPermissions.badge.reRequest');
+        case 'prompt': return t('panels.settingsPermissions.badge.request');
+        case 'unsupported': return t('panels.settingsPermissions.badge.unsupported');
+        default: return t('panels.settingsPermissions.badge.request');
     }
 }
 
@@ -252,26 +202,26 @@ function badgeProps(status: BrowserPermissionState): Record<string, string> {
 
 function descriptionFor(type: PermissionKey, status: BrowserPermissionState): string {
     if (status === 'when_in_use') {
-        return 'Location is only shared while CloudTAK is open. Set Location to "Always" in Settings so your team keeps seeing you when the app is in the background.';
+        return t('panels.settingsPermissions.whenInUse');
     }
 
     if (isNativePlatform() && status !== 'granted' && status !== 'unsupported') {
-        if (status === 'denied') return `${permissionDescriptions.denied[type].split('. ')[0]}.`;
-        if (status === 'prompt') return permissionDescriptions.prompt[type];
-        return permissionDescriptions.unknown[type];
+        if (status === 'denied') return `${permissionText('denied', type).split('. ')[0]}.`;
+        if (status === 'prompt') return permissionText('prompt', type);
+        return permissionText('unknown', type);
     }
 
     switch (status) {
         case 'granted':
-            return permissionDescriptions.granted[type];
+            return permissionText('granted', type);
         case 'denied':
-            return permissionDescriptions.denied[type];
+            return permissionText('denied', type);
         case 'prompt':
-            return permissionDescriptions.prompt[type];
+            return permissionText('prompt', type);
         case 'unsupported':
-            return permissionDescriptions.unsupported[type];
+            return permissionText('unsupported', type);
         default:
-            return permissionDescriptions.unknown[type];
+            return permissionText('unknown', type);
     }
 }
 
@@ -300,12 +250,12 @@ function shouldShowAction(type: PermissionKey, status: BrowserPermissionState): 
 }
 
 function actionLabel(status: BrowserPermissionState, type: PermissionKey): string {
-    if (offersNativeSettings(type, status)) return 'Open Settings';
-    if (working.value === type) return 'Requesting...';
-    if (type === 'orientation' && !deviceStore.orientation.hasPermissionRequest() && status !== 'granted') return 'Unavailable';
-    if (status === 'denied') return 'Re-request Permission';
-    if (status === 'granted') return 'Allowed';
-    return 'Request Permission';
+    if (offersNativeSettings(type, status)) return t('panels.settingsPermissions.action.openSettings');
+    if (working.value === type) return t('panels.settingsPermissions.action.requesting');
+    if (type === 'orientation' && !deviceStore.orientation.hasPermissionRequest() && status !== 'granted') return t('panels.settingsPermissions.action.unavailable');
+    if (status === 'denied') return t('panels.settingsPermissions.action.reRequest');
+    if (status === 'granted') return t('panels.settingsPermissions.action.allowed');
+    return t('panels.settingsPermissions.action.request');
 }
 
 async function refreshStatuses(): Promise<void> {
@@ -314,7 +264,7 @@ async function refreshStatuses(): Promise<void> {
     try {
         await deviceStore.refreshPermissionStatuses();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Failed to refresh permission status';
+        error.value = err instanceof Error ? err.message : t('panels.settingsPermissions.refreshFailed');
     }
 }
 
@@ -328,7 +278,7 @@ async function requestPermission(type: PermissionKey): Promise<void> {
         try {
             await deviceStore.geolocation.openNativeSettings();
         } catch (err) {
-            error.value = err instanceof Error ? err.message : 'Failed to open system settings';
+            error.value = err instanceof Error ? err.message : t('panels.settingsPermissions.openSettingsFailed');
         } finally {
             working.value = undefined;
             await refreshStatuses();
@@ -367,7 +317,7 @@ async function requestPermission(type: PermissionKey): Promise<void> {
                 break;
         }
     } catch (err) {
-        error.value = err instanceof Error ? err.message : `Failed to request ${type} permission`;
+        error.value = err instanceof Error ? err.message : t('panels.settingsPermissions.requestFailed', { permission: permissionTitle(type) });
     } finally {
         working.value = undefined;
         await refreshStatuses();

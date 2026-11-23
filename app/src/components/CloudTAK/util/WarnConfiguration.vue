@@ -24,16 +24,16 @@
                 <TablerLoading v-if='loading' />
                 <template v-else>
                     <p class='text-secondary'>
-                        Before you get started, tell other TAK users who you are. These can be changed at any time from Settings.
+                        {{ t('util.warnConfiguration.detailsIntro') }}
                     </p>
 
                     <div class='row g-3'>
                         <div class='col-12'>
                             <TablerInput
                                 v-model='form.tak_callsign'
-                                label='Callsign'
-                                description='The name other users will see you as on the map'
-                                placeholder='Enter your callsign'
+                                :label='t("util.warnConfiguration.callsign")'
+                                :description='t("util.warnConfiguration.callsignHelp")'
+                                :placeholder='t("util.warnConfiguration.callsignPlaceholder")'
                                 :autofocus='true'
                                 :required='true'
                                 :error='callsignError'
@@ -43,22 +43,22 @@
                         <div class='col-12 col-md-6'>
                             <TablerEnum
                                 v-model='form.tak_group'
-                                label='Team'
+                                :label='t("util.warnConfiguration.team")'
                                 :options='groupOptions'
                             />
                         </div>
                         <div class='col-12 col-md-6'>
-                            <TablerEnum
+                            <TranslatedEnum
                                 v-model='form.tak_role'
-                                label='Role'
-                                :options='roles'
+                                :label='t("util.warnConfiguration.role")'
+                                :options='roleOptions'
                             />
                         </div>
                         <div class='col-12'>
                             <TablerInput
                                 v-model='form.tak_phone'
-                                label='Phone Number'
-                                description='Optional - shared with other users in your channels'
+                                :label='t("util.warnConfiguration.phone")'
+                                :description='t("util.warnConfiguration.phoneHelp")'
                                 type='tel'
                             />
                         </div>
@@ -70,9 +70,9 @@
 
                 <div class='card mb-3'>
                     <ul class='card-body list-unstyled d-flex flex-column gap-2 mb-0'>
-                        <li>Your location is sent to the TAK server you are connected to and shared with members of your team.</li>
-                        <li>The server's administrator controls whether location data is stored and for how long.</li>
-                        <li>CloudTAK does not use your location for advertising.</li>
+                        <li>{{ t('util.locationDisclosure.sentToServer') }}</li>
+                        <li>{{ t('util.locationDisclosure.adminControls') }}</li>
+                        <li>{{ t('util.locationDisclosure.noAdvertising') }}</li>
                     </ul>
                 </div>
 
@@ -82,7 +82,7 @@
             </template>
             <template v-else>
                 <p class='text-secondary'>
-                    CloudTAK needs the following permissions to keep your team informed. You can review these later under Settings.
+                    {{ t('util.warnConfiguration.permissionsIntro') }}
                 </p>
 
                 <div
@@ -157,7 +157,7 @@
                             v-if='saving'
                             :inline='true'
                         />
-                        <span v-else>Get Started</span>
+                        <span v-else>{{ t('util.warnConfiguration.getStarted') }}</span>
                     </button>
                 </div>
             </template>
@@ -167,7 +167,7 @@
                     :disabled='Boolean(working)'
                     @click='current = "permissions"'
                 >
-                    Not now
+                    {{ t('util.locationDisclosure.notNow') }}
                 </button>
                 <div class='ms-auto'>
                     <button
@@ -175,7 +175,7 @@
                         :disabled='Boolean(working)'
                         @click='acceptDisclosure'
                     >
-                        {{ working ? 'Requesting...' : 'Agree and continue' }}
+                        {{ working ? t('util.locationDisclosure.requesting') : t('util.locationDisclosure.agree') }}
                     </button>
                 </div>
             </template>
@@ -185,7 +185,7 @@
                     :disabled='Boolean(working)'
                     @click='dismissPermissions'
                 >
-                    Skip for now
+                    {{ t('util.warnConfiguration.skip') }}
                 </button>
                 <div class='ms-auto btn-list'>
                     <button
@@ -193,14 +193,14 @@
                         :disabled='Boolean(working)'
                         @click='refreshStatuses'
                     >
-                        Refresh
+                        {{ t('util.warnConfiguration.refresh') }}
                     </button>
                     <button
                         class='btn btn-primary'
                         :disabled='!permissionsSatisfied'
                         @click='emit("close")'
                     >
-                        Done
+                        {{ t('util.common.done') }}
                     </button>
                 </div>
             </template>
@@ -238,6 +238,7 @@ export function setPermissionsWarningDismissed(): void {
 </script>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import type { Component, PropType } from 'vue';
 import {
@@ -253,6 +254,7 @@ import {
     IconMapPin,
 } from '@tabler/icons-vue';
 import StandardItem from './StandardItem.vue';
+import TranslatedEnum from './TranslatedEnum.vue';
 import type { Profile } from '../../../types.ts';
 import Config from '../../../base/config.ts';
 import type { FullConfig } from '../../../base/config.ts';
@@ -261,6 +263,8 @@ import { validateTextNotEmpty } from '../../../utils/validators.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { useDeviceStore } from '../../../stores/device.ts';
 import type { BrowserPermissionState, BrowserPermissionType } from '../../../stores/device.ts';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 const deviceStore = useDeviceStore();
@@ -280,15 +284,19 @@ const current = ref<ModalPage>(props.page);
 
 const title = computed(() => {
     switch (current.value) {
-        case 'details': return 'Welcome to CloudTAK';
-        case 'disclosure': return 'Location access';
-        default: return 'Permissions';
+        case 'details': return t('util.warnConfiguration.welcome');
+        case 'disclosure': return t('util.locationDisclosure.titleLocation');
+        default: return t('util.warnConfiguration.permissions');
     }
 });
 
 // --- User Details ---
 
 const roles: Profile['tak_role'][] = ['Team Member', 'Team Lead', 'HQ', 'Sniper', 'Medic', 'Forward Observer', 'RTO', 'K9'];
+
+const roleOptions = computed(() => roles.map((value) => {
+    return { value, label: t(`util.common.roles.${value.replace(/[^a-zA-Z0-9]+/g, '_')}`) };
+}));
 
 const groupKeys: (keyof FullConfig)[] = [
     'group::Yellow',
@@ -386,29 +394,29 @@ type PermissionDescriptor = {
     icon: Component;
 };
 
-const permissionDescriptors: Record<string, PermissionDescriptor> = {
+const permissionDescriptors = computed<Record<string, PermissionDescriptor>>(() => ({
     location: {
         key: 'location',
-        title: 'Location',
+        title: t('util.warnConfiguration.location'),
         description: isNativePlatform()
-            ? 'Share your live position with your team, including when the app is closed or not in use.'
-            : 'Share your live position with your team on the map.',
+            ? t('util.warnConfiguration.locationNative')
+            : t('util.warnConfiguration.locationBrowser'),
         icon: IconMapPin,
     },
     notification: {
         key: 'notification',
-        title: 'Notifications',
-        description: 'Receive alerts for chats, pages, and mission updates.',
+        title: t('util.warnConfiguration.notifications'),
+        description: t('util.warnConfiguration.notificationsHelp'),
         icon: IconBell,
     },
-};
+}));
 
 const error = ref('');
 const working = ref<BrowserPermissionType | undefined>();
 
 const permissionItems = computed(() => {
     return deviceStore.requiredPermissions
-        .map((key) => permissionDescriptors[key])
+        .map((key) => permissionDescriptors.value[key])
         .filter((item): item is PermissionDescriptor => !!item)
         .map((item) => ({
             ...item,
@@ -421,32 +429,32 @@ const permissionsSatisfied = computed(() => deviceStore.hasRequiredPermissions()
 
 const disclosureLead = computed(() => {
     return isNativePlatform()
-        ? "CloudTAK collects your device's location, including when the app is closed or not in use, so your team can see your position on the map."
-        : "CloudTAK collects your device's location while it is open in your browser so your team can see your position on the map.";
+        ? t('util.locationDisclosure.leadNative')
+        : t('util.locationDisclosure.leadBrowser');
 });
 
 const disclosureNext = computed(() => {
-    const always = isAndroidPlatform() ? '"Allow all the time"' : '"Always"';
+    const always = isAndroidPlatform() ? t('util.locationDisclosure.alwaysAndroid') : t('util.locationDisclosure.alwaysIOS');
 
     if (needsNativeSettings(deviceStore.permissions.location)) {
-        return `Next, CloudTAK will open your device settings. Set Location to ${always} to keep sharing your position in the background.`;
+        return t('util.locationDisclosure.nextBackgroundSettings', { always });
     } else if (isAndroidPlatform()) {
-        return 'Next, Android will ask for location access. Choose "Allow all the time" to keep sharing your position in the background. You can change this anytime in Settings.';
+        return t('util.warnConfiguration.nextAndroid');
     } else if (isIOSPlatform()) {
-        return 'Next, iOS will ask for location access. Choose "Allow While Using App", then "Change to Always Allow" to keep sharing your position in the background. You can change this anytime in Settings.';
+        return t('util.warnConfiguration.nextIOS');
     }
 
-    return 'Next, your browser will ask for location access. You can change this anytime in your browser settings.';
+    return t('util.locationDisclosure.nextBrowser');
 });
 
 function badgeLabel(status: BrowserPermissionState): string {
     switch (status) {
-        case 'granted': return 'Allowed';
-        case 'when_in_use': return 'While Using';
-        case 'denied': return 'Re-request';
-        case 'prompt': return 'Request';
-        case 'unsupported': return 'Unsupported';
-        default: return 'Request';
+        case 'granted': return t('util.warnConfiguration.status.granted');
+        case 'when_in_use': return t('util.warnConfiguration.status.whenInUse');
+        case 'denied': return t('util.warnConfiguration.status.denied');
+        case 'prompt': return t('util.warnConfiguration.status.prompt');
+        case 'unsupported': return t('util.warnConfiguration.status.unsupported');
+        default: return t('util.warnConfiguration.status.prompt');
     }
 }
 
@@ -478,10 +486,10 @@ function needsNativeSettings(status: BrowserPermissionState): boolean {
 }
 
 function actionLabel(type: BrowserPermissionType, status: BrowserPermissionState): string {
-    if (working.value === type) return 'Requesting...';
-    if (needsNativeSettings(status)) return 'Open Settings';
-    if (status === 'denied') return 'Re-request Permission';
-    return 'Request Permission';
+    if (working.value === type) return t('util.locationDisclosure.requesting');
+    if (needsNativeSettings(status)) return t('util.drawOverlay.openSettings');
+    if (status === 'denied') return t('util.warnConfiguration.reRequest');
+    return t('util.warnConfiguration.request');
 }
 
 function dismissPermissions(): void {
@@ -495,7 +503,7 @@ async function refreshStatuses(): Promise<void> {
     try {
         await deviceStore.refreshPermissionStatuses();
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'Failed to refresh permission status';
+        error.value = err instanceof Error ? err.message : t('util.warnConfiguration.refreshFailed');
     }
 }
 
@@ -531,7 +539,7 @@ async function runRequest(type: BrowserPermissionType): Promise<void> {
             await deviceStore.notification.request();
         }
     } catch (err) {
-        error.value = err instanceof Error ? err.message : `Failed to request ${type} permission`;
+        error.value = err instanceof Error ? err.message : t('util.warnConfiguration.requestFailed', { type });
     } finally {
         working.value = undefined;
         await refreshStatuses();

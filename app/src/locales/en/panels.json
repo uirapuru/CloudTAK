@@ -69,7 +69,8 @@
         "noDevices": "No devices registered. Tap the + button to register this device.",
         "registeredDevice": "Registered Device",
         "registeredOn": "Registered {date}",
-        "tokenFailed": "Failed to obtain a push notification token."
+        "tokenFailed": "Failed to obtain a push notification token.",
+        "permissionDenied": "Push notification permission was not granted."
     },
     "pagingModal": {
         "isVerified": "This source is verified",
@@ -130,7 +131,8 @@
                 "storage": "CloudTAK can persist local data storage for more reliable offline access.",
                 "camera": "CloudTAK can access your camera when needed.",
                 "wakeLock": "CloudTAK can keep the screen awake during active operations.",
-                "fileSystem": "CloudTAK can open local files for import and export workflows."
+                "fileSystem": "CloudTAK can open local files for import and export workflows.",
+                "notificationBrowser": "CloudTAK can deliver browser notifications."
             },
             "denied": {
                 "location": "Location access is currently blocked. Use the button below to try again.",
@@ -140,7 +142,8 @@
                 "storage": "Persistent storage was not granted. Use the button below to try again.",
                 "camera": "Camera access is currently blocked. Use the button below to try again.",
                 "wakeLock": "Wake lock access is currently blocked. Use the button below to try again.",
-                "fileSystem": "File system access is currently blocked. Use the button below to try again."
+                "fileSystem": "File system access is currently blocked. Use the button below to try again.",
+                "backgroundLocationBlocked": "Location access is currently blocked, so background location sharing is unavailable."
             },
             "prompt": {
                 "location": "Location access has not been granted yet.",
@@ -179,7 +182,9 @@
             "denied": "Denied",
             "notAsked": "Not asked yet",
             "unsupported": "Unsupported",
-            "unknown": "Unknown"
+            "unknown": "Unknown",
+            "reRequest": "Re-request",
+            "request": "Request"
         },
         "whenInUse": "Location is only shared while CloudTAK is open. Set Location to \"Always\" in Settings so your team keeps seeing you when the app is in the background.",
         "action": {
@@ -191,7 +196,8 @@
             "request": "Request Permission"
         },
         "refreshFailed": "Failed to refresh permission status",
-        "requestFailed": "Failed to request {permission} permission"
+        "requestFailed": "Failed to request {permission} permission",
+        "openSettingsFailed": "Failed to open system settings"
     },
     "settingsSessions": {
         "title": "Login Sessions"
@@ -295,7 +301,8 @@
         "items": "{count} Items",
         "noSubscribed": "No subscribed data syncs",
         "invalidPassword": "Invalid Password",
-        "fetchFailed": "Mission fetch failed"
+        "fetchFailed": "Mission fetch failed",
+        "qrCode": "QR code for ATAK Data Sync"
     },
     "overlayExplorer": {
         "title": "Overlay Explorer",
@@ -303,7 +310,24 @@
         "yourFiles": "Your Files",
         "yourFilesDesc": "Access overlays you have uploaded",
         "openFiles": "Open Files",
-        "none": "No Overlays"
+        "none": "No Overlays",
+        "working": "Working…",
+        "addVisible": "Add visible to overlays",
+        "removeVisible": "Remove visible from overlays",
+        "sectionCount": "Layers in section: {count}",
+        "favoritesHint": "Click the star next to a layer to keep it handy here.",
+        "stale": "(stale)",
+        "bulkHint": "Works on layers in expanded sections, and on all results while searching.",
+        "favorites": "Favorites",
+        "buildings3d": "3D buildings",
+        "favoriteFailed": "Could not change favorites: {error}",
+        "allAdded": "All visible layers are already in overlays.",
+        "added": "Overlays added: {count}.",
+        "addedPartial": "Overlays added: {count} of {total}, the rest failed.",
+        "noneAdded": "No visible item is in overlays.",
+        "removed": "Overlays removed: {count}.",
+        "removedPartial": "Overlays removed: {count} of {total}, the rest failed.",
+        "catalogFailed": "Could not load the layer catalog: {error}"
     },
     "overlays": {
         "title": "Overlays",
@@ -344,7 +368,46 @@
             "data": "Data",
             "profile": "Profile",
             "hidden": "Hidden"
-        }
+        },
+        "addGroup": "Add group",
+        "hideAll": "Hide all",
+        "showAll": "Show all",
+        "arrangeHint": "Move overlays without a group into the groups of their categories",
+        "arranging": "Arranging…",
+        "arrange": "Arrange into categories",
+        "groupName": "Group name",
+        "addGroupSubmit": "Add",
+        "expandFavorites": "Expand favorites",
+        "collapseFavorites": "Collapse favorites",
+        "favorites": "Favorites",
+        "favoritesCount": "Favorite overlays: {count}",
+        "dragGroup": "Drag to reorder groups",
+        "expandGroup": "Expand group",
+        "collapseGroup": "Collapse group",
+        "hideGroup": "Hide group overlays",
+        "showGroup": "Show group overlays",
+        "saveName": "Save name",
+        "groupCount": "Overlays in group: {count}",
+        "renameGroup": "Rename group",
+        "deleteGroup": "Delete group",
+        "deleteGroupConfirm": "Delete the group? Its overlays stay on the list without a group.",
+        "dropHere": "Drag overlays here",
+        "dropUngroup": "Drag an overlay here to take it out of its group",
+        "errors": {
+            "favorite": "Could not change favorites",
+            "arrange": "Could not arrange overlays into categories",
+            "moveOverlay": "Could not move the overlay",
+            "moveGroup": "Could not move the group",
+            "addGroup": "Could not add the group",
+            "renameGroup": "Could not rename the group",
+            "deleteGroup": "Could not delete the group"
+        },
+        "arrangeNothingUnknown": "Nothing to arrange. Overlays outside the catalog stayed without a group: {count}.",
+        "arrangeNothing": "Nothing to arrange: all overlays are already in groups.",
+        "arranged": "Overlays arranged into categories: {n}.",
+        "arrangedNewGroups": "New groups: {groups}.",
+        "arrangedUnknown": "Overlays outside the catalog stayed without a group: {count}.",
+        "groupNameLength": "Group name must be 1 to {max} characters."
     },
     "treeVector": {
         "viewRaw": "View Raw Style",
@@ -391,7 +454,16 @@
         "travelMode": "Travel Mode",
         "generate": "Generate Route",
         "addFailed": "Failed to add route",
-        "notFound": "No Route Found"
+        "notFound": "No Route Found",
+        "buildHint": "Click the map to add another point. The last point is the destination.",
+        "removePoint": "Remove point",
+        "myLocation": "My location",
+        "viaLabel": "Via point {n}",
+        "via": "Via point",
+        "removeVia": "Remove via point",
+        "addVia": "Add via point",
+        "threatsHint": "Cross-country routes also avoid the line of sight of hostile markers within 3 km.",
+        "locationUnknown": "Location unknown. Turn on GPS or set your position manually on the map."
     },
     "videos": {
         "title": "Videos",

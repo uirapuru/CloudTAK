@@ -32,13 +32,13 @@
                     type='button'
                     class='badge border-0 flex-shrink-0 cursor-pointer'
                     :class='attachment.required ? "bg-red-lt" : "bg-secondary-lt"'
-                    :title='attachment.required ? "The Form must be completed - click to make it optional" : "The Form is optional - click to make it required"'
+                    :title='attachment.required ? t("util.formSelect.requiredHint") : t("util.formSelect.optionalHint")'
                     :disabled='props.disabled'
                     @click='setRequired(attachment, !attachment.required)'
-                    v-text='attachment.required ? "Required" : "Optional"'
+                    v-text='attachment.required ? t("util.formSelect.required") : t("util.formSelect.optional")'
                 />
                 <TablerIconButton
-                    title='Remove Form'
+                    :title='t("util.formSelect.remove")'
                     :disabled='props.disabled'
                     @click='remove(attachment)'
                 >
@@ -62,7 +62,7 @@
                     :class='{ "cursor-pointer": !props.disabled }'
                     role='button'
                     :tabindex='props.disabled ? -1 : 0'
-                    aria-label='Attach a Form'
+                    :aria-label='t("util.formSelect.attach")'
                 >
                     <IconForms
                         :size='18'
@@ -72,7 +72,7 @@
                     <span
                         class='flex-grow-1 text-truncate text-secondary user-select-none'
                         style='min-width: 0;'
-                    >Attach a Form</span>
+                    >{{ t('util.formSelect.attach') }}</span>
                 </div>
             </template>
 
@@ -83,11 +83,11 @@
                 >
                     <div class='d-flex align-items-center px-3 py-2 border-bottom'>
                         <h3 class='m-0 fw-bold'>
-                            Forms
+                            {{ t('util.formSelect.title') }}
                         </h3>
                         <div class='ms-auto btn-list'>
                             <TablerRefreshButton
-                                title='Refresh Forms'
+                                :title='t("util.formSelect.refresh")'
                                 :size='20'
                                 :loading='loading'
                                 @click.stop='listForms'
@@ -100,7 +100,7 @@
                              search field has to swallow its own -->
                         <TablerInput
                             v-model='search'
-                            placeholder='Search...'
+                            :placeholder='t("util.common.searchPlaceholder")'
                             icon='search'
                             :autofocus='true'
                             class='mb-0'
@@ -112,7 +112,7 @@
                         <TablerLoading
                             v-if='loading'
                             :compact='true'
-                            desc='Loading Forms'
+                            :desc='t("util.formSelect.loading")'
                         />
                         <TablerAlert
                             v-else-if='error'
@@ -146,7 +146,7 @@
                                 v-if='!filtered.length'
                                 :compact='true'
                                 :create='false'
-                                :label='forms.length ? "No Matching Forms" : "No Forms shared with this Channel"'
+                                :label='forms.length ? t("util.formSelect.noMatching") : t("util.formSelect.none")'
                             />
                         </template>
                     </div>
@@ -157,6 +157,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /**
  * FormSelect - picker that attaches Core Forms to something (currently Board
  * Columns), each marked required or optional. Selection is staged through
@@ -182,6 +183,8 @@ import {
     IconForms,
     IconTrash,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 export type FormAttachment = {
     form: CoreForm;

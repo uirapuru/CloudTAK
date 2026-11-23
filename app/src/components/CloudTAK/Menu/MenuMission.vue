@@ -1,23 +1,23 @@
 <template>
     <MenuTemplate
-        :name='subscription ? subscription.meta.name : "Data Sync"'
+        :name='subscription ? subscription.meta.name : t("panels.mission.dataSync")'
         :loading='(!subscription && !error) || loading'
         :scroll='false'
     >
         <template #buttons>
             <TablerDelete
                 v-if='!loading && subscription && subscription.subscribed && subscription.role.permissions.includes("MISSION_DELETE")'
-                title='Delete'
-                :label='"Delete " + (subscription.meta.name || "Data Sync")'
+                :title='t("common.delete")'
+                :label='t("panels.mission.deleteLabel", { name: subscription.meta.name || t("panels.mission.dataSync") })'
                 displaytype='icon'
-                match='Delete Data Sync'
+                :match='t("panels.mission.deleteMatch")'
                 @delete='deleteMission'
             />
             <TablerDropdown
                 v-if='subscription && subscription.subscribed'
             >
                 <TablerIconButton
-                    title='More Options'
+                    :title='t("panels.mission.moreOptions")'
                 >
                     <IconDotsVertical
                         :size='20'
@@ -35,7 +35,7 @@
                                 :size='32'
                                 stroke='1'
                             />
-                            <span class='mx-2'>Export Data Package</span>
+                            <span class='mx-2'>{{ t('panels.mission.exportPackage') }}</span>
                         </div>
                         <div
                             class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -45,7 +45,7 @@
                                 :size='32'
                                 stroke='1'
                             />
-                            <span class='mx-2'>Export GeoJSON</span>
+                            <span class='mx-2'>{{ t('panels.mission.exportGeojson') }}</span>
                         </div>
                         <div
                             class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -55,7 +55,7 @@
                                 :size='32'
                                 stroke='1'
                             />
-                            <span class='mx-2'>Export KML</span>
+                            <span class='mx-2'>{{ t('panels.mission.exportKml') }}</span>
                         </div>
                         <div
                             class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
@@ -65,7 +65,7 @@
                                 :size='32'
                                 stroke='1'
                             />
-                            <span class='mx-2'>Download Archive</span>
+                            <span class='mx-2'>{{ t('panels.mission.downloadArchive') }}</span>
                         </div>
                     </div>
                 </template>
@@ -120,14 +120,14 @@
 
     <ShareToPackage
         v-if='shareToPackage.shown && subscription'
-        :name='`${new Date().toISOString().replace(/T.*/, "")} ${subscription ? subscription.meta.name : "Mission"}`'
+        :name='`${new Date().toISOString().replace(/T.*/, "")} ${subscription ? subscription.meta.name : t("panels.mission.mission")}`'
         :feats='shareToPackage.features'
         @close='shareToPackage.shown = false'
     />
 </template>
 
 <script setup lang='ts'>
-import { ref, triggerRef, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, triggerRef, onMounted, onBeforeUnmount, watch } from 'vue';
 import { std } from '../../../std.ts';
 import type { Feature } from '../../../types.ts';
 import type { Component } from 'vue';
@@ -157,22 +157,24 @@ import {
 import MenuTemplate from '../util/MenuTemplate.vue';
 import ShareToPackage from '../util/ShareToPackage.vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useMapStore } from '../../../stores/map.ts';
 import OverlayManager from '../../../base/overlay.ts';
 
 const mapStore = useMapStore();
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
-const missionTabs = [
-    { value: 'home-menu-mission-info', label: 'Metadata' },
-    { value: 'home-menu-mission-layers', label: 'Layers' },
-    { value: 'home-menu-mission-users', label: 'Users' },
-    { value: 'home-menu-mission-changes', label: 'Changes' },
-    { value: 'home-menu-mission-logs', label: 'Logs' },
-    { value: 'home-menu-mission-contents', label: 'Files' },
-    { value: 'home-menu-mission-chats', label: 'Chats' },
-];
+const missionTabs = computed(() => [
+    { value: 'home-menu-mission-info', label: t('panels.mission.tabs.info') },
+    { value: 'home-menu-mission-layers', label: t('panels.mission.tabs.layers') },
+    { value: 'home-menu-mission-users', label: t('panels.mission.tabs.users') },
+    { value: 'home-menu-mission-changes', label: t('panels.mission.tabs.changes') },
+    { value: 'home-menu-mission-logs', label: t('panels.mission.tabs.logs') },
+    { value: 'home-menu-mission-contents', label: t('panels.mission.tabs.contents') },
+    { value: 'home-menu-mission-chats', label: t('panels.mission.tabs.chats') },
+]);
 
 const missionTabIcons: Record<string, Component> = {
     'home-menu-mission-info': IconInfoSquare,
@@ -271,7 +273,7 @@ async function deleteMission() {
 async function exportToPackage(format: string): Promise<void> {
     if (!subscription.value) return;
 
-    loadingInline.value = 'Generating Archive'
+    loadingInline.value = t('panels.mission.generating')
 
     try {
         await std(`/api/marti/missions/${encodeURIComponent(subscription.value.guid)}/archive?download=true&format=${format}`, {

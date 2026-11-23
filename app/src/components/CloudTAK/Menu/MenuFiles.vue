@@ -1,10 +1,10 @@
 <template>
-    <MenuTemplate name='Files'>
+    <MenuTemplate :name='t("menu.files.title")'>
         <template #buttons>
             <template v-if='tab === "online" && !isOffline'>
                 <TablerIconButton
                     v-if='!loading && !upload'
-                    title='File Upload'
+                    :title='t("menu.files.upload")'
                     @click='upload = true'
                 >
                     <IconUpload
@@ -24,8 +24,8 @@
                 v-model='tab'
                 class='pt-2'
                 :options='[
-                    { value: "online", label: "Online" },
-                    { value: "offline", label: "Offline" },
+                    { value: "online", label: t("menu.files.online") },
+                    { value: "offline", label: t("menu.files.offline") },
                 ]'
             />
 
@@ -54,7 +54,7 @@
                     <TablerInput
                         v-model='paging.filter'
                         icon='search'
-                        placeholder='Filter'
+                        :placeholder='t("menu.common.filter")'
                     />
                 </div>
 
@@ -75,16 +75,16 @@
                                 />
                                 <div class='flex-grow-1 min-w-0'>
                                     <div class='d-flex align-items-center gap-2'>
-                                        <span class='fw-semibold'>Imports</span>
+                                        <span class='fw-semibold'>{{ t('menu.files.imports') }}</span>
                                     </div>
                                     <p class='mb-0 small text-white-50'>
-                                        Review and manage data imports
+                                        {{ t('menu.files.importsDescription') }}
                                     </p>
                                 </div>
                             </div>
                             <div class='d-flex align-items-center gap-2 flex-wrap'>
                                 <TablerIconButton
-                                    title='Open Imports'
+                                    :title='t("menu.files.openImports")'
                                     @click.stop.prevent='router.push("/menu/imports")'
                                 >
                                     <IconChevronRight
@@ -100,7 +100,7 @@
                 <div class='col-12 pt-2 d-flex align-items-center justify-content-between'>
                     <PathBreadcrumb v-model:collection='collectionPath' />
                     <TablerIconButton
-                        title='Create Folder'
+                        :title='t("menu.features.createFolder")'
                         @click='folderModal.shown = true'
                     >
                         <IconFolderPlus
@@ -119,7 +119,7 @@
                 />
                 <TablerNone
                     v-else-if='!currentFolders.length && !currentFiles.length'
-                    :label='currentPath === "/" ? "No Files" : "Folder is empty"'
+                    :label='currentPath === "/" ? t("menu.files.none") : t("menu.features.folderEmpty")'
                     :create='false'
                 />
                 <template v-else>
@@ -196,19 +196,19 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='folderModal.shown = false'
         />
         <div class='modal-header text-body'>
             <div class='modal-title'>
-                {{ folderModal.editingNode ? 'Rename Folder' : 'Create Folder' }}
+                {{ folderModal.editingNode ? t('menu.features.renameFolder') : t('menu.features.createFolder') }}
             </div>
         </div>
         <div class='modal-body'>
             <TablerInput
                 v-model='folderModal.name'
-                label='Folder Name'
-                placeholder='Documents'
+                :label='t("menu.features.folderName")'
+                :placeholder='t("menu.files.folderPlaceholder")'
                 @submit='submitFolder'
             />
         </div>
@@ -218,7 +218,7 @@
                 variant='primary'
                 @click='submitFolder'
             >
-                {{ folderModal.editingNode ? 'Save' : 'Create' }}
+                {{ folderModal.editingNode ? t('common.save') : t('menu.common.create') }}
             </TablerButton>
         </div>
     </TablerModal>
@@ -230,12 +230,12 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='moveModal.shown = false'
         />
         <div class='modal-header text-body'>
             <div class='modal-title'>
-                Move File to Folder
+                {{ t('menu.files.moveTitle') }}
             </div>
         </div>
         <div class='modal-body'>
@@ -248,7 +248,7 @@
                     stroke='1'
                     class='me-2'
                 />
-                <span>/ (Root)</span>
+                <span>{{ t('menu.files.root') }}</span>
             </div>
             <div
                 v-for='p in allPaths'
@@ -276,6 +276,7 @@
 
 <script setup lang='ts'>
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue';
 import { Preferences } from '@capacitor/preferences';
 import type { ProfileFile, ProfileFileList } from '../../../types.ts';
@@ -319,6 +320,7 @@ import { useDeviceStore } from '../../../stores/device.ts';
 import type { Subscription } from 'dexie';
 import Upload from '../../util/Upload.vue';
 
+const { t } = useI18n();
 const mapStore = useMapStore();
 const deviceStore = useDeviceStore();
 

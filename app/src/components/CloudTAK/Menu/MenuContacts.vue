@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='Contacts'>
+    <MenuTemplate :name='t("menu.contacts.title")'>
         <template #buttons>
             <TablerRefreshButton
                 :loading='syncing'
@@ -10,7 +10,7 @@
             <div class='my-2'>
                 <SearchSortFilter
                     v-model='paging.filter'
-                    placeholder='Filter'
+                    :placeholder='t("menu.common.filter")'
                 />
             </div>
 
@@ -19,14 +19,14 @@
             <TablerLoading v-if='!contacts' />
             <TablerNone
                 v-else-if='!visibleActiveContacts.length && !visibleOfflineContacts.length'
-                label='No Contacts'
+                :label='t("menu.contacts.none")'
                 :create='false'
             />
             <template v-else>
-                <label class='subheader'>Online</label>
+                <label class='subheader'>{{ t('menu.contacts.online') }}</label>
                 <TablerNone
                     v-if='visibleActiveContacts.length === 0'
-                    label='No Online Contacts'
+                    :label='t("menu.contacts.noneOnline")'
                     :compact='true'
                     :create='false'
                 />
@@ -80,7 +80,7 @@
                 <div class='col-lg-12'>
                     <SlideDownHeader
                         v-model='showOffline'
-                        label='Recently Offline'
+                        :label='t("menu.contacts.recentlyOffline")'
                     >
                         <template #right>
                             <TablerBadge
@@ -96,7 +96,7 @@
                         <div class='mx-2 pt-2'>
                             <TablerNone
                                 v-if='visibleOfflineContacts.length === 0'
-                                label='No Offline Contacts'
+                                :label='t("menu.contacts.noneOffline")'
                                 :compact='true'
                                 :create='false'
                             />
@@ -123,6 +123,7 @@
 <script setup lang='ts'>
 import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import type { Ref } from 'vue';
 import { liveQuery } from '../../../database.ts';
 import { useObservable } from '@vueuse/rxjs';
@@ -146,6 +147,7 @@ import Contact from '../util/Contact.vue';
 import ContactPuck from '../util/ContactPuck.vue';
 import EmptyInfo from '../util/EmptyInfo.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 const syncing = ref(false);
 const showOffline = ref(false);

@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Data Packages'
+        :name='t("panels.packages.title")'
     >
         <template #buttons>
             <TablerIconButton
                 v-if='!loading'
-                title='Create Package'
+                :title='t("panels.packages.create")'
                 @click='upload = true'
             >
                 <IconPlus
@@ -31,12 +31,12 @@
                     <TablerInput
                         v-model='paging.filter'
                         icon='search'
-                        placeholder='Filter'
+                        :placeholder='t("panels.common.filter")'
                         class='flex-grow-1'
                     />
                 </div>
 
-                <ChannelInfo label='Data Packages' />
+                <ChannelInfo :label='t("panels.packages.title")' />
                 <EmptyInfo v-if='mapStore.hasNoChannels' />
 
                 <TablerLoading
@@ -45,12 +45,12 @@
                 />
                 <TablerAlert
                     v-else-if='error'
-                    title='Packages Error'
+                    :title='t("panels.packages.error")'
                     :err='error'
                 />
                 <TablerNone
                     v-else-if='!list.items.length'
-                    label='No Packages'
+                    :label='t("panels.packages.none")'
                     :create='false'
                 />
                 <div
@@ -100,6 +100,7 @@
 import type { PackageList } from '../../../../src/types.ts';
 import { ref, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import Keywords from '../util/Keywords.vue';
 import StandardItem from '../util/StandardItem.vue';
@@ -126,6 +127,7 @@ import { useMapStore } from '../../../../src/stores/map.ts';
 const mapStore = useMapStore();
 
 const router = useRouter();
+const { t } = useI18n();
 
 const error = ref<Error | undefined>();
 const loading = ref(true);
@@ -163,10 +165,10 @@ async function fetchList() {
         });
 
         if (res.error) {
-            throw new Error(res.error.message || 'Failed to load data packages');
+            throw new Error(res.error.message || t('panels.packages.loadFailed'));
         }
 
-        if (!res.data) throw new Error('Failed to load data packages');
+        if (!res.data) throw new Error(t('panels.packages.loadFailed'));
 
         list.value = res.data;
     } catch (err) {

@@ -2,8 +2,8 @@
     <TablerToggle
         :model-value='!modelValue?.ignore_danger_zones'
         class='avoid-danger-zones'
-        label='Omijaj strefy niebezpieczne'
-        description='Strefa niebezpieczna to figura z zaznaczonym polem „Strefa niebezpieczna” w jej widoku (geofence z alarmem przy wejściu) albo z „zamknięt” w nazwie.'
+        :label='t("taklab.routeDangerZones.avoid")'
+        :description='t("taklab.routeDangerZones.description")'
         :disabled='disabled'
         @update:model-value='change($event)'
     />
@@ -15,8 +15,11 @@
  * edycji trasy. Wartość to opcje trasy w formacie planu: wyłączenie omijania zapisuje
  * ignore_danger_zones, pozostałe opcje przechodzą bez zmian.
  */
+import { useI18n } from 'vue-i18n';
 import { TablerToggle } from '@tak-ps/vue-tabler';
 import type { RouteOptions } from '../../../base/route-plan.ts';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     modelValue?: RouteOptions;

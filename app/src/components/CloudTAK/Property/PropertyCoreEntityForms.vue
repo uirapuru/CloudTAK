@@ -1,6 +1,6 @@
 <template>
     <PropertySection
-        label='Forms'
+        :label='t("property.coreEntityForms.title")'
         :count='responses.length'
     >
         <template #actions>
@@ -15,7 +15,7 @@
                 >
                     <template #default>
                         <TablerIconButton
-                            title='Complete a Form'
+                            :title='t("property.coreEntityForms.complete")'
                             @click='listForms'
                         >
                             <IconPlus
@@ -29,11 +29,11 @@
                         <div class='event-form-pick-menu'>
                             <div class='d-flex align-items-center px-3 py-2 border-bottom'>
                                 <h3 class='m-0 fw-bold'>
-                                    Forms
+                                    {{ t('property.coreEntityForms.title') }}
                                 </h3>
                                 <div class='ms-auto btn-list'>
                                     <TablerRefreshButton
-                                        title='Refresh Forms'
+                                        :title='t("property.coreEntityForms.refresh")'
                                         :size='20'
                                         :loading='loading'
                                         @click.stop='listForms(true)'
@@ -46,7 +46,7 @@
                                          search field has to swallow its own -->
                                 <TablerInput
                                     v-model='search'
-                                    placeholder='Search...'
+                                    :placeholder='t("property.coreEntityForms.search")'
                                     icon='search'
                                     :autofocus='true'
                                     class='mb-0'
@@ -58,7 +58,7 @@
                                 <TablerLoading
                                     v-if='formsLoading'
                                     :compact='true'
-                                    desc='Loading Forms'
+                                    :desc='t("property.coreEntityForms.loading")'
                                 />
                                 <TablerAlert
                                     v-else-if='formsError'
@@ -92,7 +92,7 @@
                                         v-if='!filtered.length'
                                         :compact='true'
                                         :create='false'
-                                        :label='forms.length ? "No Matching Forms" : "No Forms shared with this Event"'
+                                        :label='forms.length ? t("property.coreEntityForms.noMatching") : t("property.coreEntityForms.noneShared")'
                                     />
                                 </template>
                             </div>
@@ -105,7 +105,7 @@
         <TablerLoading
             v-if='loading'
             :compact='true'
-            desc='Loading Forms'
+            :desc='t("property.coreEntityForms.loading")'
         />
         <TablerAlert
             v-else-if='error'
@@ -114,7 +114,7 @@
         <template v-else>
             <TablerNone
                 v-if='!responses.length'
-                label='No Completed Forms'
+                :label='t("property.coreEntityForms.noneCompleted")'
                 class='pb-4'
                 :compact='true'
                 :create='false'
@@ -138,7 +138,7 @@
                             v-text='item.form.name'
                         />
                         <div class='small text-muted text-truncate'>
-                            <span v-text='item.username || "Unknown User"' />
+                            <span v-text='item.username || t("property.coreEntityForms.unknownUser")' />
                             <span class='mx-1'>&middot;</span>
                             <TablerEpoch :date='item.created' />
                         </div>
@@ -173,6 +173,10 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 /**
  * PropertyCoreEntityForms - the Forms that have been completed for a Core
  * Event: every Form Response linked to it, expandable into a read-only

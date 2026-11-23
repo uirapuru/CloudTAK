@@ -8,14 +8,14 @@
             :gap='gap'
         >
             <template #label>
-                <small :class='labelClass'>{{ label }}</small>
+                <small :class='labelClass'>{{ label ?? t('util.inlineGroupSelect.label') }}</small>
             </template>
             <template
                 v-if='editable && !editing'
                 #tools
             >
                 <TablerIconButton
-                    :title='editTitle'
+                    :title='editTitle ?? t("util.inlineGroupSelect.edit")'
                     @click.stop.prevent='emit("edit")'
                 >
                     <IconPencil
@@ -32,7 +32,7 @@
                     <TablerIconButton
                         :disabled='saving'
                         color='rgba(var(--tblr-primary-rgb), 0.14)'
-                        :title='saving ? savingLabel : saveLabel'
+                        :title='saving ? (savingLabel ?? t("util.common.saving")) : (saveLabel ?? t("common.save"))'
                         @click.stop='commitDraft'
                     >
                         <IconDeviceFloppy
@@ -42,7 +42,7 @@
                     </TablerIconButton>
                     <TablerIconButton
                         :disabled='saving'
-                        title='Cancel'
+                        :title='t("common.cancel")'
                         @click.stop='revertDraft'
                     >
                         <IconX stroke='1' />
@@ -80,7 +80,7 @@
                     v-else
                     :class='emptyClass'
                 >
-                    {{ emptyLabel }}
+                    {{ emptyLabel ?? t('util.common.none') }}
                 </p>
             </template>
         </TablerBorder>
@@ -88,10 +88,13 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { IconDeviceFloppy, IconPencil, IconX } from '@tabler/icons-vue';
 import { TablerBadge, TablerBorder, TablerIconButton } from '@tak-ps/vue-tabler';
 import { ref, watch } from 'vue';
 import GroupSelect from './GroupSelect.vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     value: string[];
@@ -121,8 +124,8 @@ const props = withDefaults(defineProps<{
     badgeTextColor?: string;
 }>(), {
     editable: false,
-    label: 'Groups (Channels)',
-    editTitle: 'Edit channels',
+    label: undefined,
+    editTitle: undefined,
     containerClass: 'col-12',
     borderClass: undefined,
     labelClass: 'text-uppercase text-secondary d-block mb-0',
@@ -134,9 +137,9 @@ const props = withDefaults(defineProps<{
     direction: 'IN',
     limit: undefined,
     saving: false,
-    saveLabel: 'Save',
-    savingLabel: 'Saving...',
-    emptyLabel: 'None',
+    saveLabel: undefined,
+    savingLabel: undefined,
+    emptyLabel: undefined,
     emptyClass: 'text-secondary mb-0',
     badgeClass: 'rounded-pill text-uppercase fw-semibold',
     badgeBackgroundColor: 'var(--tblr-secondary-lt)',

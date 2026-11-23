@@ -1,7 +1,7 @@
 <template>
     <div class='col-12 row g-0'>
         <div class='col-12 d-flex align-items-center'>
-            <label class='subheader mx-2'>Sun Phase</label>
+            <label class='subheader mx-2'>{{ t('tools.sun.title') }}</label>
             <span
                 v-if='sun'
                 class='subheader ms-auto me-2'
@@ -11,7 +11,7 @@
         </div>
         <TablerLoading
             v-if='loading'
-            desc='Loading sun data...'
+            :desc='t("tools.sun.loading")'
         />
         <TablerAlert
             v-else-if='error'
@@ -34,7 +34,7 @@
                         class='text-muted small text-end'
                         style='width: 60px;'
                     >
-                        Prev Night
+                        {{ t('tools.sun.prevNight') }}
                     </div>
                     <div class='mx-3 d-flex flex-column align-items-center'>
                         <IconMoonStars
@@ -44,10 +44,10 @@
                         />
                     </div>
                     <div>
-                        <div v-text='prevMoon.phase' />
+                        <div v-text='t(`tools.sun.moonPhases.${prevMoon.phase.replace(/[^a-zA-Z0-9]+/g, "_")}`)' />
                         <div
                             class='small text-muted'
-                            v-text='prevMoon.illumination + "% Illuminated"'
+                            v-text='t("tools.sun.illuminated", { value: prevMoon.illumination })'
                         />
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                     <template v-if='event.type === "now"'>
                         <div class='w-100 d-flex align-items-center text-red'>
                             <div class='flex-grow-1 border-top border-red' />
-                            <span class='mx-2 small font-weight-bold'>Current Time</span>
+                            <span class='mx-2 small font-weight-bold'>{{ t('tools.sun.events.Current_Time') }}</span>
                             <div class='flex-grow-1 border-top border-red' />
                         </div>
                     </template>
@@ -75,7 +75,7 @@
                             />
                         </div>
                         <div>
-                            <div v-text='event.name' />
+                            <div v-text='t(`tools.sun.events.${event.name.replace(/[^a-zA-Z0-9]+/g, "_")}`)' />
                             <div
                                 class='small text-muted'
                                 v-text='fromNow(event.time)'
@@ -90,7 +90,7 @@
                     class='text-muted small text-end'
                     style='width: 60px;'
                 >
-                    Moon
+                    {{ t('tools.sun.moon') }}
                 </div>
                 <div class='mx-3 d-flex flex-column align-items-center'>
                     <IconMoonStars
@@ -100,10 +100,10 @@
                     />
                 </div>
                 <div>
-                    <div v-text='moon.phase' />
+                    <div v-text='t(`tools.sun.moonPhases.${moon.phase.replace(/[^a-zA-Z0-9]+/g, "_")}`)' />
                     <div
                         class='small text-muted'
-                        v-text='moon.illumination + "% Illuminated"'
+                        v-text='t("tools.sun.illuminated", { value: moon.illumination })'
                     />
                 </div>
             </div>
@@ -127,6 +127,9 @@ import {
     TablerLoading,
     TablerAlert
 } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     longitude: number;

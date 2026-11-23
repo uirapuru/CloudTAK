@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -11,7 +14,7 @@
                             <a
                                 href='/docs'
                                 class='link-secondary'
-                            >Documentation</a>
+                            >{{ t('login.pageFooter.documentation') }}</a>
                         </li>
                         <li class='list-inline-item'>
                             <a
@@ -19,7 +22,7 @@
                                 target='_blank'
                                 class='link-secondary'
                                 rel='noopener'
-                            >Source code</a>
+                            >{{ t('login.pageFooter.sourceCode') }}</a>
                         </li>
                     </ul>
                 </div>
@@ -34,7 +37,7 @@
                             - <a 
                                 href='https://github.com/dfpc-coe/CloudTAK/blob/main/LICENSE'
                                 class='link-secondary'  
-                            >AGPL-3.0 license</a>
+                            >{{ t('login.pageFooter.license') }}</a>
                         </li>
                     </ul>
                 </div>

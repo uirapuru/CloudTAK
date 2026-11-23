@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='External IDs'
+            :label='t("property.coreEntityExternalId.title")'
         >
             <template #icon>
                 <IconHash
@@ -15,7 +15,7 @@
             <template #right>
                 <TablerIconButton
                     v-if='props.edit'
-                    title='Add External ID'
+                    :title='t("property.coreEntityExternalId.add")'
                     class='me-2'
                     @click.stop='add'
                 >
@@ -38,7 +38,7 @@
                 <div class='rounded mx-2 mt-2 px-2 py-2'>
                     <TablerNone
                         v-if='!entries.length && !creating'
-                        label='No External IDs'
+                        :label='t("property.coreEntityExternalId.none")'
                         :compact='true'
                         :create='false'
                     />
@@ -62,7 +62,7 @@
                         />
                         <TablerIconButton
                             v-if='props.edit'
-                            title='Remove External ID'
+                            :title='t("property.coreEntityExternalId.remove")'
                             class='flex-shrink-0'
                             @click='remove(system)'
                         >
@@ -79,11 +79,11 @@
                     >
                         <div class='d-flex align-items-center mb-2'>
                             <div class='subheader user-select-none'>
-                                External ID
+                                {{ t('property.coreEntityExternalId.externalId') }}
                             </div>
                             <div class='ms-auto d-flex align-items-center flex-nowrap'>
                                 <TablerIconButton
-                                    title='Save External ID'
+                                    :title='t("property.coreEntityExternalId.save")'
                                     :disabled='!valid'
                                     @click='saveNew'
                                 >
@@ -93,7 +93,7 @@
                                     />
                                 </TablerIconButton>
                                 <TablerIconButton
-                                    title='Discard External ID'
+                                    :title='t("property.coreEntityExternalId.discard")'
                                     @click='creating = false'
                                 >
                                     <IconTrash
@@ -106,15 +106,15 @@
 
                         <TablerInput
                             v-model='draft.system'
-                            label='System'
+                            :label='t("property.coreEntityExternalId.system")'
                             placeholder='active911, caltopo, cad'
-                            description='Letters, numbers, dots, dashes & underscores'
+                            :description='t("property.coreEntityExternalId.systemDescription")'
                             class='pb-2'
                         />
 
                         <TablerInput
                             v-model='draft.value'
-                            label='ID'
+                            :label='t("property.coreEntityExternalId.id")'
                             placeholder='1234'
                         />
                     </div>
@@ -130,6 +130,9 @@ import SlideDownHeader from '../util/SlideDownHeader.vue';
 import { TablerBadge, TablerInput, TablerIconButton, TablerNone } from '@tak-ps/vue-tabler';
 import { IconHash, IconPlus, IconTrash, IconCheck } from '@tabler/icons-vue';
 import type { CoreEntityExternalId } from '../../../types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const SYSTEM = /^[A-Za-z0-9][A-Za-z0-9_.-]*$/;
 

@@ -1,4 +1,5 @@
 import cronstrue from 'cronstrue';
+import { t } from '../i18n.ts';
 
 /**
  * Client-side helpers for the EventBridge-style schedule strings stored on
@@ -74,12 +75,12 @@ export function validateCronExpression(expression: string): string | null {
     const fields = expression.trim().split(/\s+/).filter((field) => field.length);
 
     if (fields.length !== 6) {
-        return 'Cron expressions require 6 fields: minutes hours day-of-month month day-of-week year';
+        return t('messages.schedule.cronFields');
     }
 
     // EventBridge cannot resolve both day fields - one of the two must defer with ?
     if (fields[2] !== '?' && fields[4] !== '?') {
-        return 'One of day-of-month or day-of-week must be "?"';
+        return t('messages.schedule.cronDayField');
     }
 
     try {
@@ -95,17 +96,27 @@ export function validateCronExpression(expression: string): string | null {
 /** Return an error message for an invalid schedule or null if valid */
 export function validateSchedule(schedule?: string | null): string | null {
     if (!schedule || !schedule.trim().length) {
-        return 'Schedule cannot be empty';
+        return t('messages.schedule.empty');
     } else if (isCron(schedule)) {
         return validateCronExpression(cronExpression(schedule));
     } else if (isRate(schedule)) {
         if (!parseRate(schedule)) {
-            return 'Rates must be in the format rate(<frequency> <seconds|minutes|hours|days>)';
+            return t('messages.schedule.rateFormat');
         }
         return null;
     } else {
-        return 'Schedules must be either a rate(...) or cron(...) expression';
+        return t('messages.schedule.unknownType');
     }
+}
+
+/** Translated unit name in the grammatical form that fits the given count (one / few / many) */
+export function scheduleUnitLabel(unit: ScheduleUnit, count: number): string {
+    const lastDigit = count % 10;
+    const lastTwo = count % 100;
+    let form = 'many';
+    if (count === 1) form = 'one';
+    else if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) form = 'few';
+    return t(`messages.schedule.unit_${unit}_${form}`);
 }
 
 /** Human readable description of a schedule - empty string if the schedule is invalid */
@@ -115,7 +126,9 @@ export function describeSchedule(schedule?: string | null): string {
     if (isRate(schedule)) {
         const rate = parseRate(schedule);
         if (!rate) return '';
-        return `Runs once every ${rate.freq === 1 ? rate.unit : `${rate.freq} ${rate.unit}s`}`;
+        return rate.freq === 1
+            ? t('messages.schedule.runsEveryOne', { unit: scheduleUnitLabel(rate.unit, rate.freq) })
+            : t('messages.schedule.runsEvery', { count: rate.freq, unit: scheduleUnitLabel(rate.unit, rate.freq) });
     } else {
         try {
             return cronstrue.toString(cronExpression(schedule));

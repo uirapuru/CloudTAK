@@ -6,7 +6,7 @@
     >
         <template #buttons>
             <TablerIconButton
-                title='Select Chats'
+                :title='t("menu.chat.select")'
                 @click='multiselect = !multiselect'
             >
                 <IconListCheck
@@ -29,7 +29,7 @@
                 :multiselect='multiselect'
                 :can-attach-map='canAttachMap'
                 :attach-error='attachError'
-                placeholder='Send Message...'
+                :placeholder='t("menu.chat.send")'
                 @send='sendMessage'
                 @delete='deleteChats'
                 @at-bottom='onAtBottom'
@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import { ref, onMounted, shallowRef, watch, onUnmounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import Chatroom from '../../../base/chatroom.ts';
 import type { Subscription } from 'dexie';
 import { liveQuery } from '../../../database.ts';
@@ -57,6 +58,7 @@ import ProfileConfig from '../../../base/profile.ts';
 import { collectMapSnapshot } from '../../../base/taklab-map-collect.ts';
 import OverlayManager from '../../../base/overlay.ts';
 
+const { t } = useI18n();
 const mapStore = useMapStore();
 const atBottom = ref(true);
 

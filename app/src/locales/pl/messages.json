@@ -73,5 +73,19 @@
         "utmBounds": "Szerokość jest poza obsługiwanym zakresem UTM",
         "mgrsZone": "Oczekiwano poprawnej litery strefy MGRS",
         "bngBounds": "Współrzędne są poza British National Grid"
+    },
+    "route": {
+        "noRoute": "Usługa tras nie zwróciła trasy.",
+        "noPlan": "Usługa tras zwróciła trasę bez planu.",
+        "minTwoPoints": "Trasa musi mieć co najmniej dwa punkty.",
+        "maxWaypoints": "Najwyżej 25 punktów pośrednich."
+    },
+    "zoneReroute": {
+        "title": "Strefa zmieniona: trasy",
+        "rerouted": "Przeliczone: {names}.",
+        "failed": "Nie udało się przeliczyć „{name}”: {error}"
+    },
+    "voice": {
+        "micDenied": "Brak dostępu do mikrofonu. Zezwól na mikrofon w ustawieniach przeglądarki."
     }
 }

@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='New Route'
+        :name='t("panels.routesNew.title")'
     >
         <template #default>
             <TablerLoading
                 v-if='loading || !config'
-                desc='Loading'
+                :desc='t("common.loading")'
             />
             <TablerAlert
                 v-else-if='error'
@@ -17,7 +17,7 @@
                         v-if='config.providers.length'
                         v-model='routePlan.provider'
                         :disabled='building'
-                        label='Routing Provider'
+                        :label='t("panels.routesNew.provider")'
                         :options='config.providers.map(p => p.name)'
                     />
                 </div>
@@ -26,7 +26,7 @@
                     class='my-2 route-build-list'
                 >
                     <div class='text-secondary small mb-1'>
-                        Kliknij mapę, aby dodać kolejny punkt. Ostatni punkt jest celem.
+                        {{ t('panels.routesNew.buildHint') }}
                     </div>
                     <div
                         v-for='(point, index) in buildPoints'
@@ -45,7 +45,7 @@
                         <button
                             type='button'
                             class='btn btn-sm btn-link text-danger p-0 route-build-remove'
-                            title='Usuń punkt'
+                            :title='t("panels.routesNew.removePoint")'
                             @click='mapStore.draw.removeRouteWaypoint(index)'
                         >
                             <IconX
@@ -59,8 +59,8 @@
                     <div class='my-2'>
                         <SearchBox
                             :key='startKey'
-                            label='Start Location'
-                            placeholder='Start Location'
+                            :label='t("panels.routesNew.start")'
+                            :placeholder='t("panels.routesNew.start")'
                             :autofocus='true'
                             :location-picker='true'
                             :initial-value='startInitialValue'
@@ -75,7 +75,7 @@
                                 :size='18'
                                 stroke='1'
                                 class='me-1'
-                            />Moja pozycja
+                            />{{ t('panels.routesNew.myLocation') }}
                         </button>
                         <div
                             v-if='locationError'
@@ -90,8 +90,8 @@
                     >
                         <div class='flex-grow-1'>
                             <SearchBox
-                                :label='"Punkt pośredni " + (index + 1)'
-                                placeholder='Punkt pośredni'
+                                :label='t("panels.routesNew.viaLabel", { n: index + 1 })'
+                                :placeholder='t("panels.routesNew.via")'
                                 :autofocus='false'
                                 :location-picker='true'
                                 @select='via.value = $event ? { name: $event.name, coordinates: $event.coordinates } : null'
@@ -100,7 +100,7 @@
                         <button
                             type='button'
                             class='btn btn-sm btn-outline-danger mb-1 remove-via'
-                            title='Usuń punkt pośredni'
+                            :title='t("panels.routesNew.removeVia")'
                             @click='removeVia(index)'
                         >
                             <IconX
@@ -119,13 +119,13 @@
                                 :size='16'
                                 stroke='1'
                                 class='me-1'
-                            />Dodaj punkt pośredni
+                            />{{ t('panels.routesNew.addVia') }}
                         </button>
                     </div>
                     <div class='my-2'>
                         <SearchBox
-                            label='End Location'
-                            placeholder='End Location'
+                            :label='t("panels.routesNew.end")'
+                            :placeholder='t("panels.routesNew.end")'
                             :autofocus='false'
                             :location-picker='true'
                             :initial-value='endInitialValue'
@@ -139,7 +139,7 @@
                         v-if='modes.length > 0'
                         v-model='routePlan.travelMode'
                         :disabled='building && mapStore.draw.routeBusy'
-                        label='Travel Mode'
+                        :label='t("panels.routesNew.travelMode")'
                         :options='modes.map(m => m.name)'
                     />
                 </div>
@@ -161,7 +161,7 @@
                         :disabled='building && mapStore.draw.routeBusy'
                     />
                     <div class='text-secondary small route-threats-hint'>
-                        Na przełaju trasa omija też pole widzenia wrogich znaczników do 3 km.
+                        {{ t('panels.routesNew.threatsHint') }}
                     </div>
                 </div>
                 <div class='my-3'>
@@ -170,7 +170,7 @@
                         class='btn btn-primary w-100'
                         @click='generateRoute'
                     >
-                        Generate Route
+                        {{ t('panels.routesNew.generate') }}
                     </button>
                 </div>
             </template>
@@ -181,6 +181,7 @@
 <script setup lang='ts'>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import SearchBox from '../util/SearchBox.vue';
 import RouteCrossCountryOptions from '../util/RouteCrossCountryOptions.vue';
 import RouteDangerZones from '../util/RouteDangerZones.vue';
@@ -201,6 +202,7 @@ import { LocationState } from '../../../utils/events.ts';
 import type { Search } from '../../../types.ts';
 
 const router = useRouter();
+const { t } = useI18n();
 const route = useRoute();
 const mapStore = useMapStore();
 
@@ -381,12 +383,12 @@ async function useMyLocation(): Promise<boolean> {
         location = await mapStore.worker.profile.location;
     } catch (err) {
         console.error('Nie udało się odczytać pozycji', err);
-        locationError.value = 'Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.';
+        locationError.value = t('panels.routesNew.locationUnknown');
         return false;
     }
 
     if (![LocationState.Preset, LocationState.Live].includes(location.source)) {
-        locationError.value = 'Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.';
+        locationError.value = t('panels.routesNew.locationUnknown');
         return false;
     }
 
@@ -503,13 +505,13 @@ async function generateRoute(): Promise<void> {
                 authored: true
             });
 
-            if (!cot) throw new Error('Failed to add route');
+            if (!cot) throw new Error(t('panels.routesNew.addFailed'));
 
             cot.flyTo();
 
             router.push(`/cot/${cot.id}`);
         } else {
-            throw new Error('No Route Found');
+            throw new Error(t('panels.routesNew.notFound'));
         }
 
         loading.value = false;

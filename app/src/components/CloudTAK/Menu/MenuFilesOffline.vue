@@ -3,14 +3,14 @@
         <TablerInput
             v-model='filter'
             icon='search'
-            placeholder='Filter'
+            :placeholder='t("menu.common.filter")'
         />
     </div>
 
     <TablerLoading v-if='loading' />
     <TablerNone
         v-else-if='!files.length'
-        label='No Offline Files'
+        :label='t("menu.filesOffline.none")'
         :create='false'
     />
     <div
@@ -91,7 +91,7 @@
                     <TablerDelete
                         displaytype='menu'
                         class='cloudtak-hover rounded'
-                        label='Remove from Device'
+                        :label='t("menu.filesOffline.remove")'
                         @delete='remove(file)'
                     />
                 </template>
@@ -102,6 +102,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Subscription } from 'dexie';
 import type { DBProfileFile } from '../../../database.ts';
 import ProfileFileManager from '../../../base/profile-file.ts';
@@ -119,6 +120,8 @@ import {
     TablerEpoch
 } from '@tak-ps/vue-tabler';
 import { IconMapPlus } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     overlayUrls: Set<string>;
@@ -175,9 +178,9 @@ function canCreateOverlay(file: DBProfileFile): boolean {
 }
 
 function overlayTitle(file: DBProfileFile): string {
-    if (overlayExists(file)) return 'Overlay already added';
-    if (props.isOffline) return 'Connect to add to Map as Overlay';
-    return 'Add to Map as Overlay';
+    if (overlayExists(file)) return t('menu.filesRow.overlayExists');
+    if (props.isOffline) return t('menu.filesOffline.connectToAdd');
+    return t('menu.filesRow.addOverlay');
 }
 
 async function remove(file: DBProfileFile) {

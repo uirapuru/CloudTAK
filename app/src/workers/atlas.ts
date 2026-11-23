@@ -13,6 +13,7 @@ import AtlasSync from './atlas-sync.ts';
 import AtlasTiles from './atlas-tiles.ts';
 import { CloudTAKTransferHandler } from './handler.ts';
 import { db, probeDatabase, suspendDatabase, resumeDatabase } from '../database.ts';
+import { setWorkerLocale } from '../base/worker-i18n.ts';
 
 // A storage process that is not answering never will - surface it in
 // seconds rather than burning the main thread's 30s init budget
@@ -64,8 +65,15 @@ export default class Atlas {
                 this.profile.update(msg.body);
             } else if (msg.type === WorkerMessageType.Network_Change) {
                 this.conn.setOnline(msg.body.online === true);
+            } else if (msg.type === WorkerMessageType.Locale_Change) {
+                setWorkerLocale(String(msg.body.locale));
             }
         }
+    }
+
+    /** The main thread passes the UI language; notifications are written in it. */
+    async setLocale(locale: string): Promise<void> {
+        setWorkerLocale(locale);
     }
 
     async postMessage(msg: WorkerMessage): Promise<void> {

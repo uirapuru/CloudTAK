@@ -10,8 +10,8 @@
                 v-for='item in visibleCompactMenuItems'
                 :key='`compact-${item.key}`'
                 :icon='item.icon'
-                :label='item.label'
-                :tooltip='item.tooltip'
+                :label='itemText(item, "label")'
+                :tooltip='itemText(item, "tooltip")'
                 :badge='item.badge'
                 :layout='"list"'
                 :compact='true'
@@ -26,7 +26,7 @@
                 >
                     <template #default>
                         <TablerIconButton
-                            title='Application Switcher'
+                            :title='t("map.mainMenu.appSwitcher")'
                             class='cloudtak-hover'
                             :hover='false'
                         >
@@ -42,7 +42,7 @@
                             style='min-width: 200px;'
                         >
                             <div class='px-3 pt-2 pb-1 fw-bold'>
-                                Applications
+                                {{ t('map.mainMenu.applications') }}
                             </div>
                             <div class='px-2 pb-2'>
                                 <div
@@ -54,7 +54,7 @@
                                     <img
                                         v-if='application.icon'
                                         :src='application.icon'
-                                        :alt='`${application.name} logo`'
+                                        :alt='t("map.mainMenu.appLogo", { name: application.name })'
                                         class='app-switcher-logo'
                                     >
                                     <IconWorld
@@ -76,7 +76,7 @@
                                         :size='25'
                                         stroke='1'
                                     />
-                                    <span class='ps-2'>Video Wall</span>
+                                    <span class='ps-2'>{{ t('map.mainMenu.videoWall') }}</span>
                                 </div>
                                 <div
                                     class='col-12 py-1 px-2 cloudtak-hover cursor-pointer user-select-none'
@@ -86,7 +86,7 @@
                                         :size='25'
                                         stroke='1'
                                     />
-                                    <span class='ps-2'>Event Board</span>
+                                    <span class='ps-2'>{{ t('map.mainMenu.eventBoard') }}</span>
                                 </div>
                                 <div
                                     class='col-12 py-1 px-2 cloudtak-hover cursor-pointer user-select-none'
@@ -96,7 +96,7 @@
                                         :size='25'
                                         stroke='1'
                                     />
-                                    <span class='ps-2'>Forms</span>
+                                    <span class='ps-2'>{{ t('map.mainMenu.forms') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -116,19 +116,19 @@
                     target='_blank'
                     rel='noopener'
                     class='small text-white text-decoration-underline'
-                >Kod źródłowy (AGPL-3.0)</a>
+                >{{ t('map.mainMenu.sourceCode') }}</a>
             </div>
         </div>
     </div>
 
     <MenuTemplate
         v-else
-        name='Main Menu'
+        :name='t("map.mainMenu.title")'
         :back='false'
     >
         <template #buttons>
             <TablerIconButton
-                :title='preferredLayout === "list" ? "Tile View" : "List View"'
+                :title='preferredLayout === "list" ? t("map.mainMenu.tileView") : t("map.mainMenu.listView")'
                 @click='mapStore.menu.setLayout(preferredLayout === "list" ? "tiles" : "list")'
             >
                 <IconLayoutGrid
@@ -144,7 +144,7 @@
             </TablerIconButton>
             <TablerIconButton
                 v-if='canEditOrder'
-                :title='isDraggable ? "Save Order" : "Reorder Items"'
+                :title='isDraggable ? t("map.mainMenu.saveOrder") : t("map.mainMenu.reorder")'
                 :variant='isDraggable ? "primary" : "secondary"'
                 @click='handleReorderToggle'
             >
@@ -166,7 +166,7 @@
         >
             <TablerInput
                 v-model='menuFilter'
-                placeholder='Search...'
+                :placeholder='t("map.mainMenu.searchPlaceholder")'
                 :autofocus='searchAutofocus'
                 icon='search'
                 class='mb-0'
@@ -191,9 +191,9 @@
                 }'
                 :description-class='item.visibility === "hidden" ? "text-muted" : ""'
                 :icon='item.icon'
-                :label='item.label'
-                :description='item.description'
-                :tooltip='item.tooltip'
+                :label='itemText(item, "label")'
+                :description='itemText(item, "description")'
+                :tooltip='itemText(item, "tooltip")'
                 :badge='item.badge'
                 :layout='menuLayout'
                 :compact='false'
@@ -235,7 +235,7 @@
         </div>
         <TablerNone
             v-else
-            label='No Menu Items'
+            :label='t("map.mainMenu.noItems")'
             :create='false'
             class='px-3'
         />
@@ -253,7 +253,7 @@
                     >
                         <div class='d-flex align-items-center overflow-hidden w-100'>
                             <IconUser
-                                title='User Icon'
+                                :title='t("map.mainMenu.userIcon")'
                                 :size='32'
                                 stroke='1'
                                 class='mx-2'
@@ -277,7 +277,7 @@
                         role='button'
                         style='width: 40px;'
                         class='py-2 px-2 ms-auto d-flex cloudtak-hover cursor-pointer'
-                        title='Logout'
+                        :title='t("map.mainMenu.logout")'
                         @click.stop.prevent='logout'
                         @keyup.enter='logout'
                     >
@@ -326,12 +326,21 @@ import { useAppStore } from '../../stores/app.ts';
 import type { MenuItemConfig } from '../../stores/modules/menu.ts';
 import Config from '../../base/config.ts';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import MenuItemCard from './Menu/MenuItemCard.vue';
 import MenuTemplate from './util/MenuTemplate.vue';
 import ServerStatus from './ServerStatus.vue';
 import ProfileConfig from '../../base/profile.ts';
 
 const router = useRouter();
+const { t, te } = useI18n();
+
+// Built-in menu items are defined in English in the menu store; translate them
+// by key here and fall back to the store text for plugin-provided items.
+function itemText<F extends 'label' | 'tooltip' | 'description'>(item: MenuItemConfig, field: F): MenuItemConfig[F] {
+    const key = `map.mainMenu.items.${item.key.replace(/[^a-zA-Z0-9]+/g, '_')}.${field}`;
+    return te(key, 'en') ? t(key) as MenuItemConfig[F] : item[field];
+}
 
 const mapStore = useMapStore();
 const appStore = useAppStore();
@@ -358,7 +367,7 @@ onMounted(async () => {
     appSwitcherApplications.value = normalizeApplications(applicationsConfig['external::applications' as never]);
 });
 
-const username = ref<string>('Username');
+const username = ref<string>(t('map.mainMenu.username'));
 
 const props = defineProps({
     compact: Boolean

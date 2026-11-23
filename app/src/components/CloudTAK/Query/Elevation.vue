@@ -1,11 +1,11 @@
 <template>
     <div class='col-12 row g-0'>
         <div class='col-12'>
-            <label class='subheader mx-2'>Elevation</label>
+            <label class='subheader mx-2'>{{ t('tools.query.elevation') }}</label>
         </div>
         <TablerLoading
             v-if='loading'
-            desc='Loading elevation...'
+            :desc='t("tools.query.loadingElevation")'
         />
         <TablerAlert
             v-else-if='error'
@@ -35,7 +35,7 @@
                 class='mx-2'
                 style='font-size: 20px;'
             >
-                No Elevation Data
+                {{ t('tools.query.noElevation') }}
             </div>
         </div>
     </div>
@@ -53,6 +53,9 @@ import {
     TablerLoading,
     TablerAlert
 } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     longitude: number;

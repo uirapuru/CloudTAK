@@ -7,6 +7,9 @@
 import { computed } from 'vue';
 import TimesFooter, { type TimesFooterEntry } from '../util/TimesFooter.vue';
 import type COT from '../../../base/cot';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     cot: COT
@@ -14,14 +17,14 @@ const props = defineProps<{
 
 const entries = computed<Array<TimesFooterEntry>>(() => {
     const entries: Array<TimesFooterEntry> = [
-        { label: 'Updated', time: props.cot.properties.time }
+        { label: t('property.times.updated'), time: props.cot.properties.time }
     ];
 
     if (props.cot.properties.start && props.cot.properties.start !== props.cot.properties.time) {
-        entries.push({ label: 'Start', time: props.cot.properties.start });
+        entries.push({ label: t('property.times.start'), time: props.cot.properties.start });
     }
 
-    entries.push({ label: 'Stale', time: props.cot.properties.stale });
+    entries.push({ label: t('property.times.stale'), time: props.cot.properties.stale });
 
     return entries;
 });

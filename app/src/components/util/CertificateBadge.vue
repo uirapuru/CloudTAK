@@ -5,7 +5,7 @@
         border-color='rgba(220, 38, 38, 0.35)'
         text-color='#b91c1c'
     >
-        {{ expiredLabel }}
+        {{ expiredLabel ?? t('shared.certificateBadge.expired') }}
     </TablerBadge>
     <TablerBadge
         v-else-if='state === "near-expiry"'
@@ -13,7 +13,7 @@
         border-color='rgba(249, 115, 22, 0.35)'
         text-color='#c2410c'
     >
-        {{ nearExpiryLabel }}
+        {{ nearExpiryLabel ?? t('shared.certificateBadge.nearExpiry') }}
     </TablerBadge>
 </template>
 
@@ -23,6 +23,7 @@
  * public certificate metadata - renders nothing for a healthy certificate
  */
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { TablerBadge } from '@tak-ps/vue-tabler';
 import { certificateExpiryState, type CertificateMetadata } from '../../utils/certificate.ts';
 
@@ -32,9 +33,11 @@ const props = withDefaults(defineProps<{
     nearExpiryLabel?: string;
 }>(), {
     certificate: null,
-    expiredLabel: 'Expired',
-    nearExpiryLabel: 'Near Expiry',
+    expiredLabel: undefined,
+    nearExpiryLabel: undefined,
 });
+
+const { t } = useI18n();
 
 const state = computed(() => certificateExpiryState(props.certificate?.validTo));
 </script>

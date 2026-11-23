@@ -1,0 +1,120 @@
+{
+    "common": {
+        "refresh": "Refresh",
+        "copy": "Copy"
+    },
+    "otsAccounts": {
+        "title": "Server accounts",
+        "adminOnly": "The server account list is available to the OTS administrator only",
+        "search": "Search accounts",
+        "none": "No accounts",
+        "locked": "locked",
+        "qrAlt": "QR code",
+        "warning": "This code gives full access to the account. Do not share it.",
+        "qrAtak": "QR code for ATAK",
+        "qrAtakUnavailable": "The ATAK code needs access by server name",
+        "qrIcu": "QR code for OpenTAK ICU",
+        "qrIcuUnavailable": "This environment has no video"
+    },
+    "voice": {
+        "title": "Voice",
+        "endSelecting": "Finish selecting",
+        "startSelecting": "Select recordings to delete",
+        "downloadReport": "Download the full report (recordings and transcripts)",
+        "disabled": "The voice log is not enabled in this environment",
+        "speakingNow": "Now speaking: {user} on channel {channel}",
+        "channel": "Channel",
+        "allChannels": "All channels",
+        "from": "From",
+        "to": "To",
+        "downloadRange": "Download range (ZIP)",
+        "selectedCount": "Selected: {count}",
+        "selectVisible": "Select visible",
+        "deleteSelected": "Delete selected",
+        "noRecordings": "No recordings in this range",
+        "selectRecording": "Select recording by {author} from {when}",
+        "hidePlayer": "Hide player",
+        "play": "Play",
+        "saveRecording": "Save recording",
+        "deleteRecording": "Delete recording",
+        "olderRecordings": "Older recordings",
+        "deleteTitle": "Delete recordings",
+        "deleteWarning": "The recording and its transcript will be removed from the server. This cannot be undone.",
+        "deleteOne": "Delete this recording?",
+        "deleteFew": "Delete {count} recordings?",
+        "deleteMany": "Delete {count} recordings?",
+        "transcriptPending": "Transcript queued…",
+        "transcriptFailed": "Transcription failed",
+        "transcriptDisabled": "Transcription disabled",
+        "transcriptEmpty": "No words to transcribe",
+        "seconds": "{value} s"
+    },
+    "dataSyncQr": {
+        "title": "Mission QR code: {name}",
+        "alt": "Mission QR code",
+        "hint": "Scan in ATAK: Data Sync, add button, “Scan QR Code”. The phone must already be connected to this server."
+    },
+    "favoriteStar": {
+        "remove": "Remove from favorites",
+        "add": "Add to favorites"
+    },
+    "overlayRow": {
+        "drag": "Drag to change the order or group",
+        "buildings3d": "3D Buildings"
+    },
+    "ptt": {
+        "unlockAudio": "Click to turn on sound",
+        "transmitting": "TRANSMITTING",
+        "wait": "WAIT",
+        "busy": "BUSY",
+        "channel": "Voice channel",
+        "listenOff": "Stop listening to the channel",
+        "listenOn": "Listen to the channel",
+        "busyTitle": "{speaker} is speaking. The button unlocks when they finish.",
+        "noConnection": "No connection to the voice server",
+        "pttDisabled": "Transmitting from CloudTAK is disabled in this environment",
+        "selectChannel": "Select a channel",
+        "transmittingTitle": "You are transmitting. Release the button to finish.",
+        "idleTitle": "Press and hold to talk on the channel"
+    },
+    "floatingWebVideo": {
+        "video": "Video"
+    },
+    "routeActorNote": {
+        "text": "Changed by ai-buddy at the request of {label}"
+    },
+    "routeCrossCountry": {
+        "title": "Cross-country options",
+        "avoidWetland": "Avoid wetlands",
+        "avoidStreams": "Avoid streams and ditches",
+        "maxSlope": "Maximum slope",
+        "noSlopeLimit": "no limit (35°)",
+        "exposure": "Exposure",
+        "exposureDescription": "Medium and avoid lead the route through forest instead of across fields and roads. The model knows the terrain type from OSM, but not how dense the forest is.",
+        "exposureAllow": "allowed",
+        "exposureMedium": "medium",
+        "exposureAvoid": "avoid",
+        "avoidObservation": "Avoid being seen from hills",
+        "avoidObservationDescription": "The route avoids the field of view of dominant hills up to 3 km away."
+    },
+    "routeDangerZones": {
+        "avoid": "Avoid danger zones",
+        "description": "A danger zone is a shape with the “Danger zone” box checked in its view (a geofence with an entry alert) or with “zamknięt” in its name."
+    },
+    "routeVariants": {
+        "title": "Route variants",
+        "intermediate": "Variants connect the start with the destination and skip intermediate waypoints.",
+        "none": "There are no variants clearly different from the route.",
+        "variant": "Variant",
+        "length": "Length",
+        "time": "Time",
+        "concealed": "Cover",
+        "exposed": "Exposed",
+        "observed": "Seen from hills",
+        "crossings": "Road crossings",
+        "added": "Added",
+        "addToMap": "Add to map",
+        "current": "A (current)",
+        "noPlan": "The route has no taklab plan."
+    }
+}

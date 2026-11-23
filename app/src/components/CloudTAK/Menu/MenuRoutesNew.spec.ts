@@ -150,7 +150,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await flushPromises();
 
         expect(box(wrapper, 'Start Location').find('input').element.value).toBe('');
-        expect(wrapper.text()).not.toContain('Pozycja nieznana');
+        expect(wrapper.text()).not.toContain('Location unknown');
     });
 
     it('leaves the start empty without an error when the position is unknown on open', async () => {
@@ -160,7 +160,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await flushPromises();
 
         expect(box(wrapper, 'Start Location').find('input').element.value).toBe('');
-        expect(wrapper.text()).not.toContain('Pozycja nieznana');
+        expect(wrapper.text()).not.toContain('Location unknown');
     });
 
     it('shows a message when the button is clicked and the position is unknown', async () => {
@@ -172,7 +172,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await wrapper.find('button.my-location').trigger('click');
         await flushPromises();
 
-        expect(wrapper.text()).toContain('Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.');
+        expect(wrapper.text()).toContain('Location unknown. Turn on GPS or set your position manually on the map.');
         expect(box(wrapper, 'Start Location').find('input').element.value).toBe('');
     });
 
@@ -187,7 +187,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await wrapper.find('button.my-location').trigger('click');
         await flushPromises();
 
-        expect(wrapper.text()).toContain('Pozycja nieznana. Włącz GPS albo ustaw pozycję ręcznie na mapie.');
+        expect(wrapper.text()).toContain('Location unknown. Turn on GPS or set your position manually on the map.');
         spy.mockRestore();
     });
 
@@ -452,8 +452,8 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         await flushPromises();
 
         await wrapper.find('button.add-via').trigger('click');
-        expect(box(wrapper, 'Punkt pośredni 1').exists()).toBe(true);
-        await box(wrapper, 'Punkt pośredni 1').find('.pick').trigger('click');
+        expect(box(wrapper, 'Via point 1').exists()).toBe(true);
+        await box(wrapper, 'Via point 1').find('.pick').trigger('click');
         await box(wrapper, 'End Location').find('.pick').trigger('click');
         await wrapper.find('button.btn-primary').trigger('click');
         await flushPromises();
@@ -472,7 +472,7 @@ describe('CloudTAK/Menu/MenuRoutesNew', () => {
         expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeDefined();
 
         await wrapper.find('button.remove-via').trigger('click');
-        expect(box(wrapper, 'Punkt pośredni 1').exists()).toBe(false);
+        expect(box(wrapper, 'Via point 1').exists()).toBe(false);
         expect(wrapper.find('button.btn-primary').attributes('disabled')).toBeUndefined();
     });
 

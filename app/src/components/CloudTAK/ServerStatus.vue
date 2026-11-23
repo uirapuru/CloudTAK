@@ -1,7 +1,7 @@
 <template>
     <div class='d-flex flex-column align-items-center'>
         <div
-            title='Return Home'
+            :title='t("map.serverStatus.returnHome")'
             class='position-relative cursor-pointer cloudtak-hover'
             role='button'
             tabindex='0'
@@ -12,7 +12,7 @@
                 :src='logo'
                 :height='props.size'
                 :width='props.size'
-                alt='Server Logo'
+                :alt='t("map.serverStatus.serverLogo")'
             >
             <div
                 class='server-status-dot position-absolute'
@@ -33,6 +33,7 @@
 <script setup lang='ts'>
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useMapStore } from '../../stores/map.ts';
 import { supportsServiceWorker } from '../../utils/capacitor.ts';
 import Config from '../../base/config.ts';
@@ -43,6 +44,7 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const { t } = useI18n();
 const mapStore = useMapStore();
 
 const logo = ref('/CloudTAKLogo.svg');

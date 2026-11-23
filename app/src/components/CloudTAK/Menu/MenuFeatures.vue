@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Saved Features'
+        :name='t("menu.features.savedTitle")'
     >
         <template #buttons>
             <TablerDropdown>
                 <TablerIconButton
-                    title='Export'
+                    :title='t("menu.common.export")'
                 >
                     <IconDownload
                         :size='32'
@@ -44,7 +44,7 @@
 
             <TablerDropdown>
                 <TablerIconButton
-                    title='More Options'
+                    :title='t("menu.common.moreOptions")'
                 >
                     <IconDotsVertical
                         :size='32'
@@ -59,7 +59,7 @@
                         <TablerDelete
                             displaytype='menu'
                             class='cloudtak-hover'
-                            label='Delete All Features'
+                            :label='t("menu.features.deleteAll")'
                             @click.stop
                             @delete='deleteFeatures'
                         />
@@ -90,20 +90,20 @@
                     <template #filters>
                         <div class='d-flex flex-column'>
                             <div class='d-flex align-items-center justify-content-between px-3 py-2'>
-                                <strong class='small text-uppercase text-white-50'>Filters</strong>
+                                <strong class='small text-uppercase text-white-50'>{{ t('menu.common.filters') }}</strong>
                                 <button
                                     v-if='activeFilterCount > 0'
                                     type='button'
                                     class='btn btn-link btn-sm p-0'
                                     @click='clearGeometryFilters'
                                 >
-                                    Clear
+                                    {{ t('menu.common.clear') }}
                                 </button>
                             </div>
                             <div class='px-3 pb-2 d-flex flex-column gap-2'>
                                 <div>
                                     <div class='small text-uppercase text-white-50 mb-1'>
-                                        Geometry
+                                        {{ t('menu.features.geometry') }}
                                     </div>
                                     <label
                                         v-for='opt in geometryFilterOptions'
@@ -135,7 +135,7 @@
             <div class='my-2 d-flex align-items-center justify-content-between'>
                 <PathBreadcrumb v-model:collection='collectionPath' />
                 <TablerIconButton
-                    title='Create Folder'
+                    :title='t("menu.features.createFolder")'
                     @click='folderModal.shown = true'
                 >
                     <IconFolderPlus
@@ -148,7 +148,7 @@
             <TablerLoading
                 v-if='loading'
                 v-model='query.filter'
-                desc='Loading Features'
+                :desc='t("menu.features.loading")'
             />
             <template v-else>
                 <div
@@ -163,14 +163,14 @@
                             :size='20'
                             stroke='1'
                             class='me-2'
-                        /> Recently Deleted
+                        /> {{ t('menu.features.recentlyDeleted') }}
                     </StandardItem>
                 </div>
 
                 <TablerNone
                     v-if='currentItems.size === 0 && currentFolders.length === 0'
                     :create='false'
-                    :label='query.filter ? "No Matching Features" : currentPath === "/" ? "No Archived Features" : "Folder is empty"'
+                    :label='query.filter ? t("menu.features.noMatching") : currentPath === "/" ? t("menu.features.noArchived") : t("menu.features.folderEmpty")'
                 />
 
                 <template v-else>
@@ -214,19 +214,19 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='folderModal.shown = false'
         />
         <div class='modal-header text-body'>
             <div class='modal-title'>
-                {{ folderModal.editingNode ? 'Rename Folder' : 'Create Folder' }}
+                {{ folderModal.editingNode ? t('menu.features.renameFolder') : t('menu.features.createFolder') }}
             </div>
         </div>
         <div class='modal-body'>
             <TablerInput
                 v-model='folderModal.name'
-                label='Folder Name'
-                placeholder='Operations'
+                :label='t("menu.features.folderName")'
+                :placeholder='t("menu.features.folderPlaceholder")'
                 @submit='submitFolder'
             />
         </div>
@@ -236,7 +236,7 @@
                 variant='primary'
                 @click='submitFolder'
             >
-                {{ folderModal.editingNode ? 'Save' : 'Create' }}
+                {{ folderModal.editingNode ? t('common.save') : t('menu.common.create') }}
             </TablerButton>
         </div>
     </TablerModal>
@@ -251,6 +251,7 @@ import PathManager from '../../../utils/path-manager.ts';
 import type { PathNode } from '../../../utils/path-manager.ts';
 import { FeatureVisibility, GENERAL_SOURCE_ID } from '../../../stores/modules/feature-visibility.ts';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import SearchSortFilter from '../util/SearchSortFilter.vue';
 import PathBrowser from '../util/PathBrowser.vue';
@@ -288,6 +289,7 @@ import Sortable from 'sortablejs';
 import type { SortableEvent } from 'sortablejs'
 import { useMapStore } from '../../../stores/map.ts';
 
+const { t } = useI18n();
 const router = useRouter();
 const mapStore = useMapStore();
 
@@ -380,11 +382,11 @@ const loading = ref(true);
 const sortOptions = ['Newest → Oldest', 'Oldest → Newest', 'Alphabetical A→Z', 'Alphabetical Z→A'];
 const sort = ref('Newest → Oldest');
 
-const geometryFilterOptions = [
-    { value: 'Point', label: 'Point', icon: IconPoint },
-    { value: 'LineString', label: 'LineString', icon: IconLine },
-    { value: 'Polygon', label: 'Polygon', icon: IconPolygon },
-];
+const geometryFilterOptions = computed(() => [
+    { value: 'Point', label: t('menu.features.point'), icon: IconPoint },
+    { value: 'LineString', label: t('menu.features.line'), icon: IconLine },
+    { value: 'Polygon', label: t('menu.features.polygon'), icon: IconPolygon },
+]);
 
 const geometryTypes = ref<string[]>([]);
 const activeFilterCount = computed(() => geometryTypes.value.length);

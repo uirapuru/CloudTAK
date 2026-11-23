@@ -49,6 +49,7 @@ export enum WorkerMessageType {
 
     // Device network status forwarded from the main thread
     Network_Change = 'cloudtak:network:change',
+    Locale_Change = 'cloudtak:locale:change',
 
     Iconset_Change = 'cloudtak:iconset:change',
 

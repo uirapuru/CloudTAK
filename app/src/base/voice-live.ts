@@ -9,6 +9,7 @@
  * The microphone is opened on every press and closed on release, so the
  * browser shows its recording indicator only while the user transmits.
  */
+import { t } from '../i18n.ts';
 import { reactive } from 'vue';
 import { stdurl, getRuntimeToken } from '../std.ts';
 import {
@@ -238,7 +239,7 @@ export default class VoiceLive {
                 audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
             });
         } catch {
-            this.state.error = 'Brak dostępu do mikrofonu. Zezwól na mikrofon w ustawieniach przeglądarki.';
+            this.state.error = t('messages.voice.micDenied');
             this.state.requesting = false;
             this.pressed = false;
             this.send({ type: 'stop' });

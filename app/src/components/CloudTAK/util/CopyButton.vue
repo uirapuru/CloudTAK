@@ -1,7 +1,7 @@
 <template>
     <TablerIconButton
         v-if='!copied'
-        :title='title'
+        :title='title || t("util.copyButton.copy")'
         @click.stop.prevent='copy'
     >
         <IconCopy
@@ -11,7 +11,7 @@
     </TablerIconButton>
     <TablerIconButton
         v-else
-        title='Copied'
+        :title='t("util.copyButton.copied")'
         @click.stop.prevent='copy'
     >
         <IconCopyCheck
@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onUnmounted } from 'vue';
 import {
     IconCopy,
@@ -33,6 +34,8 @@ import {
     TablerIconButton
 } from '@tak-ps/vue-tabler'
 
+const { t } = useI18n();
+
 const props = defineProps({
     text: {
         type: [String, Number],
@@ -40,7 +43,7 @@ const props = defineProps({
     },
     title: {
         type: String,
-        default: 'Copy'
+        default: ''
     },
     size: {
         type: Number,

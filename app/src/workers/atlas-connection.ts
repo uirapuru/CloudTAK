@@ -13,6 +13,7 @@ import { WorkerMessageType } from '../utils/events.ts';
 import type { SyncTriggerReason, SyncTriggerBody } from '../utils/events.ts';
 import type { SyncEvent } from './atlas-sync.ts';
 import type { Feature, Import, Chat } from '../types.ts';
+import { wt } from '../base/worker-i18n.ts';
 
 const RECONNECT_BACKOFF_STEP_MS = 5000;
 const RECONNECT_BACKOFF_MAX_MS = 30000;
@@ -234,8 +235,8 @@ export default class AtlasConnection {
 
                 await TAKNotification.create(
                     NotificationType.Import,
-                    `Import ${imp.status}`,
-                    `${imp.name} has been updated to status: ${imp.status}`,
+                    wt('importTitle', { status: imp.status }),
+                    wt('importBody', { name: imp.name, status: imp.status }),
                     `/menu/imports/${imp.id}`,
                     true
                 );
@@ -257,7 +258,7 @@ export default class AtlasConnection {
                     if (!await TAKNotification.existsByUrl(alertUrl)) {
                         await TAKNotification.create(
                             NotificationType.Alert,
-                            `${feat.properties.callsign} Created`,
+                            wt('alertCreated', { callsign: feat.properties.callsign }),
                             '',
                             alertUrl,
                             true
@@ -268,8 +269,8 @@ export default class AtlasConnection {
                 ].includes(feat.properties.type)) {
                     await TAKNotification.create(
                         NotificationType.Medical,
-                        `New CASEVAC`,
-                        `A CASEVAC has been requested for ${feat.properties.callsign}.`,
+                        wt('casevacTitle'),
+                        wt('casevacBody', { callsign: feat.properties.callsign }),
                         `/cot/${feat.id}`,
                         true
                     );
@@ -281,8 +282,8 @@ export default class AtlasConnection {
                     if (task.properties.type === 't-x-m-c-l' && task.properties.mission) {
                         await TAKNotification.create(
                             NotificationType.Mission,
-                            `${task.properties.mission.name} Log Entry`,
-                            'Log Entry Added or Modified',
+                            wt('missionLogTitle', { mission: task.properties.mission.name }),
+                            wt('missionLogBody'),
                             `/menu/missions/${task.properties.mission.guid}/logs`,
                             true
                         );
@@ -294,16 +295,16 @@ export default class AtlasConnection {
                         if (task.properties.mission.missionChanges[0].type === 'ADD_CONTENT') {
                             await TAKNotification.create(
                                 NotificationType.Mission,
-                                `${task.properties.mission.name} File Added`,
-                                `File ${task.properties.mission.missionChanges[0].contentResource.name}`,
+                                wt('missionFileAdded', { mission: task.properties.mission.name }),
+                                wt('missionFileBody', { file: task.properties.mission.missionChanges[0].contentResource.name }),
                                 `/menu/missions/${task.properties.mission.guid}/content`,
                                 true
                             );
                         } else if (task.properties.mission.missionChanges[0].type === 'REMOVE_CONTENT') {
                             await TAKNotification.create(
                                 NotificationType.Mission,
-                                `${task.properties.mission.name} File Removed`,
-                                `File ${task.properties.mission.missionChanges[0].contentResource.name}`,
+                                wt('missionFileRemoved', { mission: task.properties.mission.name }),
+                                wt('missionFileBody', { file: task.properties.mission.missionChanges[0].contentResource.name }),
                                 `/menu/missions/${task.properties.mission.guid}/content`,
                                 true
                             );
@@ -346,7 +347,7 @@ export default class AtlasConnection {
                 } else if (task.properties.type === 't-x-m-n' && task.properties.mission) {
                     await TAKNotification.create(
                         NotificationType.Mission,
-                        `${task.properties.mission.name} Created`,
+                        wt('missionCreated', { mission: task.properties.mission.name }),
                         '',
                         `/menu/missions/${task.properties.mission.guid}`,
                         true
@@ -397,8 +398,8 @@ export default class AtlasConnection {
 
                 await TAKNotification.create(
                     NotificationType.Chat,
-                    'New Chat Message',
-                    `${chat.from.callsign} to ${chat.chatroom} says: ${chat.message}`,
+                    wt('chatTitle'),
+                    wt('chatBody', { from: chat.from.callsign, room: chat.chatroom, message: chat.message }),
                     `/menu/chats`,
                     true
                 );

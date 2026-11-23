@@ -17,7 +17,7 @@
                     <slot name='actions' />
 
                     <TablerIconButton
-                        title='Close Pane'
+                        :title='t("util.floatingPane.close")'
                         @click='emit("close")'
                     >
                         <IconX
@@ -67,7 +67,7 @@
                 <slot name='actions' />
 
                 <TablerIconButton
-                    title='Close Pane'
+                    :title='t("util.floatingPane.close")'
                     @click='emit("close")'
                 >
                     <IconX
@@ -93,6 +93,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch, nextTick, onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { useAppStore } from '../../../stores/app.ts';
 import { useFloatStore } from '../../../stores/float.ts';
@@ -104,6 +105,8 @@ import {
     TablerModal,
     TablerIconButton,
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 defineOptions({ inheritAttrs: false });
 

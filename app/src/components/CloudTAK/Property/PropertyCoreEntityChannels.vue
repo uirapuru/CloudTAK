@@ -1,12 +1,12 @@
 <template>
     <PropertySection
-        label='Channels'
+        :label='t("property.coreEntityChannels.title")'
         :count='props.modelValue.length'
     >
         <template #actions>
             <TablerIconButton
                 v-if='props.edit && !editing'
-                title='Edit Channels'
+                :title='t("property.coreEntityChannels.edit")'
                 @click.stop='startEditing'
             >
                 <IconPencil
@@ -16,7 +16,7 @@
             </TablerIconButton>
             <TablerIconButton
                 v-else-if='props.edit'
-                :title='canSave ? "Save Channels" : "An Event must be shared with at least one Channel"'
+                :title='canSave ? t("property.coreEntityChannels.save") : t("property.coreEntityChannels.mustShare")'
                 :disabled='!canSave'
                 @click.stop='save'
             >
@@ -29,7 +29,7 @@
         <TablerLoading
             v-if='loading'
             :compact='true'
-            desc='Loading Channels'
+            :desc='t("property.coreEntityChannels.loading")'
         />
         <div
             v-else-if='editing'
@@ -41,13 +41,13 @@
                 v-if='!canSave'
                 class='form-hint text-warning'
             >
-                Select at least one Channel to share the Event with
+                {{ t('property.coreEntityChannels.selectAtLeastOne') }}
             </div>
         </div>
         <template v-else>
             <TablerNone
                 v-if='!shared.length'
-                label='Not shared with any Channels'
+                :label='t("property.coreEntityChannels.none")'
                 :compact='true'
                 :create='false'
             />
@@ -81,7 +81,7 @@
                         class='d-flex align-items-center gap-2 ps-4 pe-2 py-1 cursor-pointer cloudtak-hover'
                         role='button'
                         tabindex='0'
-                        :title='`Open ${board.name} in the Event Board`'
+                        :title='t("property.coreEntityChannels.openBoard", { name: board.name })'
                         @click='openBoard(board)'
                         @keydown.enter='openBoard(board)'
                     >
@@ -113,11 +113,11 @@
                                 v-else
                                 type='button'
                                 class='btn btn-success btn-sm py-0'
-                                :title='`Nominate this Event to ${board.name}`'
+                                :title='t("property.coreEntityChannels.nominateTo", { name: board.name })'
                                 @click.stop='emit("nominate", board)'
                                 @keydown.enter.stop
                             >
-                                Nominate
+                                {{ t('property.coreEntityChannels.nominate') }}
                             </button>
                         </div>
                     </div>
@@ -142,6 +142,9 @@ import {
     IconExternalLink,
     IconLayoutKanban,
 } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     /** TAK Server Channel bitpositions the Event is shared with */
@@ -169,7 +172,7 @@ const shared = computed(() => {
 
         return {
             bitpos,
-            name: channel ? channel.name : `Channel ${bitpos}`,
+            name: channel ? channel.name : t('property.coreEntityChannels.channelBitpos', { bitpos }),
             boards: (props.boards || []).filter((board) => board.channel === bitpos),
         };
     });

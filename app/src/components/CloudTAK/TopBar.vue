@@ -24,7 +24,7 @@
             <TablerDropdown>
                 <TablerIconButton
                     id='map-notifications'
-                    title='Notifications Icon'
+                    :title='t("map.topBar.notifications")'
                     class='cloudtak-hover'
                     :class='{ "alert-pulse": alertNotifications }'
                     :hover='false'
@@ -64,7 +64,7 @@
 
             <TablerIconButton
                 v-if='!menuShown'
-                title='Open Menu'
+                :title='t("map.topBar.openMenu")'
                 class='ms-1 cloudtak-hover'
                 :hover='false'
                 @click='router.push("/menu")'
@@ -76,7 +76,7 @@
             </TablerIconButton>
             <TablerIconButton
                 v-else
-                title='Close Menu'
+                :title='t("map.topBar.closeMenu")'
                 class='ms-1 cloudtak-hover'
                 :hover='false'
                 @click='router.push("/")'
@@ -93,6 +93,7 @@
 <script setup lang='ts'>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { from } from 'rxjs';
 import { liveQuery } from '../../database.ts';
 import { useObservable } from '@vueuse/rxjs';
@@ -114,6 +115,7 @@ defineProps<{
 }>();
 
 const router = useRouter();
+const { t } = useI18n();
 const appStore = useAppStore();
 
 const compact = computed(() => appStore.isMobileDetected);

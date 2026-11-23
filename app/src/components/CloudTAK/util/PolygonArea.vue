@@ -1,26 +1,29 @@
 <template>
     <PropertyMeasureRow
-        label='Area'
+        :label='t("util.polygonArea.label")'
         :model-value='inMode'
         :unit='mode'
-        :units='UNITS'
+        :units='units'
         @update:unit='mode = $event'
     />
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch } from 'vue';
 import { area } from '@turf/area';
 import PropertyMeasureRow from './PropertyMeasureRow.vue';
 import type { UnitOption } from './UnitSwitcher.vue';
 import type { Geometry } from 'geojson';
 
-const UNITS: Array<UnitOption> = [
-    { value: 'square feet', label: 'ft²', title: 'Square Feet' },
-    { value: 'square meter', label: 'm²', title: 'Square Meters' },
-    { value: 'acre', label: 'acres', title: 'Acres' },
-    { value: 'hectare', label: 'ha', title: 'Hectares' },
-];
+const { t } = useI18n();
+
+const units = computed<Array<UnitOption>>(() => [
+    { value: 'square feet', label: 'ft²', title: t('util.polygonArea.squareFeet') },
+    { value: 'square meter', label: 'm²', title: t('util.polygonArea.squareMeters') },
+    { value: 'acre', label: t('util.polygonArea.acresShort'), title: t('util.polygonArea.acres') },
+    { value: 'hectare', label: 'ha', title: t('util.polygonArea.hectares') },
+]);
 
 const props = withDefaults(defineProps<{
     geometry: Geometry;

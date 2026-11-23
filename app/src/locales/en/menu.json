@@ -78,7 +78,8 @@
         "noAttributes": "No Attributes",
         "details": "Details",
         "debug": "Debug",
-        "noName": "No Name"
+        "noName": "No Name",
+        "loadingDetails": "Loading details"
     },
     "featuresTabs": {
         "features": "Features",
@@ -100,7 +101,8 @@
         "loading": "Loading Features",
         "recentlyDeleted": "Recently Deleted",
         "noMatching": "No Matching Features",
-        "noArchived": "No Archived Features"
+        "noArchived": "No Archived Features",
+        "savedTitle": "Saved Features"
     },
     "featuresDeleted": {
         "title": "Deleted Features",
@@ -181,7 +183,8 @@
         "pts": "{count} pts",
         "liveTrail": "Live Trail",
         "viewCot": "View CoT",
-        "clearTrail": "Clear Trail"
+        "clearTrail": "Clear Trail",
+        "recordingDescription": "CoT markers with live breadcrumb recording."
     },
     "icon": {
         "title": "Icon",
@@ -203,7 +206,12 @@
     "iconsets": {
         "title": "Iconsets",
         "create": "Create Iconset",
-        "zipUpload": "Zip Upload"
+        "zipUpload": "Zip Upload",
+        "icons": "Icons",
+        "loading": "Loading Iconsets",
+        "none": "No Iconsets",
+        "public": "Public",
+        "private": "Private"
     },
     "iconset": {
         "addIcons": "Add Icons",
@@ -239,6 +247,8 @@
         "clash": "{folder} already has an icon named \"{name}\"",
         "onlyImages": "Only PNG and SVG files can be added as icons",
         "adding": "Adding {count} icons | Adding {count} icon | Adding {count} icons",
-        "moving": "Moving {name}"
+        "moving": "Moving {name}",
+        "createIcon": "Create Icon",
+        "downloadTakZip": "Download TAK Zip"
     }
 }

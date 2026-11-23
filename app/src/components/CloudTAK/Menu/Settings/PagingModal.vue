@@ -7,7 +7,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='$emit("close")'
         />
         <div class='modal-header d-flex align-items-center gap-2'>
@@ -24,7 +24,7 @@
             </div>
             <div
                 class='modal-title'
-                v-text='isEdit ? `Edit ${meta.label}` : `New ${meta.label}`'
+                v-text='isEdit ? meta.editTitle : meta.newTitle'
             />
             <div class='ms-auto btn-list'>
                 <TablerDelete
@@ -61,7 +61,7 @@
                                 stroke='1.5'
                                 class='text-green'
                             />
-                            <span class='small'>This source is verified</span>
+                            <span class='small'>{{ t('panels.pagingModal.isVerified') }}</span>
                         </template>
                         <template v-else>
                             <IconAlertCircle
@@ -69,12 +69,12 @@
                                 stroke='1.5'
                                 class='text-yellow'
                             />
-                            <span class='small'>Pending verification</span>
+                            <span class='small'>{{ t('panels.pagingModal.pendingVerification') }}</span>
                             <button
                                 class='btn btn-sm btn-warning ms-auto'
                                 @click='step = "verify"'
                             >
-                                Enter Code
+                                {{ t('panels.pagingModal.enterCode') }}
                             </button>
                         </template>
                     </div>
@@ -92,9 +92,9 @@
                                 type='checkbox'
                             >
                         </span>
-                        <span class='fw-bold'>Enabled</span>
+                        <span class='fw-bold'>{{ t('panels.pagingModal.enabled') }}</span>
                         <span class='text-secondary small ms-auto'>
-                            {{ enabled ? 'Receiving pages' : 'Paused' }}
+                            {{ enabled ? t('panels.pagingModal.receiving') : t('panels.pagingModal.paused') }}
                         </span>
                     </label>
                 </div>
@@ -105,14 +105,14 @@
                     class='btn btn-link text-secondary me-auto'
                     @click='resendCode'
                 >
-                    Resend Code
+                    {{ t('panels.pagingModal.resendCode') }}
                 </button>
                 <button
                     class='btn btn-primary'
                     :disabled='!value'
                     @click='saveSource'
                 >
-                    Save
+                    {{ t('common.save') }}
                 </button>
             </div>
         </template>
@@ -133,7 +133,7 @@
                         />
                     </div>
                     <p class='text-secondary small mb-0'>
-                        Enter the 6-digit code sent to
+                        {{ t('panels.pagingModal.enterDigits') }}
                     </p>
                     <p class='fw-bold mb-0 text-break'>
                         {{ value }}
@@ -154,14 +154,14 @@
                     class='btn btn-link text-secondary me-auto'
                     @click='resendCode'
                 >
-                    Resend Code
+                    {{ t('panels.pagingModal.resendCode') }}
                 </button>
                 <button
                     class='btn btn-primary'
                     :disabled='verifyCodeInput.length !== 6'
                     @click='submitVerify'
                 >
-                    Verify
+                    {{ t('panels.pagingModal.verify') }}
                 </button>
             </div>
         </template>
@@ -176,10 +176,10 @@
                         class='text-green'
                     />
                     <div class='mt-3 fw-bold fs-3'>
-                        Verified!
+                        {{ t('panels.pagingModal.verified') }}
                     </div>
                     <div class='text-secondary small mt-1'>
-                        {{ value }} is ready to receive pages.
+                        {{ t('panels.pagingModal.ready', { value }) }}
                     </div>
                 </div>
             </div>
@@ -188,7 +188,7 @@
                     class='btn btn-primary w-100'
                     @click='$emit("refresh")'
                 >
-                    Done
+                    {{ t('panels.pagingModal.done') }}
                 </button>
             </div>
         </template>
@@ -197,6 +197,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { server } from '../../../../std.ts';
 import type { ProfilePaging, ProfilePaging_Create } from '../../../../types.ts';
 import {
@@ -219,6 +220,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['close', 'refresh']);
+const { t } = useI18n();
 
 const isEdit = computed((): boolean => 'id' in props.source);
 const type = computed((): PagingType => props.source.type as PagingType);
@@ -232,8 +234,9 @@ const enabled = ref<boolean>('enabled' in props.source ? props.source.enabled : 
 // The ID of the created/edited source (set after POST for the verification flow)
 const createdId = ref<number | null>('id' in props.source ? props.source.id : null);
 
-const TYPE_META: Record<Exclude<PagingType, 'push'>, {
-    label: string;
+const TYPE_META = computed<Record<Exclude<PagingType, 'push'>, {
+    editTitle: string;
+    newTitle: string;
     valueLabel: string;
     placeholder: string;
     inputType: string;
@@ -241,10 +244,11 @@ const TYPE_META: Record<Exclude<PagingType, 'push'>, {
     iconClass: string;
     tint: string;
     accent: string;
-}> = {
+}>>(() => ({
     sms: {
-        label: 'SMS Notification',
-        valueLabel: 'Phone Number',
+        editTitle: t('panels.pagingModal.editSms'),
+        newTitle: t('panels.pagingModal.newSms'),
+        valueLabel: t('panels.pagingModal.phone'),
         placeholder: '+1 (555) 000-0000',
         inputType: 'tel',
         icon: IconMessage,
@@ -253,8 +257,9 @@ const TYPE_META: Record<Exclude<PagingType, 'push'>, {
         accent: 'bg-blue',
     },
     email: {
-        label: 'Email Notification',
-        valueLabel: 'Email Address',
+        editTitle: t('panels.pagingModal.editEmail'),
+        newTitle: t('panels.pagingModal.newEmail'),
+        valueLabel: t('panels.pagingModal.emailAddress'),
         placeholder: 'you@example.com',
         inputType: 'email',
         icon: IconMail,
@@ -262,9 +267,9 @@ const TYPE_META: Record<Exclude<PagingType, 'push'>, {
         tint: 'rgba(63, 182, 139, 0.15)',
         accent: 'bg-green',
     },
-};
+}));
 
-const meta = computed(() => TYPE_META[type.value as Exclude<PagingType, 'push'>] ?? TYPE_META.sms);
+const meta = computed(() => TYPE_META.value[type.value as Exclude<PagingType, 'push'>] ?? TYPE_META.value.sms);
 const accentClass = computed(() => meta.value.accent);
 
 async function saveSource() {

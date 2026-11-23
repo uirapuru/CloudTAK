@@ -1,26 +1,26 @@
 <template>
     <div>
         <div class='d-flex align-items-center user-select-none'>
-            <label class='mx-1 mb-1'>Task Selection</label>
+            <label class='mx-1 mb-1'>{{ t('shared.layerTaskSelect.title') }}</label>
         </div>
         <div class='card'>
             <div class='card-body'>
                 <TablerLoading
                     v-if='loading.main'
                     :inline='true'
-                    desc='Loading Tasks'
+                    :desc='t("shared.layerTaskSelect.loadingTasks")'
                 />
                 <TablerLoading
                     v-else-if='loading.task'
                     :inline='true'
-                    desc='Loading Task'
+                    :desc='t("shared.layerTaskSelect.loadingTask")'
                 />
                 <template v-else-if='selected.prefix'>
                     <div class='col-12 d-flex align-items-center user-select-none'>
                         <img
                             v-if='selected.logo'
                             :src='selected.logo'
-                            alt='Logo Preview'
+                            :alt='t("shared.layerTaskSelect.logoPreview")'
                             style='height: 50px;'
                             class='img-thumbnail'
                         >
@@ -45,9 +45,9 @@
                                     v-else-if='checkedUpdate && !latestVersion'
                                     class='d-flex align-items-center'
                                 >
-                                    <span class='small text-muted'>Up to date</span>
+                                    <span class='small text-muted'>{{ t('shared.layerTaskSelect.upToDate') }}</span>
                                     <TablerRefreshButton
-                                        title='Check for Updates'
+                                        :title='t("shared.layerTaskSelect.checkUpdates")'
                                         class='ms-1'
                                         :size='20'
                                         :loading='loading.update'
@@ -59,7 +59,7 @@
                                     class='btn btn-sm btn-primary'
                                     @click='emit("update", { prefix: String(selected.prefix), from: String(selected.version), to: latestVersion })'
                                 >
-                                    Update to v<span v-text='latestVersion' />
+                                    {{ t('shared.layerTaskSelect.updateTo', { version: latestVersion }) }}
                                 </button>
                                 <button
                                     v-else
@@ -71,7 +71,7 @@
                                         stroke='1'
                                         class='me-1'
                                     />
-                                    Check for Updates
+                                    {{ t('shared.layerTaskSelect.checkUpdates') }}
                                 </button>
                             </template>
 
@@ -83,7 +83,7 @@
 
                             <TablerIconButton
                                 v-if='!disabled'
-                                title='Remove Task'
+                                :title='t("shared.layerTaskSelect.remove")'
                                 @click='selected = { id: undefined }'
                             >
                                 <IconTrash
@@ -97,7 +97,7 @@
                 <template v-else>
                     <TablerInput
                         v-model='paging.filter'
-                        placeholder='Task Filter...'
+                        :placeholder='t("shared.layerTaskSelect.filter")'
                         class='pb-2'
                     />
 
@@ -105,13 +105,13 @@
                         v-if='loading.list'
                         class='card-body'
                     >
-                        <TablerLoading desc='Loading Tasks' />
+                        <TablerLoading :desc='t("shared.layerTaskSelect.loadingTasks")' />
                     </div>
                     <TablerNone
                         v-else-if='list.total === 0'
                         :create='false'
                         :compact='true'
-                        label='No Tasks'
+                        :label='t("shared.layerTaskSelect.noTasks")'
                     />
                     <div
                         v-else
@@ -135,7 +135,7 @@
                                         <div v-text='task.name' />
                                         <div class='ms-auto'>
                                             <TablerIconButton
-                                                title='Task Info'
+                                                :title='t("shared.layerTaskSelect.info")'
                                                 @click.prevent.stop='infoModal = task'
                                             >
                                                 <IconInfoSquare
@@ -150,7 +150,7 @@
                                             <img
                                                 v-if='task.logo'
                                                 :src='task.logo'
-                                                alt='Logo Preview'
+                                                :alt='t("shared.layerTaskSelect.logoPreview")'
                                                 class='img-thumbnail'
                                             >
                                             <IconBroadcast
@@ -220,13 +220,14 @@
                 class='btn btn-primary'
                 @click='infoModal = undefined'
             >
-                Close
+                {{ t('common.close') }}
             </button>
         </div>
     </TablerModal>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { server } from '../../std.ts';
 import type { APIList } from '../../types.ts';
@@ -268,6 +269,8 @@ export interface TaskUpdate {
     from: string;
     to: string;
 }
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     modelValue?: string;

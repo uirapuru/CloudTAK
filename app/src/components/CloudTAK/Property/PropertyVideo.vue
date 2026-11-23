@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Video'
+            :label='t("property.video.title")'
         >
             <template #icon>
                 <IconMovie
@@ -19,7 +19,7 @@
                         <div class='col-12'>
                             <TablerInput
                                 v-model='video.url'
-                                label='Video URL'
+                                :label='t("property.video.url")'
                                 placeholder='rtsp://example.com:8554/stream'
                             />
                         </div>
@@ -37,6 +37,9 @@ import SlideDownHeader from '../util/SlideDownHeader.vue';
 import { IconMovie } from '@tabler/icons-vue';
 import { TablerInput } from '@tak-ps/vue-tabler';
 import type COT from '../../../base/cot';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface Video {
     uid?: string;

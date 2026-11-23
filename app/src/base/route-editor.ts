@@ -11,6 +11,7 @@
  * - kliknięcie przy linii stawia punkt na linii (na wierzchołku, gdy blisko),
  * - kliknięcie punktu usera otwiera menu z usunięciem.
  */
+import { t } from '../i18n.ts';
 import type { Ref } from 'vue';
 import { isEqual } from '@ver0/deep-equal';
 import type { Feature } from '../types.ts';
@@ -365,7 +366,7 @@ export default class RouteEditor {
     /** Kliknięcie mapy albo linii: budowanie dopisuje na koniec, edycja wstawia w najbliższy odcinek. */
     private async addPoint(position: LngLat, leg: number | null): Promise<void> {
         if (this.waypoints.length >= MAX_WAYPOINTS) {
-            this.state.error.value = 'Najwyżej 25 punktów pośrednich.';
+            this.state.error.value = t('messages.route.maxWaypoints');
             return;
         }
 
@@ -448,7 +449,7 @@ export default class RouteEditor {
     /** Przyjmuje trasę z API: geometria, opis i plan; id, nazwa i reszta właściwości zostają. */
     private accept(fresh: Feature): void {
         const plan = readRoutePlan(fresh);
-        if (!plan) throw new Error('Usługa tras zwróciła trasę bez planu.');
+        if (!plan) throw new Error(t('messages.route.noPlan'));
 
         if (this.feature) {
             this.feature = {

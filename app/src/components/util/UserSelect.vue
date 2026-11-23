@@ -2,7 +2,7 @@
     <div class='w-100 px-2 py-2'>
         <TablerLoading
             v-if='loading'
-            desc='Loading User...'
+            :desc='t("shared.userSelect.loading")'
             :inline='true'
         />
         <template v-else>
@@ -11,7 +11,7 @@
                     v-if='selected'
                     v-text='selected.username'
                 />
-                <span v-else>Publically Shared - No User Selected</span>
+                <span v-else>{{ t('shared.userSelect.none') }}</span>
 
                 <div
                     v-if='!props.disabled'
@@ -19,7 +19,7 @@
                 >
                     <TablerIconButton
                         v-if='selected'
-                        title='Remove Selected'
+                        :title='t("shared.userSelect.remove")'
                         @click='selected = undefined'
                     >
                         <IconTrash
@@ -30,7 +30,7 @@
                     <TablerDropdown>
                         <template #default>
                             <TablerIconButton
-                                title='User Select'
+                                :title='t("shared.userSelect.select")'
                                 class='dropdown-toggle'
                             >
                                 <IconSettings
@@ -48,7 +48,7 @@
                                     <TablerInput
                                         v-model='paging.filter'
                                         icon='search'
-                                        placeholder='Filter...'
+                                        :placeholder='t("shared.userSelect.filter")'
                                     />
                                 </div>
                                 <div
@@ -86,6 +86,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted, watch } from 'vue'
 import { server } from '../../std.ts';
 import type { User, UserList } from '../../types.ts';
@@ -100,6 +101,8 @@ import {
     TablerLoading,
     TablerDropdown
 } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     modelValue: string | undefined,

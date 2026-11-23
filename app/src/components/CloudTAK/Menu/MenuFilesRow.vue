@@ -51,7 +51,7 @@
                                     v-if='hasSharedChannels(asset) && !isSharedAsset(asset)'
                                     type='button'
                                     class='menu-files-row__shared-badge-btn p-0 border-0 bg-transparent'
-                                    title='Share to Channel'
+                                    :title='t("menu.filesRow.shareChannel")'
                                     @click.stop.prevent='emit("share-channel", asset)'
                                 >
                                     <TablerBadge
@@ -60,7 +60,7 @@
                                         border-color='rgba(255, 171, 0, 0.35)'
                                         text-color='#c98500'
                                     >
-                                        Shared
+                                        {{ t('menu.filesRow.shared') }}
                                     </TablerBadge>
                                 </button>
                                 <TablerBadge
@@ -69,9 +69,9 @@
                                     background-color='rgba(255, 171, 0, 0.15)'
                                     border-color='rgba(255, 171, 0, 0.35)'
                                     text-color='#c98500'
-                                    :title='isSharedAsset(asset) ? "Shared file from another user" : "Shared to channel"'
+                                    :title='isSharedAsset(asset) ? t("menu.filesRow.sharedFromUser") : t("menu.filesRow.sharedToChannel")'
                                 >
-                                    Shared
+                                    {{ t('menu.filesRow.shared') }}
                                 </TablerBadge>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
                         :size='32'
                         stroke='1'
                     />
-                    <span class='mx-2'>Shared from {{ asset.username }}. Owner-only actions are unavailable.</span>
+                    <span class='mx-2'>{{ t('menu.filesRow.sharedFrom', { username: asset.username }) }}</span>
                 </div>
 
                 <div
@@ -106,7 +106,7 @@
                         :size='32'
                         stroke='1'
                     />
-                    <span class='mx-2'>{{ canCreateOverlay(asset) ? "Add to Map as Overlay" : "Overlay already added" }}</span>
+                    <span class='mx-2'>{{ canCreateOverlay(asset) ? t("menu.filesRow.addOverlay") : t("menu.filesRow.overlayExists") }}</span>
                 </div>
                 <div
                     v-else-if='!isSharedAsset(asset)'
@@ -117,7 +117,7 @@
                         :size='32'
                         stroke='1'
                     />
-                    <span class='mx-2'>Cannot Add to Map - Unsupported Format</span>
+                    <span class='mx-2'>{{ t('menu.filesRow.unsupported') }}</span>
                 </div>
 
                 <TablerDropdown
@@ -132,7 +132,7 @@
                                 :size='32'
                                 stroke='1'
                             />
-                            <span class='mx-2'>Download</span>
+                            <span class='mx-2'>{{ t('menu.filesRow.download') }}</span>
                         </div>
                     </template>
                     <template #dropdown>
@@ -182,7 +182,7 @@
                             :size='32'
                             stroke='1'
                         />
-                        <span class='mx-2'>Add to Data Sync</span>
+                        <span class='mx-2'>{{ t('menu.filesRow.addDataSync') }}</span>
                     </div>
                     <div
                         class='cursor-pointer rounded col-12 cloudtak-hover d-flex align-items-center px-2 py-2 user-select-none'
@@ -195,7 +195,7 @@
                             :size='32'
                             stroke='1'
                         />
-                        <span class='mx-2'>Create Data Package</span>
+                        <span class='mx-2'>{{ t('menu.filesRow.createPackage') }}</span>
                     </div>
                     <div
                         class='cursor-pointer rounded col-12 cloudtak-hover d-flex align-items-center px-2 py-2 user-select-none'
@@ -208,7 +208,7 @@
                             :size='32'
                             stroke='1'
                         />
-                        <span class='mx-2'>Share to Channel</span>
+                        <span class='mx-2'>{{ t('menu.filesRow.shareChannel') }}</span>
                     </div>
 
                     <div
@@ -222,7 +222,7 @@
                             :size='32'
                             stroke='1'
                         />
-                        <span class='mx-2'>Rename File</span>
+                        <span class='mx-2'>{{ t('menu.filesRow.rename') }}</span>
                     </div>
 
                     <div v-if='rename && rename.id === asset.id'>
@@ -248,13 +248,13 @@
                             :size='32'
                             stroke='1'
                         />
-                        <span class='mx-2'>Move to Folder</span>
+                        <span class='mx-2'>{{ t('menu.filesRow.move') }}</span>
                     </div>
 
                     <TablerDelete
                         displaytype='menu'
                         class='cloudtak-hover rounded'
-                        label='Delete File'
+                        :label='t("menu.filesRow.delete")'
                         @delete='emit("delete", asset)'
                     />
                 </template>
@@ -264,6 +264,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import type { ProfileFile } from '../../../types.ts';
 import StandardItem from '../util/StandardItem.vue';
 import OfflineDownloader from '../util/OfflineDownloader.vue';
@@ -290,6 +291,8 @@ import {
     IconFile,
     IconMap
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     asset: ProfileFile;
@@ -346,9 +349,9 @@ function canCreateOverlay(asset: ProfileFile): boolean {
 }
 
 function overlayButtonTitle(asset: ProfileFile): string {
-    if (!assetSupportsOverlay(asset)) return 'Not Cloud Optimized';
-    if (assetOverlayExists(asset)) return 'Overlay already added';
-    return 'Add to Map as Overlay';
+    if (!assetSupportsOverlay(asset)) return t('menu.filesRow.notOptimized');
+    if (assetOverlayExists(asset)) return t('menu.filesRow.overlayExists');
+    return t('menu.filesRow.addOverlay');
 }
 </script>
 

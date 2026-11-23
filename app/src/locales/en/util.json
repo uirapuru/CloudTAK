@@ -322,7 +322,9 @@
         "none": "No Iconsets",
         "open": "Open Iconset",
         "noIcons": "No icons yet.",
-        "showAll": "Show all {count} icons"
+        "showAll": "Show all {count} icons",
+        "loadingIcons": "Loading Icons",
+        "noIconsLabel": "No Icons"
     },
     "createCoreEntity": {
         "title": "Create Event",
@@ -374,7 +376,10 @@
             "failed": "Failed to Deliver",
             "delivered": "Delivered",
             "read": "Read"
-        }
+        },
+        "mapAttached": "The map will be attached to the message",
+        "attachMap": "Attach map",
+        "sendMessage": "Send Message"
     },
     "iconSelectOffline": {
         "iconName": "Icon: {name}",
@@ -424,7 +429,18 @@
         "noSnapping": "No Snapping",
         "layerSelection": "Layer Selection",
         "layerSelectionHelp": "Features will be selected from the chosen layer.",
-        "mapFeatures": "Map Features"
+        "mapFeatures": "Map Features",
+        "routeBuild": "Plotting route",
+        "routeEdit": "Editing route",
+        "saveRoute": "Save route",
+        "routeCalculating": "Calculating route…",
+        "routePoint": "Point {label}",
+        "removePoint": "Remove point",
+        "hideRouteSettings": "Hide mode and options",
+        "routeSettings": "Mode and options",
+        "routeMode": "Route mode",
+        "routeBuildHint": "Click the map to add another point. Drag a point or a segment to change the route.",
+        "routeEditHint": "Click the map to add a point to the nearest segment. Drag a point or a segment to change the route."
     },
     "warnConfiguration": {
         "detailsIntro": "Before you get started, tell other TAK users who you are. These can be changed at any time from Settings.",
@@ -456,7 +472,9 @@
         "reRequest": "Re-request Permission",
         "request": "Request Permission",
         "refreshFailed": "Failed to refresh permission status",
-        "requestFailed": "Failed to request {type} permission"
+        "requestFailed": "Failed to request {type} permission",
+        "nextAndroid": "Next, Android will ask for location access. Choose \"Allow all the time\" to keep sharing your position in the background. You can change this anytime in Settings.",
+        "nextIOS": "Next, iOS will ask for location access. Choose \"Allow While Using App\", then \"Change to Always Allow\" to keep sharing your position in the background. You can change this anytime in Settings."
     },
     "searchBox": {
         "pickingTitle": "Click on map to select location",
@@ -493,6 +511,7 @@
             "terrain": "Terrain"
         },
         "overlayHidden": "{kind} · Hidden",
-        "goToCoordinate": "Go to coordinate"
+        "goToCoordinate": "Go to coordinate",
+        "noItems": "No Items"
     }
 }

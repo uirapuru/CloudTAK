@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Biological Sensor'
+            :label='t("property.bioSensor.title")'
         >
             <template #icon>
                 <IconBiohazard
@@ -21,12 +21,12 @@
                             stroke='1'
                             class='me-2 text-muted'
                         />
-                        <label class='subheader m-0'>Sensor Information</label>
+                        <label class='subheader m-0'>{{ t('property.sensorData.information') }}</label>
                     </div>
                     <div class='datagrid'>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Manufacturer
+                                {{ t('property.sensorData.manufacturer') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -35,7 +35,7 @@
                         </div>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Model
+                                {{ t('property.sensorData.model') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -44,7 +44,7 @@
                         </div>
                         <div class='datagrid-item'>
                             <div class='datagrid-title'>
-                                Serial Number
+                                {{ t('property.sensorData.serialNumber') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -56,7 +56,7 @@
                             class='datagrid-item'
                         >
                             <div class='datagrid-title'>
-                                Battery
+                                {{ t('property.sensorData.battery') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -68,7 +68,7 @@
                             class='datagrid-item'
                         >
                             <div class='datagrid-title'>
-                                Status
+                                {{ t('property.sensorData.status') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -80,7 +80,7 @@
                             class='datagrid-item'
                         >
                             <div class='datagrid-title'>
-                                Callsign
+                                {{ t('property.sensorData.callsign') }}
                             </div>
                             <div
                                 class='datagrid-content'
@@ -99,16 +99,16 @@
                                 stroke='1'
                                 class='me-2 text-muted'
                             />
-                            <label class='subheader m-0'>Measurements</label>
+                            <label class='subheader m-0'>{{ t('property.sensorData.measurements') }}</label>
                         </div>
                         <div class='table-responsive rounded mt-1'>
                             <table class='table card-table table-hover table-vcenter datatable table-sm'>
                                 <thead>
                                     <tr>
-                                        <th>Class</th>
-                                        <th>Type</th>
-                                        <th>Dose</th>
-                                        <th>Harmful</th>
+                                        <th>{{ t('property.sensorData.class') }}</th>
+                                        <th>{{ t('property.sensorData.type') }}</th>
+                                        <th>{{ t('property.bioSensor.dose') }}</th>
+                                        <th>{{ t('property.bioSensor.harmful') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -122,7 +122,7 @@
                                         <td>
                                             <span
                                                 :class='measurement.harmful ? "text-danger fw-bold" : "text-muted"'
-                                                v-text='measurement.harmful ? "YES" : "No"'
+                                                v-text='measurement.harmful ? t("property.bioSensor.yes") : t("property.bioSensor.no")'
                                             />
                                         </td>
                                     </tr>
@@ -140,6 +140,9 @@
 import { ref } from 'vue';
 import { IconBiohazard, IconInfoCircle, IconActivity } from '@tabler/icons-vue';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface BioSensorData {
     manufacturer: string;

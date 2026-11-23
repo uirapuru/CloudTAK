@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Links'
+            :label='t("property.coreEntityLinks.title")'
         >
             <template #icon>
                 <IconLink
@@ -15,7 +15,7 @@
             <template #right>
                 <TablerIconButton
                     v-if='props.edit'
-                    title='Add Link'
+                    :title='t("property.coreEntityLinks.add")'
                     class='me-2'
                     @click.stop='addLink'
                 >
@@ -38,7 +38,7 @@
                 <div class='rounded mx-2 mt-2 px-2 py-2'>
                     <TablerNone
                         v-if='!props.modelValue.length && !creating'
-                        label='No Links'
+                        :label='t("property.coreEntityLinks.none")'
                         :compact='true'
                         :create='false'
                     />
@@ -52,11 +52,11 @@
                         <template v-if='editing === index'>
                             <div class='d-flex align-items-center mb-2'>
                                 <div class='subheader user-select-none'>
-                                    Link
+                                    {{ t('property.coreEntityLinks.link') }}
                                 </div>
                                 <div class='ms-auto d-flex align-items-center flex-nowrap'>
                                     <TablerIconButton
-                                        title='Save Link'
+                                        :title='t("property.coreEntityLinks.save")'
                                         @click='saveLink(index)'
                                     >
                                         <IconCheck
@@ -65,7 +65,7 @@
                                         />
                                     </TablerIconButton>
                                     <TablerIconButton
-                                        title='Remove Link'
+                                        :title='t("property.coreEntityLinks.remove")'
                                         @click='removeLink(index)'
                                     >
                                         <IconTrash
@@ -78,8 +78,8 @@
 
                             <TablerInput
                                 v-model='draft.name'
-                                label='Name'
-                                placeholder='Incident Report'
+                                :label='t("property.coreEntityLinkFields.name")'
+                                :placeholder='t("property.coreEntityLinkFields.namePlaceholder")'
                                 class='pb-2'
                             />
 
@@ -112,12 +112,12 @@
                                 v-else
                                 class='text-muted flex-fill'
                             >
-                                {{ link.name || 'Untitled Link' }}
+                                {{ link.name || t('property.coreEntityLinks.untitled') }}
                             </div>
 
                             <TablerIconButton
                                 v-if='props.edit'
-                                title='Edit Link'
+                                :title='t("property.coreEntityLinks.edit")'
                                 @click='startEditing(index)'
                             >
                                 <IconPencil
@@ -134,11 +134,11 @@
                     >
                         <div class='d-flex align-items-center mb-2'>
                             <div class='subheader user-select-none'>
-                                Link
+                                {{ t('property.coreEntityLinks.link') }}
                             </div>
                             <div class='ms-auto d-flex align-items-center flex-nowrap'>
                                 <TablerIconButton
-                                    title='Save Link'
+                                    :title='t("property.coreEntityLinks.save")'
                                     @click='saveNewLink'
                                 >
                                     <IconCheck
@@ -147,7 +147,7 @@
                                     />
                                 </TablerIconButton>
                                 <TablerIconButton
-                                    title='Discard Link'
+                                    :title='t("property.coreEntityLinks.discard")'
                                     @click='cancelNewLink'
                                 >
                                     <IconTrash
@@ -160,8 +160,8 @@
 
                         <TablerInput
                             v-model='draft.name'
-                            label='Name'
-                            placeholder='Incident Report'
+                            :label='t("property.coreEntityLinkFields.name")'
+                            :placeholder='t("property.coreEntityLinkFields.namePlaceholder")'
                             class='pb-2'
                         />
 
@@ -179,6 +179,7 @@
 
 <script setup lang='ts'>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import SlideDownHeader from '../util/SlideDownHeader.vue';
 import { TablerBadge, TablerInput, TablerIconButton, TablerNone } from '@tak-ps/vue-tabler';
 import { IconLink, IconExternalLink, IconPlus, IconTrash, IconPencil, IconCheck } from '@tabler/icons-vue';
@@ -193,6 +194,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update:modelValue', value: Array<CoreEntityLink>): void
 }>();
+
+const { t } = useI18n();
 
 const expanded = ref(true);
 const editing = ref<number | null>(null);

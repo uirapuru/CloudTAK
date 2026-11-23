@@ -1,6 +1,6 @@
 <template>
     <PropertyFactRow
-        label='Phone'
+        :label='t("property.phone.label")'
         class='py-1'
     >
         <a
@@ -15,6 +15,9 @@
 import { computed } from 'vue';
 import PropertyFactRow from '../util/PropertyFactRow.vue';
 import { phone as phoneFormat } from 'phone';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     phone: string;

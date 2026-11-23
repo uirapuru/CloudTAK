@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='Overlay Explorer'>
+    <MenuTemplate :name='t("panels.overlayExplorer.title")'>
         <template #buttons>
             <TablerRefreshButton
                 :loading='loading'
@@ -12,7 +12,7 @@
                     <TablerInput
                         v-model='filter'
                         icon='search'
-                        placeholder='Search overlays...'
+                        :placeholder='t("panels.overlayExplorer.search")'
                         class='flex-grow-1'
                     />
                 </div>
@@ -24,7 +24,7 @@
                         :title='bulkHint'
                         :disabled='loading || bulkBusy'
                         @click='void addAll()'
-                        v-text='bulkBusy ? "Pracuję…" : "Dodaj widoczne do nakładek"'
+                        v-text='bulkBusy ? t("panels.overlayExplorer.working") : t("panels.overlayExplorer.addVisible")'
                     />
                     <button
                         type='button'
@@ -32,7 +32,7 @@
                         :title='bulkHint'
                         :disabled='loading || bulkBusy'
                         @click='void removeAll()'
-                        v-text='bulkBusy ? "Pracuję…" : "Usuń widoczne z nakładek"'
+                        v-text='bulkBusy ? t("panels.overlayExplorer.working") : t("panels.overlayExplorer.removeVisible")'
                     />
                 </div>
 
@@ -57,16 +57,16 @@
                                 />
                                 <div class='flex-grow-1 min-w-0'>
                                     <div class='d-flex align-items-center gap-2'>
-                                        <span class='fw-semibold'>Your Files</span>
+                                        <span class='fw-semibold'>{{ t('panels.overlayExplorer.yourFiles') }}</span>
                                     </div>
                                     <p class='mb-0 small text-white-50'>
-                                        Access overlays you have uploaded
+                                        {{ t('panels.overlayExplorer.yourFilesDesc') }}
                                     </p>
                                 </div>
                             </div>
                             <div class='d-flex align-items-center gap-2 flex-wrap'>
                                 <TablerIconButton
-                                    title='Open Files'
+                                    :title='t("panels.overlayExplorer.openFiles")'
                                     @click.stop.prevent='goToFiles'
                                 >
                                     <IconFolder
@@ -107,11 +107,11 @@
                             />
                             <span
                                 class='small text-uppercase fw-semibold flex-grow-1 text-start'
-                                v-text='section.category'
+                                v-text='categoryLabel(section.category)'
                             />
                             <span
                                 class='badge rounded-pill text-bg-secondary'
-                                :title='`Warstwy w sekcji: ${section.entries.length}`'
+                                :title='t("panels.overlayExplorer.sectionCount", { count: section.entries.length })'
                                 v-text='section.entries.length'
                             />
                         </button>
@@ -123,7 +123,7 @@
                                     v-if='section.category === FAVORITES && !section.entries.length'
                                     class='small mb-0 text-white-50'
                                 >
-                                    Kliknij gwiazdkę przy warstwie, aby mieć ją tutaj pod ręką.
+                                    {{ t('panels.overlayExplorer.favoritesHint') }}
                                 </p>
 
                                 <template
@@ -175,7 +175,7 @@
                                             <span
                                                 v-if='entry.mode === "live" && liveOf(entry)?.stale'
                                                 class='small text-white-50'
-                                            >(nieaktualna)</span>
+                                            >{{ t('panels.overlayExplorer.stale') }}</span>
                                             <FavoriteStar
                                                 :active='favoriteKeys.has(entryKey(entry))'
                                                 @toggle='void toggleFavorite(entryKey(entry))'
@@ -189,7 +189,7 @@
 
                     <TablerNone
                         v-if='!entries.length || (filter.trim() && !sections.length)'
-                        label='No Overlays'
+                        :label='t("panels.overlayExplorer.none")'
                         :create='false'
                     />
                 </template>
@@ -201,6 +201,7 @@
 <script setup lang='ts'>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import type { Basemap } from '../../../types.ts';
 import { stdurl } from '../../../std.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
@@ -226,7 +227,7 @@ import FavoriteStar from './Overlays/FavoriteStar.vue';
 import OverlayManager from '../../../base/overlay.ts';
 import type Overlay from '../../../base/overlay-class.ts';
 import { db } from '../../../database.ts';
-import { overlayCountText, selectToAdd, selectToRemove, type ExplorerRef } from '../../../base/overlay-explorer-bulk.ts';
+import { selectToAdd, selectToRemove, type ExplorerRef } from '../../../base/overlay-explorer-bulk.ts';
 import {
     BUILDINGS_3D,
     FAVORITES,
@@ -240,6 +241,7 @@ import CategoryPlacer, { syncCatalogNames } from '../../../base/overlay-category
 import type { Subscription } from 'dexie';
 
 const router = useRouter();
+const { t } = useI18n();
 
 /** Section collapse state of this device */
 const COLLAPSED_KV_KEY = 'overlay-explorer-collapsed';
@@ -314,7 +316,14 @@ function isOpen(category: string): boolean {
     return searching.value || !collapsed.value.has(category);
 }
 
-const bulkHint = 'Działa na warstwach w rozwiniętych sekcjach, a podczas wyszukiwania na wszystkich wynikach.';
+const bulkHint = computed(() => t('panels.overlayExplorer.bulkHint'));
+
+/** The two built-in categories are stored in Polish - only their label follows the language */
+function categoryLabel(category: string): string {
+    if (category === FAVORITES) return t('panels.overlayExplorer.favorites');
+    if (category === BUILDINGS_3D) return t('panels.overlayExplorer.buildings3d');
+    return category;
+}
 
 function entryKey(entry: ExplorerEntry): string {
     return `${entry.mode}:${entry.modeId}`;
@@ -371,7 +380,7 @@ async function toggleFavorite(key: string): Promise<void> {
     try {
         await OverlayFavoriteManager.toggle(key);
     } catch (err) {
-        notice.value = `Nie udało się zmienić ulubionych: ${err instanceof Error ? err.message : String(err)}`;
+        notice.value = t('panels.overlayExplorer.favoriteFailed', { error: err instanceof Error ? err.message : String(err) });
     }
 }
 
@@ -493,7 +502,7 @@ async function addAll(): Promise<void> {
         // items last to first leaves them in the listed order
         const todo = selectToAdd(explorerRefs(visible), OverlayManager.loaded).reverse();
         if (!todo.length) {
-            notice.value = 'Wszystkie widoczne warstwy są już w nakładkach.';
+            notice.value = t('panels.overlayExplorer.allAdded');
             return;
         }
 
@@ -512,8 +521,8 @@ async function addAll(): Promise<void> {
         }
 
         notice.value = added === todo.length
-            ? `Dodano do nakładek ${overlayCountText(added)}.`
-            : `Dodano do nakładek ${overlayCountText(added)} z ${todo.length}, reszta się nie udała.`;
+            ? t('panels.overlayExplorer.added', { count: added })
+            : t('panels.overlayExplorer.addedPartial', { count: added, total: todo.length });
     } finally {
         bulkBusy.value = false;
     }
@@ -527,7 +536,7 @@ async function removeAll(): Promise<void> {
     try {
         const todo = selectToRemove(explorerRefs(visibleEntries()), [...OverlayManager.loaded]);
         if (!todo.length) {
-            notice.value = 'Żadna widoczna pozycja nie jest w nakładkach.';
+            notice.value = t('panels.overlayExplorer.noneAdded');
             return;
         }
 
@@ -542,8 +551,8 @@ async function removeAll(): Promise<void> {
         }
 
         notice.value = removed === todo.length
-            ? `Usunięto z nakładek ${overlayCountText(removed)}.`
-            : `Usunięto z nakładek ${overlayCountText(removed)} z ${todo.length}, reszta się nie udała.`;
+            ? t('panels.overlayExplorer.removed', { count: removed })
+            : t('panels.overlayExplorer.removedPartial', { count: removed, total: todo.length });
     } finally {
         bulkBusy.value = false;
     }
@@ -556,7 +565,7 @@ async function fetchList(opts: { fresh?: boolean } = {}): Promise<void> {
         catalog.value = await loadCatalog(opts);
     } catch (err) {
         console.error('Failed to load the overlay catalog', err);
-        notice.value = `Nie udało się wczytać katalogu warstw: ${err instanceof Error ? err.message : String(err)}`;
+        notice.value = t('panels.overlayExplorer.catalogFailed', { error: err instanceof Error ? err.message : String(err) });
     } finally {
         loading.value = false;
     }

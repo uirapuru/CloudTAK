@@ -12,7 +12,7 @@
                 style='width: 12px; height: 12px; border-width: 1px;'
                 role='status'
             />
-            Syncing
+            {{ t('util.notSyncedBadge.syncing') }}
         </template>
         <template v-else>
             <IconCloudOff
@@ -20,15 +20,18 @@
                 stroke='1'
                 class='me-1'
             />
-            Not Synced
+            {{ t('util.notSyncedBadge.notSynced') }}
         </template>
     </TablerBadge>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import { IconCloudOff } from '@tabler/icons-vue';
 import { TablerBadge } from '@tak-ps/vue-tabler';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     /** The last error encountered submitting the change to the server */
@@ -40,10 +43,11 @@ const props = defineProps<{
 }>();
 
 const title = computed<string>(() => {
-    if (props.loading) return 'Submitting this change to the server';
+    if (props.loading) return t('util.notSyncedBadge.submitting');
 
-    const base = 'This change is saved on this device and has not reached the server yet';
-    const reason = props.error ? `${base}: ${props.error}` : base;
-    return props.retry ? `${reason} - Click to retry` : reason;
+    const reason = props.error
+        ? t('util.notSyncedBadge.savedLocallyError', { error: props.error })
+        : t('util.notSyncedBadge.savedLocally');
+    return props.retry ? t('util.notSyncedBadge.retry', { reason }) : reason;
 });
 </script>

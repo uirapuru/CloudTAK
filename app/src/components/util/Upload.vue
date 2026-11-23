@@ -3,7 +3,7 @@
         <TablerInlineAlert
             v-if='props.sizeWarning'
             severity='warning'
-            title='Uploads are limited to 5 GB'
+            :title='t("shared.upload.sizeWarning")'
         />
         <div
             class='row'
@@ -11,7 +11,7 @@
         >
             <div
                 class='col-12 d-flex justify-content-center mb-3'
-                v-text='props.label'
+                v-text='props.label ?? t("shared.upload.label")'
             />
             <div class='col-12 d-flex justify-content-center'>
                 <div class='btn-list'>
@@ -20,13 +20,13 @@
                         class='btn btn-secondary'
                         @click='emit("cancel")'
                     >
-                        Cancel
+                        {{ t('common.cancel') }}
                     </button>
                     <button
                         class='btn btn-primary'
                         @click='fileInput?.click()'
                     >
-                        Upload
+                        {{ t('shared.upload.upload') }}
                     </button>
                 </div>
             </div>
@@ -62,7 +62,7 @@
         <div
             v-else-if='file && progress > 0 && progress < 100'
         >
-            <TablerLoading :desc='`Uploading ${file.name} (${progress}%)`' />
+            <TablerLoading :desc='t("shared.upload.uploading", { name: file.name, progress })' />
             <TablerProgress :percent='progress / 100' />
         </div>
         <div
@@ -76,7 +76,7 @@
                 />
                 <span
                     class='mx-2 user-select-none'
-                    v-text='`${file.name} - Upload Complete`'
+                    v-text='t("shared.upload.complete", { name: file.name })'
                 />
             </div>
         </div>
@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted } from 'vue';
 import { Preferences } from '@capacitor/preferences';
 import {
@@ -109,13 +110,15 @@ interface Props {
     immediate?: boolean;
 }
 
+const { t } = useI18n();
+
 const props = withDefaults(defineProps<Props>(), {
     headers: () => ({}),
     autoupload: true,
     format: 'formdata',
     method: 'POST',
     cancel: true,
-    label: 'Select a file to upload',
+    label: undefined,
     mimetype: '*',
     sizeWarning: false,
     immediate: false
@@ -219,15 +222,15 @@ async function upload(opts: {
                 }
             } catch (error) {
                 refresh();
-                emit('error', new Error('Failed to parse response'));
+                emit('error', new Error(t('shared.upload.parseFailed')));
                 reject(error);
             }
         };
 
         xhr.onerror = () => {
             refresh();
-            emit('error', new Error('Upload failed'));
-            reject(new Error('Upload failed'));
+            emit('error', new Error(t('shared.upload.failed')));
+            reject(new Error(t('shared.upload.failed')));
         };
 
         xhr.onabort = () => {

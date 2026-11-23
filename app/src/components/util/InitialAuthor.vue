@@ -10,7 +10,7 @@
 
         <div class='ms-2'>
             <div class='subheader user-select-none'>
-                Author
+                {{ t('shared.initialAuthor.author') }}
             </div>
             <div v-text='props.email' />
         </div>
@@ -18,6 +18,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import {
     IconUserEdit
 } from '@tabler/icons-vue';
@@ -25,4 +26,6 @@ import {
 const props = defineProps<{
   email: string
 }>();
+
+const { t } = useI18n();
 </script>

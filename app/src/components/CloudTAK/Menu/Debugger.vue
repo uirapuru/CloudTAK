@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='COT Debugger'>
+    <MenuTemplate :name='t("menu.debugger.title")'>
         <template #default>
             <div class='my-2 mx-2 d-flex align-items-center'>
                 <TablerInput
@@ -9,7 +9,7 @@
                     style='
                         width: calc(100% - 52px);
                     '
-                    placeholder='COT UID'
+                    :placeholder='t("menu.debugger.uid")'
                 />
                 <button
                     class='btn btn-primary'
@@ -26,12 +26,12 @@
             <TablerLoading v-if='loading' />
             <TablerAlert
                 v-else-if='error'
-                title='Historic Features Error'
+                :title='t("menu.debugger.error")'
                 :err='error'
             />
             <TablerNone
                 v-else-if='!history.features.length'
-                label='No Features'
+                :label='t("menu.debugger.none")'
                 :create='false'
             />
             <template v-else>
@@ -75,6 +75,7 @@
 
 <script setup lang='ts'>
 import { ref, shallowRef } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { paths } from '@cloudtak/api-types';
 import CopyField from '../util/CopyField.vue';
 import timeDiff from '../../../timediff.ts';
@@ -91,6 +92,8 @@ import {
 import MenuTemplate from '../util/MenuTemplate.vue';
 
 type DebuggerHistory = paths['/api/marti/cot/{:uid}/all']['get']['responses']['200']['content']['application/json'];
+
+const { t } = useI18n();
 
 const error = ref<Error | undefined>();
 const loading = ref(false);

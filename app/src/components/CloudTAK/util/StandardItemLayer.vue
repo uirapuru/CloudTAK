@@ -26,7 +26,7 @@
                 <div
                     v-if='connection'
                     class='text-white-50 small text-truncate'
-                    v-text='layer.parent ? layer.parent.name : "Admin Layer"'
+                    v-text='layer.parent ? layer.parent.name : t("util.standardItemLayer.adminLayer")'
                 />
                 <div class='d-flex align-items-center'>
                     <LayerStatus :layer='layer' />
@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import StandardItem from './StandardItem.vue';
 import LayerStatus from '../../ETL/Layer/utils/StatusDot.vue';
@@ -72,6 +73,8 @@ import {
     IconStack,
     IconBrandDocker,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     layer: ETLLayer;
@@ -85,9 +88,9 @@ defineEmits<{
 }>();
 
 const type = computed(() => {
-    if (props.layer.incoming && props.layer.outgoing) return { label: 'Incoming & Outgoing', icon: IconExchange };
-    if (props.layer.outgoing) return { label: 'Outgoing', icon: IconStackPop };
-    if (props.layer.incoming) return { label: 'Incoming', icon: IconStackPush };
-    return { label: 'Unconfigured', icon: IconStack };
+    if (props.layer.incoming && props.layer.outgoing) return { label: t('util.standardItemLayer.incomingOutgoing'), icon: IconExchange };
+    if (props.layer.outgoing) return { label: t('util.standardItemLayer.outgoing'), icon: IconStackPop };
+    if (props.layer.incoming) return { label: t('util.standardItemLayer.incoming'), icon: IconStackPush };
+    return { label: t('util.standardItemLayer.unconfigured'), icon: IconStack };
 });
 </script>

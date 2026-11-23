@@ -24,7 +24,7 @@
                 z-index: 1;
             '
             :src='footerLogo'
-            alt='CloudTAK Logo'
+            :alt='t("login.login.cloudtakLogo")'
             @load='footerLogoLoaded = true'
         >
 
@@ -56,15 +56,15 @@
                                         style='height: 150px;'
                                         draggable='false'
                                         class='user-select-none'
-                                        alt='CloudTAK System Logo'
+                                        :alt='t("login.login.systemLogo")'
                                     >
                                 </div>
                                 <h2 class='h2 text-center mb-4'>
-                                    Login to your account
+                                    {{ t('login.login.title') }}
                                 </h2>
                                 <TablerLoading
                                     v-if='loading'
-                                    desc='Logging in'
+                                    :desc='t("login.login.loggingIn")'
                                 />
                                 <template v-else-if='brandStore.oidc.enabled && brandStore.oidc.enforced'>
                                     <div class='text-center text-muted py-3'>
@@ -75,7 +75,7 @@
                                             />
                                         </div>
                                         <p class='mb-0'>
-                                            This instance only supports Single Sign-On (SSO). Please use the SSO login button below.
+                                            {{ t('login.login.ssoOnly') }}
                                         </p>
                                     </div>
                                 </template>
@@ -83,7 +83,7 @@
                                     <div class='mb-3'>
                                         <template v-if='storedUsername'>
                                             <label class='form-label'>
-                                                {{ brandStore.login?.username || "Username or Email" }}
+                                                {{ brandStore.login?.username || t("login.login.usernameOrEmail") }}
                                             </label>
                                             <div class='d-flex align-items-center justify-content-between border rounded px-3 py-2'>
                                                 <div class='d-flex align-items-center text-truncate'>
@@ -99,7 +99,7 @@
                                                     class='btn btn-sm btn-link text-decoration-none flex-shrink-0 ms-2'
                                                     @click='notMe'
                                                 >
-                                                    Not Me
+                                                    {{ t('login.login.notMe') }}
                                                 </button>
                                             </div>
                                         </template>
@@ -107,8 +107,8 @@
                                             v-else
                                             v-model='body.username'
                                             icon='user'
-                                            :label='brandStore.login?.username || "Username or Email"'
-                                            :placeholder='brandStore.login?.username || "your@email.com"'
+                                            :label='brandStore.login?.username || t("login.login.usernameOrEmail")'
+                                            :placeholder='brandStore.login?.username || t("login.login.emailPlaceholder")'
                                             autocomplete='username webauthn'
                                             @keyup.enter='createLogin'
                                         />
@@ -116,7 +116,7 @@
                                     <div class='mb-2'>
                                         <div class='d-flex'>
                                             <label class='form-label mb-0'>
-                                                Password
+                                                {{ t('login.login.password') }}
                                             </label>
                                             <span class='ms-auto'>
                                                 <a
@@ -124,14 +124,14 @@
                                                     tabindex='-1'
                                                     class='cursor-pointer'
                                                     :href='brandStore.login.forgot'
-                                                >Forgot Password</a>
+                                                >{{ t('login.login.forgotPassword') }}</a>
                                             </span>
                                         </div>
                                         <TablerInput
                                             v-model='body.password'
                                             icon='lock'
                                             type='password'
-                                            placeholder='Your password'
+                                            :placeholder='t("login.login.passwordPlaceholder")'
                                             @keyup.enter='createLogin'
                                         />
                                     </div>
@@ -141,7 +141,7 @@
                                             class='btn btn-primary w-100'
                                             @click='createLogin'
                                         >
-                                            Sign In
+                                            {{ t('login.login.signIn') }}
                                         </button>
                                     </div>
                                 </template>
@@ -151,14 +151,14 @@
                                         class='my-3 d-flex align-items-center'
                                     >
                                         <hr class='flex-grow-1 m-0'>
-                                        <span class='mx-2 text-muted small'>or</span>
+                                        <span class='mx-2 text-muted small'>{{ t('login.login.or') }}</span>
                                         <hr class='flex-grow-1 m-0'>
                                     </div>
                                     <TablerInlineAlert
                                         v-if='!brandStore.oidc.discovery'
                                         class='mb-2'
-                                        title='OIDC Misconfigured'
-                                        description='The administrator has not configured OIDC correctly. Please contact your system administrator.'
+                                        :title='t("login.login.oidcMisconfigured")'
+                                        :description='t("login.login.oidcMisconfiguredDescription")'
                                         severity='warning'
                                     />
                                     <a
@@ -172,7 +172,7 @@
                                             style='height: 20px; width: 20px; object-fit: contain;'
                                             alt=''
                                         >
-                                        Sign in with {{ brandStore.oidc.name || 'SSO' }}
+                                        {{ t('login.login.signInWith', { name: brandStore.oidc.name || 'SSO' }) }}
                                     </a>
                                 </template>
                                 <template v-if='brandStore.passkey.enabled && !loading && !isNativePlatform()'>
@@ -181,7 +181,7 @@
                                         class='my-3 d-flex align-items-center'
                                     >
                                         <hr class='flex-grow-1 m-0'>
-                                        <span class='mx-2 text-muted small'>or</span>
+                                        <span class='mx-2 text-muted small'>{{ t('login.login.or') }}</span>
                                         <hr class='flex-grow-1 m-0'>
                                     </div>
                                     <button
@@ -193,16 +193,16 @@
                                             :size='20'
                                             stroke='1.5'
                                         />
-                                        Sign in with Passkey
+                                        {{ t('login.login.signInWithPasskey') }}
                                     </button>
                                 </template>
                                 <template v-if='certRenewal.required && !loading'>
                                     <TablerInlineAlert
                                         class='mt-3 mb-2'
-                                        title='Certificate Renewal Required'
+                                        :title='t("login.login.certRenewalRequired")'
                                         :description='certRenewal.expired
-                                            ? "Your TAK certificate is expired or no longer valid. Please enter your password to issue a new one."
-                                            : "Your TAK certificate is expiring soon. Please enter your password to renew it."'
+                                            ? t("login.login.certExpired")
+                                            : t("login.login.certExpiring")'
                                         :severity='certRenewal.expired ? "danger" : "warning"'
                                     />
                                     <div class='mb-3'>
@@ -210,8 +210,8 @@
                                             v-model='certRenewal.password'
                                             icon='lock'
                                             type='password'
-                                            label='Password'
-                                            placeholder='Enter your password'
+                                            :label='t("login.login.password")'
+                                            :placeholder='t("login.login.enterPassword")'
                                             @keyup.enter='renewCertificate'
                                         />
                                     </div>
@@ -221,7 +221,7 @@
                                             class='btn btn-primary flex-fill'
                                             @click='renewCertificate'
                                         >
-                                            Renew Certificate
+                                            {{ t('login.login.renewCertificate') }}
                                         </button>
                                         <button
                                             v-if='!certRenewal.expired'
@@ -229,7 +229,7 @@
                                             class='btn btn-secondary'
                                             @click='skipCertRenewal'
                                         >
-                                            Skip
+                                            {{ t('login.login.skip') }}
                                         </button>
                                     </div>
                                 </template>
@@ -239,12 +239,12 @@
                             v-if='brandStore.login && brandStore.login.signup'
                             class='text-center text-muted mt-3'
                         >
-                            Don't have an account yet?
+                            {{ t('login.login.noAccount') }}
                             <a
                                 tabindex='-1'
                                 class='cursor-pointer'
                                 :href='brandStore.login.signup'
-                            >Sign Up</a>
+                            >{{ t('login.login.signUp') }}</a>
                         </div>
                     </div>
                 </div>
@@ -270,7 +270,7 @@
                 <div class='card'>
                     <div class='card-header'>
                         <h3 class='card-title'>
-                            Login Settings
+                            {{ t('login.login.settings') }}
                         </h3>
                         <div class='card-actions'>
                             <button
@@ -288,19 +288,19 @@
                                 class='btn btn-sm btn-outline-secondary w-100'
                                 @click='switchServers'
                             >
-                                Switch Servers
+                                {{ t('login.login.switchServers') }}
                             </button>
                         </div>
                         <div class='px-3 pt-2 pb-1 border-bottom'>
-                            <span class='text-muted small'>Running </span>
+                            <span class='text-muted small'>{{ t('login.login.running') }} </span>
                             <code class='small'>v{{ version }}</code>
-                            <span class='text-muted small'> (build: {{ buildHash }})</span>
+                            <span class='text-muted small'> {{ t('login.login.build', { build: buildHash }) }}</span>
                         </div>
                         <div
                             v-if='workers.length === 0'
                             class='p-3 text-muted text-center'
                         >
-                            No Service Workers Found
+                            {{ t('login.login.noServiceWorkers') }}
                         </div>
                         <div
                             v-else
@@ -314,7 +314,7 @@
                                 <div class='d-flex justify-content-between align-items-center'>
                                     <div
                                         class='text-truncate me-2'
-                                        title='Service Worker'
+                                        :title='t("login.login.serviceWorker")'
                                     >
                                         <div class='fw-bold'>
                                             {{ w.url }}
@@ -343,7 +343,7 @@
                                     </div>
                                     <button
                                         class='btn btn-icon btn-ghost-danger btn-sm'
-                                        title='Unregister'
+                                        :title='t("login.login.unregister")'
                                         @click='unregister(w.registration)'
                                     >
                                         <IconTrash size='16' />
@@ -361,6 +361,7 @@
 <script setup lang='ts'>
 import type { Login_Create, ConfigLogin } from '../types.ts'
 import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { version } from '../../package.json';
 import { IconSettings, IconTrash, IconLock, IconFingerprint, IconUser } from '@tabler/icons-vue';
 import { Preferences } from '@capacitor/preferences';
@@ -382,6 +383,7 @@ import {
 
 const emit = defineEmits([ 'login' ]);
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -454,7 +456,7 @@ const fetchWorkers = async () => {
         const worker = r.active || r.waiting || r.installing;
         const scriptURL = worker?.scriptURL;
 
-        let url = 'Unknown';
+        let url = t('shared.common.unknown');
         let version: string | null = null;
         let build: string | null = null;
 
@@ -471,7 +473,7 @@ const fetchWorkers = async () => {
 
         return {
             url,
-            state: worker?.state || 'Unknown',
+            state: worker?.state || t('shared.common.unknown'),
             version,
             build,
             registration: r
@@ -538,7 +540,7 @@ function applyConfig(config: Partial<FullConfig>): void {
         logo: config['login::logo'],
         signup: config['login::signup'],
         forgot: config['login::forgot'],
-        username: config['login::username'] || 'Username or Email',
+        username: config['login::username'] || t('login.login.usernameOrEmail'),
         brand: {
             enabled: config['login::brand::enabled'] as "default" | "enabled" | "disabled" || 'default',
             logo: config['login::brand::logo']

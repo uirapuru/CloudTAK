@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Konta serwera'
+        :name='t("taklab.otsAccounts.title")'
         :loading='loading'
     >
         <template #buttons>
             <TablerIconButton
-                title='Odśwież'
+                :title='t("taklab.common.refresh")'
                 @click='refresh'
             >
                 <IconRefresh
@@ -21,7 +21,7 @@
             />
             <TablerNone
                 v-else-if='!status.enabled || !status.administrator'
-                :label='status.reason || "Lista kont serwera jest dostępna tylko dla administratora OTS"'
+                :label='status.reason || t("taklab.otsAccounts.adminOnly")'
                 :create='false'
             />
             <template v-else>
@@ -29,13 +29,13 @@
                     <TablerInput
                         v-model='filter'
                         icon='search'
-                        placeholder='Szukaj konta'
+                        :placeholder='t("taklab.otsAccounts.search")'
                     />
                 </div>
 
                 <TablerNone
                     v-if='!visible.length'
-                    label='Brak kont'
+                    :label='t("taklab.otsAccounts.none")'
                     :create='false'
                 />
                 <div
@@ -60,7 +60,7 @@
                                     border-color='rgba(220, 38, 38, 0.3)'
                                     text-color='#dc2626'
                                 >
-                                    zablokowane
+                                    {{ t('taklab.otsAccounts.locked') }}
                                 </TablerBadge>
                             </div>
                             <span
@@ -72,7 +72,7 @@
                             v-for='type in TYPES'
                             :key='type'
                             class='btn btn-sm d-flex flex-column align-items-center px-2'
-                            :title='qrButtonState(status, type).title'
+                            :title='qrTitle(type)'
                             :disabled='qrButtonState(status, type).disabled'
                             @click='openQr(account, type)'
                         >
@@ -96,7 +96,7 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Zamknij'
+            :aria-label='t("common.close")'
             @click='modal = undefined'
         />
         <div class='modal-header text-body'>
@@ -114,7 +114,7 @@
             <template v-else-if='modal.qr'>
                 <img
                     class='ots-qr d-block mx-auto mb-3'
-                    alt='Kod QR'
+                    :alt='t("taklab.otsAccounts.qrAlt")'
                     :src='`data:image/svg+xml;charset=utf-8,${encodeURIComponent(modal.qr.svg)}`'
                 >
                 <div class='d-flex align-items-center gap-2'>
@@ -125,12 +125,12 @@
                     >
                     <CopyButton
                         :text='modal.qr.uri'
-                        title='Kopiuj'
+                        :title='t("taklab.common.copy")'
                         :size='24'
                     />
                 </div>
                 <div class='alert alert-warning mt-3 mb-0'>
-                    Ten kod daje pełny dostęp do konta. Nie publikuj go.
+                    {{ t('taklab.otsAccounts.warning') }}
                 </div>
             </template>
         </div>
@@ -139,6 +139,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { IconQrcode, IconRefresh } from '@tabler/icons-vue';
 import {
     TablerAlert,
@@ -163,6 +164,8 @@ import {
 } from './ots-accounts.ts';
 
 const TYPES: OtsQrType[] = ['atak', 'icu'];
+
+const { t } = useI18n();
 
 const loading = ref(true);
 const error = ref<Error | undefined>();
@@ -190,6 +193,13 @@ async function refresh(): Promise<void> {
     } catch (err) {
         error.value = err instanceof Error ? err : new Error(String(err));
     }
+}
+
+/** Button tooltip; qrButtonState keeps the Polish text for its spec, the screen shows the translated one. */
+function qrTitle(type: OtsQrType): string {
+    const { disabled } = qrButtonState(status.value, type);
+    if (type === 'atak') return t(disabled ? 'taklab.otsAccounts.qrAtakUnavailable' : 'taklab.otsAccounts.qrAtak');
+    return t(disabled ? 'taklab.otsAccounts.qrIcuUnavailable' : 'taklab.otsAccounts.qrIcu');
 }
 
 async function openQr(account: OtsAccount, type: OtsQrType): Promise<void> {

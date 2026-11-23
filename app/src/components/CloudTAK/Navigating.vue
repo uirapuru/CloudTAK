@@ -23,15 +23,15 @@
                 <div class='d-flex align-items-center gap-2'>
                     <span
                         class='fw-bold text-truncate'
-                        v-text='mapStore.navigation.callsign || (mapStore.navigation.mode === "point" ? "Destination" : "Route")'
+                        v-text='mapStore.navigation.callsign || (mapStore.navigation.mode === "point" ? t("map.navigating.destination") : t("map.navigating.route"))'
                     />
                 </div>
                 <div class='small text-secondary'>
                     <template v-if='state'>
-                        <span v-text='`${remainingDisplay} to destination`' />
+                        <span v-text='t("map.navigating.toDestination", { distance: remainingDisplay })' />
                     </template>
                     <template v-else>
-                        Acquiring location…
+                        {{ t('map.navigating.acquiring') }}
                     </template>
                 </div>
             </div>
@@ -64,12 +64,12 @@
                 <span
                     class='text-secondary'
                     style='font-size: 0.7rem;'
-                >ETA</span>
+                >{{ t('map.navigating.eta') }}</span>
             </div>
 
             <div class='d-flex align-items-center gap-1 flex-shrink-0'>
                 <TablerIconButton
-                    :title='mapStore.navigation.mode === "point" ? "Zoom to Destination" : "Zoom to Route"'
+                    :title='mapStore.navigation.mode === "point" ? t("map.navigating.zoomDestination") : t("map.navigating.zoomRoute")'
                     @click='zoomToRoute'
                 >
                     <IconZoomPan
@@ -79,7 +79,7 @@
                 </TablerIconButton>
                 <TablerIconButton
                     v-if='mapStore.navigation.mode !== "point"'
-                    title='Reverse Direction'
+                    :title='t("map.navigating.reverse")'
                     @click='mapStore.reverseNavigation()'
                 >
                     <IconArrowsExchange
@@ -88,7 +88,7 @@
                     />
                 </TablerIconButton>
                 <TablerIconButton
-                    title='End Navigation'
+                    :title='t("map.navigating.end")'
                     @click='mapStore.stopNavigation()'
                 >
                     <IconX
@@ -103,6 +103,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { LngLatLike } from 'maplibre-gl';
 import {
     IconRoute,
@@ -116,6 +117,7 @@ import { useMapStore } from '../../stores/map.ts';
 import ProfileConfig from '../../base/profile.ts';
 
 const mapStore = useMapStore();
+const { t } = useI18n();
 
 const units = ref({
     display_speed: 'mi/h',

@@ -2,6 +2,7 @@
 * FloatStore - Maintain Floating Panes ontop of the Map View
 */
 
+import { t } from '../i18n.ts';
 import { defineStore } from 'pinia'
 import { markRaw, defineAsyncComponent } from 'vue';
 import type { Component } from 'vue';
@@ -156,7 +157,7 @@ export const useFloatStore = defineStore('float', {
             })
         },
         addConnection(connection: VideoConnection): void {
-            if (connection.feeds.length === 0) throw new Error('Cannot add Stream as it does not have any valid feeds');
+            if (connection.feeds.length === 0) throw new Error(t('messages.float.noFeeds'));
 
             this.panes.set(connection.uuid, {
                 uid: connection.uuid,

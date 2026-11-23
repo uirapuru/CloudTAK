@@ -16,7 +16,7 @@
                     class='me-2 flex-shrink-0'
                 />
                 <div class='me-2 font-weight-bold text-truncate'>
-                    No Active Mission
+                    {{ t('map.activeMission.noActive') }}
                 </div>
             </div>
         </template>
@@ -47,7 +47,7 @@
 
             <div class='d-none d-md-flex gap-1 ms-2'>
                 <TablerIconButton
-                    title='Layers'
+                    :title='t("map.activeMission.layers")'
                     class='cloudtak-hover'
                     :hover='false'
                     @click='router.push(`/menu/missions/${mapStore.mission.meta.guid}/layers`)'
@@ -59,7 +59,7 @@
                 </TablerIconButton>
 
                 <TablerIconButton
-                    title='Changes'
+                    :title='t("map.activeMission.changes")'
                     class='cloudtak-hover'
                     :hover='false'
                     @click='router.push(`/menu/missions/${mapStore.mission.meta.guid}/changes`)'
@@ -71,7 +71,7 @@
                 </TablerIconButton>
 
                 <TablerIconButton
-                    title='Users'
+                    :title='t("map.activeMission.users")'
                     class='cloudtak-hover'
                     :hover='false'
                     @click='router.push(`/menu/missions/${mapStore.mission.meta.guid}/users`)'
@@ -84,7 +84,7 @@
 
                 <div class='position-relative'>
                     <TablerIconButton
-                        title='Logs'
+                        :title='t("map.activeMission.logs")'
                         class='cloudtak-hover'
                         :hover='false'
                         @click='router.push(`/menu/missions/${mapStore.mission.meta.guid}/logs`)'
@@ -105,7 +105,7 @@
 
                 <div class='position-relative'>
                     <TablerIconButton
-                        title='Chats'
+                        :title='t("map.activeMission.chats")'
                         class='cloudtak-hover'
                         :hover='false'
                         @click='router.push(`/menu/missions/${mapStore.mission.meta.guid}/chats`)'
@@ -125,7 +125,7 @@
                 </div>
 
                 <TablerIconButton
-                    title='Files'
+                    :title='t("map.activeMission.files")'
                     class='cloudtak-hover'
                     :hover='false'
                     @click='router.push(`/menu/missions/${mapStore.mission.meta.guid}/contents`)'
@@ -142,6 +142,7 @@
 
 <script setup lang='ts'>
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useMapStore } from '../../stores/map.ts';
 import { db, liveQuery } from '../../database.ts';
 import { useObservable } from '@vueuse/rxjs';
@@ -165,6 +166,7 @@ withDefaults(defineProps<{
 
 const mapStore = useMapStore();
 const router = useRouter();
+const { t } = useI18n();
 
 const unreadLogs = useObservable(
     from(liveQuery(async () => {

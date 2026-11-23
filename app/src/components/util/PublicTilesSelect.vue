@@ -1,26 +1,26 @@
 <template>
     <div>
         <div class='d-flex align-items-center user-select-none'>
-            <label class='mx-1 mb-1'>Public Tiles Selection</label>
+            <label class='mx-1 mb-1'>{{ t('shared.publicTilesSelect.title') }}</label>
         </div>
         <div class='card'>
             <div class='card-body'>
                 <TablerLoading
                     v-if='loading.main'
                     :inline='true'
-                    desc='Loading Tiles'
+                    :desc='t("shared.publicTilesSelect.loadingTiles")'
                 />
                 <TablerLoading
                     v-else-if='loading.tiles'
                     :inline='true'
-                    desc='Loading Tile Metadata'
+                    :desc='t("shared.publicTilesSelect.loadingMetadata")'
                 />
                 <template v-else-if='selected'>
                     <div class='col-12 d-flex align-items-center user-select-none'>
                         <div v-text='selected.name' />
                         <div class='ms-auto btn-list'>
                             <TablerIconButton
-                                title='Remove Tile'
+                                :title='t("shared.publicTilesSelect.remove")'
                                 @click='selected = undefined'
                             >
                                 <IconX
@@ -34,7 +34,7 @@
                 <template v-else>
                     <TablerInput
                         v-model='paging.filter'
-                        placeholder='Task Filter...'
+                        :placeholder='t("shared.publicTilesSelect.filter")'
                         class='pb-2'
                     />
 
@@ -42,13 +42,13 @@
                         v-if='loading.list'
                         class='card-body'
                     >
-                        <TablerLoading desc='Loading Tasks' />
+                        <TablerLoading :desc='t("shared.publicTilesSelect.loadingList")' />
                     </div>
                     <TablerNone
                         v-else-if='list.total === 0'
                         :create='false'
                         :compact='true'
-                        label='No Tasks'
+                        :label='t("shared.publicTilesSelect.none")'
                     />
                     <template
                         v-for='task in list.items'
@@ -81,6 +81,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, watch, onMounted } from 'vue';
 import { Preferences } from '@capacitor/preferences';
 import { server, std, stdurl } from '../../std.ts';
@@ -105,6 +106,8 @@ interface TileDetail {
 const emit = defineEmits<{
     (e: 'select', tile: TileDetail | undefined): void;
 }>();
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     url?: string;

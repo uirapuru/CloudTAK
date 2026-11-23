@@ -13,12 +13,12 @@
                     :size='24'
                     stroke='1'
                 />
-                <label class='mx-2'>Video Feed</label>
+                <label class='mx-2'>{{ t('panels.videosRemoteFeed.title') }}</label>
             </div>
             <div class='ms-auto btn-list'>
                 <TablerDelete
                     :size='24'
-                    title='Delete Feed'
+                    :title='t("panels.videosRemoteFeed.delete")'
                     displaytype='icon'
                     @delete='emit("delete")'
                 />
@@ -29,11 +29,11 @@
             <div class='col-12'>
                 <TablerInput
                     v-model='feed.alias'
-                    label='Feed Name'
+                    :label='t("panels.videosRemoteFeed.name")'
                 >
                     <TablerToggle
                         v-model='feed.active'
-                        label='Active'
+                        :label='t("panels.videosRemote.active")'
                     />
                 </TablerInput>
             </div>
@@ -41,7 +41,7 @@
             <div class='col-12'>
                 <TablerInput
                     v-model='feed.url'
-                    label='Feed URL'
+                    :label='t("panels.videosRemoteFeed.url")'
                 />
             </div>
         </div>
@@ -50,6 +50,7 @@
 
 <script setup lang='ts'>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { VideoConnectionFeed } from '../../../../types.ts';
 import {
     TablerInput,
@@ -63,6 +64,8 @@ import {
 const props = defineProps<{
     modelValue: VideoConnectionFeed
 }>();
+
+const { t } = useI18n();
 
 const feed = ref(props.modelValue);
 

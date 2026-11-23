@@ -33,7 +33,7 @@
         <template #buttons>
             <TablerIconButton
                 v-if='event && hasMap'
-                title='Zoom To'
+                :title='t("map.common.zoomTo")'
                 @click='flyTo'
             >
                 <IconZoomPan
@@ -44,7 +44,7 @@
 
             <TablerIconButton
                 v-if='event && is_editable && hasMap'
-                title='Move Marker'
+                :title='t("map.common.moveMarker")'
                 @click='editGeometry'
             >
                 <IconPencil
@@ -56,7 +56,7 @@
             <!-- Only the creator can change who is allowed to edit -->
             <TablerIconButton
                 v-if='event && is_creator'
-                :title='event.editable ? "Disable Editing by Others" : "Allow Editing by Others"'
+                :title='event.editable ? t("map.coreEntityView.disableEditing") : t("map.coreEntityView.allowEditing")'
                 @click='patch({ editable: !event.editable })'
             >
                 <IconLockOpen
@@ -80,7 +80,7 @@
 
             <TablerIconButton
                 v-if='embedded'
-                title='Close'
+                :title='t("common.close")'
                 @click='emit("close")'
             >
                 <IconCircleX
@@ -97,7 +97,7 @@
         <TablerNone
             v-else-if='!event && !loading'
             :create='false'
-            label='No Event'
+            :label='t("map.coreEntityView.none")'
         />
         <div
             v-else-if='event'
@@ -118,7 +118,7 @@
             >
                 <TablerInlineAlert
                     severity='danger'
-                    title='Change Not Saved'
+                    :title='t("map.common.changeNotSaved")'
                     :description='saveError.message'
                 />
             </div>
@@ -138,11 +138,11 @@
                     </div>
 
                     <PropertyFactRow
-                        label='Location'
+                        :label='t("map.coreEntityView.location")'
                         class='py-1'
                     >
                         <CopyField
-                            :model-value='event.location || "None"'
+                            :model-value='event.location || t("map.coreEntityView.noneValue")'
                             :edit='is_editable'
                             :hover='is_editable'
                             :size='24'
@@ -151,7 +151,7 @@
                     </PropertyFactRow>
 
                     <PropertyFactRow
-                        label='Coords'
+                        :label='t("map.common.coords")'
                         class='py-1'
                     >
                         <Coordinate
@@ -180,7 +180,7 @@
 
                     <PropertyFactRow
                         v-if='event.username'
-                        label='Creator'
+                        :label='t("map.common.creator")'
                     >
                         <a
                             :href='`mailto:${event.username}`'
@@ -288,6 +288,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import {
     TablerNone,
@@ -343,6 +344,7 @@ const emit = defineEmits<{
     (e: 'close'): void;
 }>();
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const mapStore = useMapStore();
@@ -376,10 +378,10 @@ const formsRefresh = ref(0);
 const tab = ref('details');
 
 const tabs: Array<PropertyTab> = [
-    { value: 'details', label: 'Details' },
-    { value: 'channels', label: 'Channels' },
-    { value: 'assignments', label: 'Assignments' },
-    { value: 'forms', label: 'Forms' },
+    { value: 'details', label: t('map.common.details') },
+    { value: 'channels', label: t('map.common.channels') },
+    { value: 'assignments', label: t('map.coreEntityView.assignments') },
+    { value: 'forms', label: t('map.coreEntityView.forms') },
 ];
 
 const profile = ref<{ username?: string, system_admin?: boolean }>({});
@@ -610,7 +612,7 @@ async function placeNomination(column: string): Promise<void> {
 
 /** Complete any Form shared with one of the Event's Channels */
 function completeForm(form: CoreForm): void {
-    formWizard.value = { forms: [form], title: 'Complete Form' };
+    formWizard.value = { forms: [form], title: t('map.coreEntityView.completeForm') };
 }
 
 async function completeFormWizard(): Promise<void> {
@@ -722,7 +724,7 @@ async function editGeometry(): Promise<void> {
     const cot = await mapStore.worker.db.get(event.value.id);
 
     if (!cot) {
-        saveError.value = new Error('The Event marker is not currently on the map so its location cannot be edited here');
+        saveError.value = new Error(t('map.coreEntityView.notOnMap'));
         return;
     }
 

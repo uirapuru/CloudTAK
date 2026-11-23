@@ -6,7 +6,7 @@
     >
         <div
             class='cursor-pointer'
-            title='Zoom To Location'
+            :title='t("tools.gps.zoomToLocation")'
             data-test='to-location'
             @click='$emit("to-location")'
         >
@@ -78,6 +78,9 @@ import {
     IconLocationOff,
 } from '@tabler/icons-vue';
 import GPSPanelCoordinates from './GPSPanelCoordinates.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     mode: string;
@@ -112,11 +115,11 @@ const locationColor = computed(() => {
 });
 
 const locationTooltip = computed(() => {
-    if (props.mode === 'SetLocation') return 'Click on map to set location';
-    if (mapStore.location === LocationState.Preset) return 'Manual Location - Click to adjust or switch to GPS';
-    if (mapStore.location === LocationState.Live) return 'Live Location - Click to set manually';
-    if (mapStore.location === LocationState.Loading) return 'Acquiring GPS';
-    return 'Set Your Location - Click to enable GPS or set manually';
+    if (props.mode === 'SetLocation') return t('tools.gps.tooltipSetLocation');
+    if (mapStore.location === LocationState.Preset) return t('tools.gps.tooltipManual');
+    if (mapStore.location === LocationState.Live) return t('tools.gps.tooltipLive');
+    if (mapStore.location === LocationState.Loading) return t('tools.gps.tooltipAcquiring');
+    return t('tools.gps.tooltipSet');
 });
 
 function formatLength(meters: number, unit: string): string {
@@ -131,10 +134,10 @@ const altitudeText = computed(() => {
 });
 
 const accuracyText = computed(() => {
-    if (props.mode === 'SetLocation') return 'Click map';
-    if (mapStore.location === LocationState.Preset) return 'Manual';
-    if (mapStore.location === LocationState.Loading) return 'Acquiring';
-    if (!locationAccuracy.value) return isLive.value ? 'GPS' : 'No Fix';
+    if (props.mode === 'SetLocation') return t('tools.gps.clickMap');
+    if (mapStore.location === LocationState.Preset) return t('tools.gps.manual');
+    if (mapStore.location === LocationState.Loading) return t('tools.gps.acquiring');
+    if (!locationAccuracy.value) return isLive.value ? 'GPS' : t('tools.gps.noFix');
     return `+/- ${formatLength(locationAccuracy.value, mapStore.distanceUnit)}`;
 });
 

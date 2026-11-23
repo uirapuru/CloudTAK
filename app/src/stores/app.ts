@@ -1,3 +1,4 @@
+import { t } from '../i18n.ts';
 import { defineStore } from 'pinia';
 import type { Subscription } from 'dexie';
 import { Preferences } from '@capacitor/preferences';
@@ -328,7 +329,7 @@ export const useAppStore = defineStore('cloudtak-app', {
         },
 
         async bootstrap(): Promise<boolean> {
-            this.loadingStage = 'Connecting to server…';
+            this.loadingStage = t('messages.loading.connecting');
 
             if (!isNativePlatform()) {
                 await this.setServerUrl(window.location.origin);
@@ -342,7 +343,7 @@ export const useAppStore = defineStore('cloudtak-app', {
                 }
             }
 
-            this.loadingStage = 'Setting up styles…';
+            this.loadingStage = t('messages.loading.styles');
 
             if (isNativePlatform()) {
                 try {
@@ -388,7 +389,7 @@ export const useAppStore = defineStore('cloudtak-app', {
                     console.warn('Failed to load login branding', err);
                 });
 
-            this.loadingStage = 'Checking your account…';
+            this.loadingStage = t('messages.loading.account');
 
             let status;
             try {
@@ -411,7 +412,7 @@ export const useAppStore = defineStore('cloudtak-app', {
             const { value: token } = await Preferences.get({ key: 'token' });
 
             if (token) {
-                this.loadingStage = 'Signing you in…';
+                this.loadingStage = t('messages.loading.signingIn');
                 await this.refreshLogin({ extend: true });
             } else if (router.currentRoute.value.name !== 'login') {
                 await this.routeLogin();

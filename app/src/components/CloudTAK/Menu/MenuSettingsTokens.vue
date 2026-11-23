@@ -1,12 +1,12 @@
 <template>
     <MenuTemplate
-        name='API Tokens'
+        :name='t("panels.settingsTokens.title")'
         :loading='loading'
         :none='!tokens.items.length'
     >
         <template #buttons>
             <TablerIconButton
-                title='New Token'
+                :title='t("panels.settingsTokens.newToken")'
                 @click='token={}'
             >
                 <IconPlus
@@ -22,9 +22,9 @@
         <template #default>
             <div class='col-12 d-flex flex-column gap-2 py-3'>
                 <StandardItem
-                    v-for='t in tokens.items'
-                    :key='t.id'
-                    @click='token = t'
+                    v-for='tok in tokens.items'
+                    :key='tok.id'
+                    @click='token = tok'
                 >
                     <div class='d-flex align-items-center px-2 py-2'>
                         <IconRobot
@@ -32,7 +32,7 @@
                             stroke='1'
                         />
                         <div class='ms-2 flex-grow-1 fw-bold'>
-                            {{ t.name }}
+                            {{ tok.name }}
                         </div>
                     </div>
                 </StandardItem>
@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
 import { server } from '../../../std.ts';
@@ -64,6 +65,7 @@ import {
     IconRobot,
 } from '@tabler/icons-vue';
 
+const { t } = useI18n();
 const loading = ref<boolean>(true);
 const token = ref<ProfileToken | Record<string, never> | false>(false);
 const tokens = ref<ProfileTokenList>({

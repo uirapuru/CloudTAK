@@ -1,7 +1,7 @@
 <template>
     <!-- Raised so the icon picker's dropdown overlays the sections below -->
     <PropertySection
-        label='Style'
+        :label='t("property.style.title")'
         class='position-relative'
         style='z-index: 10;'
     >
@@ -9,14 +9,14 @@
             <div class='pb-1'>
                 <IconSelect
                     :model-value='(modelValue.icon as string | undefined) ?? ""'
-                    label='Icon'
+                    :label='t("property.style.icon")'
                     :size='32'
                     stroke='1'
                     @update:model-value='updatePropertyIcon($event)'
                 />
             </div>
             <PropertyFactRow
-                label='Color'
+                :label='t("property.style.color")'
                 class='py-1'
             >
                 <TablerInput
@@ -28,7 +28,7 @@
                 />
             </PropertyFactRow>
             <PropertyFactRow
-                label='Opacity'
+                :label='t("property.style.opacity")'
                 class='py-1'
             >
                 <TablerRange
@@ -44,7 +44,7 @@
         </template>
         <template v-else>
             <PropertyFactRow
-                label='Stroke'
+                :label='t("property.style.stroke")'
                 class='py-1'
             >
                 <TablerInput
@@ -55,19 +55,19 @@
                 />
             </PropertyFactRow>
             <PropertyFactRow
-                label='Line Style'
+                :label='t("property.style.lineStyle")'
                 class='py-1'
             >
-                <TablerEnum
-                    :model-value='modelValue["stroke-style"] ?? "solid"'
+                <TranslatedEnum
+                    :model-value='(modelValue["stroke-style"] as string | undefined) ?? "solid"'
                     label=''
-                    :options='["solid", "dashed", "dotted", "outlined"]'
+                    :options='strokeStyles'
                     default='solid'
                     @update:model-value='updateProperty("stroke-style", $event)'
                 />
             </PropertyFactRow>
             <PropertyFactRow
-                label='Width'
+                :label='t("property.style.width")'
                 class='py-1'
             >
                 <TablerRange
@@ -81,7 +81,7 @@
                 />
             </PropertyFactRow>
             <PropertyFactRow
-                label='Opacity'
+                :label='t("property.style.opacity")'
                 class='py-1'
             >
                 <TablerRange
@@ -97,7 +97,7 @@
         </template>
         <template v-if='geometry === "Polygon" || geometry === "MultiPolygon"'>
             <PropertyFactRow
-                label='Fill'
+                :label='t("property.style.fill")'
                 class='py-1'
             >
                 <TablerInput
@@ -108,7 +108,7 @@
                 />
             </PropertyFactRow>
             <PropertyFactRow
-                label='Fill Opacity'
+                :label='t("property.style.fillOpacity")'
                 class='py-1'
             >
                 <TablerRange
@@ -126,15 +126,19 @@
 </template>
 
 <script setup lang='ts'>
+import { computed } from 'vue';
 import Type2525 from '@tak-ps/node-cot/2525';
 import PropertySection from '../util/PropertySection.vue';
 import PropertyFactRow from '../util/PropertyFactRow.vue';
 import {
     TablerInput,
     TablerRange,
-    TablerEnum,
 } from '@tak-ps/vue-tabler';
 import IconSelect from '../util/IconSelectOffline.vue';
+import TranslatedEnum from '../util/TranslatedEnum.vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 type StyleProperties = Record<string, unknown>;
 
@@ -146,6 +150,11 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update:modelValue', value: StyleProperties): void
 }>();
+
+const strokeStyles = computed(() => ['solid', 'dashed', 'dotted', 'outlined'].map((value) => ({
+    value,
+    label: t(`property.style.strokeStyles.${value}`),
+})));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function updateProperty(key: string, event: any) {

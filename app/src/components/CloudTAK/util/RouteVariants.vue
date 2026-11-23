@@ -4,13 +4,14 @@
         <button
             type='button'
             class='btn-close'
-            aria-label='Close'
+            :aria-label='t("common.close")'
             @click='emit("close")'
         />
         <div class='modal-header text-body'>
-            <div class='modal-title'>
-                Warianty trasy
-            </div>
+            <div
+                class='modal-title'
+                v-text='t("taklab.routeVariants.title")'
+            />
         </div>
         <div class='modal-body text-body'>
             <TablerLoading v-if='loading' />
@@ -28,13 +29,13 @@
                         v-if='intermediate'
                         class='text-secondary mb-2'
                     >
-                        Warianty łączą start z celem i pomijają punkty pośrednie.
+                        {{ t('taklab.routeVariants.intermediate') }}
                     </div>
                     <div
                         v-if='!variants.length'
                         class='text-secondary'
                     >
-                        Nie ma wariantów wyraźnie innych niż trasa.
+                        {{ t('taklab.routeVariants.none') }}
                     </div>
                     <div
                         v-else
@@ -43,13 +44,13 @@
                         <table class='table table-sm'>
                             <thead>
                                 <tr>
-                                    <th>Wariant</th>
-                                    <th>Długość</th>
-                                    <th>Czas</th>
-                                    <th>Osłona</th>
-                                    <th>Odsłonięte</th>
-                                    <th>Widoczność ze wzgórz</th>
-                                    <th>Przejścia przez drogi</th>
+                                    <th v-text='t("taklab.routeVariants.variant")' />
+                                    <th v-text='t("taklab.routeVariants.length")' />
+                                    <th v-text='t("taklab.routeVariants.time")' />
+                                    <th v-text='t("taklab.routeVariants.concealed")' />
+                                    <th v-text='t("taklab.routeVariants.exposed")' />
+                                    <th v-text='t("taklab.routeVariants.observed")' />
+                                    <th v-text='t("taklab.routeVariants.crossings")' />
                                     <th />
                                 </tr>
                             </thead>
@@ -78,7 +79,7 @@
                                             :disabled='added.has(row.index)'
                                             @click='addVariant(row.index)'
                                         >
-                                            {{ added.has(row.index) ? 'Dodano' : 'Dodaj na mapę' }}
+                                            {{ added.has(row.index) ? t('taklab.routeVariants.added') : t('taklab.routeVariants.addToMap') }}
                                         </button>
                                     </td>
                                 </tr>
@@ -93,6 +94,7 @@
 
 <script setup lang='ts'>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type * as maplibregl from 'maplibre-gl';
 import { TablerModal, TablerAlert, TablerLoading } from '@tak-ps/vue-tabler';
 import type { Feature } from '../../../types.ts';
@@ -109,6 +111,8 @@ const NAMES = ['B', 'C'];
 const NONE = '—';
 
 type PreviewMap = Pick<maplibregl.Map, 'addSource' | 'getSource' | 'removeSource' | 'addLayer' | 'getLayer' | 'removeLayer'>;
+
+const { t } = useI18n();
 
 const props = defineProps<{ feature: Feature }>();
 const emit = defineEmits<{ (e: 'close'): void }>();
@@ -163,7 +167,7 @@ function describe(plan: RoutePlan | null, label: string, color?: string, index?:
 }
 
 const rows = computed(() => [
-    describe(currentPlan, 'A (obecna)'),
+    describe(currentPlan, t('taklab.routeVariants.current')),
     ...variants.value.map((v, i) => describe(planOf(v), NAMES[i], COLORS[i], i)),
 ]);
 
@@ -214,7 +218,7 @@ async function addVariant(index: number): Promise<void> {
 
 onMounted(async () => {
     try {
-        if (!currentPlan) throw new Error('Trasa nie ma planu taklab.');
+        if (!currentPlan) throw new Error(t('taklab.routeVariants.noPlan'));
         const threats = await collectThreats(mapStore.worker.db as unknown as ThreatSource, currentPlan.waypoints);
         const geometry = props.feature.geometry as { coordinates: number[][] };
         const result = await std('/api/search/route/variants', {

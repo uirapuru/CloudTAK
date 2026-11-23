@@ -1,9 +1,9 @@
 <template>
     <PropertyMeasureRow
-        :label='label'
+        :label='label ?? t("property.distance.label")'
         :model-value='config.distance'
         :unit='mode'
-        :units='UNITS'
+        :units='units'
         :edit='edit'
         :hover='hover'
         @update:model-value='config.distance = Number($event)'
@@ -13,17 +13,20 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, watch } from 'vue';
+import { ref, computed, watch } from 'vue';
 import PropertyMeasureRow from '../util/PropertyMeasureRow.vue';
 import type { UnitOption } from '../util/UnitSwitcher.vue';
+import { useI18n } from 'vue-i18n';
 
-const UNITS: Array<UnitOption> = [
-    { value: 'feet', label: 'ft', title: 'Feet' },
-    { value: 'yard', label: 'yd', title: 'Yards' },
-    { value: 'meter', label: 'm', title: 'Meters' },
-    { value: 'kilometer', label: 'km', title: 'Kilometers' },
-    { value: 'mile', label: 'mi', title: 'Miles' },
-];
+const { t } = useI18n();
+
+const units = computed<Array<UnitOption>>(() => [
+    { value: 'feet', label: 'ft', title: t('property.distance.feet') },
+    { value: 'yard', label: 'yd', title: t('property.distance.yards') },
+    { value: 'meter', label: 'm', title: t('property.distance.meters') },
+    { value: 'kilometer', label: 'km', title: t('property.distance.kilometers') },
+    { value: 'mile', label: 'mi', title: t('property.distance.miles') },
+]);
 
 const emit = defineEmits([
     'submit',
@@ -33,7 +36,7 @@ const emit = defineEmits([
 const props = defineProps({
     label: {
         type: String,
-        default: 'Distance'
+        default: undefined
     },
     modelValue: {
         type: Number,

@@ -1,6 +1,6 @@
 <template>
     <span
-        :title='battery + "% Battery"'
+        :title='t("property.battery.title", { battery })'
         class='d-flex'
     >
         <IconBattery1
@@ -33,6 +33,9 @@ import {
     IconBattery3,
     IconBattery4,
 } from '@tabler/icons-vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 defineProps({
     battery: {

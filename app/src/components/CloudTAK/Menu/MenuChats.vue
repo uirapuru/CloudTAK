@@ -1,8 +1,8 @@
 <template>
-    <MenuTemplate name='Chats'>
+    <MenuTemplate :name='t("menu.chats.title")'>
         <template #buttons>
             <TablerIconButton
-                title='Select Chats'
+                :title='t("menu.chat.select")'
                 @click='multiselect = !multiselect'
             >
                 <IconListCheck
@@ -11,7 +11,7 @@
                 />
             </TablerIconButton>
             <TablerIconButton
-                title='New Chat'
+                :title='t("menu.chats.newChat")'
                 @click='router.push("/menu/contacts")'
             >
                 <IconPlus
@@ -30,7 +30,7 @@
                     v-model='paging.filter'
                     v-model:sort='sort'
                     :sort-options='sortOptions'
-                    placeholder='Filter'
+                    :placeholder='t("menu.common.filter")'
                 >
                     <template #sort-icon>
                         <template v-if='sort'>
@@ -151,10 +151,12 @@ import {
     IconArrowsSort,
 } from '@tabler/icons-vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { liveQuery } from '../../../database.ts';
 import timeDiff from '../../../timediff.ts';
 
 const select = useTemplateRef<ComponentExposed<typeof GenericSelect>>('select');
+const { t } = useI18n();
 const router = useRouter();
 const error = ref<Error | undefined>(undefined);
 const loading = ref(true);

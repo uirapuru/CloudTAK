@@ -1,9 +1,9 @@
 <template>
-    <MenuTemplate name='Query Mode'>
+    <MenuTemplate :name='t("map.queryView.title")'>
         <template #buttons>
             <TablerIconButton
                 v-if='coords && coords.length >= 2'
-                :title='isNavigating ? "End Navigation" : "Navigate"'
+                :title='isNavigating ? t("map.queryView.endNavigation") : t("map.queryView.navigate")'
                 @click='toggleNavigation'
             >
                 <IconNavigationFilled
@@ -19,7 +19,7 @@
                 />
             </TablerIconButton>
             <TablerIconButton
-                title='Create Route'
+                :title='t("map.queryView.createRoute")'
                 @click='openRoute'
             >
                 <IconRoute
@@ -28,7 +28,7 @@
                 />
             </TablerIconButton>
             <TablerIconButton
-                title='Refresh'
+                :title='t("map.queryView.refresh")'
                 @click='refreshKey++'
             >
                 <IconRefresh
@@ -52,7 +52,7 @@
                     class='btn btn-success w-100'
                     @click='openCreateEvent'
                 >
-                    Create Event
+                    {{ t('map.queryView.createEvent') }}
                 </button>
             </div>
 
@@ -98,6 +98,7 @@
 <script setup lang='ts'>
 import { ref, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useMapStore } from '../../stores/map.ts';
 import { useFloatStore } from '../../stores/float.ts';
 import type { SearchReverseReverse } from '../../types.ts';
@@ -123,6 +124,7 @@ const route = useRoute();
 const router = useRouter();
 const mapStore = useMapStore();
 const floatStore = useFloatStore();
+const { t } = useI18n();
 
 const refreshKey = ref(0);
 const reverse = ref<SearchReverseReverse['reverse']>(null);
@@ -146,7 +148,7 @@ function openCreateEvent(): void {
 
     floatStore.add({
         uid,
-        name: 'Create Event',
+        name: t('map.queryView.createEvent'),
         component: CreateCoreEntity,
         config: {
             coordinates: coords.value,

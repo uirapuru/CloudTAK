@@ -3,7 +3,7 @@
         <template #buttons>
             <TablerIconButton
                 v-if='iconset.username || isSystemAdmin'
-                title='Create Icon'
+                :title='t("menu.iconset.createIcon")'
                 @click='router.push(`/menu/iconset/${iconset.uid}/new`)'
             >
                 <IconPlus
@@ -14,7 +14,7 @@
 
             <TablerIconButton
                 v-if='iconset.username || isSystemAdmin'
-                title='Settings'
+                :title='t("menu.iconset.settings")'
                 @click='editIconsetModal = iconset'
             >
                 <IconSettings
@@ -24,7 +24,7 @@
             </TablerIconButton>
 
             <TablerIconButton
-                title='Download TAK Zip'
+                :title='t("menu.iconset.downloadTakZip")'
                 @click.stop='IconsetCache.download(iconset.uid)'
             >
                 <IconDownload
@@ -78,6 +78,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import IconsetCache from '../../../base/iconset.ts';
 import IconCache from '../../../base/icon.ts';
 import CombinedIcons from '../util/Icons.vue';
@@ -99,6 +100,7 @@ import IconsetEditModal from './Iconset/EditModal.vue';
 import ProfileConfig from '../../../base/profile.ts';
 import type { Iconset } from '../../../types.ts';
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const mapStore = useMapStore();
@@ -155,7 +157,7 @@ async function refresh(opts: { autoSync?: boolean } = {}): Promise<void> {
 
 async function fetchIconset(): Promise<void> {
     const cached = await IconsetCache.from(String(route.params.iconset));
-    if (!cached) throw new Error('Iconset not available offline. Refresh to sync this iconset.');
+    if (!cached) throw new Error(t('menu.icon.iconsetOffline'));
 
     iconset.value = {
         ...iconset.value,

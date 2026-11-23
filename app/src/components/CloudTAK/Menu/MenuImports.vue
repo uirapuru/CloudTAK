@@ -1,9 +1,9 @@
 <template>
-    <MenuTemplate name='Data Imports'>
+    <MenuTemplate :name='t("panels.imports.title")'>
         <template #buttons>
             <TablerIconButton
                 v-if='!loading && !upload'
-                title='New Import'
+                :title='t("panels.imports.newImport")'
                 @click='upload = true'
             >
                 <IconUpload
@@ -33,7 +33,7 @@
                 v-model='paging.filter'
                 v-model:sort='sort'
                 :sort-options='sortOptions'
-                placeholder='Filter'
+                :placeholder='t("panels.common.filter")'
             >
                 <template #sort-icon>
                     <template v-if='sort'>
@@ -59,12 +59,12 @@
             <TablerLoading v-if='loading' />
             <TablerAlert
                 v-else-if='error'
-                title='Imports Error'
+                :title='t("panels.imports.error")'
                 :err='error'
             />
             <TablerNone
                 v-else-if='!list.items.length'
-                label='No Imports'
+                :label='t("panels.imports.none")'
                 :create='false'
             />
             <template v-else>
@@ -98,6 +98,7 @@
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import type { ImportList } from '../../../../src/types.ts';
 import { server, stdurl } from '../../../../src/std.ts';
 import {
@@ -122,6 +123,7 @@ import StandardItemImport from '../util/StandardItemImport.vue';
 import Upload from '../../util/Upload.vue';
 
 const router = useRouter();
+const { t } = useI18n();
 const upload = ref(false)
 const error = ref<Error | undefined>();
 const loading = ref(true);
@@ -132,10 +134,12 @@ const paging = ref({
     page: 0
 });
 
-const sort = ref('Newest → Oldest');
-const sortOptions = ['Newest → Oldest', 'Oldest → Newest', 'A → Z', 'Z → A'];
+const SORT_NEWEST = t('panels.common.sortNewest');
+const SORT_OLDEST = t('panels.common.sortOldest');
+const sort = ref(SORT_NEWEST);
+const sortOptions = [SORT_NEWEST, SORT_OLDEST, 'A → Z', 'Z → A'];
 const sortTypeIcon = computed(() => (sort.value === 'A → Z' || sort.value === 'Z → A') ? IconLetterCase : IconClock);
-const sortDirectionIcon = computed(() => (sort.value === 'Oldest → Newest' || sort.value === 'A → Z') ? IconArrowUp : IconArrowDown);
+const sortDirectionIcon = computed(() => (sort.value === SORT_OLDEST || sort.value === 'A → Z') ? IconArrowUp : IconArrowDown);
 
 const list = ref<ImportList>({
     total: 0,
@@ -168,7 +172,7 @@ async function fetchList() {
         const res = await server.GET('/api/import', {
             params: {
                 query: {
-                    order: (sort.value === 'Oldest → Newest' || sort.value === 'A → Z') ? 'asc' : 'desc',
+                    order: (sort.value === SORT_OLDEST || sort.value === 'A → Z') ? 'asc' : 'desc',
                     page: paging.value.page,
                     limit: paging.value.limit,
                     filter: paging.value.filter,

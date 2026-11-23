@@ -1,27 +1,30 @@
 <template>
     <PropertyMeasureRow
-        label='Length'
+        :label='t("util.lineLength.label")'
         :model-value='inMode'
         :unit='mode'
-        :units='UNITS'
+        :units='units'
         @update:unit='mode = $event'
     />
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch } from 'vue';
 import { length } from '@turf/length';
 import PropertyMeasureRow from './PropertyMeasureRow.vue';
 import type { UnitOption } from './UnitSwitcher.vue';
 import type { Geometry } from 'geojson';
 
-const UNITS: Array<UnitOption> = [
-    { value: 'feet', label: 'ft', title: 'Feet' },
-    { value: 'yard', label: 'yd', title: 'Yards' },
-    { value: 'meter', label: 'm', title: 'Meters' },
-    { value: 'kilometer', label: 'km', title: 'Kilometers' },
-    { value: 'mile', label: 'mi', title: 'Miles' },
-];
+const { t } = useI18n();
+
+const units = computed<Array<UnitOption>>(() => [
+    { value: 'feet', label: 'ft', title: t('util.lineLength.feet') },
+    { value: 'yard', label: 'yd', title: t('util.lineLength.yards') },
+    { value: 'meter', label: 'm', title: t('util.lineLength.meters') },
+    { value: 'kilometer', label: 'km', title: t('util.lineLength.kilometers') },
+    { value: 'mile', label: 'mi', title: t('util.lineLength.miles') },
+]);
 
 const props = withDefaults(defineProps<{
     geometry: Geometry;
@@ -37,7 +40,7 @@ watch(() => props.unit, (newUnit) => {
 });
 
 const inMode = computed(() => {
-    if (props.geometry.type !== 'LineString') return 'Not a Line!';
+    if (props.geometry.type !== 'LineString') return t('util.lineLength.notALine');
 
     const cotLength = length({ type: 'Feature', properties: {}, geometry: props.geometry });
 

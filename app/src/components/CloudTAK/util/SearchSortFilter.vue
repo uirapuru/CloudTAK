@@ -3,7 +3,7 @@
         <TablerInput
             :model-value='modelValue'
             icon='search'
-            :placeholder='placeholder'
+            :placeholder='placeholder || t("common.search")'
             @update:model-value='emit("update:modelValue", $event as string)'
         />
         <div class='d-flex align-items-center justify-content-between mt-1'>
@@ -13,7 +13,7 @@
                 autoclose='outside'
                 position='bottom-start'
             >
-                <TablerIconButton title='Filter'>
+                <TablerIconButton :title='t("util.common.filter")'>
                     <IconFilter
                         :size='20'
                         stroke='1'
@@ -37,7 +37,7 @@
                 v-if='sortOptions.length'
                 position='bottom-end'
             >
-                <TablerIconButton title='Sort'>
+                <TablerIconButton :title='t("util.common.sort")'>
                     <slot name='sort-icon'>
                         <IconArrowsSort
                             :size='20'
@@ -64,6 +64,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed, useSlots } from 'vue';
 import {
     TablerInput,
@@ -75,6 +76,8 @@ import {
     IconFilter,
     IconArrowsSort,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 export interface SearchSortFilterProps {
     modelValue: string;
@@ -88,7 +91,7 @@ withDefaults(defineProps<SearchSortFilterProps>(), {
     sort: '',
     sortOptions: () => [],
     activeFilters: 0,
-    placeholder: 'Search',
+    placeholder: '',
 });
 
 const emit = defineEmits<{

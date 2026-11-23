@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Paging Notifications'
+        :name='t("panels.settingsPaging.title")'
         :loading='loading'
     >
         <template #buttons>
@@ -24,10 +24,10 @@
                             <span
                                 v-if='smsDisabled'
                                 class='badge bg-yellow-lt text-yellow'
-                            >Disabled</span>
+                            >{{ t('panels.settingsPaging.disabled') }}</span>
                             <TablerIconButton
                                 v-else
-                                title='Add SMS Notification'
+                                :title='t("panels.settingsPaging.addSms")'
                                 @click='openCreate("sms")'
                             >
                                 <IconPlus
@@ -68,7 +68,7 @@
                                             :size='14'
                                             stroke='2'
                                         />
-                                        Verified
+                                        {{ t('panels.settingsPaging.verified') }}
                                     </span>
                                     <span
                                         v-else
@@ -78,18 +78,18 @@
                                             :size='14'
                                             stroke='2'
                                         />
-                                        Pending
+                                        {{ t('panels.settingsPaging.pending') }}
                                     </span>
                                     <span
                                         v-if='p.enabled'
                                         class='badge bg-blue-lt'
-                                    >Enabled</span>
+                                    >{{ t('panels.settingsPaging.enabled') }}</span>
                                 </div>
                             </div>
                         </StandardItem>
                         <PagingEmptyHint
                             v-if='!smsItems.length'
-                            label='No SMS numbers configured'
+                            :label='t("panels.settingsPaging.noSms")'
                         />
                     </div>
                 </section>
@@ -102,15 +102,15 @@
                             stroke='1.5'
                             class='text-secondary me-2'
                         />
-                        <span class='subheader user-select-none mb-0'>Email</span>
+                        <span class='subheader user-select-none mb-0'>{{ t('panels.settingsPaging.email') }}</span>
                         <div class='ms-auto'>
                             <span
                                 v-if='emailDisabled'
                                 class='badge bg-yellow-lt text-yellow'
-                            >Disabled</span>
+                            >{{ t('panels.settingsPaging.disabled') }}</span>
                             <TablerIconButton
                                 v-else
-                                title='Add Email Notification'
+                                :title='t("panels.settingsPaging.addEmail")'
                                 @click='openCreate("email")'
                             >
                                 <IconPlus
@@ -151,7 +151,7 @@
                                             :size='14'
                                             stroke='2'
                                         />
-                                        Verified
+                                        {{ t('panels.settingsPaging.verified') }}
                                     </span>
                                     <span
                                         v-else
@@ -161,18 +161,18 @@
                                             :size='14'
                                             stroke='2'
                                         />
-                                        Pending
+                                        {{ t('panels.settingsPaging.pending') }}
                                     </span>
                                     <span
                                         v-if='p.enabled'
                                         class='badge bg-blue-lt'
-                                    >Enabled</span>
+                                    >{{ t('panels.settingsPaging.enabled') }}</span>
                                 </div>
                             </div>
                         </StandardItem>
                         <PagingEmptyHint
                             v-if='!emailItems.length'
-                            label='No email addresses configured'
+                            :label='t("panels.settingsPaging.noEmail")'
                         />
                     </div>
                 </section>
@@ -185,16 +185,16 @@
                             stroke='1.5'
                             class='text-secondary me-2'
                         />
-                        <span class='subheader user-select-none mb-0'>Push Notifications</span>
+                        <span class='subheader user-select-none mb-0'>{{ t('panels.settingsPaging.push') }}</span>
                         <div class='ms-auto'>
                             <span
                                 v-if='pushDisabled'
                                 class='badge bg-yellow-lt text-yellow'
-                            >Disabled</span>
+                            >{{ t('panels.settingsPaging.disabled') }}</span>
                             <template v-else>
                                 <TablerIconButton
                                     v-if='!pushLoading'
-                                    title='Register This Device'
+                                    :title='t("panels.settingsPaging.registerDevice")'
                                     @click='registerPush'
                                 >
                                     <IconPlus
@@ -234,10 +234,10 @@
                                 </div>
                                 <div class='flex-grow-1 text-truncate'>
                                     <div class='fw-bold text-truncate'>
-                                        {{ p.value || 'Registered Device' }}
+                                        {{ p.value || t('panels.settingsPaging.registeredDevice') }}
                                     </div>
                                     <div class='text-secondary small'>
-                                        Registered {{ new Date(p.created).toLocaleString() }}
+                                        {{ t('panels.settingsPaging.registeredOn', { date: new Date(p.created).toLocaleString() }) }}
                                     </div>
                                 </div>
                                 <label class='form-check form-switch m-0'>
@@ -256,7 +256,7 @@
                         </StandardItem>
                         <PagingEmptyHint
                             v-if='!pushItems.length'
-                            label='No devices registered. Tap the + button to register this device.'
+                            :label='t("panels.settingsPaging.noDevices")'
                         />
                     </div>
                 </section>
@@ -275,6 +275,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import MenuTemplate from '../util/MenuTemplate.vue';
+import { useI18n } from 'vue-i18n';
 import StandardItem from '../util/StandardItem.vue';
 import PagingEmptyHint from './Settings/PagingEmptyHint.vue';
 import { server } from '../../../std.ts';
@@ -299,6 +300,7 @@ import {
 
 const loading = ref<boolean>(true);
 const source = ref<ProfilePaging | { type: ProfilePaging_Create['type'] } | false>(false);
+const { t } = useI18n();
 const pushLoading = ref<boolean>(false);
 const pushErr = ref<Error | null>(null);
 const deviceStore = useDeviceStore();
@@ -382,12 +384,12 @@ async function registerPush(): Promise<void> {
     try {
         await deviceStore.notification.request();
         if (deviceStore.permissions.notification !== 'granted') {
-            pushErr.value = new Error('Push notification permission was not granted.');
+            pushErr.value = new Error(t('panels.settingsPaging.permissionDenied'));
             return;
         }
         const token = deviceStore.getMessagingToken() ?? await deviceStore.refreshMessagingToken();
         if (!token) {
-            pushErr.value = new Error('Failed to obtain a push notification token.');
+            pushErr.value = new Error(t('panels.settingsPaging.tokenFailed'));
             return;
         }
 

@@ -3,13 +3,13 @@
         <div class='d-flex align-items-center mb-1'>
             <label
                 class='form-label mb-0'
-                v-text='label'
+                v-text='label ?? t("shared.scheduleInput.label")'
             />
             <div class='ms-auto'>
                 <TablerPillGroup
                     v-model='mode'
                     :options='[
-                        { value: "rate", label: "Rate" },
+                        { value: "rate", label: t("shared.scheduleInput.rate") },
                         { value: "cron", label: "Cron" }
                     ]'
                     :rounded='false'
@@ -40,7 +40,7 @@
 
         <div v-if='mode === "rate"'>
             <div class='input-group'>
-                <span class='input-group-text'>Every</span>
+                <span class='input-group-text'>{{ t('shared.scheduleInput.every') }}</span>
                 <input
                     v-model.number='rateFreq'
                     type='number'
@@ -49,14 +49,14 @@
                     class='form-control'
                     :class='{ "is-invalid": Boolean(errorMessage) }'
                     :disabled='disabled'
-                    aria-label='Frequency'
+                    :aria-label='t("shared.scheduleInput.frequency")'
                 >
                 <select
                     v-model='rateUnit'
                     class='form-select'
                     style='max-width: 130px;'
                     :disabled='disabled'
-                    aria-label='Unit'
+                    :aria-label='t("shared.scheduleInput.unit")'
                 >
                     <option
                         v-for='unit in SCHEDULE_UNITS'
@@ -75,7 +75,7 @@
                 :class='{ "is-invalid": Boolean(errorMessage) }'
                 :disabled='disabled'
                 placeholder='0/15 * * * ? *'
-                aria-label='Cron Expression'
+                :aria-label='t("shared.scheduleInput.cronExpression")'
             >
             <div
                 v-if='!disabled'
@@ -113,6 +113,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch, useId } from 'vue';
 import type { ScheduleUnit } from '../../utils/schedule.ts';
 import {
@@ -125,6 +126,7 @@ import {
     serializeCron,
     validateCronExpression,
     describeSchedule,
+    scheduleUnitLabel,
 } from '../../utils/schedule.ts';
 import { TablerPillGroup } from '@tak-ps/vue-tabler';
 import {
@@ -133,12 +135,14 @@ import {
     IconRepeat,
 } from '@tabler/icons-vue';
 
-const CRON_PRESETS = [
-    { label: 'Every 15 Min', expression: '0/15 * * * ? *' },
-    { label: 'Hourly', expression: '0 * * * ? *' },
-    { label: 'Daily @ 10:15', expression: '15 10 * * ? *' },
-    { label: 'Weekday Working Hours', expression: '0/5 8-17 ? * MON-FRI *' },
-] as const;
+const { t } = useI18n();
+
+const CRON_PRESETS = computed(() => [
+    { label: t('shared.scheduleInput.presetEvery15'), expression: '0/15 * * * ? *' },
+    { label: t('shared.scheduleInput.presetHourly'), expression: '0 * * * ? *' },
+    { label: t('shared.scheduleInput.presetDaily'), expression: '15 10 * * ? *' },
+    { label: t('shared.scheduleInput.presetWeekday'), expression: '0/5 8-17 ? * MON-FRI *' },
+]);
 
 const props = withDefaults(defineProps<{
     modelValue?: string | null;
@@ -146,7 +150,7 @@ const props = withDefaults(defineProps<{
     disabled?: boolean;
 }>(), {
     modelValue: undefined,
-    label: 'Schedule',
+    label: undefined,
     disabled: false,
 });
 
@@ -164,7 +168,7 @@ const cronField = ref<string>('');
 const errorMessage = computed<string | null>(() => {
     if (mode.value === 'rate') {
         if (!Number.isInteger(rateFreq.value) || rateFreq.value < 1) {
-            return 'Frequency must be a positive whole number';
+            return t('shared.scheduleInput.frequencyInvalid');
         }
         return null;
     } else {
@@ -175,8 +179,8 @@ const errorMessage = computed<string | null>(() => {
 const description = computed<string>(() => describeSchedule(serialize()));
 
 function unitLabel(unit: ScheduleUnit): string {
-    const label = unit.charAt(0).toUpperCase() + unit.slice(1);
-    return Number.isInteger(rateFreq.value) && rateFreq.value === 1 ? label : `${label}s`;
+    const label = scheduleUnitLabel(unit, Number.isInteger(rateFreq.value) ? rateFreq.value : 0);
+    return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function serialize(): string {

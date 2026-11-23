@@ -11,7 +11,7 @@
             />
             <div
                 class='mx-2 text-sm text-truncate'
-                v-text='"GeoJSON Import"'
+                v-text='t("tools.geojson.title")'
             />
         </template>
 
@@ -21,25 +21,25 @@
                 :model-value='""'
                 type='file'
                 accept='.json, .geojson'
-                label='File'
+                :label='t("tools.geojson.file")'
                 @change='processUpload($event)'
             />
 
             <TablerInlineAlert
                 v-if='error'
                 class='mt-3'
-                title='An Error Occurred'
+                :title='t("tools.common.errorOccurred")'
                 :description='error.message'
             />
 
             <TablerInlineAlert
                 class='mt-3'
-                title='FYI'
-                description='Large GeoJSON files should be uploaded via the Imports menu'
+                :title='t("tools.geojson.fyi")'
+                :description='t("tools.geojson.largeFiles")'
             />
         </template>
         <template v-else>
-            <label class='form-label user-select-none'>Features To Import</label>
+            <label class='form-label user-select-none'>{{ t('tools.geojson.featuresToImport') }}</label>
 
             <FeatureRow
                 v-for='feat of feats'
@@ -56,7 +56,7 @@
                 :disabled='loading || !feats.length'
                 @click='saveToMap'
             >
-                Create Features
+                {{ t('tools.geojson.create') }}
             </TablerButton>
         </template>
     </FloatingPane>
@@ -82,6 +82,9 @@ import FeatureRow from '../util/FeatureRow.vue';
 import FloatingPane from '../util/FloatingPane.vue';
 import { bbox } from '@turf/bbox';
 import type { InputFeature } from '../../../types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 const floatStore = useFloatStore();
@@ -120,12 +123,12 @@ async function parseGeoJSON(file: File) {
 
     reader.onload = async (e) => {
         try {
-            if (!e.target || !e.target.result) throw new Error('File read error: No content');
+            if (!e.target || !e.target.result) throw new Error(t('tools.geojson.readError'));
 
             const fc = JSON.parse(String(e.target.result));
 
             if (!fc || !fc.features || !Array.isArray(fc.features)) {
-                throw new Error('Invalid GeoJSON format');
+                throw new Error(t('tools.geojson.invalid'));
             }
 
             // TODO Ideally CloudTAK in the future will use CoTs natively so we will

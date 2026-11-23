@@ -7,7 +7,7 @@
                 background-color='rgba(36, 163, 255, 0.15)'
                 border-color='rgba(36, 163, 255, 0.35)'
                 text-color='#24a3ff'
-                :title='`${selectedCount} selected channel${selectedCount === 1 ? "" : "s"}`'
+                :title='t("shared.groupSelectModal.selectedCount", { count: selectedCount }, selectedCount)'
             >
                 <IconChecks
                     :size='14'
@@ -28,7 +28,7 @@
                     :size='28'
                     stroke='1'
                 />
-                <span class='mx-2'>Share to Channels</span>
+                <span class='mx-2'>{{ t('shared.groupSelectModal.title') }}</span>
             </div>
         </div>
         <div
@@ -48,13 +48,14 @@
                 variant='primary'
                 @click='submit'
             >
-                Save
+                {{ t('common.save') }}
             </TablerButton>
         </div>
     </TablerModal>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { computed, ref, onMounted } from 'vue';
 import {
     TablerModal,
@@ -66,6 +67,8 @@ import { IconBroadcast, IconChecks } from '@tabler/icons-vue';
 import GroupSelect from './GroupSelect.vue';
 import type { Group } from '../../../src/types.ts';
 import GroupManager from '../../base/group.ts';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     modelValue: Array<number>;

@@ -2,7 +2,7 @@
     <div class='col-12'>
         <SlideDownHeader
             v-model='expanded'
-            label='Sensor'
+            :label='t("property.sensor.title")'
         >
             <template #icon>
                 <IconCone
@@ -19,22 +19,22 @@
                         <div class='col-6'>
                             <TablerInput
                                 v-model='sensor.type'
-                                label='Type'
-                                placeholder='Unknown'
+                                :label='t("property.sensor.type")'
+                                :placeholder='t("property.sensor.unknown")'
                             />
                         </div>
                         <div class='col-6'>
                             <TablerInput
                                 v-model='sensor.model'
-                                label='Model'
-                                placeholder='Unknown'
+                                :label='t("property.sensor.model")'
+                                :placeholder='t("property.sensor.unknown")'
                             />
                         </div>
 
                         <TablerRange
                             v-if='sensor.range !== undefined'
                             v-model='sensor.range'
-                            label='Sensor Range Length'
+                            :label='t("property.sensor.rangeLength")'
                             :min='0'
                             :max='60000'
                         >
@@ -52,7 +52,7 @@
                         <TablerRange
                             v-if='sensor.azimuth !== undefined'
                             v-model='sensor.azimuth'
-                            label='Sensor Direction'
+                            :label='t("property.sensor.direction")'
                             :min='0'
                             :max='360'
                         >
@@ -70,7 +70,7 @@
                         <TablerRange
                             v-if='sensor.fov !== undefined'
                             v-model='sensor.fov'
-                            label='Sensor FOV'
+                            :label='t("property.sensor.fov")'
                             :min='0'
                             :max='360'
                         >
@@ -98,6 +98,9 @@ import SlideDownHeader from '../util/SlideDownHeader.vue';
 import { IconCone } from '@tabler/icons-vue';
 import { TablerRange, TablerInput } from '@tak-ps/vue-tabler';
 import type COT from '../../../base/cot';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface Sensor {
     type?: string;

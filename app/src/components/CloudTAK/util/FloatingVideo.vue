@@ -10,7 +10,7 @@
                 v-if='metadata'
                 :status='metadata.active ? "success" : "unknown"'
                 :dark='true'
-                :title='metadata.active ? "Streaming" : "Unknown"'
+                :title='metadata.active ? t("util.floatingVideo.streaming") : t("util.common.unknown")'
                 :size='24'
             />
 
@@ -26,7 +26,7 @@
             >
                 <div
                     class='text-sm text-truncate'
-                    v-text='title'
+                    v-text='title || t("util.floatingVideo.title")'
                 />
                 <div
                     v-if='metadata && metadata.source_model'
@@ -48,14 +48,14 @@
                 <span v-text='metadata.watchers + 1' />
                 <span
                     class='ms-1 watcher-text'
-                    v-text='metadata.watchers + 1 > 1 ? "Watchers" : "Watcher"'
+                    v-text='metadata.watchers + 1 > 1 ? t("util.floatingVideo.watchers") : t("util.floatingVideo.watcher")'
                 />
             </span>
 
             <template v-if='!isNativePlatform()'>
                 <TablerIconButton
                     v-if='!pushing'
-                    title='Push to Video Wall'
+                    :title='t("util.floatingVideo.push")'
                     @click='pushToWall'
                 >
                     <IconCast
@@ -66,7 +66,7 @@
                 <TablerLoading
                     v-else
                     :inline='true'
-                    desc='Pushing'
+                    :desc='t("util.floatingVideo.pushing")'
                 />
             </template>
         </template>
@@ -75,7 +75,7 @@
             <TablerAlert
                 v-if='pushError'
                 class='w-100 mb-0'
-                title='Video Wall Error'
+                :title='t("util.floatingVideo.wallError")'
                 :compact='true'
                 :err='pushError'
             />
@@ -90,6 +90,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 /**
  * FloatingVideo - draggable, resizable pane wrapping the unified VideoPlayer
  * with stream metadata and push-to-Video-Wall support.
@@ -116,12 +117,14 @@ import {
     TablerIconButton,
 } from '@tak-ps/vue-tabler';
 
+const { t } = useI18n();
+
 const floatStore = useFloatStore();
 
 const props = defineProps({
     title: {
         type: String,
-        default: 'Video Stream'
+        default: ''
     },
     uid: {
         type: String,

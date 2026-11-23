@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='Package'>
+    <MenuTemplate :name='t("panels.package.title")'>
         <template #buttons>
             <div class='d-flex align-items-center gap-2'>
                 <TablerDelete
@@ -9,7 +9,7 @@
                 />
                 <TablerIconButton
                     v-if='pkg && !loading && !error'
-                    :title='"Download Asset"'
+                    :title='t("panels.package.download")'
                     @click='downloadFile'
                 >
                     <IconDownload
@@ -33,11 +33,11 @@
                                 :size='20'
                                 stroke='1'
                             />
-                            <span class='fw-semibold text-uppercase small'>Share Package</span>
+                            <span class='fw-semibold text-uppercase small'>{{ t('panels.package.share') }}</span>
                             <button
                                 type='button'
                                 class='btn-close btn-close-white ms-auto'
-                                aria-label='Close share panel'
+                                :aria-label='t("panels.package.closeShare")'
                                 @click='mode = "default"'
                             />
                         </div>
@@ -68,7 +68,7 @@
                                     </div>
                                     <div class='flex-grow-1'>
                                         <p class='text-uppercase text-white-50 small mb-1'>
-                                            Package
+                                            {{ t('panels.package.title') }}
                                         </p>
                                         <h2
                                             class='h4 mb-0 text-break'
@@ -78,14 +78,14 @@
                                             class='cursor-pointer text-sm text-white-50'
                                             @click='relative = !relative'
                                         >
-                                            Created {{ relative ? timeDiff(pkg.created) : pkg.created }}
+                                            {{ t('panels.package.createdOn', { date: relative ? timeDiff(pkg.created) : pkg.created }) }}
                                         </span>
                                     </div>
                                 </div>
 
                                 <div class='row gy-3 gx-0 gx-sm-3'>
                                     <div class='col-6'>
-                                        <small class='text-uppercase text-white-50 d-block mb-1'>Created By</small>
+                                        <small class='text-uppercase text-white-50 d-block mb-1'>{{ t('panels.package.createdBy') }}</small>
                                         <p
                                             class='text-start text-white fw-semibold p-0 text-decoration-none'
                                             v-text='pkg.username'
@@ -98,7 +98,7 @@
                                         :editing='editingChannels'
                                         :editable='canEditPackage'
                                         :saving='savingChannels'
-                                        label='Channels'
+                                        :label='t("panels.package.channels")'
                                         empty-class='text-start text-white fw-semibold p-0 mb-0 text-decoration-none'
                                         @edit='startEditingChannels'
                                         @cancel='cancelEditingChannels'
@@ -110,7 +110,7 @@
                                         :editing='editingExpiration'
                                         :editable='canEditPackage'
                                         :saving='savingExpiration'
-                                        label='Expiry'
+                                        :label='t("panels.package.expiry")'
                                         :interactive='Boolean(packageExpiration)'
                                         display-class='btn btn-link p-0 text-start text-reset fw-semibold menu-package__inline-button'
                                         @edit='startEditingExpiration'
@@ -125,24 +125,24 @@
                                         :editing='editingKeywords'
                                         :editable='canEditPackage'
                                         :saving='savingKeywords'
-                                        label='Hashtags'
-                                        edit-title='Edit hashtags'
-                                        placeholder='No hashtags provided'
-                                        input-placeholder='Add hashtags'
+                                        :label='t("panels.package.hashtags")'
+                                        :edit-title='t("panels.package.editHashtags")'
+                                        :placeholder='t("panels.package.noHashtags")'
+                                        :input-placeholder='t("panels.package.addHashtags")'
                                         tone='accent'
                                         @edit='startEditingKeywords'
                                         @cancel='cancelEditingKeywords'
                                         @save='saveKeywords'
                                     />
                                     <div class='col-12'>
-                                        <small class='text-uppercase text-white-50 d-block mb-1'>Package Hash</small>
+                                        <small class='text-uppercase text-white-50 d-block mb-1'>{{ t('panels.package.hash') }}</small>
                                         <p
                                             class='fs-6 fw-semibold text-white mb-0 text-break'
                                             v-text='pkg.hash || "—"'
                                         />
                                     </div>
                                     <div class='col-12'>
-                                        <small class='text-uppercase text-white-50 d-block mb-1'>Size</small>
+                                        <small class='text-uppercase text-white-50 d-block mb-1'>{{ t('panels.package.size') }}</small>
                                         <p class='fs-6 text-white mb-0'>
                                             {{ packageSize }}
                                         </p>
@@ -154,7 +154,7 @@
                             <TablerBorder class='cloudtak-bg text-white'>
                                 <template #label>
                                     <p class='text-uppercase text-white-50 small mb-0'>
-                                        Quick Actions
+                                        {{ t('panels.package.quickActions') }}
                                     </p>
                                 </template>
                                 <button
@@ -165,7 +165,7 @@
                                         :size='20'
                                         stroke='1'
                                     />
-                                    <span>Import Package</span>
+                                    <span>{{ t('panels.package.import') }}</span>
                                 </button>
                                 <button
                                     class='btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2'
@@ -176,7 +176,7 @@
                                         :size='20'
                                         stroke='1'
                                     />
-                                    <span>Share Package</span>
+                                    <span>{{ t('panels.package.share') }}</span>
                                 </button>
                             </TablerBorder>
                         </div>
@@ -190,6 +190,7 @@
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import type { Server, Package, Feature } from '../../../../src/types.ts';
 import { server } from '../../../std.ts';
 import Share from '../util/Share.vue';
@@ -218,6 +219,7 @@ import ProfileConfig from '../../../base/profile.ts';
 const route = useRoute();
 const router = useRouter();
 const mapStore = useMapStore();
+const { t } = useI18n();
 
 const relative = ref(true);
 const expirationRelative = ref(true);
@@ -512,7 +514,7 @@ async function saveExpiration(nextExpirationDraft: string): Promise<void> {
         }
 
         const time = new Date(trimmed).getTime();
-        if (Number.isNaN(time)) throw new Error('Invalid expiration date');
+        if (Number.isNaN(time)) throw new Error(t('panels.package.invalidExpiration'));
 
         const updated = await patchPackage({ expiration: Math.floor(time / 1000) });
 
@@ -531,7 +533,7 @@ async function patchPackage(body: {
     keywords?: string[];
     expiration?: number;
 }): Promise<Package> {
-    if (!pkg.value) throw new Error('Package not loaded');
+    if (!pkg.value) throw new Error(t('panels.package.notLoaded'));
 
     const res = await server.PATCH('/api/marti/package/{:uid}', {
         params: {

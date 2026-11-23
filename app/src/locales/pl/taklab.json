@@ -1,0 +1,120 @@
+{
+    "common": {
+        "refresh": "Odśwież",
+        "copy": "Kopiuj"
+    },
+    "otsAccounts": {
+        "title": "Konta serwera",
+        "adminOnly": "Lista kont serwera jest dostępna tylko dla administratora OTS",
+        "search": "Szukaj konta",
+        "none": "Brak kont",
+        "locked": "zablokowane",
+        "qrAlt": "Kod QR",
+        "warning": "Ten kod daje pełny dostęp do konta. Nie publikuj go.",
+        "qrAtak": "Kod QR dla ATAK",
+        "qrAtakUnavailable": "Kod ATAK wymaga dostępu po nazwie serwera",
+        "qrIcu": "Kod QR dla OpenTAK ICU",
+        "qrIcuUnavailable": "Środowisko nie ma wideo"
+    },
+    "voice": {
+        "title": "Głos",
+        "endSelecting": "Zakończ zaznaczanie",
+        "startSelecting": "Zaznacz nagrania do usunięcia",
+        "downloadReport": "Pobierz cały raport (nagrania i transkrypcje)",
+        "disabled": "Rejestr głosu nie jest włączony w tym środowisku",
+        "speakingNow": "Teraz mówi {user} na kanale {channel}",
+        "channel": "Kanał",
+        "allChannels": "Wszystkie kanały",
+        "from": "Od",
+        "to": "Do",
+        "downloadRange": "Pobierz zakres (ZIP)",
+        "selectedCount": "Zaznaczone: {count}",
+        "selectVisible": "Zaznacz widoczne",
+        "deleteSelected": "Usuń zaznaczone",
+        "noRecordings": "Brak nagrań w tym zakresie",
+        "selectRecording": "Zaznacz nagranie {author} z {when}",
+        "hidePlayer": "Ukryj odtwarzacz",
+        "play": "Odsłuchaj",
+        "saveRecording": "Zapisz nagranie",
+        "deleteRecording": "Usuń nagranie",
+        "olderRecordings": "Starsze nagrania",
+        "deleteTitle": "Usuwanie nagrań",
+        "deleteWarning": "Nagranie i jego transkrypcja znikną z serwera. Tego nie da się cofnąć.",
+        "deleteOne": "Usunąć to nagranie?",
+        "deleteFew": "Usunąć {count} nagrania?",
+        "deleteMany": "Usunąć {count} nagrań?",
+        "transcriptPending": "Transkrypcja w kolejce…",
+        "transcriptFailed": "Transkrypcja nieudana",
+        "transcriptDisabled": "Transkrypcja wyłączona",
+        "transcriptEmpty": "Bez słów do przepisania",
+        "seconds": "{value} s"
+    },
+    "dataSyncQr": {
+        "title": "Kod QR misji: {name}",
+        "alt": "Kod QR misji",
+        "hint": "Zeskanuj w ATAK: Data Sync, przycisk dodawania, „Skanuj kod QR”. Telefon musi być już połączony z tym serwerem."
+    },
+    "favoriteStar": {
+        "remove": "Usuń z ulubionych",
+        "add": "Dodaj do ulubionych"
+    },
+    "overlayRow": {
+        "drag": "Przeciągnij, aby zmienić kolejność lub grupę",
+        "buildings3d": "Budynki 3D"
+    },
+    "ptt": {
+        "unlockAudio": "Kliknij, żeby włączyć dźwięk",
+        "transmitting": "NADAJESZ",
+        "wait": "CZEKAJ",
+        "busy": "ZAJĘTE",
+        "channel": "Kanał głosowy",
+        "listenOff": "Wyłącz odsłuch kanału",
+        "listenOn": "Włącz odsłuch kanału",
+        "busyTitle": "Teraz mówi {speaker}. Przycisk odblokuje się, gdy skończy.",
+        "noConnection": "Brak połączenia z serwerem głosu",
+        "pttDisabled": "Nadawanie z CloudTAK jest wyłączone w tym środowisku",
+        "selectChannel": "Wybierz kanał",
+        "transmittingTitle": "Nadajesz. Puść przycisk, żeby skończyć.",
+        "idleTitle": "Przytrzymaj, żeby mówić na kanale"
+    },
+    "floatingWebVideo": {
+        "video": "Wideo"
+    },
+    "routeActorNote": {
+        "text": "Zmieniona przez ai-buddy na prośbę {label}"
+    },
+    "routeCrossCountry": {
+        "title": "Opcje przełaju",
+        "avoidWetland": "Omijaj bagna",
+        "avoidStreams": "Omijaj strumienie i rowy",
+        "maxSlope": "Największe nachylenie",
+        "noSlopeLimit": "bez limitu (35°)",
+        "exposure": "Ekspozycja",
+        "exposureDescription": "Średnia i unikaj prowadzą trasę lasem zamiast przez pola i drogi. Model zna rodzaj terenu z OSM, ale nie gęstość lasu.",
+        "exposureAllow": "może być",
+        "exposureMedium": "średnia",
+        "exposureAvoid": "unikaj",
+        "avoidObservation": "Unikaj widoczności ze wzgórz",
+        "avoidObservationDescription": "Trasa omija pole widzenia dominujących wzgórz do 3 km."
+    },
+    "routeDangerZones": {
+        "avoid": "Omijaj strefy niebezpieczne",
+        "description": "Strefa niebezpieczna to figura z zaznaczonym polem „Strefa niebezpieczna” w jej widoku (geofence z alarmem przy wejściu) albo z „zamknięt” w nazwie."
+    },
+    "routeVariants": {
+        "title": "Warianty trasy",
+        "intermediate": "Warianty łączą start z celem i pomijają punkty pośrednie.",
+        "none": "Nie ma wariantów wyraźnie innych niż trasa.",
+        "variant": "Wariant",
+        "length": "Długość",
+        "time": "Czas",
+        "concealed": "Osłona",
+        "exposed": "Odsłonięte",
+        "observed": "Widoczność ze wzgórz",
+        "crossings": "Przejścia przez drogi",
+        "added": "Dodano",
+        "addToMap": "Dodaj na mapę",
+        "current": "A (obecna)",
+        "noPlan": "Trasa nie ma planu taklab."
+    }
+}

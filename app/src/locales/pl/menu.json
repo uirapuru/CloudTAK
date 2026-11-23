@@ -78,7 +78,8 @@
         "noAttributes": "Brak atrybutów",
         "details": "Szczegóły",
         "debug": "Debug",
-        "noName": "Bez nazwy"
+        "noName": "Bez nazwy",
+        "loadingDetails": "Pobieranie szczegółów"
     },
     "featuresTabs": {
         "features": "Obiekty",
@@ -100,7 +101,8 @@
         "loading": "Wczytywanie obiektów",
         "recentlyDeleted": "Niedawno usunięte",
         "noMatching": "Brak pasujących obiektów",
-        "noArchived": "Brak zapisanych obiektów"
+        "noArchived": "Brak zapisanych obiektów",
+        "savedTitle": "Zapisane obiekty"
     },
     "featuresDeleted": {
         "title": "Usunięte obiekty",
@@ -181,7 +183,8 @@
         "pts": "{count} pkt",
         "liveTrail": "Ślad na żywo",
         "viewCot": "Pokaż CoT",
-        "clearTrail": "Wyczyść ślad"
+        "clearTrail": "Wyczyść ślad",
+        "recordingDescription": "Znaczniki CoT z zapisem śladu na żywo."
     },
     "icon": {
         "title": "Ikona",
@@ -203,7 +206,12 @@
     "iconsets": {
         "title": "Zestawy ikon",
         "create": "Utwórz zestaw ikon",
-        "zipUpload": "Wyślij ZIP"
+        "zipUpload": "Wyślij ZIP",
+        "icons": "Ikony",
+        "loading": "Wczytywanie zestawów ikon",
+        "none": "Brak zestawów ikon",
+        "public": "Publiczny",
+        "private": "Prywatny"
     },
     "iconset": {
         "addIcons": "Dodaj ikony",
@@ -239,6 +247,8 @@
         "clash": "„{folder}” ma już ikonę o nazwie „{name}”",
         "onlyImages": "Jako ikony można dodać tylko pliki PNG i SVG",
         "adding": "Dodawanie ikon: {count}",
-        "moving": "Przenoszenie: {name}"
+        "moving": "Przenoszenie: {name}",
+        "createIcon": "Utwórz ikonę",
+        "downloadTakZip": "Pobierz ZIP dla TAK"
     }
 }

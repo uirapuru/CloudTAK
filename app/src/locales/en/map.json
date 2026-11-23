@@ -108,9 +108,9 @@
         "username": "Username",
         "items": {
             "features": {
-                "label": "Features",
-                "tooltip": "Features",
-                "description": "Saved features, events, and devices"
+                "label": "Your Features",
+                "tooltip": "Your Features",
+                "description": "Manage saved features"
             },
             "overlays": {
                 "label": "Overlays",
@@ -191,8 +191,19 @@
                 "label": "Settings",
                 "tooltip": "Display Settings",
                 "description": "Adjust personal display preferences."
+            },
+            "voice": {
+                "label": "Voice",
+                "tooltip": "Voice",
+                "description": "Voice conversation history with transcripts"
+            },
+            "ots_accounts": {
+                "label": "Server accounts",
+                "tooltip": "Server accounts",
+                "description": "OTS server accounts with QR codes for ATAK and OpenTAK ICU"
             }
-        }
+        },
+        "sourceCode": "Source code (AGPL-3.0)"
     },
     "cotAppearance": {
         "title": "Appearance",
@@ -260,7 +271,11 @@
         "radius": "Radius",
         "speed": "Speed",
         "course": "Course",
-        "debug": "Debug"
+        "debug": "Debug",
+        "routeVariants": "Route variants",
+        "dangerZone": "Danger zone",
+        "dangerZoneHint": "taklab routes avoid this shape. In ATAK it is a geofence with an alarm on entry; the alarm goes off on the phone.",
+        "style": "Style"
     },
     "map": {
         "clickToSetLocation": "Click on the map to set your location",

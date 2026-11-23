@@ -1,9 +1,9 @@
 <template>
     <PropertyMeasureRow
-        :label='label'
+        :label='label ?? t("property.elevation.label")'
         :model-value='inMode'
         :unit='mode'
-        :units='UNITS'
+        :units='units'
         @update:unit='mode = $event'
     />
 </template>
@@ -13,16 +13,19 @@ import { ref, computed, watch, onMounted } from 'vue';
 import PropertyMeasureRow from '../util/PropertyMeasureRow.vue';
 import type { UnitOption } from '../util/UnitSwitcher.vue';
 import ProfileConfig from '../../../base/profile.ts';
+import { useI18n } from 'vue-i18n';
 
-const UNITS: Array<UnitOption> = [
-    { value: 'feet', label: 'ft', title: 'Feet' },
-    { value: 'meter', label: 'm', title: 'Meters' },
-];
+const { t } = useI18n();
+
+const units = computed<Array<UnitOption>>(() => [
+    { value: 'feet', label: 'ft', title: t('property.elevation.feet') },
+    { value: 'meter', label: 'm', title: t('property.elevation.meters') },
+]);
 
 const props = defineProps({
     label: {
         type: String,
-        default: 'Elevation'
+        default: undefined
     },
     elevation: {
         type: Number,
@@ -56,7 +59,7 @@ const inMode = computed(() => {
     } else if (mode.value === 'meter') {
         return Math.round(props.elevation * 100) / 100;
     } else {
-        return 'UNKNOWN';
+        return t('property.common.unknown');
     }
 })
 </script>

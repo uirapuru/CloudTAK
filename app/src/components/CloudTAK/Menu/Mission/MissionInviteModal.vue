@@ -7,9 +7,9 @@
                 class='text-blue mb-2'
                 stroke='1'
             />
-            <h3>Mission Invitation</h3>
+            <h3>{{ t('mission.invites.title') }}</h3>
             <div class='text-secondary'>
-                You have been invited to join the mission:
+                {{ t('mission.invites.invited') }}
                 <br>
                 <strong>{{ props.mission.name }}</strong>
             </div>
@@ -22,7 +22,7 @@
                             class='btn w-100'
                             @click='ignore'
                         >
-                            Ignore
+                            {{ t('mission.invites.ignore') }}
                         </button>
                     </div>
                     <div class='col'>
@@ -30,7 +30,7 @@
                             class='btn btn-danger w-100'
                             @click='decline'
                         >
-                            Delete
+                            {{ t('common.delete') }}
                         </button>
                     </div>
                     <div class='col'>
@@ -38,7 +38,7 @@
                             class='btn btn-success w-100'
                             @click='accept'
                         >
-                            Accept
+                            {{ t('mission.invites.accept') }}
                         </button>
                     </div>
                 </div>
@@ -54,6 +54,9 @@ import { IconMail } from '@tabler/icons-vue';
 import { useRouter } from 'vue-router';
 import { server } from '../../../../std.ts';
 import Subscription from '../../../../base/subscription.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     mission: {

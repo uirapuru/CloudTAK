@@ -21,7 +21,7 @@
                             class='dz-button'
                             type='button'
                         >
-                            Drop .p12 here<br>click to upload
+                            {{ t('shared.uploadP12.drop') }}<br>{{ t('shared.uploadP12.click') }}
                         </button>
                     </div>
                 </form>
@@ -29,7 +29,7 @@
             <template v-else>
                 <TablerInput
                     v-model='password'
-                    label='P12 Password'
+                    :label='t("shared.uploadP12.password")'
                     @keyup.enter='extract'
                 />
 
@@ -38,7 +38,7 @@
                         <a
                             class='cursor-pointer btn w-100'
                             @click='extract'
-                        >OK</a>
+                        >{{ t('shared.uploadP12.ok') }}</a>
                     </div>
                 </div>
             </template>
@@ -47,6 +47,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, onMounted, nextTick } from 'vue';
 import { 
     TablerModal,
@@ -56,6 +57,8 @@ import Dropzone from 'dropzone/dist/dropzone.mjs';
 import 'dropzone/dist/dropzone.css';
 import '@tabler/core/dist/css/tabler-vendors.min.css';
 import { convertToPem, type ConvertToPemResult } from '@tak-ps/node-p12/browser';
+
+const { t } = useI18n();
 
 const emit = defineEmits<{
     (e: 'close'): void;

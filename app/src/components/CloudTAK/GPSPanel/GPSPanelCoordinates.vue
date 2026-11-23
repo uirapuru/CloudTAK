@@ -8,7 +8,7 @@
                 <div
                     class='d-flex align-items-center gap-2 rounded'
                     :class='isNative ? "" : "cursor-pointer cloudtak-hover"'
-                    :title='coordSource === "gps" ? "GPS Location - Click to change format" : "Cursor Position - Click to change format"'
+                    :title='coordSource === "gps" ? t("tools.gps.gpsFormatTooltip") : t("tools.gps.cursorFormatTooltip")'
                 >
                     <IconCursorText
                         v-if='coordSource === "cursor"'
@@ -74,7 +74,7 @@
                             :size='16'
                             stroke='1'
                         />
-                        {{ copied ? 'Copied' : 'Copy' }}
+                        {{ copied ? t('tools.gps.copied') : t('tools.gps.copy') }}
                     </button>
                 </li>
                 <li
@@ -106,6 +106,9 @@ import {
 import { formatCoordPair, COORD_MODES, type CoordMode } from '../../../utils/coordinateFormat.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { isNativePlatform } from '../../../utils/capacitor.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 
@@ -179,10 +182,10 @@ onBeforeUnmount(() => {
     mapStore.map.off('mouseout', onMouseOut);
 });
 
-const sourceOptions = [
-    { value: 'cursor', label: 'Cursor' },
+const sourceOptions = computed(() => [
+    { value: 'cursor', label: t('tools.gps.cursor') },
     { value: 'gps', label: 'GPS' }
-];
+]);
 
 const displayCoord = computed(() => {
     if (coordSource.value === 'gps') {
@@ -202,7 +205,7 @@ async function setCoordFormat(mode: CoordMode): Promise<void> {
 const formattedCoord = computed(() => {
     const c = displayCoord.value;
 
-    if (!c) return coordSource.value === 'cursor' ? 'Cursor Offscreen' : 'No GPS Fix';
+    if (!c) return coordSource.value === 'cursor' ? t('tools.gps.cursorOffscreen') : t('tools.gps.noGpsFix');
 
     return formatCoordPair(
         c.lat,

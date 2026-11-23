@@ -1,11 +1,11 @@
 <template>
     <MenuTemplate
-        name='Videos'
+        :name='t("panels.videos.title")'
         :loading='loading.main'
     >
         <template #buttons>
             <TablerIconButton
-                title='Publish Video Stream'
+                :title='t("panels.videos.publish")'
                 @click='router.push(`/menu/videos/remote/new`)'
             >
                 <IconVideoPlus
@@ -15,7 +15,7 @@
             </TablerIconButton>
 
             <TablerIconButton
-                title='Get Lease'
+                :title='t("panels.videos.getLease")'
                 @click='lease={}'
             >
                 <IconPlus
@@ -41,14 +41,14 @@
             <TablerPillGroup
                 v-model='mode'
                 :options='[
-                    { value: "connections", label: "Streams" },
-                    { value: "lease", label: "Leases" }
+                    { value: "connections", label: t("panels.videos.streams") },
+                    { value: "lease", label: t("panels.videos.leases") }
                 ]'
             >
                 <template #option='{ option }'>
                     <span
                         v-if='option.value === "connections"'
-                        title='Video Connections'
+                        :title='t("panels.videos.connections")'
                     >
                         <IconVideo
                             :size='32'
@@ -57,7 +57,7 @@
                     </span>
                     <span
                         v-else
-                        title='Video Leases'
+                        :title='t("panels.videos.videoLeases")'
                     >
                         <IconServer2
                             :size='32'
@@ -73,7 +73,7 @@
                     <TablerInput
                         v-model='connectionFilter'
                         icon='search'
-                        placeholder='Stream Search'
+                        :placeholder='t("panels.videos.streamSearch")'
                     />
                 </div>
 
@@ -84,7 +84,7 @@
                 />
                 <TablerNone
                     v-else-if='!filteredVideos.size && !filteredConnections.length'
-                    label='No Video Connections'
+                    :label='t("panels.videos.noConnections")'
                     :create='false'
                 />
                 <TablerAlert
@@ -117,13 +117,13 @@
                                 <span
                                     v-else
                                     class='fst-italic text-secondary'
-                                >Unnamed</span>
+                                >{{ t('panels.videos.unnamed') }}</span>
                             </div>
                         </div>
 
                         <div class='d-flex btn-list ms-auto'>
                             <TablerIconButton
-                                title='Edit Lease'
+                                :title='t("panels.videos.editLease")'
                                 @click.stop='router.push(`/menu/videos/remote/${connection.uuid}`)'
                             >
                                 <IconPencil
@@ -155,7 +155,7 @@
                                 <span
                                     v-else
                                     class='fst-italic text-secondary'
-                                >Unnamed</span>
+                                >{{ t('panels.videos.unnamed') }}</span>
                             </div>
                         </div>
                     </StandardItem>
@@ -166,7 +166,7 @@
                     <TablerInput
                         v-model='leasePaging.filter'
                         icon='search'
-                        placeholder='Lease Search'
+                        :placeholder='t("panels.videos.leaseSearch")'
                     />
                 </div>
                 <TablerLoading
@@ -174,7 +174,7 @@
                 />
                 <TablerNone
                     v-else-if='leases.total === 0'
-                    label='No Video Leases'
+                    :label='t("panels.videos.noLeases")'
                     :create='false'
                 />
                 <TablerAlert
@@ -208,7 +208,7 @@
                                 <span
                                     v-else
                                     class='fst-italic text-secondary'
-                                >Unnamed</span>
+                                >{{ t('panels.videos.unnamed') }}</span>
                             </div>
                             <div
                                 v-if='getLeaseDescription(l)'
@@ -294,8 +294,10 @@ import {
 
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 const mapStore = useMapStore();
 const floatStore = useFloatStore();
 
@@ -323,7 +325,7 @@ const filteredConnections = computed(() => {
     if (!connectionFilter.value) return connections.value.videoConnections;
 
     return connections.value.videoConnections.filter((c) => {
-        return (c.alias || 'Unnamed').toLowerCase().includes(connectionFilter.value.toLowerCase());
+        return (c.alias || t('panels.videos.unnamed')).toLowerCase().includes(connectionFilter.value.toLowerCase());
     });
 });
 
@@ -332,7 +334,7 @@ const filteredVideos = computed(() => {
 
     const filtered = new Set<COT>();
     for (const v of videos.value) {
-        const name = v.properties.callsign || v.properties.name || 'Unnamed';
+        const name = v.properties.callsign || v.properties.name || t('panels.videos.unnamed');
         if (typeof name === 'string' && name.toLowerCase().includes(connectionFilter.value.toLowerCase())) {
             filtered.add(v);
         }
@@ -439,14 +441,14 @@ function isLeasePlayable(lease: VideoLeaseList['items'][number]): boolean {
 }
 
 function getLeasePlayTitle(lease: VideoLeaseList['items'][number]): string {
-    if (lease.active) return 'Play Lease';
-    if (lease.proxy !== null) return 'Play Lease - starts on demand';
-    return 'Lease is not currently streaming';
+    if (lease.active) return t('panels.videos.play');
+    if (lease.proxy !== null) return t('panels.videos.playOnDemand');
+    return t('panels.videos.notStreaming');
 }
 
 function getLeaseDescription(lease: VideoLease): string {
-    if (expired(lease.expiration)) return 'Expired Lease';
-    if (lease.expiration === null) return 'Permanent';
+    if (expired(lease.expiration)) return t('panels.videos.expired');
+    if (lease.expiration === null) return t('panels.videos.permanent');
     return lease.expiration;
 }
 

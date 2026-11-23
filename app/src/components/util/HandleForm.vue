@@ -51,19 +51,20 @@
             v-if='isFocused'
             class='hb-helper form-hint'
         >
-            <span>Type:</span>
+            <span>{{ t('shared.handleForm.type') }}</span>
             <span
                 v-pre
                 class='hb-helper-token'
             >
                 {{
             </span>
-            <span>to see template suggestions</span>
+            <span>{{ t('shared.handleForm.suggestions') }}</span>
         </div>
     </div>
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { TablerInput } from '@tak-ps/vue-tabler';
 
@@ -72,6 +73,8 @@ interface SchemaNode {
   properties?: Record<string, SchemaNode>;
   [key: string]: unknown;
 }
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
   modelValue?: string | number;

@@ -10,7 +10,7 @@
                 stroke='1'
                 class='flex-shrink-0'
             />
-            <span class='mx-2 flex-shrink-0'>Associated Mission</span>
+            <span class='mx-2 flex-shrink-0'>{{ t('property.mission.associatedMission') }}</span>
             <span
                 class='text-muted text-truncate'
                 v-text='name'
@@ -19,7 +19,7 @@
 
         <TablerIconButton
             v-if='props.edit'
-            title='Remove Associated Mission'
+            :title='t("property.mission.removeAssociatedMission")'
             @click='emit("remove")'
         >
             <IconTrash
@@ -36,6 +36,9 @@ import { useRouter } from 'vue-router';
 import { TablerButton, TablerIconButton } from '@tak-ps/vue-tabler';
 import { IconCloudPin, IconTrash } from '@tabler/icons-vue';
 import Subscription from '../../../base/subscription.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     /** GUID of the TAK Server Mission the CoT or Event is associated with */

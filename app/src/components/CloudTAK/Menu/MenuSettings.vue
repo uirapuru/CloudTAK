@@ -1,5 +1,5 @@
 <template>
-    <MenuTemplate name='Settings'>
+    <MenuTemplate :name='t("panels.settings.title")'>
         <div class='col-12 d-flex flex-column gap-2 py-3'>
             <StandardItem
                 @click='router.push("/menu/settings/callsign")'
@@ -10,7 +10,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Callsign & Device Preferences
+                        {{ t('panels.settings.callsign') }}
                     </div>
                 </div>
             </StandardItem>
@@ -23,7 +23,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Display Preferences
+                        {{ t('panels.settings.display') }}
                     </div>
                 </div>
             </StandardItem>
@@ -36,7 +36,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Permissions
+                        {{ t('panels.settings.permissions') }}
                     </div>
                 </div>
             </StandardItem>
@@ -49,7 +49,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        API Tokens
+                        {{ t('panels.settings.tokens') }}
                     </div>
                 </div>
             </StandardItem>
@@ -62,7 +62,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Login Passkeys
+                        {{ t('panels.settings.passkeys') }}
                     </div>
                 </div>
             </StandardItem>
@@ -75,7 +75,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Login Sessions
+                        {{ t('panels.settings.sessions') }}
                     </div>
                 </div>
             </StandardItem>
@@ -88,7 +88,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Paging Notifications
+                        {{ t('panels.settings.paging') }}
                     </div>
                 </div>
             </StandardItem>
@@ -101,7 +101,7 @@
                         stroke='1'
                     />
                     <div class='ms-2 flex-grow-1 font-weight-bold'>
-                        Refresh App
+                        {{ t('panels.settings.refreshApp') }}
                     </div>
                 </div>
             </StandardItem>
@@ -111,6 +111,7 @@
 
 <script setup lang='ts'>
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { supportsServiceWorker } from '../../../utils/capacitor.ts';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
@@ -128,10 +129,11 @@ import { useDeviceStore } from '../../../stores/device.ts';
 
 const deviceStore = useDeviceStore();
 const router = useRouter();
+const { t } = useI18n();
 
 async function refreshApp() {
     if (!deviceStore.network.isOnline) {
-        throw new Error('Cannot refresh app while offline.');
+        throw new Error(t('panels.settings.offlineRefresh'));
     }
 
     if (supportsServiceWorker()) {

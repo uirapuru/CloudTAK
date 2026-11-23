@@ -7,7 +7,7 @@
             <TablerInput
                 v-model='paging.filter'
                 icon='search'
-                placeholder='Filter'
+                :placeholder='t("util.common.filter")'
             />
         </div>
 
@@ -31,7 +31,7 @@
                         <div class='col-12 py-2 px-2 d-flex align-items-center'>
                             <span
                                 v-if='ch.active'
-                                title='User has Channel Enabled'
+                                :title='t("util.subscriptions.enabled")'
                             >
                                 <IconEye
                                     :size='32'
@@ -40,7 +40,7 @@
                             </span>
                             <span
                                 v-else
-                                title='User has Channel Disabled'
+                                :title='t("util.subscriptions.disabled")'
                             >
                                 <IconEyeOff
                                     :size='32'
@@ -49,7 +49,7 @@
                             </span>
                             <span
                                 class='mx-2 cursor-pointer'
-                                title='Show Details'
+                                :title='t("util.subscriptions.details")'
                                 @click='shown[ch.name] = !shown[ch.name]'
                                 v-text='ch.name'
                             />
@@ -57,7 +57,7 @@
                             <div class='ms-auto'>
                                 <span
                                     v-if='ch.direction.length === 2'
-                                    title='Bi-Directional'
+                                    :title='t("util.common.biDirectional")'
                                 >
                                     <IconLocation
                                         :size='32'
@@ -66,7 +66,7 @@
                                 </span>
                                 <span
                                     v-else-if='ch.direction.includes("IN")'
-                                    title='Location Sharing'
+                                    :title='t("util.common.locationSharing")'
                                 >
                                     <IconLocation
                                         :size='32'
@@ -75,7 +75,7 @@
                                 </span>
                                 <span
                                     v-else-if='ch.direction.includes("OUT")'
-                                    title='No Location Sharing'
+                                    :title='t("util.common.noLocationSharing")'
                                 >
                                     <IconLocationOff
                                         :size='32'
@@ -89,7 +89,7 @@
                             class='col-12 pb-2 user-select-none'
                             style='margin-left: 40px;'
                         >
-                            <span v-text='ch.description || "No Description"' />
+                            <span v-text='ch.description || t("util.common.noDescription")' />
                         </div>
                     </div>
                 </div>
@@ -99,6 +99,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted } from 'vue';
 import type { GroupChannel } from '../../../types.ts';
 import type COT from '../../../base/cot.ts';
@@ -115,6 +116,8 @@ import {
     IconEye,
     IconEyeOff,
 } from '@tabler/icons-vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
     cot: COT

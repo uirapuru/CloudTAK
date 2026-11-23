@@ -14,17 +14,17 @@
                     <IconPoint
                         :size='24'
                         stroke='1'
-                    /><span class='mx-2'>Draw Point</span>
+                    /><span class='mx-2'>{{ t('util.drawOverlay.drawPoint') }}</span>
                 </template>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
                         v-if='appStore.isMobileDetected'
-                        :title='opened ? "Close Settings" : "Open Settings"'
+                        :title='opened ? t("util.drawOverlay.closeSettings") : t("util.drawOverlay.openSettings")'
                         @click='opened = !opened'
                     >
                         <span class='d-flex align-items-center'>
-                            <span>More</span>
+                            <span>{{ t('util.drawOverlay.more') }}</span>
                             <IconChevronDown
                                 v-if='opened'
                                 :size='24'
@@ -38,7 +38,7 @@
                         </span>
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -48,7 +48,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -76,11 +76,11 @@
                     :size='24'
                     stroke='1'
                 />
-                <span class='mx-2'>Circle Editing</span>
+                <span class='mx-2'>{{ t('util.drawOverlay.circle') }}</span>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -90,7 +90,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -109,11 +109,11 @@
                 <IconVector
                     :size='24'
                     stroke='1'
-                /><span class='mx-2'>Rectangle Editing</span>
+                /><span class='mx-2'>{{ t('util.drawOverlay.rectangle') }}</span>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -123,7 +123,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -142,25 +142,25 @@
                 <IconLine
                     :size='24'
                     stroke='1'
-                /><span class='mx-2'>Line Editing</span>
+                /><span class='mx-2'>{{ t('util.drawOverlay.line') }}</span>
 
                 <div class='ms-auto btn-list align-items-center'>
-                    <TablerEnum
+                    <TranslatedEnum
                         v-if='!appStore.isMobileDetected'
                         v-model='mapStore.draw.snappingLayer'
-                        description='Choose the type of line to draw.'
+                        :description='t("util.drawOverlay.snappingHelp")'
                         default='No Snapping'
-                        :options='mapStore.draw.snappingOptions'
+                        :options='snappingOptions'
                         :disabled='!mapStore.hasSnapping'
                     />
 
                     <TablerIconButton
                         v-if='appStore.isMobileDetected'
-                        :title='opened ? "Close Settings" : "Open Settings"'
+                        :title='opened ? t("util.drawOverlay.closeSettings") : t("util.drawOverlay.openSettings")'
                         @click='opened = !opened'
                     >
                         <span class='d-flex align-items-center'>
-                            <span>More</span>
+                            <span>{{ t('util.drawOverlay.more') }}</span>
                             <IconChevronDown
                                 v-if='opened'
                                 :size='24'
@@ -175,7 +175,7 @@
                     </TablerIconButton>
 
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -185,7 +185,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -199,11 +199,11 @@
                 v-if='appStore.isMobileDetected && opened'
                 class='card-body'
             >
-                <TablerEnum
+                <TranslatedEnum
                     v-model='mapStore.draw.snappingLayer'
-                    description='Choose the type of line to draw.'
+                    :description='t("util.drawOverlay.snappingHelp")'
                     default='No Snapping'
-                    :options='mapStore.draw.snappingOptions'
+                    :options='snappingOptions'
                     :disabled='!mapStore.hasSnapping'
                 />
             </div>
@@ -216,11 +216,11 @@
                 <IconPolygon
                     :size='24'
                     stroke='1'
-                /><span class='mx-2'>Polygon Editing</span>
+                /><span class='mx-2'>{{ t('util.drawOverlay.polygon') }}</span>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -230,7 +230,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -249,11 +249,11 @@
                 <IconCone
                     :size='24'
                     stroke='1'
-                /><span class='mx-2'>Sector Editing</span>
+                /><span class='mx-2'>{{ t('util.drawOverlay.sector') }}</span>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -263,7 +263,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -282,16 +282,16 @@
                 <IconLasso
                     :size='24'
                     stroke='1'
-                /><span class='mx-2'>Lasso Select</span>
+                /><span class='mx-2'>{{ t('util.drawOverlay.lasso') }}</span>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
                         v-if='appStore.isMobileDetected'
-                        :title='opened ? "Close Settings" : "Open Settings"'
+                        :title='opened ? t("util.drawOverlay.closeSettings") : t("util.drawOverlay.openSettings")'
                         @click='opened = !opened'
                     >
                         <span class='d-flex align-items-center'>
-                            <span>More</span>
+                            <span>{{ t('util.drawOverlay.more') }}</span>
                             <IconChevronDown
                                 v-if='opened'
                                 :size='24'
@@ -306,7 +306,7 @@
                     </TablerIconButton>
 
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -316,7 +316,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -330,10 +330,10 @@
                 v-if='!appStore.isMobileDetected || opened'
                 class='card-body'
             >
-                <TablerEnum
+                <TranslatedEnum
                     v-model='mapStore.draw.lasso.overlay'
-                    label='Layer Selection'
-                    description='Features will be selected from the chosen layer.'
+                    :label='t("util.drawOverlay.layerSelection")'
+                    :description='t("util.drawOverlay.layerSelectionHelp")'
                     default='Map Features'
                     :options='filteredOverlayNames'
                 />
@@ -349,12 +349,12 @@
                     stroke='1'
                 /><span
                     class='mx-2'
-                    v-text='mapStore.draw.routeEditorKind === "build" ? "Wyznaczanie trasy" : "Edycja trasy"'
+                    v-text='mapStore.draw.routeEditorKind === "build" ? t("util.drawOverlay.routeBuild") : t("util.drawOverlay.routeEdit")'
                 />
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Zapisz trasę'
+                        :title='t("util.drawOverlay.saveRoute")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -364,7 +364,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Anuluj'
+                        :title='t("common.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -383,7 +383,7 @@
                     v-if='mapStore.draw.routeBusy'
                     class='text-secondary small route-busy'
                 >
-                    Przeliczam trasę…
+                    {{ t('util.drawOverlay.routeCalculating') }}
                 </div>
                 <div
                     v-if='mapStore.draw.routeError'
@@ -394,20 +394,20 @@
                     v-if='mapStore.draw.routeMenu'
                     class='d-flex align-items-center gap-2 mt-2 route-point-menu'
                 >
-                    <span v-text='"Punkt " + routePointLabel(mapStore.draw.routeMenu.index)' />
+                    <span v-text='t("util.drawOverlay.routePoint", { label: routePointLabel(mapStore.draw.routeMenu.index) })' />
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-danger route-remove-point'
                         @click='mapStore.draw.removeRouteWaypoint(mapStore.draw.routeMenu.index)'
                     >
-                        Usuń punkt
+                        {{ t('util.drawOverlay.removePoint') }}
                     </button>
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-secondary'
                         @click='mapStore.draw.routeMenu = null'
                     >
-                        Zamknij
+                        {{ t('common.close') }}
                     </button>
                 </div>
                 <template v-if='mapStore.draw.routeEditorKind === "edit"'>
@@ -415,7 +415,7 @@
                         type='button'
                         class='btn btn-sm btn-outline-secondary mt-2 route-settings-toggle'
                         @click='toggleRouteSettings'
-                        v-text='routeSettingsOpen ? "Ukryj tryb i opcje" : "Tryb i opcje"'
+                        v-text='routeSettingsOpen ? t("util.drawOverlay.hideRouteSettings") : t("util.drawOverlay.routeSettings")'
                     />
                     <div
                         v-if='routeSettingsOpen && routeModes.length'
@@ -424,7 +424,7 @@
                         <TablerEnum
                             v-model='routeModeName'
                             class='route-travel-mode'
-                            label='Tryb trasy'
+                            :label='t("util.drawOverlay.routeMode")'
                             :options='routeModes.map((m) => m.name)'
                             :disabled='mapStore.draw.routeBusy'
                         />
@@ -449,8 +449,8 @@
                     v-if='!mapStore.draw.routeMenu'
                     class='text-secondary small mt-1'
                     v-text='mapStore.draw.routeEditorKind === "build"
-                        ? "Kliknij mapę, aby dodać kolejny punkt. Przeciągnij punkt albo odcinek, aby zmienić trasę."
-                        : "Kliknij mapę, aby dodać punkt do najbliższego odcinka. Przeciągnij punkt albo odcinek, aby zmienić trasę."'
+                        ? t("util.drawOverlay.routeBuildHint")
+                        : t("util.drawOverlay.routeEditHint")'
                 />
             </div>
         </div>
@@ -462,11 +462,11 @@
                 <IconPencil
                     :size='24'
                     stroke='1'
-                /><span class='mx-2'>Editing Existing Feature</span>
+                /><span class='mx-2'>{{ t('util.drawOverlay.existing') }}</span>
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Finish Drawing'
+                        :title='t("util.drawOverlay.finish")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -476,7 +476,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Cancel Editing'
+                        :title='t("util.drawOverlay.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -491,6 +491,7 @@
 </template>
 
 <script setup lang='ts'>
+import { useI18n } from 'vue-i18n';
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import GenericBottomPane from '../GenericBottomPane.vue';
 import CoordinateType from '../util/CoordinateType.vue';
@@ -498,6 +499,7 @@ import { DrawToolMode } from '../../../stores/modules/draw.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { useAppStore } from '../../../stores/app.ts';
 import OverlayManager from '../../../base/overlay.ts';
+import TranslatedEnum from './TranslatedEnum.vue';
 import {
     TablerEnum,
     TablerIconButton
@@ -522,6 +524,8 @@ import type { RouteOptions } from '../../../base/route-plan.ts';
 import { server } from '../../../std.ts';
 import RouteCrossCountryOptions from './RouteCrossCountryOptions.vue';
 import RouteDangerZones from './RouteDangerZones.vue';
+
+const { t } = useI18n();
 
 const mapStore = useMapStore();
 const appStore = useAppStore();
@@ -582,8 +586,16 @@ watch(() => mapStore.draw.routeEditorKind, () => {
     routeSettingsReady = false;
 });
 
-const filteredOverlayNames = computed((): string[] => {
-    return OverlayManager.queryableOverlayNames();
+const filteredOverlayNames = computed(() => {
+    return OverlayManager.queryableOverlayNames().map((value) => {
+        return { value, label: value === 'Map Features' ? t('util.drawOverlay.mapFeatures') : value };
+    });
+});
+
+const snappingOptions = computed(() => {
+    return mapStore.draw.snappingOptions.map((value) => {
+        return { value, label: value === 'No Snapping' ? t('util.drawOverlay.noSnapping') : value };
+    });
 });
 
 onMounted(async () => {

@@ -1,35 +1,38 @@
 <template>
     <TablerInput
         v-model='model.name'
-        label='Name'
-        placeholder='Jane Doe'
+        :label='t("property.coreEntityAssignmentFields.name")'
+        :placeholder='t("property.coreEntityAssignmentFields.namePlaceholder")'
         class='pb-2'
     />
 
     <TablerInput
         v-model='model.role'
-        label='Role'
+        :label='t("property.coreEntityAssignmentFields.role")'
         placeholder='IC'
         class='pb-2'
     />
 
     <TablerInput
         v-model='model.uid'
-        label='Username'
-        placeholder='Optional - links a CloudTAK Profile'
+        :label='t("property.coreEntityAssignmentFields.username")'
+        :placeholder='t("property.coreEntityAssignmentFields.usernamePlaceholder")'
         class='pb-2'
     />
 
     <TablerInput
         v-model='model.remarks'
-        label='Remarks'
-        placeholder='Optional'
+        :label='t("property.coreEntityAssignmentFields.remarks")'
+        :placeholder='t("property.coreEntityAssignmentFields.optional")'
     />
 </template>
 
 <script setup lang='ts'>
 import { TablerInput } from '@tak-ps/vue-tabler';
 import type { CoreEntityAssignmentInput } from '../../../types.ts';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const model = defineModel<CoreEntityAssignmentInput>({ required: true });
 </script>

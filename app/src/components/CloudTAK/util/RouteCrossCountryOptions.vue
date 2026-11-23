@@ -1,44 +1,44 @@
 <template>
     <div class='route-cross-country-options'>
         <div class='text-secondary small mb-1'>
-            Opcje przełaju
+            {{ t('taklab.routeCrossCountry.title') }}
         </div>
         <TablerToggle
             :model-value='!!modelValue?.avoid_wetland'
             class='avoid-wetland'
-            label='Omijaj bagna'
+            :label='t("taklab.routeCrossCountry.avoidWetland")'
             :disabled='disabled'
             @update:model-value='change({ avoid_wetland: $event })'
         />
         <TablerToggle
             :model-value='!!modelValue?.avoid_streams'
             class='avoid-streams'
-            label='Omijaj strumienie i rowy'
+            :label='t("taklab.routeCrossCountry.avoidStreams")'
             :disabled='disabled'
             @update:model-value='change({ avoid_streams: $event })'
         />
-        <TablerEnum
+        <TranslatedEnum
             :model-value='slopeLabel'
             class='max-slope'
-            label='Największe nachylenie'
+            :label='t("taklab.routeCrossCountry.maxSlope")'
             :options='slopeChoices'
             :disabled='disabled'
             @update:model-value='change({ max_slope_deg: slopeValue($event) })'
         />
-        <TablerEnum
+        <TranslatedEnum
             :model-value='exposureLabel'
             class='exposure'
-            label='Ekspozycja'
-            description='Średnia i unikaj prowadzą trasę lasem zamiast przez pola i drogi. Model zna rodzaj terenu z OSM, ale nie gęstość lasu.'
-            :options='Object.keys(EXPOSURE_CHOICES)'
+            :label='t("taklab.routeCrossCountry.exposure")'
+            :description='t("taklab.routeCrossCountry.exposureDescription")'
+            :options='exposureChoices'
             :disabled='disabled'
             @update:model-value='change({ exposure: EXPOSURE_CHOICES[$event] })'
         />
         <TablerToggle
             :model-value='!!modelValue?.avoid_observation'
             class='avoid-observation'
-            label='Unikaj widoczności ze wzgórz'
-            description='Trasa omija pole widzenia dominujących wzgórz do 3 km.'
+            :label='t("taklab.routeCrossCountry.avoidObservation")'
+            :description='t("taklab.routeCrossCountry.avoidObservationDescription")'
             :disabled='disabled'
             @update:model-value='change({ avoid_observation: $event })'
         />
@@ -52,8 +52,12 @@
  * a brak jakiejkolwiek opcji to undefined.
  */
 import { computed } from 'vue';
-import { TablerEnum, TablerToggle } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+import { TablerToggle } from '@tak-ps/vue-tabler';
+import TranslatedEnum from './TranslatedEnum.vue';
 import type { RouteOptions } from '../../../base/route-plan.ts';
+
+const { t } = useI18n();
 
 const props = withDefaults(defineProps<{
     modelValue?: RouteOptions;
@@ -67,6 +71,8 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: RouteOptions | undefined): void;
 }>();
 
+// Wartości list (NO_SLOPE_LIMIT, klucze EXPOSURE_CHOICES) to stałe identyfikatory,
+// użytkownik widzi przetłumaczone etykiety.
 // Pierwsza pozycja = limit usługi terenu, czyli brak dodatkowego ograniczenia
 const MAX_SLOPE_DEG = 35;
 const NO_SLOPE_LIMIT = 'bez limitu (35°)';
@@ -79,6 +85,15 @@ const EXPOSURE_CHOICES: Record<string, NonNullable<RouteOptions['exposure']>> = 
     'unikaj': 'avoid',
 };
 
+const EXPOSURE_LABELS: Record<string, string> = {
+    'może być': 'taklab.routeCrossCountry.exposureAllow',
+    'średnia': 'taklab.routeCrossCountry.exposureMedium',
+    'unikaj': 'taklab.routeCrossCountry.exposureAvoid',
+};
+
+const exposureChoices = computed(() => Object.keys(EXPOSURE_CHOICES)
+    .map((value) => ({ value, label: t(EXPOSURE_LABELS[value]) })));
+
 const slopeLabel = computed(() => {
     const slope = props.modelValue?.max_slope_deg;
     return slope === undefined || slope >= MAX_SLOPE_DEG ? NO_SLOPE_LIMIT : `${slope}°`;
@@ -88,7 +103,10 @@ const slopeLabel = computed(() => {
 const slopeChoices = computed(() => {
     const choices = [NO_SLOPE_LIMIT, ...SLOPE_STEPS.map((step) => `${step}°`)];
     if (!choices.includes(slopeLabel.value)) choices.push(slopeLabel.value);
-    return choices;
+    return choices.map((value) => ({
+        value,
+        label: value === NO_SLOPE_LIMIT ? t('taklab.routeCrossCountry.noSlopeLimit') : value,
+    }));
 });
 
 const exposureLabel = computed(() => {
