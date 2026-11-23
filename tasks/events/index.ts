@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import jwt from 'jsonwebtoken';
 import { fetch } from '@tak-ps/node-safeurl';
+import AreaPackagePool from './src/area-package/pool.js';
 
 export default class WorkerPool extends EventEmitter {
     interval: NodeJS.Timeout;
@@ -216,4 +217,22 @@ if (isMainModule) {
         bucket: process.env.ASSET_BUCKET,
         interval: 1000,
     });
+
+    const areaPackages = new AreaPackagePool({
+        api: process.env.API_URL || 'http://localhost:5001',
+        tiles: process.env.TILES_URL || 'http://localhost:5002',
+        secret: process.env.SigningSecret,
+        bucket: process.env.ASSET_BUCKET,
+        tmpdir: os.tmpdir(),
+        interval: 2000,
+    });
+
+    // The API may still be starting; retry until the requeue succeeds
+    const startAreaPackages = (): void => {
+        areaPackages.start().catch((err) => {
+            console.error('error - Area Package Pool failed to start, retrying in 10s:', err);
+            setTimeout(startAreaPackages, 10000);
+        });
+    };
+    startAreaPackages();
 }

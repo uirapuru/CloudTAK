@@ -18,8 +18,10 @@ export async function buildDataPackage(opts: {
     mbtiles: Array<{ path: string; fileName: string }>;
     features: Array<Feature>;
     attachments: (hash: string) => Promise<PackageAttachment | null>;
+    /** Directory for the package build files and the zip; defaults to a new one in the OS temp dir */
+    workdir?: string;
 }): Promise<string> {
-    const pkg = new DataPackage(opts.id, opts.name);
+    const pkg = new DataPackage(opts.id, opts.name, opts.workdir ? { path: opts.workdir } : {});
     pkg.setPermanent();
 
     for (const file of opts.mbtiles) {
