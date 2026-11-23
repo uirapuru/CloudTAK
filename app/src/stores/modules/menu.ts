@@ -18,6 +18,7 @@ import {
     IconBoxMultiple,
     IconAffiliate,
     IconHistory,
+    IconMicrophone,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import ContactManager from '../../base/contact.ts';
@@ -166,6 +167,15 @@ export default class MenuManager {
                 tooltip: 'Chats',
                 description: 'Open chat threads and history',
                 icon: IconMessage,
+            },
+            {
+                // taklab: rejestr głosu (historia, odsłuch, transkrypcje, raport)
+                key: 'voice',
+                label: 'Głos',
+                route: '/menu/voice',
+                tooltip: 'Głos',
+                description: 'Historia rozmów głosowych z transkrypcją',
+                icon: IconMicrophone,
             },
             {
                 key: 'routes',
