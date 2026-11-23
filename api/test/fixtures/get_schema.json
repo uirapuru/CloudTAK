@@ -9,6 +9,31 @@
         "query": false,
         "res": true
     },
+    "POST /profile/area-package/preview": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "POST /profile/area-package": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /profile/area-package": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /profile/area-package/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "DELETE /profile/area-package/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "GET /attachment": {
         "body": false,
         "query": true,
@@ -2004,6 +2029,66 @@
         "query": false,
         "res": false
     },
+    "GET /search": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /search/reverse/:longitude/:latitude/sun": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /search/reverse/:longitude/:latitude/magnetic": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /search/reverse/:longitude/:latitude/weather": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /search/reverse/:longitude/:latitude/reverse": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /search/reverse/:longitude/:latitude/elevation": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /search/route": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "POST /search/route/legs": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "POST /search/route/plan": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "POST /search/route/variants": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /search/forward": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /search/suggest": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
     "GET /iconset": {
         "body": false,
         "query": true,
@@ -2068,65 +2153,5 @@
         "body": false,
         "query": true,
         "res": false
-    },
-    "GET /search": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /search/reverse/:longitude/:latitude/sun": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /search/reverse/:longitude/:latitude/magnetic": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /search/reverse/:longitude/:latitude/weather": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /search/reverse/:longitude/:latitude/reverse": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /search/reverse/:longitude/:latitude/elevation": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /search/route": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "POST /search/route/legs": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "POST /search/route/plan": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "POST /search/route/variants": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "GET /search/forward": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /search/suggest": {
-        "body": false,
-        "query": true,
-        "res": true
     }
 }
