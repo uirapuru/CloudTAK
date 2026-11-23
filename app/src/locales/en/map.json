@@ -305,10 +305,29 @@
             "noSplitMarker": "Cannot find COT to split",
             "splitLineOnly": "Can only split LineString geometries",
             "splitTooClose": "Cannot split: click point is too close to a line endpoint"
-        },
-        "areaPackage": {
-            "zoomMin": "Lowest zoom",
-            "zoomMax": "Highest zoom"
         }
+    },
+    "areaPackage": {
+        "zoomMin": "Lowest zoom",
+        "zoomMax": "Highest zoom",
+        "title": "Save to cache: area {width} × {height} km",
+        "name": "Package name",
+        "defaultName": "Area package {date}",
+        "layers": "Basemaps",
+        "markers": "Markers ({count})",
+        "shapes": "Shapes ({count})",
+        "routes": "Routes ({count})",
+        "all": "all",
+        "noLayers": "There are no raster maps on the map to save.",
+        "tiles": "{tiles} tiles, ~{size}",
+        "unavailable": {
+            "google": "Not available offline (Google terms)",
+            "vector": "Vector map — ATAK cannot display it",
+            "forbidden": "No access to this map",
+            "unsupported": "This kind of map cannot be saved offline"
+        },
+        "total": "Total: ~{size}",
+        "overLimit": "Too large: {tiles} tiles, the limit is {limit}. Shrink the area or the zoom.",
+        "save": "Save"
     }
 }

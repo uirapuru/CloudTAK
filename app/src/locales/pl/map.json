@@ -305,10 +305,29 @@
             "noSplitMarker": "Nie znaleziono znacznika CoT do podzielenia",
             "splitLineOnly": "Podzielić można tylko linię (LineString)",
             "splitTooClose": "Nie można podzielić: kliknięty punkt jest za blisko końca linii"
-        },
-        "areaPackage": {
-            "zoomMin": "Najmniejsze przybliżenie",
-            "zoomMax": "Największe przybliżenie"
         }
+    },
+    "areaPackage": {
+        "zoomMin": "Najmniejsze przybliżenie",
+        "zoomMax": "Największe przybliżenie",
+        "title": "Zapisz do cache: obszar {width} × {height} km",
+        "name": "Nazwa paczki",
+        "defaultName": "Paczka {date}",
+        "layers": "Podkłady",
+        "markers": "Markery ({count})",
+        "shapes": "Kształty ({count})",
+        "routes": "Trasy ({count})",
+        "all": "wszystkie",
+        "noLayers": "Na mapie nie ma map rastrowych do zapisania.",
+        "tiles": "{tiles} kafelków, ~{size}",
+        "unavailable": {
+            "google": "Niedostępne offline (zasady Google)",
+            "vector": "Mapa wektorowa — ATAK jej nie wyświetli",
+            "forbidden": "Brak dostępu do tej mapy",
+            "unsupported": "Tego rodzaju mapy nie da się zapisać offline"
+        },
+        "total": "Razem: ~{size}",
+        "overLimit": "Za dużo: {tiles} kafelków, limit to {limit}. Zmniejsz obszar albo przybliżenie.",
+        "save": "Zapisz"
     }
 }
