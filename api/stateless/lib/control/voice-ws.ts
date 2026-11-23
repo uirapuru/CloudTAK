@@ -15,6 +15,9 @@ const WebSocketClient = wsModule.WebSocket ?? wsModule.default;
 
 /** 0,5 s of 48 kHz 16-bit mono is the largest microphone frame the service accepts. */
 const MAX_PAYLOAD = 64 * 1024;
+/** Callsign of a profile that has not been set up yet (CloudTAK default). */
+export const DEFAULT_CALLSIGN = 'CloudTAK User';
+
 /** Messages sent by the browser before the service socket opened. */
 const MAX_PENDING = 100;
 
@@ -83,7 +86,9 @@ export function attachVoiceWebsocket(srv: Server, config: ConfigStateless): void
         let callsign = user.email;
         try {
             const profile = await profiles.from(user.email);
-            if (profile.tak_callsign) callsign = profile.tak_callsign;
+            // A fresh profile carries the placeholder callsign until the user
+            // fills it in; everyone would then share one Mumble name.
+            if (profile.tak_callsign && profile.tak_callsign !== DEFAULT_CALLSIGN) callsign = profile.tak_callsign;
         } catch {
             // Without a profile the e-mail is the name; the service makes it Mumble-safe.
         }

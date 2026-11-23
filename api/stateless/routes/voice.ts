@@ -30,7 +30,22 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         name: 'Voice Log Status',
         group: 'Voice',
         description: 'State of the taklab voice log: channels, current speaker, whether the caller may see the history; {enabled: false} when not installed',
-        res: Type.Object({ enabled: Type.Boolean() }, { additionalProperties: true }),
+        // Every field listed: batch-schema drops properties the schema does not
+        // name, and without "history" the Voice menu stayed hidden even for the
+        // administrator (public, 23 XI 2026).
+        res: Type.Object({
+            enabled: Type.Boolean(),
+            history: Type.Optional(Type.Boolean()),
+            connected: Type.Optional(Type.Boolean()),
+            floor_control: Type.Optional(Type.Boolean()),
+            transcription: Type.Optional(Type.Boolean()),
+            ptt: Type.Optional(Type.Boolean()),
+            channels: Type.Optional(Type.Array(Type.Object({
+                name: Type.String(),
+                users: Type.Optional(Type.Array(Type.String())),
+                speaking: Type.Union([Type.Null(), Type.String()]),
+            }))),
+        }),
     }, async (req, res) => {
         try {
             const user = await Auth.as_user(config, req);
