@@ -19,4 +19,9 @@ test('GET: api/ots/accounts/:username/qr rejects names OTS cannot have', async (
     assert.equal(res.status, 400, JSON.stringify(res.body));
 });
 
+test('GET: api/marti/datasync-qr needs a login', async () => {
+    const res = await flight.fetch('/api/marti/datasync-qr?name=x', { method: 'GET' }, false);
+    assert.equal(res.status, 401, JSON.stringify(res.body));
+});
+
 flight.landing();

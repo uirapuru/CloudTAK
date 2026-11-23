@@ -5,6 +5,7 @@ import qr from 'qr-image';
 import Auth from '../../common/auth.js';
 import type ConfigStateless from '../config.js';
 import { otsAccountsControl, USERNAME_PATTERN } from '../lib/control/ots-accounts.js';
+import { dataSyncQrFromEnv } from '../lib/control/datasync-qr.js';
 
 const Status = Type.Object({
     enabled: Type.Boolean(),
@@ -82,6 +83,28 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             // The URI carries the account's enrollment token.
             res.setHeader('Cache-Control', 'no-store');
             res.json({ ...code, svg: String(qr.imageSync(code.uri, { type: 'svg' })) });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.get('/marti/datasync-qr', {
+        name: 'Data Sync QR',
+        group: 'MartiMissions',
+        description: 'QR code that subscribes ATAK (Data Sync plugin) to a mission by name, built from the public host and CoT port of the environment',
+        query: Type.Object({
+            name: Type.String({ minLength: 1, maxLength: 512 }),
+        }),
+        res: Type.Object({
+            uri: Type.String(),
+            svg: Type.String(),
+        }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_user(config, req);
+            const uri = dataSyncQrFromEnv(req.query.name);
+            if (!uri) throw new Err(409, null, 'Kod QR misji wymaga dostępu po nazwie serwera');
+            res.json({ uri, svg: String(qr.imageSync(uri, { type: 'svg' })) });
         } catch (err) {
             Err.respond(err, res);
         }

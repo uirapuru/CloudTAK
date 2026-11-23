@@ -222,6 +222,15 @@
                                 </div>
 
                                 <div class='d-flex align-items-center gap-2 pe-2'>
+                                    <TablerIconButton
+                                        title='Kod QR dla ATAK Data Sync'
+                                        @click.stop='qrMission = mission.name'
+                                    >
+                                        <IconQrcode
+                                            :size='24'
+                                            stroke='1'
+                                        />
+                                    </TablerIconButton>
                                     <span
                                         v-if='subscribed.has(mission.guid)'
                                         title='Subscribed'
@@ -280,15 +289,23 @@
                                     </div>
                                 </div>
 
-                                <div
-                                    class='d-flex align-items-center gap-2 pe-2'
-                                    title='Subscribed'
-                                >
-                                    <IconAccessPoint
-                                        class='text-success'
-                                        :size='32'
-                                        stroke='1'
-                                    />
+                                <div class='d-flex align-items-center gap-2 pe-2'>
+                                    <TablerIconButton
+                                        title='Kod QR dla ATAK Data Sync'
+                                        @click.stop='qrMission = mission.name'
+                                    >
+                                        <IconQrcode
+                                            :size='24'
+                                            stroke='1'
+                                        />
+                                    </TablerIconButton>
+                                    <span title='Subscribed'>
+                                        <IconAccessPoint
+                                            class='text-success'
+                                            :size='32'
+                                            stroke='1'
+                                        />
+                                    </span>
                                 </div>
                             </StandardItem>
                         </div>
@@ -315,12 +332,19 @@
             @close='create = false'
         />
     </TablerModal>
+
+    <DataSyncQrModal
+        v-if='qrMission'
+        :name='qrMission'
+        @close='qrMission = undefined'
+    />
 </template>
 
 <script setup lang='ts'>
 import { ref, computed, onMounted, watch } from 'vue';
 import MissionCreate from './Mission/MissionCreate.vue';
 import PendingInvites from './Mission/PendingInvites.vue';
+import DataSyncQrModal from './Mission/DataSyncQrModal.vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
 import Keywords from '../util/Keywords.vue';
@@ -342,6 +366,7 @@ import {
     IconPlus,
     IconLock,
     IconLockOpen,
+    IconQrcode,
     IconAccessPoint,
     IconLetterCase,
     IconClock,
@@ -438,6 +463,8 @@ onMounted(async () => {
 });
 
 const subscribed = ref<Set<string>>(new Set())
+// taklab: mission whose Data Sync QR code is shown
+const qrMission = ref<string | undefined>();
 const filteredList = ref<Array<Mission>>([]);
 
 watch(paging.value, async () => {

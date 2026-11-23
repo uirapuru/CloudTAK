@@ -1,6 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import path from 'node:path';
 import qr from 'qr-image';
+import { dataSyncQrFromEnv } from '../lib/control/datasync-qr.js';
 import tokml from 'tokml';
 import Schema from '@openaddresses/batch-schema';
 import { Feature } from '@tak-ps/node-cot';
@@ -217,7 +218,9 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
             res.type('svg');
 
-            const svg = qr.image([
+            // taklab: public host and CoT port when the environment gives them;
+            // config.server.url is the in-cluster address the phone never knows.
+            const svg = qr.image(dataSyncQrFromEnv(mission.name) ?? [
                 `${config.server.url.replace('ssl://', '')}:ssl`,
                 `${config.server.api.replace('https://', '')}-ssl-${mission.name}`,
                 mission.name,
