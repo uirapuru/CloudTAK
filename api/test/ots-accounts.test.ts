@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { OtsAccountsControl } from '../stateless/lib/control/ots-accounts.js';
+import { OtsAccountsControl, USERNAME_PATTERN } from '../stateless/lib/control/ots-accounts.js';
 
 const OTS = 'http://ots.test:8081';
 
@@ -281,4 +281,57 @@ test('qr requires administrator role', async () => {
     const ots = fakeOts([ADMIN, user('jan')]);
     await assert.rejects(control(ots).qr('jan', 'jan', 'atak'), status(403));
     assert.equal(ots.counts['GET /api/atak_qr_string'] || 0, 0);
+});
+
+test('username pattern accepts what OTS UsernameValidator accepts', () => {
+    const re = new RegExp(USERNAME_PATTERN, 'u');
+    for (const name of ['jan', 'jan.k_1', 'michał', 'Żołnierz2']) assert.ok(re.test(name), name);
+    for (const name of ['', 'a b', 'a/b', 'a-b', 'x'.repeat(65)]) assert.ok(!re.test(name), name);
+});
+
+test('qr for a non-ASCII account name is encoded', async () => {
+    setEnv(FULL_ENV);
+    const ots = fakeOts([ADMIN, user('michał')], {
+        'GET /api/atak_qr_string': (call) => {
+            assert.equal(new URL(call.url).searchParams.get('username'), 'michał');
+            return json({ success: true, qr_string: 'tak://com.atakmap.app/enroll?host=x&username=michał&token=TOK' });
+        },
+    });
+    const qr = await control(ots).qr('administrator', 'michał', 'atak');
+    assert.equal(qr.uri, 'tak://com.atakmap.app/enroll?host=e.taklab.eu:30002&username=micha%C5%82&token=TOK');
+});
+
+for (const [name, token] of [
+    ['disabled', { disabled: true }],
+    ['expired', { exp: 1000 }],
+    ['used up', { max: 3, total_uses: 3 }],
+] as const) {
+    test(`qr refuses a ${name} enrollment token with 409 and does not POST`, async () => {
+        setEnv(FULL_ENV);
+        const ots = fakeOts([ADMIN, user('jan')], {
+            'GET /api/atak_qr_string': () => json({ success: true, qr_string: QR('TOK'), ...token }),
+        });
+        await assert.rejects(control(ots).qr('administrator', 'jan', 'atak'), status(409));
+        assert.equal(ots.counts['POST /api/atak_qr_string'] || 0, 0);
+    });
+}
+
+test('qr accepts a token with future expiry and uses left', async () => {
+    setEnv(FULL_ENV);
+    const ots = fakeOts([ADMIN, user('jan')], {
+        'GET /api/atak_qr_string': () => json({
+            success: true, qr_string: QR('TOK'), disabled: null, exp: Math.floor(Date.now() / 1000) + 3600, max: 3, total_uses: 2,
+        }),
+    });
+    assert.equal((await control(ots).qr('administrator', 'jan', 'atak')).type, 'atak');
+});
+
+test('caller match prefers the exact username over a case-insensitive one', async () => {
+    setEnv(FULL_ENV);
+    const ots = fakeOts([user('Jan', ['administrator']), user('jan')]);
+    const c = control(ots);
+    await assert.rejects(c.list('jan'), status(403));
+    assert.equal((await c.list('Jan')).length, 2);
+    // Ambiguous without an exact match: refuse.
+    await assert.rejects(c.list('JAN'), status(403));
 });

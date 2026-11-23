@@ -7,6 +7,8 @@ const PER_PAGE = 100;
 const MAX_PAGES = 100;
 const ADMIN_USERNAME = 'administrator';
 const ADMIN_ROLE = 'administrator';
+/** OTS UsernameValidator: Unicode letters and digits, underscore, period (use with the u flag). */
+export const USERNAME_PATTERN = '^[\\p{L}\\p{N}_.]{1,64}$';
 
 export type OtsAccount = {
     username: string;
@@ -171,9 +173,17 @@ export class OtsAccountsControl {
         return accounts;
     }
 
+    /**
+     * The exact username first; a case-insensitive match only when it is
+     * unique, so `jan` never borrows the role of an `Jan` administrator.
+     */
     private static isAdministrator(accounts: OtsAccount[], caller: string): boolean {
-        const name = caller.trim().toLowerCase();
-        const account = accounts.find(a => a.username.toLowerCase() === name);
+        const exact = caller.trim();
+        let account = accounts.find(a => a.username === exact);
+        if (!account) {
+            const folded = accounts.filter(a => a.username.toLowerCase() === exact.toLowerCase());
+            if (folded.length === 1) account = folded[0];
+        }
         return !!account && account.active && account.roles.includes(ADMIN_ROLE);
     }
 
@@ -223,6 +233,25 @@ export class OtsAccountsControl {
     }
 
     /**
+     * OTS refuses a disabled, expired or used-up token both at enrollment and
+     * in /api/external_auth, so such a code would fail silently on the phone.
+     * CloudTAK does not change the token (that stays an OTS decision).
+     */
+    private static requireUsable(token: { disabled?: unknown; exp?: unknown; max?: unknown; total_uses?: unknown }): void {
+        if (token.disabled === true) {
+            throw new Err(409, null, 'Token rejestracji tego konta jest wyłączony w OTS');
+        }
+        const exp = Number(token.exp);
+        if (token.exp && Number.isFinite(exp) && exp <= Date.now() / 1000) {
+            throw new Err(409, null, 'Token rejestracji tego konta wygasł w OTS');
+        }
+        const max = Number(token.max);
+        if (token.max && Number.isFinite(max) && Number(token.total_uses || 0) >= max) {
+            throw new Err(409, null, 'Token rejestracji tego konta wykorzystał limit użyć w OTS');
+        }
+    }
+
+    /**
      * Existing token first: POST /api/atak_qr_string resets `disabled` of
      * the account's token, so it is called only when the account has none.
      * Only `token` is taken from the OTS string; OTS 1.8.3 puts its in-pod
@@ -237,7 +266,8 @@ export class OtsAccountsControl {
             });
         }
         if (!res.ok) throw new Err(502, null, `OTS odpowiedział ${res.status} na token rejestracji`);
-        const body = await res.json() as { qr_string?: unknown };
+        const body = await res.json() as { qr_string?: unknown; disabled?: unknown; exp?: unknown; max?: unknown; total_uses?: unknown };
+        OtsAccountsControl.requireUsable(body);
         let token: string | null = null;
         if (typeof body.qr_string === 'string') {
             try {

@@ -4,7 +4,7 @@ import Err from '@openaddresses/batch-error';
 import qr from 'qr-image';
 import Auth from '../../common/auth.js';
 import type ConfigStateless from '../config.js';
-import { otsAccountsControl } from '../lib/control/ots-accounts.js';
+import { otsAccountsControl, USERNAME_PATTERN } from '../lib/control/ots-accounts.js';
 
 const Status = Type.Object({
     enabled: Type.Boolean(),
@@ -65,8 +65,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         group: 'OtsAccounts',
         description: 'ATAK enrollment or OpenTAK ICU QR code of an OTS account; only for OTS administrators',
         params: Type.Object({
-            // OTS UsernameValidator
-            username: Type.String({ pattern: '^[A-Za-z0-9_.]{1,64}$' }),
+            username: Type.String({ pattern: USERNAME_PATTERN }),
         }),
         query: Type.Object({
             type: Type.Union([Type.Literal('atak'), Type.Literal('icu')]),
