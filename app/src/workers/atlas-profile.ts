@@ -76,7 +76,9 @@ export default class AtlasProfile {
         await Promise.all([
             this.load(),
             this.loadServer(),
-            this.loadChannels()
+            // taklab: ask the server on every map load; the cached state could
+            // keep a channel disabled long after the server enabled it.
+            this.loadChannels({ sync: true })
         ])
 
         // Each ProfileConfig.get() is an independent IndexedDB read; fetch
@@ -405,8 +407,19 @@ export default class AtlasProfile {
         }
     }
 
-    async loadChannels(): Promise<Array<GroupChannel>> {
-        const channels = await GroupManager.list();
+    async loadChannels(opts: { sync?: boolean } = {}): Promise<Array<GroupChannel>> {
+        let channels: Array<GroupChannel>;
+        if (opts.sync) {
+            try {
+                channels = await GroupManager.list({ sync: true });
+            } catch (err) {
+                // Offline or the server is down: the cached channels still work.
+                console.warn('Channel sync failed, using cached channels', err);
+                channels = await GroupManager.list();
+            }
+        } else {
+            channels = await GroupManager.list();
+        }
 
         await this.postChannelStatus();
 
