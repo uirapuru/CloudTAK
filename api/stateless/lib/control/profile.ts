@@ -30,7 +30,8 @@ export const ProfileConfigDefaults = {
 
     'tak::phone': '',
 
-    'tak::callsign': 'CloudTAK User',
+    // taklab (decyzja usera 23 XI 2026): nowy profil przedstawia sie jako HQ.
+    'tak::callsign': 'HQ',
     'tak::remarks': 'CloudTAK User',
     'tak::group': TAKGroup.ORANGE,
     'tak::type': 'a-f-G-E-V-C',

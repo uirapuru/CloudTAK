@@ -15,7 +15,12 @@ const WebSocketClient = wsModule.WebSocket ?? wsModule.default;
 
 /** 0,5 s of 48 kHz 16-bit mono is the largest microphone frame the service accepts. */
 const MAX_PAYLOAD = 64 * 1024;
-/** Callsign of a profile that has not been set up yet (CloudTAK default). */
+/**
+ * Upstream CloudTAK placeholder callsign. Several fresh accounts would share
+ * it, so such a profile enters Mumble under its account name instead. The
+ * taklab default "HQ" is a real callsign and is kept; the voice service adds
+ * -2, -3... when two tabs use the same one.
+ */
 export const DEFAULT_CALLSIGN = 'CloudTAK User';
 
 /** Messages sent by the browser before the service socket opened. */

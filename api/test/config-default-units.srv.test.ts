@@ -179,7 +179,7 @@ test('GET api/profile', async () => {
             active: false,
             username: 'defaults@example.com',
             tak_phone: '',
-            tak_callsign: 'CloudTAK User',
+            tak_callsign: 'HQ',
             tak_remarks: 'CloudTAK User',
             tak_group: 'Orange',
             tak_role: 'Team Member',

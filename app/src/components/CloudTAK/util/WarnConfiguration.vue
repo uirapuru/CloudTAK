@@ -340,12 +340,15 @@ onMounted(async () => {
     const group = (await ProfileConfig.get('tak_group'))?.value;
     const role = (await ProfileConfig.get('tak_role'))?.value;
     const phone = (await ProfileConfig.get('tak_phone'))?.value;
+    const callsign = (await ProfileConfig.get('tak_callsign'))?.value;
 
     form.value.tak_group = group && groups.value[group]
         ? `${group} - ${groups.value[group]}`
         : (group || groupOptions.value[0] || '');
     form.value.tak_role = role || roles[0];
     form.value.tak_phone = phone || '';
+    // taklab: pole zaczyna od znaku z profilu (domyslnie HQ), nie od pustego.
+    form.value.tak_callsign = callsign && callsign !== 'CloudTAK User' ? String(callsign) : 'HQ';
 
     loading.value = false;
 });

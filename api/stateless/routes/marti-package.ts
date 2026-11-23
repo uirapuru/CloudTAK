@@ -462,7 +462,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 const cot = new FileShare({
                     filename: id,
                     name: id,
-                    senderCallsign: configs['tak::callsign'] as string || 'CloudTAK User',
+                    senderCallsign: configs['tak::callsign'] as string || 'HQ',
                     senderUid: profileUid(profile.username),
                     // iTAK currently doesn't support DNS - Ref: https://issues.tak.gov/projects/ITAK/issues/ITAK-57
                     senderUrl: `https://${(await dns.lookup(url.hostname)).address}:${url.port}/Marti/sync/content?hash=${content.Hash}`,

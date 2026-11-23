@@ -342,7 +342,7 @@ test('DELETE: api/scim/v2/Users/:id', async () => {
     }, true);
 
     assert.equal(admin.body.disabled, true);
-    assert.equal(admin.body.tak_callsign, 'CloudTAK User', 'SCIM never sets the callsign');
+    assert.equal(admin.body.tak_callsign, 'HQ', 'SCIM never sets the callsign');
 });
 
 const groupId = Buffer.from('Firefighters', 'utf8').toString('base64url');
