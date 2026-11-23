@@ -1,3 +1,5 @@
+import type { Feature } from 'geojson';
+
 /** [west, south, east, north] in EPSG:4326 */
 export type BBox = [number, number, number, number];
 
@@ -35,7 +37,7 @@ export type AreaPackageJob = {
     progress: number;
     bounds: { type: 'Polygon'; coordinates: number[][][] };
     layers: AreaPackageLayer[];
-    features: Array<GeoJSON.Feature>;
+    features: Array<Feature>;
     assets: string[];
     size: number;
 };
