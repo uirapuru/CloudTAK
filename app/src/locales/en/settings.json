@@ -1,0 +1,23 @@
+{
+    "display": {
+        "title": "Display Preferences",
+        "search": "Search settings...",
+        "noMatch": "No settings match \"{search}\"",
+        "items": {
+            "display_stale": "Remove Stale Elements",
+            "display_text": "Text Size",
+            "display_distance": "Distance Unit",
+            "display_elevation": "Elevation Unit",
+            "display_area": "Area Unit",
+            "display_speed": "Speed Unit",
+            "display_radiation_dose": "Radiation Dose Unit",
+            "display_projection": "Display Projection",
+            "display_style": "Light / Dark Style",
+            "display_coordinate": "Coordinate Format",
+            "display_zoom": "Display Zoom Controls",
+            "display_icon_rotation": "Rotate Icons with Course",
+            "display_wakelock": "Keep Screen Awake"
+        },
+        "values": {}
+    }
+}

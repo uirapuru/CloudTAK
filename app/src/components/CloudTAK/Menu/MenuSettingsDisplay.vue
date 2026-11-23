@@ -1,6 +1,6 @@
 <template>
     <MenuTemplate
-        name='Display Preferences'
+        :name='t("settings.display.title")'
         :loading='loading || !profile'
     >
         <template v-if='profile'>
@@ -8,10 +8,38 @@
                 <TablerInput
                     v-model='search'
                     icon='search'
-                    placeholder='Search settings...'
+                    :placeholder='t("settings.display.search")'
                 />
 
                 <div class='d-flex flex-column gap-2'>
+                    <StandardItem
+                        v-if='languageMatches'
+                        :hover='false'
+                    >
+                        <div class='d-flex flex-column gap-2 px-3 py-3'>
+                            <div class='d-flex align-items-center gap-3'>
+                                <div
+                                    class='d-flex align-items-center justify-content-center rounded-circle bg-black bg-opacity-25 flex-shrink-0'
+                                    style='width: 40px; height: 40px;'
+                                >
+                                    <IconLanguage
+                                        :size='24'
+                                        stroke='1.5'
+                                    />
+                                </div>
+                                <div class='fw-bold text-white'>
+                                    {{ t('common.language') }}
+                                </div>
+                            </div>
+                            <div class='col-12'>
+                                <TranslatedEnum
+                                    v-model='language'
+                                    :options='languageOptions'
+                                />
+                            </div>
+                        </div>
+                    </StandardItem>
+
                     <StandardItem
                         v-for='item of filteredSettings'
                         :key='item.key'
@@ -28,7 +56,7 @@
                                     stroke='1.5'
                                     class='text-success'
                                 />
-                                <span class='text-success small fw-medium'>Saved</span>
+                                <span class='text-success small fw-medium'>{{ t('common.saved') }}</span>
                             </div>
                         </Transition>
                         <div class='d-flex flex-column gap-2 px-3 py-3'>
@@ -44,14 +72,14 @@
                                     />
                                 </div>
                                 <div class='fw-bold text-white'>
-                                    {{ item.label }}
+                                    {{ itemLabel(item) }}
                                 </div>
                             </div>
                             <div class='col-12'>
-                                <TablerEnum
+                                <TranslatedEnum
                                     v-if='item.type === "enum"'
                                     v-model='(profile as any)[item.key]'
-                                    :options='item.options'
+                                    :options='itemOptions(item)'
                                 />
                                 <TablerToggle
                                     v-else
@@ -62,10 +90,10 @@
                     </StandardItem>
 
                     <div
-                        v-if='filteredSettings.length === 0'
+                        v-if='filteredSettings.length === 0 && !languageMatches'
                         class='text-center text-secondary py-4'
                     >
-                        No settings match "{{ search }}"
+                        {{ t('settings.display.noMatch', { search }) }}
                     </div>
                 </div>
             </div>
@@ -91,21 +119,31 @@ import {
     IconRotate,
     IconCircleCheck,
     IconBulb,
+    IconLanguage,
 } from '@tabler/icons-vue';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
 import type { Profile, Profile_Update } from '../../../types.ts';
 import {
-    TablerEnum,
     TablerInput,
     TablerToggle,
 } from '@tak-ps/vue-tabler';
+import { useI18n } from 'vue-i18n';
+import TranslatedEnum from '../util/TranslatedEnum.vue';
+import { LOCALES, setLocale, currentLocale, type Locale } from '../../../i18n.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { useDeviceStore } from '../../../stores/device.ts';
 import ProfileConfig from '../../../base/profile.ts';
 import { COORD_MODES, type CoordMode } from '../../../utils/coordinateFormat.ts';
 const mapStore = useMapStore();
 const deviceStore = useDeviceStore();
+const { t, te } = useI18n();
+
+const languageOptions = LOCALES.map((l) => ({ value: l.value, label: l.label }));
+const language = ref<string>(currentLocale());
+watch(language, (value) => {
+    setLocale(value as Locale);
+});
 
 type DisplayStyleMode = 'System Default' | 'Light' | 'Dark';
 type DisplayProfile = Profile & {
@@ -117,7 +155,6 @@ type DisplayProfileUpdate = Profile_Update & {
 
 type SettingItem = {
     key: string;
-    label: string;
     icon: Component;
     type: 'enum' | 'toggle';
     options?: string[];
@@ -133,102 +170,104 @@ const styleOptions: DisplayStyleMode[] = ['System Default', 'Light', 'Dark'];
 const settings: SettingItem[] = [
     {
         key: 'display_stale',
-        label: 'Remove Stale Elements',
         icon: IconClock,
         type: 'enum',
         options: ['Immediate', '10 Minutes', '30 Minutes', '1 Hour', 'Never'],
     },
     {
         key: 'display_text',
-        label: 'Text Size',
         icon: IconTypography,
         type: 'enum',
         options: ['Small', 'Medium', 'Large'],
     },
     {
         key: 'display_distance',
-        label: 'Distance Unit',
         icon: IconRuler,
         type: 'enum',
         options: ['meter', 'kilometer', 'mile'],
     },
     {
         key: 'display_elevation',
-        label: 'Elevation Unit',
         icon: IconMountain,
         type: 'enum',
         options: ['meter', 'feet'],
     },
     {
         key: 'display_area',
-        label: 'Area Unit',
         icon: IconPolygon,
         type: 'enum',
         options: ['square meter', 'square feet', 'acre', 'hectare'],
     },
     {
         key: 'display_speed',
-        label: 'Speed Unit',
         icon: IconGauge,
         type: 'enum',
         options: ['m/s', 'km/h', 'mi/h'],
     },
     {
         key: 'display_radiation_dose',
-        label: 'Radiation Dose Unit',
         icon: IconAtom,
         type: 'enum',
         options: ['sieverts', 'rems'],
     },
     {
         key: 'display_projection',
-        label: 'Display Projection',
         icon: IconWorld,
         type: 'enum',
         options: ['globe', 'mercator'],
     },
     {
         key: 'display_style',
-        label: 'Light / Dark Style',
         icon: IconBrightness,
         type: 'enum',
         options: styleOptions,
     },
     {
         key: 'display_coordinate',
-        label: 'Coordinate Format',
         icon: IconCrosshair,
         type: 'enum',
         options: coordFormatOptions,
     },
     {
         key: 'display_zoom',
-        label: 'Display Zoom Controls',
         icon: IconZoomIn,
         type: 'enum',
         options: ['always', 'conditional', 'never'],
     },
     {
         key: 'display_icon_rotation',
-        label: 'Rotate Icons with Course',
         icon: IconRotate,
         type: 'toggle',
     },
     {
         key: 'display_wakelock',
-        label: 'Keep Screen Awake',
         icon: IconBulb,
         type: 'enum',
         options: ['Default', 'Charging', 'Always On'],
     },
 ];
 
-const filteredSettings = computed(() => {
+function itemLabel(item: SettingItem): string {
+    return t(`settings.display.items.${item.key}`);
+}
+
+// Stored values stay in English (they are what the API expects); only the text is translated.
+function itemOptions(item: SettingItem): { value: string; label: string }[] {
+    return (item.options || []).map((value) => {
+        const key = `settings.display.values.${item.key}.${value}`;
+        return { value, label: te(key) ? t(key) : value };
+    });
+}
+
+function matches(text: string): boolean {
     const query = search.value.trim().toLowerCase();
-    if (!query) return settings;
-    return settings.filter((item) =>
-        item.label.toLowerCase().includes(query)
-    );
+    return !query || text.toLowerCase().includes(query);
+}
+
+const languageMatches = computed(() => matches(t('common.language')) || matches('language'));
+
+const filteredSettings = computed(() => {
+    return settings.filter((item) => matches(itemLabel(item)));
 });
 
 async function getProfile() {

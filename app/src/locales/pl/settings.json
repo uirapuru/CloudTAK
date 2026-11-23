@@ -1,0 +1,79 @@
+{
+    "display": {
+        "title": "Ustawienia wyświetlania",
+        "search": "Szukaj ustawień...",
+        "noMatch": "Brak ustawień pasujących do „{search}”",
+        "items": {
+            "display_stale": "Usuwanie nieaktualnych obiektów",
+            "display_text": "Rozmiar tekstu",
+            "display_distance": "Jednostka odległości",
+            "display_elevation": "Jednostka wysokości",
+            "display_area": "Jednostka powierzchni",
+            "display_speed": "Jednostka prędkości",
+            "display_radiation_dose": "Jednostka dawki promieniowania",
+            "display_projection": "Odwzorowanie mapy",
+            "display_style": "Motyw jasny / ciemny",
+            "display_coordinate": "Format współrzędnych",
+            "display_zoom": "Przyciski powiększenia",
+            "display_icon_rotation": "Obracaj ikony zgodnie z kursem",
+            "display_wakelock": "Nie wygaszaj ekranu"
+        },
+        "values": {
+            "display_stale": {
+                "Immediate": "Od razu",
+                "10 Minutes": "Po 10 minutach",
+                "30 Minutes": "Po 30 minutach",
+                "1 Hour": "Po godzinie",
+                "Never": "Nigdy"
+            },
+            "display_text": {
+                "Small": "Mały",
+                "Medium": "Średni",
+                "Large": "Duży"
+            },
+            "display_distance": {
+                "meter": "metry",
+                "kilometer": "kilometry",
+                "mile": "mile"
+            },
+            "display_elevation": {
+                "meter": "metry",
+                "feet": "stopy"
+            },
+            "display_area": {
+                "square meter": "metry kwadratowe",
+                "square feet": "stopy kwadratowe",
+                "acre": "akry",
+                "hectare": "hektary"
+            },
+            "display_speed": {
+                "m/s": "m/s",
+                "km/h": "km/h",
+                "mi/h": "mi/h"
+            },
+            "display_radiation_dose": {
+                "sieverts": "siwerty",
+                "rems": "remy"
+            },
+            "display_projection": {
+                "globe": "globus",
+                "mercator": "Mercator"
+            },
+            "display_style": {
+                "System Default": "Jak w systemie",
+                "Light": "Jasny",
+                "Dark": "Ciemny"
+            },
+            "display_zoom": {
+                "always": "zawsze",
+                "conditional": "gdy potrzebne",
+                "never": "nigdy"
+            },
+            "display_wakelock": {
+                "Default": "Domyślnie",
+                "Charging": "Podczas ładowania",
+                "Always On": "Zawsze"
+            }
+        }
+    }
+}

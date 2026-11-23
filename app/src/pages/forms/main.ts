@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import i18n from '../../i18n.ts';
 import * as VueRouter from 'vue-router'
 import { createPinia } from 'pinia'
 import { initServiceWorker } from '../../utils/service-worker.ts';
@@ -22,6 +23,7 @@ const router = VueRouter.createRouter({
 });
 
 const app = createApp(App);
+app.use(i18n);
 const pinia = createPinia()
 app.config.errorHandler = vueErrorHandler;
 app.use(router);

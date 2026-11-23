@@ -2,6 +2,7 @@ import { createApp, watch } from 'vue'
 import { PluginAPI } from '../plugin.ts';
 import type { PluginStatic, PluginInstance } from '../plugin.ts'
 import router from './router.ts'
+import i18n, { currentLocale } from './i18n.ts'
 import { createPinia } from 'pinia'
 import { useMapStore } from './stores/map.ts';
 import { isNativePlatform, supportsServiceWorker } from './utils/capacitor.ts';
@@ -99,6 +100,8 @@ app.config.errorHandler = vueErrorHandler;
 
 app.use(router);
 app.use(pinia);
+app.use(i18n);
+document.documentElement.setAttribute('lang', currentLocale());
 
 const plugins: Record<string, {
     default: PluginStatic

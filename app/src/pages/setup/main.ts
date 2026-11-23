@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import i18n from '../../i18n.ts';
 import { Capacitor } from '@capacitor/core'
 import { CapacitorUpdater } from '@capgo/capacitor-updater'
 import { initGlobalErrorReporting, vueErrorHandler } from '../../lib/reporting/index.ts';
@@ -13,5 +14,6 @@ if (Capacitor.isNativePlatform()) {
 }
 
 const app = createApp(App)
+app.use(i18n);
 app.config.errorHandler = vueErrorHandler;
 app.mount('#app')

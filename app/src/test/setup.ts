@@ -41,3 +41,9 @@ globalThis.process = {
 if (typeof self === 'undefined') {
   (globalThis as any).self = globalThis
 }
+
+// Components use vue-i18n; existing specs assert English strings.
+import { config } from '@vue/test-utils'
+import i18n from '../i18n.ts'
+i18n.global.locale.value = 'en'
+config.global.plugins = [...(config.global.plugins || []), i18n]
