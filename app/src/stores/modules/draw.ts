@@ -109,6 +109,10 @@ export default class DrawTool {
 
     // Edytor trasy taklab; stan dla paska edycji i menu New Route
     private routeEditor: RouteEditor | null = null;
+
+    // One-shot receiver of the next finished rectangle (area selection for
+    // an offline area package); the rectangle is not saved as a map object
+    private capture: ((geometry: Polygon) => void) | null = null;
     private routeKind: 'build' | 'edit' | null = null;
     private routeCallsign = '';
     private _routeState: EditorState = {
@@ -385,6 +389,10 @@ export default class DrawTool {
         this.draw.on('finish', async (id, context) => {
             if (context.action === "draw") {
                 if (this.mode === DrawToolMode.STATIC || this.editing) {
+                    return;
+                } else if (this.capture && this.mode === DrawToolMode.RECTANGLE) {
+                    const feat = this.draw.getSnapshotFeature(id);
+                    if (feat) await this.captured(id, feat.geometry as Polygon);
                     return;
                 } else if (this.mode === DrawToolMode.FREEHAND) {
                     const feat = this.draw.getSnapshotFeature(id);
@@ -745,7 +753,12 @@ export default class DrawTool {
     }
 
 
-    async start(mode: DrawToolMode, opts: { icon?: string } = {}): Promise<void> {
+    async start(mode: DrawToolMode, opts: {
+        icon?: string,
+        capture?: (geometry: Polygon) => void,
+    } = {}): Promise<void> {
+        this.capture = opts.capture ?? null;
+
         if (mode !== DrawToolMode.SNAPPING) {
             await this.removeNetwork();
         }
@@ -825,7 +838,9 @@ export default class DrawTool {
                 && !f.properties.selectionPoint
             );
 
-            if (drawn) {
+            if (drawn && this.capture && this.mode === DrawToolMode.RECTANGLE) {
+                await this.captured(drawn.id as string, drawn.geometry as Polygon);
+            } else if (drawn) {
                 const now = new Date();
                 const feat: Feature = {
                     id: String(drawn.id),
@@ -876,7 +891,19 @@ export default class DrawTool {
         feat.properties["marker-color"] = '#FFFFFF';
     }
 
+    /** Hand a finished rectangle to the capture callback instead of saving it */
+    private async captured(id: GeoJSONFeatureId, geometry: Polygon): Promise<void> {
+        const capture = this.capture;
+        this.capture = null;
+
+        this.removeFeature(id);
+        await this.stop();
+
+        if (capture) capture(geometry);
+    }
+
     async stop(refresh = true): Promise<void> {
+        this.capture = null;
         const previous = this.mode;
         this.mode = DrawToolMode.STATIC;
 

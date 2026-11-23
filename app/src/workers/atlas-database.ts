@@ -21,6 +21,7 @@ import { entityLink, entityLabel } from '../utils/core-entity.ts';
 import type { MissionChangePropertyBody, MissionPendingEdits } from '../utils/events.ts';
 import type { GeoJSONSourceDiff, LngLatLike } from 'maplibre-gl';
 import { mapSnapshotFeature } from '../base/taklab-map-snapshot.ts';
+import { toAreaFeature, type AreaBounds, type AreaFeature } from '../base/taklab-area-features.ts';
 import { readRoutePlan } from '../base/route-plan.ts';
 import { dangerZoneGeometry, dangerZoneChanged } from '../base/danger-zone.ts';
 
@@ -767,6 +768,41 @@ export default class AtlasDatabase {
             for (const mfeat of await store.feature.list()) {
                 const feat = mapSnapshotFeature(mfeat);
                 if (feat && !feats.has(feat.id)) feats.set(feat.id, feat);
+            }
+        }
+
+        return Array.from(feats.values());
+    }
+
+    /**
+     * Map objects inside an area for an offline area package: every CoT in
+     * the store and the features of the given missions, without people
+     * (contacts, devices, the own marker)
+     *
+     * @param area - [west, south, east, north]
+     * @param missions - GUIDs of the missions visible on the map
+     */
+    async areaFeatures(area: AreaBounds, missions: string[] = []): Promise<Array<AreaFeature>> {
+        const feats: Map<string, AreaFeature> = new Map();
+
+        for (const cot of this.cots.values()) {
+            if (cot.is_self) continue;
+
+            const feat = toAreaFeature(cot.as_feature({ clone: true }), area);
+            if (feat) feats.set(feat.id, feat);
+        }
+
+        for (const guid of missions) {
+            const store = await Subscription.from(guid, {
+                subscribed: true
+            });
+
+            if (!store) continue;
+
+            for (const mfeat of await store.feature.list()) {
+                if (feats.has(String(mfeat.id))) continue;
+                const feat = toAreaFeature(JSON.parse(JSON.stringify(mfeat)) as Feature, area);
+                if (feat) feats.set(feat.id, feat);
             }
         }
 
