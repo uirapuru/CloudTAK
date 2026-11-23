@@ -3,6 +3,11 @@ import assert from 'node:assert';
 import Flight from './flight.js';
 import { liveControl } from '../stateless/lib/control/live.js';
 
+function urlOf(input: string | URL | Request): string {
+    if (typeof input === 'string') return input;
+    return input instanceof URL ? input.href : input.url;
+}
+
 const flight = new Flight();
 
 flight.init({ takserver: true });
@@ -16,7 +21,7 @@ const LAYER = { type: 'FeatureCollection', features: [], attribution: 'MPK WrocÅ
 
 test('mock live-feeds pod', () => {
     liveControl.fetch = (async (input: string | URL | Request) => {
-        const url = String(input);
+        const url = urlOf(input);
         calls.push(url);
         if (url.endsWith('/layers')) return new Response(JSON.stringify(INDEX), { status: 200 });
         if (url.includes('/layers/mpk-wroclaw?since=')) return new Response(JSON.stringify({ unchanged: true, updated: 'x' }), { status: 200 });

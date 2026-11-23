@@ -1,7 +1,25 @@
 import { mount } from '@vue/test-utils';
+import { defineComponent, h, ref } from 'vue';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import i18n from '../../../i18n.ts';
 import GenericChat from './GenericChat.vue';
+
+// The composer (v14) needs Pinia; the tests only need its input, slot and 'send'
+const MessageComposer = defineComponent({
+    emits: ['send'],
+    setup(_props, { emit, slots, expose }) {
+        const text = ref('');
+        expose({ reset: () => { text.value = ''; } });
+        return () => h('div', [
+            slots.default?.(),
+            h('input', {
+                value: text.value,
+                onInput: (ev: Event) => { text.value = (ev.target as HTMLInputElement).value; },
+                onKeyup: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.keyCode === 13) emit('send', text.value); },
+            }),
+        ]);
+    },
+});
 
 const NOTICE = 'Mapa zostanie dołączona do wiadomości';
 
@@ -15,6 +33,7 @@ function chat(props: Record<string, unknown> = {}) {
         },
         global: {
             directives: { tooltip: () => {} },
+            stubs: { MessageComposer },
         },
     });
 }
@@ -25,7 +44,7 @@ function attachButton(wrapper: ReturnType<typeof chat>) {
 
 async function send(wrapper: ReturnType<typeof chat>, text: string) {
     await wrapper.find('input').setValue(text);
-    await wrapper.find('input').trigger('keyup.enter');
+    await wrapper.find('input').trigger('keyup', { key: 'Enter' });
 }
 
 describe('GenericChat attach map', () => {

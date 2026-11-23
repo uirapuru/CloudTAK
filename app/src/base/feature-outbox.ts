@@ -133,8 +133,9 @@ export default class FeatureOutbox {
     }
 
     /** Record a change made while IndexedDB was suspended; the row is written on resume */
-    static deferQueue(id: string): void {
+    static deferQueue(id: string, opts: { submit?: boolean } = {}): void {
         FeatureOutbox.pending.set(id, OutboxState.Upsert);
+        FeatureOutbox.markSubmit(id, opts.submit === true);
     }
 
     /** Forget an unconfirmed create or edit - the feature is being removed on purpose */

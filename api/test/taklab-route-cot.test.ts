@@ -30,7 +30,7 @@ test('attach + read: plan przechodzi przez XML bez analizy', async () => {
     const f = feature();
     const cot = await CoTParser.from_geojson(f);
     assert.strictEqual(attachRoutePlan(cot, f), true);
-    const back = await CoTParser.from_xml(CoTParser.to_xml(cot));
+    const back = CoTParser.from_xml(CoTParser.to_xml(cot));
     const out = readRoutePlan(back, coords);
     assert.ok(out);
     assert.strictEqual(out.mode, 'foot');
@@ -41,7 +41,7 @@ test('read: inna geometria (edycja w ATAK) = null', async () => {
     const f = feature();
     const cot = await CoTParser.from_geojson(f);
     attachRoutePlan(cot, f);
-    const back = await CoTParser.from_xml(CoTParser.to_xml(cot));
+    const back = CoTParser.from_xml(CoTParser.to_xml(cot));
     assert.strictEqual(readRoutePlan(back, [[17.03, 51.11], [17.06, 51.1], [17.07, 51.09]]), null);
 });
 
@@ -85,7 +85,7 @@ test('read: zły JSON, zła wersja, brak elementu = null', async () => {
     ]) {
         const cot = await CoTParser.from_geojson(f);
         attachRoutePlan(cot, f);
-        const back = await CoTParser.from_xml(mutate(CoTParser.to_xml(cot)));
+        const back = CoTParser.from_xml(mutate(CoTParser.to_xml(cot)));
         assert.strictEqual(readRoutePlan(back, coords), null);
     }
 });
@@ -99,7 +99,7 @@ test('round-trip: znaki specjalne i polskie litery w krokach', async () => {
     const f = feature({ ...expected, analysis: { length_m: 1 } });
     const cot = await CoTParser.from_geojson(f);
     assert.strictEqual(attachRoutePlan(cot, f), true);
-    const back = await CoTParser.from_xml(CoTParser.to_xml(cot));
+    const back = CoTParser.from_xml(CoTParser.to_xml(cot));
     assert.deepStrictEqual(readRoutePlan(back, coords), expected);
 });
 
@@ -117,7 +117,7 @@ test('read: dwa elementy w detail = null bez wyjątku', async () => {
     attachRoutePlan(cot, f);
     const xml = CoTParser.to_xml(cot);
     const element = xml.match(/<__taklab_route[^>]*>[^<]*<\/__taklab_route>/)![0];
-    const back = await CoTParser.from_xml(xml.replace(element, element + element));
+    const back = CoTParser.from_xml(xml.replace(element, element + element));
     assert.strictEqual(readRoutePlan(back, coords), null);
 });
 

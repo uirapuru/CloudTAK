@@ -1,7 +1,22 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const std = vi.hoisted(() => vi.fn(async () => ({})));
+const { std, server } = vi.hoisted(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const std = vi.fn(async (..._args: unknown[]) => ({}));
+    // v14: Profile Features go through FeatureOutbox and server.PUT/DELETE;
+    // the calls are mirrored into std so the assertions read the same URLs
+    type Opts = { params?: { path?: Record<string, string>, query?: { submit?: boolean } } };
+    const url = (path: string, opts?: Opts) => {
+        const id = opts?.params?.path?.[':id'];
+        return (id ? path.replace('{:id}', id) : path) + (opts?.params?.query?.submit ? '?submit=true' : '');
+    };
+    const server = {
+        PUT: vi.fn(async (path: string, opts?: Opts) => { await std(url(path, opts), { method: 'PUT' }); return { data: {} }; }),
+        DELETE: vi.fn(async (path: string, opts?: Opts) => { await std(url(path, opts), { method: 'DELETE' }); return { data: {} }; }),
+    };
+    return { std, server };
+});
 const sub = vi.hoisted(() => ({
     feature: {
         update: vi.fn(async () => undefined),
@@ -12,7 +27,7 @@ const from = vi.hoisted(() => vi.fn(async () => sub));
 
 vi.mock('../std.ts', () => ({
     std,
-    server: {},
+    server,
     stdurl: (url: string) => new URL(url, 'http://localhost'),
     getRuntimeToken: async () => null,
     downloadUrl: vi.fn(),
@@ -21,6 +36,7 @@ vi.mock('../std.ts', () => ({
 vi.mock('../base/subscription.ts', () => ({ default: { from } }));
 
 import { db } from '../database.ts';
+import FeatureOutbox from '../base/feature-outbox.ts';
 import AtlasDatabase from '../workers/atlas-database.ts';
 import type Atlas from '../workers/atlas.ts';
 import type { Feature } from '../types.ts';
@@ -83,10 +99,12 @@ describe('Usuwanie obiektu u wszystkich', () => {
     it('własny zapisany obiekt: DELETE z submit, serwer wysyła t-x-d-d', async () => {
         const { atlas, sendCOT } = database();
         await atlas.add(polygon('own-1'), { authored: true });
+        await FeatureOutbox.push();
         std.mockClear();
 
         await atlas.remove('own-1', { authored: true });
 
+        await FeatureOutbox.push();
         expect(deletes()).toEqual(['/api/profile/feature/own-1?submit=true']);
         expect(sendCOT).not.toHaveBeenCalled();
     });
@@ -94,10 +112,12 @@ describe('Usuwanie obiektu u wszystkich', () => {
     it('własny niezapisany obiekt: t-x-d-d prosto na strumień', async () => {
         const { atlas, sendCOT } = database();
         await atlas.add(polygon('own-2', { creator: ME, archived: false }));
+        await FeatureOutbox.push();
         std.mockClear();
 
         await atlas.remove('own-2', { authored: true });
 
+        await FeatureOutbox.push();
         expect(deletes()).toEqual([]);
         expect(sendCOT).toHaveBeenCalledTimes(1);
         const sent = sendCOT.mock.calls[0][0] as Feature;
@@ -113,12 +133,14 @@ describe('Usuwanie obiektu u wszystkich', () => {
         await atlas.add(polygon('other-1', { creator: 'ANDROID-someone-else' }));
         await atlas.add(polygon('other-2', { creator: 'ANDROID-someone-else', archived: false }));
         await atlas.add(polygon('other-3'));
+        await FeatureOutbox.push();
         std.mockClear();
 
         await atlas.remove('other-1', { authored: true });
         await atlas.remove('other-2', { authored: true });
         await atlas.remove('other-3', { authored: true });
 
+        await FeatureOutbox.push();
         expect(deletes()).toEqual(['/api/profile/feature/other-1', '/api/profile/feature/other-3']);
         expect(sendCOT).not.toHaveBeenCalled();
     });
@@ -128,12 +150,14 @@ describe('Usuwanie obiektu u wszystkich', () => {
         await atlas.add(polygon('own-3'), { authored: true });
         await atlas.add(polygon('own-4', { creator: ME, archived: false }));
         await atlas.add(polygon('own-5'), { authored: true });
+        await FeatureOutbox.push();
         std.mockClear();
 
         await atlas.remove('own-3');
         await atlas.remove('own-4');
         await atlas.remove('own-5', { authored: true, skipNetwork: true });
 
+        await FeatureOutbox.push();
         expect(deletes()).toEqual(['/api/profile/feature/own-3']);
         expect(sendCOT).not.toHaveBeenCalled();
     });
@@ -147,11 +171,13 @@ describe('Usuwanie obiektu u wszystkich', () => {
             properties: feat.properties, geometry: feat.geometry,
             synced: true, deleted: false, attempts: 0,
         });
+        await FeatureOutbox.push();
         std.mockClear();
 
         await atlas.remove('mission-1', { authored: true, mission: true });
 
         expect(sub.feature.delete).toHaveBeenCalledTimes(1);
+        await FeatureOutbox.push();
         expect(deletes()).toEqual([]);
         expect(sendCOT).not.toHaveBeenCalled();
     });

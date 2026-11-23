@@ -100,10 +100,11 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             token: Type.Optional(Type.String()),
             download: Type.Optional(Type.Boolean()),
         }),
+        security: Auth.security({ token: true }),
     }, async (req, res) => {
         try {
             // Token in the query: <audio src> and plain links cannot send headers.
-            const user = await Auth.as_user(config, req, { token: true });
+            const user = await Auth.as_user(config, req);
             await voiceControl.audio(user.email, req.params.id, res, Boolean(req.query.download));
         } catch (err) {
             Err.respond(err, res);
@@ -119,9 +120,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             ids: Type.Optional(Type.String({ pattern: '^[0-9]+(,[0-9]+)*$', maxLength: 8000 })),
             token: Type.Optional(Type.String()),
         }),
+        security: Auth.security({ token: true }),
     }, async (req, res) => {
         try {
-            const user = await Auth.as_user(config, req, { token: true });
+            const user = await Auth.as_user(config, req);
             await voiceControl.export(user.email, req.query, res);
         } catch (err) {
             Err.respond(err, res);

@@ -65,7 +65,7 @@ test('round trip: geojson -> CoT -> XML -> CoT -> geojson zachowuje plan (7+ mie
     const f = feature('b-m-r', c);
     const cot = await CoTParser.from_geojson(f);
     attachRoutePlan(cot, f);
-    const back = await CoTParser.from_xml(CoTParser.to_xml(cot));
+    const back = CoTParser.from_xml(CoTParser.to_xml(cot));
     const geo = await CoTParser.to_geojson(back) as unknown as { geometry: { type: string; coordinates: number[][] }; properties: Record<string, unknown> };
     applyRoutePlan(back, geo);
     const meta = geo.properties.metadata as Record<string, unknown> | undefined;
@@ -77,7 +77,7 @@ test('round trip: geojson -> CoT -> XML -> CoT -> geojson zachowuje plan (7+ mie
 const BOT_XML = '<event version="2.0" uid="r-1" type="b-m-r" how="h-e" time="2026-10-16T09:00:00.000Z" start="2026-10-16T09:00:00.000Z" stale="2026-10-30T09:00:00.000Z"><point lat="51.1100004" lon="17.0300001" hae="9999999.0" ce="9999999.0" le="9999999.0" /><detail><link uid="r-1.0" type="b-m-p-w" point="51.1100004321,17.0300001234" callsign="START" relation="c" /><link uid="r-1.1" type="b-m-p-c" point="51.1000001111,17.0500009876" relation="c" /><link uid="r-1.2" type="b-m-p-w" point="51.0900007777,17.0700005555" callsign="CEL" relation="c" /><link_attr color="-65536" method="Walking" direction="Infil" routetype="Primary" order="Ascending Check Points" planningmethod="Infil" prefix="CP" stroke="3" style="0" /><contact callsign="Do &#378;r&#243;d&#322;a" /><creator uid="ANDROID-1" callsign="WOLF" type="a-f-G-U-C" time="2026-10-16T09:00:00.000Z" /><remarks>Trasa przez &#322;&#261;k&#281; #ai-buddy na pro&#347;b&#281; @WOLF, 2026-10-16 09:00Z</remarks><archive /><__taklab_route v="1" fp="057fab9978d12e49dbd8397c01580429e5fa1e5a64b636e8a422f16b67e22750">{"version":1,"mode":"foot","mode_name":"Pieszo","waypoints":[[17.0300001234,51.1100004321],[17.0700005555,51.0900007777]],"legs":[{"start":0,"end":2,"distance_m":3000,"duration_s":2000}]}</__taklab_route><__taklab_actor uid="ai_buddy" on_behalf="ANDROID-1" log="7" fp="057fab9978d12e49dbd8397c01580429e5fa1e5a64b636e8a422f16b67e22750" /><marti><dest uid="ANDROID-1" /></marti></detail></event>';
 
 test('zdarzenie bota: plan i taklab_actor przechodzą przez to_geojson, polski tekst wraca', async () => {
-    const back = await CoTParser.from_xml(BOT_XML);
+    const back = CoTParser.from_xml(BOT_XML);
     const geo = await CoTParser.to_geojson(back) as unknown as { geometry: { type: string; coordinates: number[][] }; properties: Record<string, unknown> };
     applyRouteMeta(back, geo);
     const meta = geo.properties.metadata as Record<string, unknown>;
@@ -88,7 +88,7 @@ test('zdarzenie bota: plan i taklab_actor przechodzą przez to_geojson, polski t
 
 test('zdarzenie bota poprawione w ATAK (inna linia, stary actor) traci taklab_actor i plan', async () => {
     const moved = BOT_XML.replace('51.1000001111,17.0500009876', '51.1000001111,17.0600009876');
-    const back = await CoTParser.from_xml(moved);
+    const back = CoTParser.from_xml(moved);
     const geo = await CoTParser.to_geojson(back) as unknown as { geometry: { type: string; coordinates: number[][] }; properties: Record<string, unknown> };
     applyRouteMeta(back, geo);
     const meta = (geo.properties.metadata ?? {}) as Record<string, unknown>;

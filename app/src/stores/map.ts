@@ -1179,8 +1179,6 @@ export const useMapStore = defineStore('cloudtak', {
                 }
             });
 
-                } else if (msg.type === WorkerMessageType.Danger_Zone_Changed) {
-                    onDangerZoneChanged(this, msg.body);
             const { value: token } = await Preferences.get({ key: 'token' });
 
             this.loadingStage = t('messages.loading.initializingWorker');
@@ -1269,6 +1267,8 @@ export const useMapStore = defineStore('cloudtak', {
                     this.hasNoChannels = false;
                 } else if (msg.type === WorkerMessageType.Channel_Change) {
                     this.channelChange = true;
+                } else if (msg.type === WorkerMessageType.Danger_Zone_Changed) {
+                    onDangerZoneChanged(this, msg.body);
                 } else if (msg.type === WorkerMessageType.Feature_Render) {
                     if (!cotRenderQueued) {
                         cotRenderQueued = true;

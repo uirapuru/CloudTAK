@@ -123,7 +123,7 @@ export class ConnectionWebSocket {
                         // never from the payload, and nothing is stored in the database
                         const cot = buildTaklabMapCoT(client.config.uid(), msg.data);
 
-                        client.tak.write([cot], { stripFlow: true });
+                        await client.tak.write([cot], { stripFlow: true });
                     } else {
                         const feat = msg.data as Static<typeof Feature.Feature>;
 

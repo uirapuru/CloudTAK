@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { VoiceControl } from '../stateless/lib/control/voice.js';
 
+function urlOf(input: string | URL | Request): string {
+    if (typeof input === 'string') return input;
+    return input instanceof URL ? input.href : input.url;
+}
+
 test('VoiceControl.query keeps only known filters and encodes them', () => {
     assert.equal(VoiceControl.query({}), '');
     assert.equal(
@@ -34,7 +39,7 @@ test('VoiceControl sends the shared token and the caller, never the browser toke
     const control = new VoiceControl();
     const seen: Array<{ url: string; headers: Record<string, string> }> = [];
     control.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-        seen.push({ url: String(input), headers: init?.headers as Record<string, string> });
+        seen.push({ url: urlOf(input), headers: init?.headers as Record<string, string> });
         return new Response(JSON.stringify({ items: [] }), { status: 200 });
     }) as typeof fetch;
 
@@ -62,7 +67,7 @@ test('history only for VOICE_HISTORY_USERS, status says so, nothing reaches the 
     const control = new VoiceControl();
     const urls: string[] = [];
     control.fetch = (async (input: string | URL | Request) => {
-        urls.push(String(input));
+        urls.push(urlOf(input));
         return new Response(JSON.stringify({ items: [], channels: [] }), { status: 200 });
     }) as typeof fetch;
 
@@ -85,7 +90,7 @@ test('deleteRecordings: history accounts only, DELETE with ids, nothing sent oth
     const control = new VoiceControl();
     const calls: Array<{ url: string; method?: string }> = [];
     control.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-        calls.push({ url: String(input), method: init?.method });
+        calls.push({ url: urlOf(input), method: init?.method });
         return new Response(JSON.stringify({ deleted: 2 }), { status: 200 });
     }) as typeof fetch;
 

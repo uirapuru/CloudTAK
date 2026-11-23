@@ -3,6 +3,11 @@ import assert from 'node:assert';
 import Flight from './flight.js';
 import { ionControl } from '../stateless/lib/control/ion.js';
 
+function urlOf(input: string | URL | Request): string {
+    if (typeof input === 'string') return input;
+    return input instanceof URL ? input.href : input.url;
+}
+
 const flight = new Flight();
 
 flight.init({ takserver: true });
@@ -15,7 +20,7 @@ const ionCalls: Array<{ url: string; auth: string | null }> = [];
 test('mock ion', () => {
     ionControl.cache.clear();
     ionControl.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
-        ionCalls.push({ url: String(input), auth: new Headers(init?.headers).get('Authorization') });
+        ionCalls.push({ url: urlOf(input), auth: new Headers(init?.headers).get('Authorization') });
         return new Response(JSON.stringify({
             type: '3DTILES',
             options: { url: 'https://tile.googleapis.com/v1/3dtiles/root.json?key=abc' },

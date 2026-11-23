@@ -1540,26 +1540,22 @@ export default class AtlasDatabase {
                 const created = exists;
                 if (opts.skipDatabase !== true) {
                     const save = opts.skipSave !== true && created.savable;
+                    // taklab: nowa trasa z planem od usera idzie z submit (serwer ją publikuje)
+                    const submit = opts.authored === true && isPublishedRoute(created);
 
                     // Backgrounded on native: keep it in memory, persist on resume
                     if (isDatabaseSuspended()) {
                         deferFeaturePersist(created.id);
-                        if (save) FeatureOutbox.deferQueue(created.id);
+                        if (save) FeatureOutbox.deferQueue(created.id, { submit });
                     } else if (save) {
-                        await created.save();
+                        // Błąd zapisu lokalnego nie może przerwać dodania
+                        try {
+                            await created.save({ submit });
+                        } catch (err) {
+                            console.warn(`Failed to save authored feature ${created.id}:`, err);
+                        }
                     } else {
                         FeatureWriter.queue(created);
-                    }
-                }
-
-                // taklab: nowa cecha od usera - jeden zapis, trasa z planem z submit
-                // Błąd zapisu (offline, 5xx) nie może przerwać dodania - wcześniej
-                // konstruktor zapisywał bez await, więc add() kończył się zawsze
-                if (opts.authored && opts.skipSave !== true) {
-                    try {
-                        await created.save({ submit: isPublishedRoute(created) });
-                    } catch (err) {
-                        console.warn(`Failed to save authored feature ${created.id}:`, err);
                     }
                 }
 

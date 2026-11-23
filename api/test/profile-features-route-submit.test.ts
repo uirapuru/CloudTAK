@@ -148,7 +148,7 @@ test('DELETE submit nieistniejącej cechy: 404 jak dotąd i bez wysyłki', async
 
 test('DELETE submit trasy: błąd wysyłki nie psuje odpowiedzi po usunięciu w bazie', async () => {
     await put(route('route-4'));
-    const submit = flight.config!.hub.submitCots;
+    const submit = flight.config!.hub.submitCots.bind(flight.config!.hub);
     flight.config!.hub.submitCots = async () => {
         throw new Error('hub down');
     };
@@ -163,8 +163,8 @@ test('DELETE submit trasy: błąd wysyłki nie psuje odpowiedzi po usunięciu w 
 });
 
 test('PUT submit trasy z archiwizacją: błąd wysyłki nie psuje odpowiedzi, cecha zapisana, zdarzenie wysłane', async () => {
-    const submit = flight.config!.hub.submitCots;
-    const notify = flight.config!.hub.wsNotify;
+    const submit = flight.config!.hub.submitCots.bind(flight.config!.hub);
+    const notify = flight.config!.hub.wsNotify.bind(flight.config!.hub);
     const events: unknown[] = [];
     flight.config!.hub.submitCots = async () => {
         throw new Error('Profile auth certificate not configured');
@@ -194,7 +194,7 @@ test('PUT submit trasy z archiwizacją: błąd wysyłki nie psuje odpowiedzi, ce
 });
 
 test('PUT submit bez archiwizacji: błąd wysyłki nadal zwraca błąd', async () => {
-    const submit = flight.config!.hub.submitCots;
+    const submit = flight.config!.hub.submitCots.bind(flight.config!.hub);
     flight.config!.hub.submitCots = async () => {
         throw new Error('hub down');
     };

@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert';
 import { OtsAccountsControl, USERNAME_PATTERN } from '../stateless/lib/control/ots-accounts.js';
 
+function urlOf(input: string | URL | Request): string {
+    if (typeof input === 'string') return input;
+    return input instanceof URL ? input.href : input.url;
+}
+
 const OTS = 'http://ots.test:8081';
 
 type Call = { method: string; url: string; headers: Record<string, string>; body: unknown };
@@ -25,13 +30,13 @@ function fakeOts(users: OtsUser[], handlers: Record<string, (call: Call, n: numb
     const counts: Record<string, number> = {};
     let session = 0;
     const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
-        const url = new URL(String(input));
+        const url = new URL(urlOf(input));
         const method = init?.method || 'GET';
         const call: Call = {
             method,
-            url: String(input),
+            url: urlOf(input),
             headers: (init?.headers || {}) as Record<string, string>,
-            body: init?.body ? JSON.parse(String(init.body)) : undefined,
+            body: init?.body ? JSON.parse(init.body as string) : undefined,
         };
         calls.push(call);
         const key = `${method} ${url.pathname}`;

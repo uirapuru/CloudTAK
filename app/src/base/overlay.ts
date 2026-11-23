@@ -232,7 +232,9 @@ export default class OverlayManager extends BaseInterface {
      */
     private static anchorAbove(stack: Overlay[], idx: number): Overlay | undefined {
         for (let i = idx; i < stack.length; i++) {
-            if (stack[i].anchorLayerId()) return stack[i];
+            // taklab: 3D Tiles are drawn by deck.gl - anchoring against them
+            // would send the moved layers to the top of the map
+            if (stack[i].type !== '3dtiles' && stack[i].anchorLayerId()) return stack[i];
         }
 
         return undefined;

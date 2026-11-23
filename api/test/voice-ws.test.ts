@@ -37,7 +37,7 @@ test('openRelay passes text and binary both ways with the shared token', async (
     const received: Array<{ binary: boolean; text: string }> = [];
     const done = new Promise<void>((resolve) => {
         browser.on('message', (data: WebSocket.RawData, binary: boolean) => {
-            received.push({ binary, text: binary ? String((data as Buffer).length) : data.toString() });
+            received.push({ binary, text: binary ? String((data as Buffer).length) : (data as Buffer).toString() });
             if (received.length === 3) resolve();
         });
     });

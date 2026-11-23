@@ -340,12 +340,12 @@
                     stroke='1'
                 /><span
                     class='mx-2'
-                    v-text='mapStore.draw.routeEditorKind === "build" ? "Wyznaczanie trasy" : "Edycja trasy"'
+                    v-text='mapStore.draw.routeEditorKind === "build" ? t("util.drawOverlay.routeBuild") : t("util.drawOverlay.routeEdit")'
                 />
 
                 <div class='ms-auto btn-list'>
                     <TablerIconButton
-                        title='Zapisz trasę'
+                        :title='t("util.drawOverlay.saveRoute")'
                         :disabled='!mapStore.draw.canFinish'
                         @click='mapStore.draw.finish()'
                     >
@@ -355,7 +355,7 @@
                         />
                     </TablerIconButton>
                     <TablerIconButton
-                        title='Anuluj'
+                        :title='t("common.cancel")'
                         @click='mapStore.draw.stop()'
                     >
                         <IconX
@@ -374,7 +374,7 @@
                     v-if='mapStore.draw.routeBusy'
                     class='text-secondary small route-busy'
                 >
-                    Przeliczam trasę…
+                    {{ t('util.drawOverlay.routeCalculating') }}
                 </div>
                 <div
                     v-if='mapStore.draw.routeError'
@@ -385,20 +385,20 @@
                     v-if='mapStore.draw.routeMenu'
                     class='d-flex align-items-center gap-2 mt-2 route-point-menu'
                 >
-                    <span v-text='"Punkt " + routePointLabel(mapStore.draw.routeMenu.index)' />
+                    <span v-text='t("util.drawOverlay.routePoint", { label: routePointLabel(mapStore.draw.routeMenu.index) })' />
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-danger route-remove-point'
                         @click='mapStore.draw.removeRouteWaypoint(mapStore.draw.routeMenu.index)'
                     >
-                        Usuń punkt
+                        {{ t('util.drawOverlay.removePoint') }}
                     </button>
                     <button
                         type='button'
                         class='btn btn-sm btn-outline-secondary'
                         @click='mapStore.draw.routeMenu = null'
                     >
-                        Zamknij
+                        {{ t('common.close') }}
                     </button>
                 </div>
                 <template v-if='mapStore.draw.routeEditorKind === "edit"'>
@@ -406,7 +406,7 @@
                         type='button'
                         class='btn btn-sm btn-outline-secondary mt-2 route-settings-toggle'
                         @click='toggleRouteSettings'
-                        v-text='routeSettingsOpen ? "Ukryj tryb i opcje" : "Tryb i opcje"'
+                        v-text='routeSettingsOpen ? t("util.drawOverlay.hideRouteSettings") : t("util.drawOverlay.routeSettings")'
                     />
                     <div
                         v-if='routeSettingsOpen && routeModes.length'
@@ -415,7 +415,7 @@
                         <TablerEnum
                             v-model='routeModeName'
                             class='route-travel-mode'
-                            label='Tryb trasy'
+                            :label='t("util.drawOverlay.routeMode")'
                             :options='routeModes.map((m) => m.name)'
                             :disabled='mapStore.draw.routeBusy'
                         />
@@ -440,8 +440,8 @@
                     v-if='!mapStore.draw.routeMenu'
                     class='text-secondary small mt-1'
                     v-text='mapStore.draw.routeEditorKind === "build"
-                        ? "Kliknij mapę, aby dodać kolejny punkt. Przeciągnij punkt albo odcinek, aby zmienić trasę."
-                        : "Kliknij mapę, aby dodać punkt do najbliższego odcinka. Przeciągnij punkt albo odcinek, aby zmienić trasę."'
+                        ? t("util.drawOverlay.routeBuildHint")
+                        : t("util.drawOverlay.routeEditHint")'
                 />
             </div>
         </div>
@@ -493,6 +493,7 @@ import { useAppStore } from '../../../stores/app.ts';
 import OverlayManager from '../../../base/overlay.ts';
 import TranslatedEnum from './TranslatedEnum.vue';
 import {
+    TablerEnum,
     TablerIconButton
 } from '@tak-ps/vue-tabler'
 import {

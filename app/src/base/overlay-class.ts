@@ -10,7 +10,7 @@ import { bbox } from '@turf/bbox'
 import type { LngLatBoundsLike, LayerSpecification, SourceSpecification, VectorTileSource, RasterTileSource, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl'
 import cotStyles from '../utils/styles.ts'
 import { ensureLiveIcons, liveStyles, planeIcon, LIVE_PLANE_IMAGE, LivePoller, type LiveCollection } from './live.ts';
-import { server } from '../std.js';
+import { std, server } from '../std.js';
 import { db, type DBOverlay } from '../database.ts';
 import {
     registerTileJSONProtocol,

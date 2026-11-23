@@ -240,7 +240,7 @@
 
                             <MenuDropdownItem
                                 v-if='hasRoutePlan'
-                                label='Warianty trasy'
+                                :label='t("map.cotView.routeVariants")'
                                 class='route-variants-button'
                                 @click='variantsOpen = true'
                             >
@@ -495,21 +495,21 @@
                         @submit='updateProperty("remarks", $event)'
                     />
 
-                    <PropertyAttachments
-                        v-if='!cot.properties.contact'
                     <div
                         v-if='cot.geometry.type === "Polygon" && (is_editable || isDangerZone(cot.properties))'
                         class='col-12 px-3 py-2 danger-zone'
                     >
                         <TablerToggle
-                            label='Strefa niebezpieczna'
-                            description='Trasy taklab omijają tę figurę. W ATAK to geofence z alarmem przy wejściu; alarm włącza się na telefonie.'
+                            :label='t("map.cotView.dangerZone")'
+                            :description='t("map.cotView.dangerZoneHint")'
                             :disabled='!is_editable'
                             :model-value='isDangerZone(cot.properties)'
                             @update:model-value='updateDangerZone($event)'
                         />
                     </div>
 
+                    <PropertyAttachments
+                        v-if='!cot.properties.contact'
                         :key='cot.properties.id'
                         :model-value='cot.properties.attachments || []'
                         :subscription='subscription'
@@ -1025,6 +1025,16 @@ async function load_cot() {
     }
 }
 
+// Strefa niebezpieczna = geofence z alarmem przy wejściu (base/danger-zone.ts)
+function updateDangerZone(on: boolean): void {
+    if (!cot.value) return;
+    const geofence = setDangerZone(cot.value.properties.geofence as Geofence | undefined, on);
+    if (geofence === cot.value.properties.geofence) return;
+    if (geofence) cot.value.properties.geofence = geofence;
+    else delete cot.value.properties.geofence;
+    cot.value.update({});
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function updateProperty(key: string, event: any) {
     if (!cot.value) return;
@@ -1044,16 +1054,6 @@ function updateCoordinates(center: number[]): void {
     if (!cot.value) return;
 
     const properties = JSON.parse(JSON.stringify(cot.value.properties)) as COT['properties'];
-// Strefa niebezpieczna = geofence z alarmem przy wejściu (base/danger-zone.ts)
-function updateDangerZone(on: boolean): void {
-    if (!cot.value) return;
-    const geofence = setDangerZone(cot.value.properties.geofence as Geofence | undefined, on);
-    if (geofence === cot.value.properties.geofence) return;
-    if (geofence) cot.value.properties.geofence = geofence;
-    else delete cot.value.properties.geofence;
-    cot.value.update({});
-}
-
     properties.center = center;
 
     if (cot.value.geometry.type === 'Point') {

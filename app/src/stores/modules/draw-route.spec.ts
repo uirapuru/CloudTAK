@@ -43,7 +43,7 @@ vi.mock('terra-draw-route-snap-mode', () => ({
 vi.mock('../../router.ts', () => ({ default: { push: (...args: unknown[]) => push(...args) } }));
 vi.mock('../../base/filter.ts', () => ({ EDIT_HIDE_PREFIX: 'hidden-', default: { create: vi.fn(), delete: vi.fn() } }));
 vi.mock('../../std.ts', () => ({ std: vi.fn(), stdurl: (u: string) => new URL(u, 'http://localhost'), server: { GET: vi.fn() } }));
-vi.mock('../../base/overlay.ts', () => ({ default: {} }));
+vi.mock('../../base/overlay.ts', () => ({ default: { visible: () => [] } }));
 vi.mock('../../base/route-editor.ts', () => ({
     default: class {
         start = vi.fn();

@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert';
 import IonControl, { parseAttribution, tokenExpiry, isIonAssetName } from '../stateless/lib/control/ion.js';
 
+function urlOf(input: string | URL | Request): string {
+    if (typeof input === 'string') return input;
+    return input instanceof URL ? input.href : input.url;
+}
+
 function jwt(payload: object): string {
     const enc = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
     return `${enc({ alg: 'HS256', typ: 'JWT' })}.${enc(payload)}.signature`;
@@ -11,7 +16,7 @@ function fakeFetch(responses: Array<{ status: number; body: unknown }>) {
     const calls: Array<{ url: string; auth: string | null }> = [];
     const fn = (async (input: string | URL | Request, init?: RequestInit) => {
         const headers = new Headers(init?.headers);
-        calls.push({ url: String(input), auth: headers.get('Authorization') });
+        calls.push({ url: urlOf(input), auth: headers.get('Authorization') });
         const next = responses.shift();
         if (!next) throw new Error('unexpected fetch');
         return new Response(JSON.stringify(next.body), { status: next.status });

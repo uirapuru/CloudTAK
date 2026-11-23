@@ -114,6 +114,9 @@ vi.mock('../../../base/overlay.ts', () => {
     return {
         default: {
             get loaded() { return state.loaded; },
+            // The registry is kept in stack order in these tests (bottom first)
+            stack: () => [...(state.loaded as Array<Stub>)],
+            visible: (mode?: string) => (state.loaded as Array<Stub>).filter((o) => o.visible && (!mode || o.mode === mode)),
             loadedFrom: (id: number) => (state.loaded as Array<{ id: number }>).find((o) => o.id === Number(id)),
             isPinned: (o: { mode: string; _internal?: boolean }) => rank(o) !== 0,
             liveList: () => ({
