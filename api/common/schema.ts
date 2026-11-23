@@ -8,6 +8,7 @@ import type { FilterContainer } from './filter.js';
 import type { PaletteFeatureStyle } from '../stateless/lib/palette.js';
 import { Polygon, Point } from 'geojson';
 import type { Feature } from '@tak-ps/node-cot';
+import type { AreaPackageLayer } from './area-package.js';
 import { geometry, GeometryType, jsonb } from '@openaddresses/batch-generic';
 import { ConnectionAuth } from './connection-config.js';
 import { Layer_Config } from './models/Layer.js';
@@ -351,6 +352,27 @@ export const ProfileFile = pgTable('profile_files', {
         username_created_idx: index('profile_files_username_created_idx').on(table.username, table.created),
         parent_idx: index('profile_files_parent_idx').on(table.parent),
         iconset_idx: index('profile_files_iconset_idx').on(table.iconset),
+    };
+});
+
+export const AreaPackage = pgTable('area_packages', {
+    id: uuid().primaryKey().default(sql`gen_random_uuid()`),
+    created: timestamp({ withTimezone: true, mode: 'string' }).notNull().default(sql`Now()`),
+    updated: timestamp({ withTimezone: true, mode: 'string' }).notNull().default(sql`Now()`),
+    username: text().notNull().references(() => Profile.username),
+    name: text().notNull(),
+    token: text().notNull().unique(),
+    status: text().$type<'Pending' | 'Running' | 'Success' | 'Fail'>().notNull().default('Pending'),
+    error: text(),
+    progress: integer().notNull().default(0),
+    bounds: geometry({ type: GeometryType.Polygon, srid: 4326 }).$type<Polygon>().notNull(),
+    layers: jsonb().$type<AreaPackageLayer[]>().notNull().default([]),
+    features: jsonb().$type<Array<Static<typeof Feature.InputFeature>>>().notNull().default([]),
+    assets: uuid().array().notNull().default(sql`'{}'::uuid[]`),
+    size: bigint({ mode: 'number' }).notNull().default(0),
+}, (table) => {
+    return {
+        username_created_idx: index('area_packages_username_created_idx').on(table.username, table.created),
     };
 });
 

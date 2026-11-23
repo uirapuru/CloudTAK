@@ -20,6 +20,7 @@ import * as pgtypes from './schema.js';
 
 export default class Models {
     Basemap: Basemap;
+    AreaPackage: Modeler<typeof pgtypes.AreaPackage>;
     Import: Import;
     ImportResult: Modeler<typeof pgtypes.ImportResult>;
     Data: Data;
@@ -127,6 +128,7 @@ export default class Models {
         this.ProfileSession = new Modeler(pg, pgtypes.ProfileSession);
         this.ProfilePasskey = new ProfilePasskey(pg);
         this.Basemap = new Basemap(pg);
+        this.AreaPackage = new Modeler(pg, pgtypes.AreaPackage);
         this.Import = new Import(pg);
         this.ImportResult = new Modeler(pg, pgtypes.ImportResult);
         this.VideoLease = new Modeler(pg, pgtypes.VideoLease);
