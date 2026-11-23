@@ -1384,6 +1384,21 @@
         "query": false,
         "res": true
     },
+    "GET /ots/accounts/status": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /ots/accounts": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /ots/accounts/:username/qr": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
     "GET /profile/asset": {
         "body": false,
         "query": true,
@@ -1864,6 +1879,26 @@
         "query": false,
         "res": true
     },
+    "GET /voice/status": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /voice/recordings": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /voice/recordings/:id/audio": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /voice/export": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
     "POST /retention": {
         "body": true,
         "query": false,
@@ -1897,71 +1932,6 @@
     "GET /manifest.webmanifest/logos/:size": {
         "body": false,
         "query": false,
-        "res": false
-    },
-    "GET /iconset": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "POST /iconset": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "PATCH /iconset/:iconset": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "GET /iconset/:iconset": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "POST /iconset/:iconset/regen": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "DELETE /iconset/:iconset": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "POST /iconset/:iconset/icon": {
-        "body": true,
-        "query": true,
-        "res": true
-    },
-    "GET /icon": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /iconset/:iconset/icon/:icon": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "PATCH /iconset/:iconset/icon/:icon": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "DELETE /iconset/:iconset/icon/:icon": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /iconset/:iconset/sprite{:size}.json": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /iconset/:iconset/sprite{:size}.png": {
-        "body": false,
-        "query": true,
         "res": false
     },
     "GET /search": {
@@ -2028,5 +1998,70 @@
         "body": false,
         "query": true,
         "res": true
+    },
+    "GET /iconset": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "POST /iconset": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "PATCH /iconset/:iconset": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /iconset/:iconset": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "POST /iconset/:iconset/regen": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "DELETE /iconset/:iconset": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /iconset/:iconset/icon": {
+        "body": true,
+        "query": true,
+        "res": true
+    },
+    "GET /icon": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /iconset/:iconset/icon/:icon": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "PATCH /iconset/:iconset/icon/:icon": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "DELETE /iconset/:iconset/icon/:icon": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /iconset/:iconset/sprite{:size}.json": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /iconset/:iconset/sprite{:size}.png": {
+        "body": false,
+        "query": true,
+        "res": false
     }
 }
