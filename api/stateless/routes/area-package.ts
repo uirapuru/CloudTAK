@@ -3,6 +3,7 @@ import { Type, Static } from '@sinclair/typebox';
 import Schema from '@openaddresses/batch-schema';
 import Err from '@openaddresses/batch-error';
 import bboxPolygon from '@turf/bbox-polygon';
+import qr from 'qr-image';
 import { sql } from 'drizzle-orm';
 import { GenericListOrder } from '@openaddresses/batch-generic';
 import Auth, { AuthResourceAccess } from '../../common/auth.js';
@@ -455,6 +456,34 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         try {
             const user = await Auth.as_user(config, req);
             res.json(serialize(await ownedPackage(config, req.params.id, user.email)));
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.get('/profile/area-package/:id/qr', {
+        name: 'Area Package QR',
+        group: 'AreaPackage',
+        description: 'Public download link of a finished area package and a QR code that imports it into ATAK',
+        params: Type.Object({
+            id: Type.String({ format: 'uuid' }),
+        }),
+        res: Type.Object({
+            url: Type.String(),
+            uri: Type.String(),
+            svg: Type.String(),
+        }),
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+            const row = await ownedPackage(config, req.params.id, user.email);
+
+            if (row.status !== 'Success') throw new Err(409, null, 'Paczka nie jest jeszcze gotowa');
+
+            const url = `${config.API_URL.replace(/\/$/, '')}/api/public/area-package/${row.token}.zip`;
+            const uri = `tak://com.atakmap.app/import?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(`${safeFileName(row.name)}.zip`)}`;
+
+            res.json({ url, uri, svg: String(qr.imageSync(uri, { type: 'svg' })) });
         } catch (err) {
             Err.respond(err, res);
         }

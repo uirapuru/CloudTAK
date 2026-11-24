@@ -224,6 +224,40 @@ test('GET: api/profile/area-package - other user does not', async () => {
     assert.equal(res.body.total, 0);
 });
 
+test('GET: api/profile/area-package/:id/qr - not ready yet is 409', async () => {
+    const res = await flight.fetch(`/api/profile/area-package/${pkgId}/qr`, {
+        method: 'GET',
+        auth: { bearer: flight.token.user },
+    }, false);
+
+    assert.equal(res.status, 409);
+});
+
+test('GET: api/profile/area-package/:id/qr - ATAK import link for a finished package', async () => {
+    const row = await flight.config!.models.AreaPackage.commit(pkgId, { status: 'Success' });
+
+    const res = await flight.fetch(`/api/profile/area-package/${pkgId}/qr`, {
+        method: 'GET',
+        auth: { bearer: flight.token.user },
+    }, false);
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+
+    const url = `${flight.config!.API_URL}/api/public/area-package/${row.token}.zip`;
+    assert.equal(res.body.url, url);
+    assert.equal(res.body.uri, `tak://com.atakmap.app/import?url=${encodeURIComponent(url)}&filename=${encodeURIComponent('Wyjście 23 XI.zip')}`);
+    assert.match(res.body.svg, /^<svg/);
+});
+
+test('GET: api/profile/area-package/:id/qr - other user gets 404', async () => {
+    const res = await flight.fetch(`/api/profile/area-package/${pkgId}/qr`, {
+        method: 'GET',
+        auth: { bearer: flight.token.other },
+    }, false);
+
+    assert.equal(res.status, 404);
+});
+
 test('GET: api/profile/area-package/:id - other user gets 404', async () => {
     const res = await flight.fetch(`/api/profile/area-package/${pkgId}`, {
         method: 'GET',

@@ -162,6 +162,11 @@
                 "tooltip": "Pliki",
                 "description": "Przeglądaj przesłane pliki i pliki offline"
             },
+            "area_packages": {
+                "label": "Paczki obszarów",
+                "tooltip": "Paczki obszarów",
+                "description": "Mapy i obiekty z obszaru do pracy offline i dla ATAK"
+            },
             "iconsets": {
                 "label": "Zestawy ikon",
                 "tooltip": "Zestawy ikon",

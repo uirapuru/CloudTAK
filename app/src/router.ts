@@ -91,6 +91,10 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-files',
                     component: () => import('./components/CloudTAK/Menu/MenuFiles.vue')
                 },{
+                    path: 'area-packages',
+                    name: 'home-menu-area-packages',
+                    component: () => import('./components/CloudTAK/Menu/MenuAreaPackages.vue')
+                },{
                     path: 'packages',
                     name: 'home-menu-packages',
                     component: () => import('./components/CloudTAK/Menu/MenuPackages.vue')

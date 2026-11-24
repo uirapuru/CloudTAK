@@ -162,6 +162,11 @@
                 "tooltip": "Files",
                 "description": "Browse your uploaded and offline files"
             },
+            "area_packages": {
+                "label": "Area packages",
+                "tooltip": "Area packages",
+                "description": "Maps and objects of an area for offline use and ATAK"
+            },
             "iconsets": {
                 "label": "Iconsets",
                 "tooltip": "Iconsets",

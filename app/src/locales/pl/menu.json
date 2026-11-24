@@ -250,5 +250,22 @@
         "moving": "Przenoszenie: {name}",
         "createIcon": "Utwórz ikonę",
         "downloadTakZip": "Pobierz ZIP dla TAK"
+    },
+    "areaPackages": {
+        "title": "Paczki obszarów",
+        "new": "Nowa paczka (zaznacz obszar)",
+        "selecting": "Zaznacz prostokąt na mapie: przeciągnij od jednego rogu do drugiego.",
+        "empty": "Nie masz jeszcze paczek. Wciśnij „+” i zaznacz obszar na mapie.",
+        "building": "Składanie paczki: {progress}%",
+        "failed": "Nie udało się złożyć paczki: {error}",
+        "qrAlt": "Kod QR paczki dla ATAK",
+        "qrHint": "Zeskanuj kod w ATAK. Link działa bez logowania do czasu usunięcia paczki.",
+        "copyLink": "Kopiuj link",
+        "copied": "Skopiowano",
+        "saveOffline": "Zapisz offline w tej przeglądarce",
+        "savingOffline": "Zapisywanie…",
+        "delete": "Usuń",
+        "deleteTitle": "Usunąć paczkę „{name}”?",
+        "deleteBody": "Link i kod QR przestaną działać, a mapy offline tej paczki znikną z tej przeglądarki."
     }
 }

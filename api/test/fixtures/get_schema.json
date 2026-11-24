@@ -29,6 +29,11 @@
         "query": false,
         "res": true
     },
+    "GET /profile/area-package/:id/qr": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "DELETE /profile/area-package/:id": {
         "body": false,
         "query": false,

@@ -4,6 +4,7 @@ import {
     IconBug,
     IconMap,
     IconFiles,
+    IconMapDown,
     IconUsers,
     IconVideo,
     IconPhoto,
@@ -230,6 +231,14 @@ export default class MenuManager {
                 tooltip: 'Files',
                 description: 'Browse your uploaded and offline files',
                 icon: IconFiles,
+            },
+            {
+                key: 'area-packages',
+                label: 'Area packages',
+                route: '/menu/area-packages',
+                tooltip: 'Area packages',
+                description: 'Maps and objects of an area for offline use and ATAK',
+                icon: IconMapDown,
             },
             {
                 key: 'iconsets',

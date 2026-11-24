@@ -250,5 +250,22 @@
         "moving": "Moving {name}",
         "createIcon": "Create Icon",
         "downloadTakZip": "Download TAK Zip"
+    },
+    "areaPackages": {
+        "title": "Area packages",
+        "new": "New package (select an area)",
+        "selecting": "Draw a rectangle on the map: drag from one corner to the other.",
+        "empty": "No packages yet. Press \"+\" and select an area on the map.",
+        "building": "Building the package: {progress}%",
+        "failed": "The package could not be built: {error}",
+        "qrAlt": "ATAK QR code of the package",
+        "qrHint": "Scan the code in ATAK. The link works without login until the package is deleted.",
+        "copyLink": "Copy link",
+        "copied": "Copied",
+        "saveOffline": "Save offline in this browser",
+        "savingOffline": "Saving…",
+        "delete": "Delete",
+        "deleteTitle": "Delete the package \"{name}\"?",
+        "deleteBody": "The link and QR code will stop working and the offline maps of this package will be removed from this browser."
     }
 }
