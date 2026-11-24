@@ -118,6 +118,28 @@ test('buildDataPackage - MBTiles and CoT in a TAK data package', async () => {
     assert.ok(manifest.includes('6c4c4b5e-3c7a-4d7c-9e55-0b8f0e6f6a11'), manifest);
 });
 
+test('buildDataPackage - MBTiles entries carry no uid so ATAK imports them as maps, not attachments', async () => {
+    // ATAK MissionPackageFileAttachmentHandler2 compares the content uid with
+    // itself, so any file with a uid parameter in a package that has CoT
+    // items ends up in atak/attachments instead of the imagery importer
+    const mbtiles = path.join(tmp, 'nouid.mbtiles');
+    writeMBTiles(mbtiles);
+
+    const zip = await buildDataPackage({
+        id: '0b1c2d3e-0000-4000-8000-000000000009',
+        name: 'nouid',
+        mbtiles: [{ path: mbtiles, fileName: 'OSM.mbtiles' }],
+        features: [feature('m', { type: 'Point', coordinates: [21, 52.2] })],
+        attachments: async () => null,
+    });
+
+    const manifest = (await DataPackage.parse(zip)).manifest();
+    const entry = /<Content[^>]*zipEntry="[^"]*OSM\.mbtiles"[^>]*>(.*?)<\/Content>/s.exec(manifest);
+    assert.ok(entry, manifest);
+    assert.ok(!entry[1].includes('name="uid"'), entry[1]);
+    assert.ok(entry[1].includes('name="name" value="OSM.mbtiles"'), entry[1]);
+});
+
 test('buildDataPackage - a missing attachment does not stop the package', async () => {
     let asked = '';
     const zip = await buildDataPackage({

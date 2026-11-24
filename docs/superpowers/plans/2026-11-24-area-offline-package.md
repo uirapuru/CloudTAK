@@ -329,3 +329,21 @@
 - [ ] **Step 5:** Wynik zapisz w sekcji „Wynik” tego planu i commit `"Paczka obszaru: wynik sprawdzenia od końca do końca"`.
 
 Wdrożenie (podbicie `images/cloudtak/COMMIT`, `.cloudtak-version`, `.api-version`, budowa obrazów, Jenkins `taklab-produkcja`, `taklab upgrade public`) idzie po zatwierdzeniu wyników przez użytkownika, zwykłą drogą ze skilla `taklab-deploy`. Nie należy do tego planu.
+
+## Wynik
+
+Sprawdzenie z 24 XI 2026. Stos lokalny: API i serwer kafli z worktree, obraz `events` zbudowany z worktree, MinIO, PostGIS. Konto i podkład OSM.de wstawione do bazy, token podpisany sekretem stosu. Interfejsu przeglądarki nie sprawdzałem, bo logowanie CloudTAK wymaga serwera TAK.
+
+- Paczka: obszar 21,00–21,02 / 52,22–52,235, zoom 12–15, 20 kafelków, marker i trasa. Status `Success` po kilku sekundach, zip 769 KB. W MinIO leżą zip i zasób `.pmtiles`.
+- W obrazie `events` przechodzą wszystkie testy paczek (23), łącznie z prawdziwym `pmtiles convert`.
+- Link publiczny zwraca 200 i `Content-Disposition` z polską nazwą. Zły token zwraca 404. Kod QR zawiera `tak://com.atakmap.app/import?url=…&filename=…`.
+- ATAK 5.8 na emulatorze: link z kodu QR otwiera okno „Import …”. Po „Yes” ATAK pobiera paczkę, rozpakowuje marker i trasę z ich UID, a MBTiles importuje jako warstwę rastrową GRG (`atak/grg/OSM DE.mbtiles`, „External GRG Data”).
+- Sprawdzenie wykryło dwa błędy, oba poprawione testami RED→GREEN:
+  1. AJV obcinał `id` obiektu, przez co w paczce pojawiały się losowe UID.
+  2. ATAK rozpakowywał MBTiles do załączników, bo plik miał w manifeście parametr `uid`.
+
+Co zostaje do sprawdzenia na środowisku testowym po wdrożeniu:
+- przycisk „Nowa paczka” i okno wyboru w przeglądarce;
+- zapis offline do OPFS i praca bez sieci;
+- wygląd warstwy GRG w ATAK na właściwym obszarze;
+- paczka z mapy wgranej przez użytkownika (`source: profile`).

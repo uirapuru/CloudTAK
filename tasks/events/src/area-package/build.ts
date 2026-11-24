@@ -5,6 +5,23 @@ import { CoTParser, DataPackage } from '@tak-ps/node-cot';
 
 export type PackageAttachment = { name: string; body: Buffer };
 
+type ManifestContent = {
+    Parameter: Array<{ _attributes: { name: string; value: string } }>;
+};
+
+/**
+ * Remove the uid parameter of the content added last. ATAK's
+ * MissionPackageFileAttachmentHandler2 compares a file's uid with itself, so
+ * in a package that also holds CoT every file with a uid is unpacked into
+ * atak/attachments; without it the file goes through the import sorters and
+ * MBTiles land in the map layers.
+ */
+function dropContentUid(pkg: DataPackage): void {
+    const contents = (pkg as unknown as { contents: ManifestContent[] }).contents;
+    const last = contents[contents.length - 1];
+    last.Parameter = last.Parameter.filter((p) => p._attributes.name !== 'uid');
+}
+
 /**
  * Compile an ATAK data package from MBTiles files and a GeoJSON snapshot of
  * map objects. Objects the CoT parser rejects and attachments that no longer
@@ -26,6 +43,7 @@ export async function buildDataPackage(opts: {
 
     for (const file of opts.mbtiles) {
         await pkg.addFile(fs.createReadStream(file.path), { name: file.fileName });
+        dropContentUid(pkg);
     }
 
     let skipped = 0;
