@@ -53,6 +53,31 @@
                             />
                         </div>
                     </div>
+                    <template v-if='p.status === "Success" && qrs[p.id]'>
+                        <TablerIconButton
+                            :title='t("menu.areaPackages.showQr")'
+                            data-test='qr-toggle'
+                            @click='toggleQr(p.id)'
+                        >
+                            <IconQrcode
+                                :size='24'
+                                stroke='1'
+                            />
+                        </TablerIconButton>
+                        <a
+                            class='btn btn-icon btn-ghost-secondary border-0'
+                            data-test='download'
+                            :href='qrs[p.id].url'
+                            :title='t("menu.areaPackages.download")'
+                            :aria-label='t("menu.areaPackages.download")'
+                            download
+                        >
+                            <IconDownload
+                                :size='24'
+                                stroke='1'
+                            />
+                        </a>
+                    </template>
                     <TablerIconButton
                         :title='t("menu.areaPackages.delete")'
                         data-test='delete'
@@ -88,19 +113,22 @@
                 />
 
                 <template v-else-if='p.status === "Success" && qrs[p.id]'>
-                    <img
-                        class='area-package__qr d-block mx-auto my-2'
-                        data-test='qr'
-                        :data-uri='qrs[p.id].uri'
-                        :alt='t("menu.areaPackages.qrAlt")'
-                        :src='`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrs[p.id].svg)}`'
-                    >
-                    <div
-                        class='text-secondary small text-center mb-2'
-                        v-text='t("menu.areaPackages.qrHint")'
-                    />
-                    <div class='d-flex flex-wrap gap-2 justify-content-center'>
+                    <template v-if='openQr.has(p.id)'>
+                        <img
+                            class='area-package__qr d-block mx-auto my-2'
+                            data-test='qr'
+                            :data-uri='qrs[p.id].uri'
+                            :alt='t("menu.areaPackages.qrAlt")'
+                            :src='`data:image/svg+xml;charset=utf-8,${encodeURIComponent(qrs[p.id].svg)}`'
+                        >
+                        <div
+                            class='text-secondary small text-center mb-2'
+                            v-text='t("menu.areaPackages.qrHint")'
+                        />
+                    </template>
+                    <div class='d-flex flex-wrap gap-2 justify-content-center mt-2'>
                         <a
+                            v-if='openQr.has(p.id)'
                             class='btn btn-sm btn-secondary'
                             data-test='link'
                             :href='qrs[p.id].url'
@@ -164,7 +192,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { bbox } from '@turf/bbox';
 import type { Polygon } from 'geojson';
-import { IconPlus, IconTrash } from '@tabler/icons-vue';
+import { IconDownload, IconPlus, IconQrcode, IconTrash } from '@tabler/icons-vue';
 import {
     TablerAlert,
     TablerIconButton,
@@ -209,6 +237,7 @@ const bounds = ref<AreaBounds | undefined>();
 const confirmDelete = ref<AreaPackage | undefined>();
 const copied = ref<string | undefined>();
 const savingOffline = reactive(new Set<string>());
+const openQr = reactive(new Set<string>());
 
 // Packages created in this session save themselves offline when they are ready
 const autoOffline = new Set<string>();
@@ -262,6 +291,11 @@ function selectArea(): void {
             bounds.value = [w, s, e, n];
         },
     });
+}
+
+function toggleQr(id: string): void {
+    if (openQr.has(id)) openQr.delete(id);
+    else openQr.add(id);
 }
 
 async function created(pkg: unknown): Promise<void> {

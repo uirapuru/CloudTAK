@@ -266,6 +266,8 @@
         "savingOffline": "Saving…",
         "delete": "Delete",
         "deleteTitle": "Delete the package \"{name}\"?",
-        "deleteBody": "The link and QR code will stop working and the offline maps of this package will be removed from this browser."
+        "deleteBody": "The link and QR code will stop working and the offline maps of this package will be removed from this browser.",
+        "showQr": "Show the ATAK QR code",
+        "download": "Download the package"
     }
 }

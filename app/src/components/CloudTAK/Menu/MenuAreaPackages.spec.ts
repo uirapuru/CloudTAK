@@ -107,16 +107,44 @@ describe('MenuAreaPackages', () => {
         vi.useRealTimers();
     });
 
-    it('a finished package shows the ATAK QR code and the download link', async () => {
+    it('the ATAK QR code stays hidden until its icon is clicked', async () => {
         respond(() => [pkg()]);
 
         const wrapper = mountMenu();
         await flushPromises();
 
         expect(std.mock.calls.some((c) => String(c[0]).endsWith('/api/profile/area-package/pkg-1/qr'))).toBe(true);
+        expect(wrapper.find('[data-test="qr"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="link"]').exists()).toBe(false);
+
+        await wrapper.find('[data-test="qr-toggle"]').trigger('click');
         expect(wrapper.find('[data-test="qr"]').attributes('data-uri')).toBe(QR.uri);
         expect(QR.uri.startsWith('tak://com.atakmap.app/import?url=https%3A%2F%2F')).toBe(true);
         expect(wrapper.find('[data-test="link"]').attributes('href')).toBe(QR.url);
+
+        await wrapper.find('[data-test="qr-toggle"]').trigger('click');
+        expect(wrapper.find('[data-test="qr"]').exists()).toBe(false);
+    });
+
+    it('the download icon is a link that saves the package zip to disk', async () => {
+        respond(() => [pkg()]);
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        const download = wrapper.find('[data-test="download"]');
+        expect(download.element.tagName).toBe('A');
+        expect(download.attributes('href')).toBe(QR.url);
+        expect(download.attributes('download')).toBeDefined();
+    });
+
+    it('the offline button is there without opening the QR code', async () => {
+        respond(() => [pkg()]);
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        expect(wrapper.find('[data-test="offline"]').exists()).toBe(true);
     });
 
     it('a failed package shows its error', async () => {
@@ -127,6 +155,8 @@ describe('MenuAreaPackages', () => {
 
         expect(wrapper.text()).toContain('OSM: brak dostępu albo brak danych');
         expect(wrapper.find('[data-test="qr"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="qr-toggle"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="download"]').exists()).toBe(false);
     });
 
     it('delete asks first, then removes the package and its offline tiles', async () => {
