@@ -213,9 +213,9 @@
                 "description": "Server event journal with PDF and ZIP export"
             },
             "recordings": {
-                "label": "Recordings",
-                "tooltip": "Recordings",
-                "description": "Video, voice messages and scans stored on the server"
+                "label": "Video recordings",
+                "tooltip": "Video recordings",
+                "description": "Video stored on the server"
             },
             "report": {
                 "label": "Mission report",

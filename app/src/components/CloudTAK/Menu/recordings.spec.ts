@@ -8,6 +8,7 @@ import {
     formatSize,
     listQuery,
     recordingIdOf,
+    videoRecordingIdOf,
     replaceRecording,
     startPosition,
     trackBounds,
@@ -82,6 +83,14 @@ describe('recordings menu helpers', () => {
         expect(recordingIdOf({ metadata: { taklab_recording: { id: '1/2' } } })).toBeNull();
         expect(recordingIdOf(null)).toBeNull();
         expect(recordingIdOf({})).toBeNull();
+    });
+
+    it('videoRecordingIdOf: no map button for voice messages and scans (decision 25 XI 2026)', () => {
+        expect(videoRecordingIdOf({ metadata: { taklab_recording: { id: '7', kind: 'video' } } })).toBe('7');
+        expect(videoRecordingIdOf({ metadata: { taklab_recording: { id: '8', kind: 'voice' } } })).toBeNull();
+        expect(videoRecordingIdOf({ metadata: { taklab_recording: { id: '9', kind: 'scan' } } })).toBeNull();
+        expect(videoRecordingIdOf({ links: [{ uid: 'rec:12', relation: 'r-u', type: 'taklab-recording' }] })).toBe('12');
+        expect(videoRecordingIdOf(null)).toBeNull();
     });
 
     it('keeps list order on rename and drops deleted rows', () => {

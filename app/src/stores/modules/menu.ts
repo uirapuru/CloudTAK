@@ -241,12 +241,13 @@ export default class MenuManager {
                 requiresReport: true,
             },
             {
-                // taklab: nagrania z serwera OTS (wideo, głosówki, skany OCR) z pozycją operatora
+                // taklab: nagrania wideo z serwera OTS z pozycją operatora (decyzja 25 XI 2026:
+                // głosówki i skany zostają w panelu OTS i w dzienniku)
                 key: 'recordings',
-                label: 'Nagrania',
+                label: 'Nagrania wideo',
                 route: '/menu/recordings',
-                tooltip: 'Nagrania',
-                description: 'Wideo, głosówki i skany zapisane na serwerze',
+                tooltip: 'Nagrania wideo',
+                description: 'Wideo zapisane na serwerze',
                 icon: IconMovie,
                 // Decision 24 XI 2026: recordings are for the OTS administrator only.
                 requiresOtsAdmin: true,

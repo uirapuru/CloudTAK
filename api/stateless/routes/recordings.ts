@@ -71,7 +71,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.get('/recordings/archive', {
         name: 'Download Recordings Archive',
         group: 'Recordings',
-        description: 'ZIP of the chosen recordings (ids, up to 100) or of all matching the filters (all=true); OTS administrators only',
+        description: 'ZIP of the chosen recordings (ids, up to 100) or of all video recordings matching the filters (all=true); OTS administrators only',
         query: Type.Object({
             token: Type.Optional(Type.String()),
             ids: Type.Optional(Type.String({ maxLength: 6600, pattern: '^[A-Za-z0-9_,-]*$' })),
@@ -95,7 +95,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.get('/recordings', {
         name: 'List Recordings',
         group: 'Recordings',
-        description: 'Video, voice and scan recordings of the environment; OTS administrators only',
+        description: 'Video recordings of the environment (voice messages and scans stay in the OTS panel and the journal; kind is ignored); OTS administrators only',
         query: Type.Object({
             kind: Type.Optional(Kind),
             account: Type.Optional(Type.String({ maxLength: 128 })),

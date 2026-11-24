@@ -213,9 +213,9 @@
                 "description": "Dziennik zdarzeń serwera z eksportem PDF i ZIP"
             },
             "recordings": {
-                "label": "Nagrania",
-                "tooltip": "Nagrania",
-                "description": "Wideo, głosówki i skany zapisane na serwerze"
+                "label": "Nagrania wideo",
+                "tooltip": "Nagrania wideo",
+                "description": "Wideo zapisane na serwerze"
             },
             "report": {
                 "label": "Raport misji",

@@ -184,6 +184,20 @@ export function recordingIdOf(properties: { metadata?: unknown; links?: unknown 
     return null;
 }
 
+/**
+ * Id of the recording behind a map marker, for the "open recording" button.
+ * Decision 25 XI 2026: the CloudTAK menu holds video only, so a marker that
+ * says it is a voice message or a scan gets no button. A marker without a
+ * kind (link only) keeps it; the API answers 404 if it is not a video.
+ */
+export function videoRecordingIdOf(properties: { metadata?: unknown; links?: unknown } | null | undefined): string | null {
+    const id = recordingIdOf(properties);
+    if (!id) return null;
+    const meta = properties?.metadata as { taklab_recording?: { kind?: unknown } } | undefined;
+    const kind = meta && typeof meta === 'object' ? meta.taklab_recording?.kind : undefined;
+    return kind === undefined || kind === 'video' ? id : null;
+}
+
 /** A renamed row replaces the old one; everything else keeps its place. */
 export function replaceRecording(items: Recording[], rec: Recording): Recording[] {
     return items.map((r) => (r.id === rec.id ? { ...r, ...rec } : r));

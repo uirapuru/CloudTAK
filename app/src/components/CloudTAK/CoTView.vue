@@ -629,7 +629,7 @@ import RouteVariants from './util/RouteVariants.vue';
 import RouteActorNote from './util/RouteActorNote.vue';
 import { readRoutePlan } from '../../base/route-plan.ts';
 import { isDangerZone, setDangerZone } from '../../base/danger-zone.ts';
-import { recordingIdOf } from './Menu/recordings.ts';
+import { videoRecordingIdOf } from './Menu/recordings.ts';
 import type { Geofence } from '../../base/danger-zone.ts';
 import MenuTemplate from './util/MenuTemplate.vue';
 import type COT from '../../base/cot.ts';
@@ -884,8 +884,8 @@ const center = computed(() => {
     return arr;
 })
 
-// taklab: marker of a recording from the OTS register (video, voice message, scan)
-const recordingId = computed<string | null>(() => recordingIdOf(cot.value?.properties as { metadata?: unknown; links?: unknown } | undefined));
+// taklab: marker of a video recording from the OTS register (voice messages and scans are not in the CloudTAK menu)
+const recordingId = computed<string | null>(() => videoRecordingIdOf(cot.value?.properties as { metadata?: unknown; links?: unknown } | undefined));
 
 async function openRecording(): Promise<void> {
     if (!recordingId.value) return;

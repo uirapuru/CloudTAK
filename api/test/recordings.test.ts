@@ -99,12 +99,13 @@ test('listItems and normalizeUsage accept the shapes OTS may answer with', () =>
     assert.deepEqual(normalizeUsage({}), { admin: true, used_bytes: null, limit_bytes: null });
 });
 
-test('list calls OTS with the caller certificate and marks rows for the administrator', async () => {
+test('list calls OTS with the caller certificate, video only, and marks rows for the administrator', async () => {
     const { control, seen } = fake((s) => {
         if (s.url.endsWith('/usage')) return json({ used_bytes: 5, limit_bytes: 50 });
         return json([ROW, { ...ROW, id: 8, account: 'bravo' }, { id: 9, kind: 'weird' }]);
     });
-    const list = await control.list('administrator', AUTH, { kind: 'video', page: 2 });
+    // Decision 25 XI 2026: CloudTAK lists video only, whatever kind the browser asks for.
+    const list = await control.list('administrator', AUTH, { kind: 'voice', page: 2 });
     assert.equal(list.enabled, true);
     assert.equal(list.admin, true);
     assert.equal(list.page, 2);
@@ -139,15 +140,20 @@ test('list on an OTS without the register = disabled, not an error', async () =>
     assert.deepEqual(list, { enabled: false, admin: false, page: 1, total_pages: null, items: [] });
 });
 
-test('get returns the track and the scan text; rename sends a trimmed name; delete', async () => {
+test('get returns the track; voice and scan are not shown; rename sends a trimmed name; delete', async () => {
     const { control, seen } = fake((s) => {
         if (s.url.endsWith('/usage')) return json({}, 403);
         if (s.method === 'PATCH' || s.method === 'DELETE') return new Response(null, { status: 204 });
-        return json({ ...ROW, kind: 'scan', has_text: true, text: 'Rozkaz nr 1', track: [[51, 17, 0]] });
+        if (s.url.endsWith('/8')) return json({ ...ROW, id: 8, kind: 'scan', has_text: true, text: 'Rozkaz nr 1' });
+        if (s.url.endsWith('/9')) return json({ ...ROW, id: 9, kind: 'voice' });
+        return json({ ...ROW, track: [[51, 17, 0]] });
     });
     const rec = await control.get('alfa', AUTH, '7');
-    assert.equal(rec.text, 'Rozkaz nr 1');
+    assert.equal(rec.kind, 'video');
     assert.deepEqual(rec.track, [[51, 17, 0]]);
+    for (const id of ['8', '9']) {
+        await assert.rejects(control.get('alfa', AUTH, id), (err: { status: number }) => err.status === 404, id);
+    }
 
     await control.rename('alfa', AUTH, '7', '  Odprawa  ');
     const patch = seen.find((s) => s.method === 'PATCH')!;
@@ -225,13 +231,13 @@ test('file passes Range to OTS and 206 with Content-Range back, inline unless do
     assert.equal(down.headers['content-disposition'], 'attachment; filename="patrol.mp4"');
 });
 
-test('archiveQuery: chosen ids or all with the list filters, nothing else', () => {
+test('archiveQuery: chosen ids, or all video with the list filters, nothing else', () => {
     assert.equal(archiveQuery({ ids: 'a-1, b_2,,' }), '?ids=a-1,b_2');
     assert.equal(archiveQuery({ ids: 'a', all: true, kind: 'video' }), '?ids=a', 'ids win over all');
-    assert.equal(archiveQuery({ all: true }), '?all=1');
+    assert.equal(archiveQuery({ all: true }), '?kind=video&all=1');
     assert.equal(
         archiveQuery({ all: true, kind: 'voice', account: ' alfa ', from: '2026-11-24T10:00:00Z' }),
-        '?kind=voice&account=alfa&from=2026-11-24T10%3A00%3A00.000Z&all=1',
+        '?kind=video&account=alfa&from=2026-11-24T10%3A00%3A00.000Z&all=1',
     );
     for (const bad of [{}, { ids: '../usage' }, { ids: Array.from({ length: 101 }, (_, n) => `r${n}`).join(',') }, { all: true, from: 'jutro' }]) {
         assert.throws(() => archiveQuery(bad), (err: { status: number }) => err.status === 400, JSON.stringify(bad).slice(0, 40));

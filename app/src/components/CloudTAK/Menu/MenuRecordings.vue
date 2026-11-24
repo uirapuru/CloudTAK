@@ -61,23 +61,6 @@
                     </div>
                 </div>
 
-                <div class='px-2 pt-2'>
-                    <div
-                        class='btn-group w-100'
-                        role='group'
-                        :aria-label='t("taklab.recordings.kindFilter")'
-                    >
-                        <button
-                            v-for='k in KIND_FILTERS'
-                            :key='k'
-                            type='button'
-                            class='btn btn-sm'
-                            :class='{ active: kind === k }'
-                            @click='kind = k'
-                            v-text='t(`taklab.recordings.filter.${k}`)'
-                        />
-                    </div>
-                </div>
                 <div class='row g-2 px-2 pt-2'>
                     <div class='col-12'>
                         <TranslatedEnum
@@ -434,7 +417,6 @@ import { std, stdurl, downloadUrl, getRuntimeToken } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { recordingTrack } from '../../../base/recording-track.ts';
 import {
-    KIND_FILTERS,
     MAX_ARCHIVE_IDS,
     type KindFilter,
     type Recording,
@@ -475,7 +457,8 @@ const page = ref(1);
 const more = ref(false);
 const token = ref<string | undefined>();
 
-const kind = ref<KindFilter>('all');
+// Decision 25 XI 2026: video only here; voice messages and scans stay in the OTS panel and the journal.
+const kind = ref<KindFilter>('video');
 const account = ref(ALL_ACCOUNTS);
 const from = ref('');
 const to = ref('');

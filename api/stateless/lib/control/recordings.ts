@@ -16,6 +16,11 @@ const PASSED_FILE_HEADERS = ['content-type', 'content-length', 'content-range', 
 
 export const RECORDING_KINDS = ['video', 'voice', 'scan'] as const;
 export type RecordingKind = typeof RECORDING_KINDS[number];
+/**
+ * Decision 25 XI 2026: the CloudTAK menu shows video recordings only; voice
+ * messages and scans stay in the OTS panel and the journal.
+ */
+export const CLOUDTAK_KIND: RecordingKind = 'video';
 
 export type CertAuth = { cert: string; key: string };
 
@@ -222,7 +227,7 @@ export function archiveQuery(q: ArchiveQuery): string {
         return `?ids=${ids.map((id) => safeId(id)).join(',')}`;
     }
     if (!q.all) throw new Err(400, null, 'Wybierz nagrania albo wszystkie');
-    const filters = otsQuery({ kind: q.kind, account: q.account, from: q.from, to: q.to });
+    const filters = otsQuery({ kind: CLOUDTAK_KIND, account: q.account, from: q.from, to: q.to });
     return filters ? `${filters}&all=1` : '?all=1';
 }
 
@@ -306,7 +311,7 @@ export class RecordingsControl {
     }
 
     async list(user: string, auth: CertAuth, q: RecordingQuery): Promise<RecordingList> {
-        const query = otsQuery(q);
+        const query = otsQuery({ ...q, kind: CLOUDTAK_KIND });
         const [res, admin] = await Promise.all([this.request(query, auth), this.isAdmin(user, auth)]);
         if (res.status === 404) {
             // No register route in this OTS (older image): the menu says so instead of an error.
@@ -332,6 +337,7 @@ export class RecordingsControl {
         const raw = await res.json() as Record<string, unknown>;
         const rec = normalizeRecording(raw, user, admin);
         if (!rec) throw new Err(502, null, 'Serwer TAK zwrócił nieprawidłowe nagranie');
+        if (rec.kind !== CLOUDTAK_KIND) throw new Err(404, null, 'Nie ma takiego nagrania');
         return {
             ...rec,
             track: normalizeTrack(raw.track),

@@ -122,7 +122,7 @@
         "noPlan": "Trasa nie ma planu taklab."
     },
     "recordings": {
-        "title": "Nagrania",
+        "title": "Nagrania wideo",
         "disabled": "Ten serwer nie zapisuje jeszcze nagrań",
         "usage": "Zajęte miejsce",
         "usageOf": "{used} z {limit}",
