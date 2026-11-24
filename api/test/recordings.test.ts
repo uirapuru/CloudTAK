@@ -89,6 +89,7 @@ test('listItems and normalizeUsage accept the shapes OTS may answer with', () =>
     assert.equal(listItems([ROW]).items.length, 1);
     assert.deepEqual(listItems({ results: [ROW], page: 2, total_pages: 5 }).total_pages, 5);
     assert.equal(listItems({ items: [ROW, ROW] }).items.length, 2);
+    assert.deepEqual(listItems({ results: [ROW], total: 31, current_page: 3, total_pages: 4, per_page: 10 }).page, 3);
     assert.deepEqual(listItems('x').items, []);
 
     assert.deepEqual(normalizeUsage({ used_bytes: 10, limit_bytes: 20 }), { admin: true, used_bytes: 10, limit_bytes: 20 });

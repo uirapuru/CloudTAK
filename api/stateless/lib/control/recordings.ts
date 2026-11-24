@@ -172,7 +172,7 @@ export function listItems(body: unknown): { items: unknown[]; page: number | nul
     if (body && typeof body === 'object') {
         const b = body as Record<string, unknown>;
         const items = [b.items, b.results, b.recordings].find(Array.isArray) as unknown[] | undefined;
-        return { items: items || [], page: num(b.page), total_pages: num(b.total_pages ?? b.pages) };
+        return { items: items || [], page: num(b.page ?? b.current_page), total_pages: num(b.total_pages ?? b.pages) };
     }
     return { items: [], page: null, total_pages: null };
 }
