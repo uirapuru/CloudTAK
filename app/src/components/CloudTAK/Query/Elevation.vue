@@ -73,7 +73,9 @@ onMounted(async () => {
         let terrainElevation: number | undefined;
         try {
             const raw = mapStore.map.queryTerrainElevation([props.longitude, props.latitude]);
-            terrainElevation = raw !== null ? raw : undefined;
+            // queryTerrainElevation mnoży przez przewyższenie terenu; serwer oczekuje metrów
+            const exaggeration = mapStore.map.getTerrain()?.exaggeration || 1;
+            terrainElevation = raw !== null ? raw / exaggeration : undefined;
         } catch {
             // No terrain data available
         }

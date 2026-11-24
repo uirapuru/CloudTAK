@@ -11,6 +11,7 @@ import { parseStops } from '../lib/routing/stops.js';
 import { SearchManagerConfig, FetchReverse, FetchSuggest, FetchForward } from '../lib/search/types.js';
 import { Feature } from '@tak-ps/node-cot';
 import type { RouteThreats } from '../lib/routing/taklab.js';
+import { resolveElevation, formatElevation } from '../lib/taklab-elevation.js';
 import type ConfigStateless from '../config.js';
 
 function optionalISOString(date: Date | null): string | null {
@@ -237,11 +238,17 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             const user = await Auth.as_user(config, req);
             const elevationUnit = await config.models.ProfileConfig.from(user.email).then(p => p['display::elevation'] as string).catch(() => 'feet');
 
-            const elevation = req.query.elevation !== undefined
-                ? (elevationUnit === 'feet' || elevationUnit === 'FEET'
-                        ? ((req.query.elevation / 1.5) * 3.28084).toFixed(2) + ' ft'
-                        : (req.query.elevation / 1.5).toFixed(2) + ' m')
-                : null;
+            const settings = await config.models.Setting.typedMany({
+                'taklab::routing::terrain_url': '',
+            });
+
+            const metres = await resolveElevation(
+                settings['taklab::routing::terrain_url'],
+                req.params.longitude,
+                req.params.latitude,
+                req.query.elevation,
+            );
+            const elevation = formatElevation(metres, elevationUnit);
 
             res.json({ elevation });
         } catch (err) {
