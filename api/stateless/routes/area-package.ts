@@ -42,11 +42,16 @@ const LayerRequest = Type.Object({
     maxzoom: Type.Optional(Type.Integer({ minimum: 0, maximum: 24 })),
 });
 
+// batch-schema runs AJV with removeAdditional: 'all', which drops every key not
+// listed here even with additionalProperties: true. The id becomes the CoT UID
+// in the ATAK package, so it has to be declared or ATAK sees new objects.
 const FeatureInput = Type.Object({
+    id: Type.Optional(Type.Union([Type.String(), Type.Number()])),
     type: Type.Literal('Feature'),
+    path: Type.Optional(Type.String()),
     properties: Type.Record(Type.String(), Type.Unknown()),
     geometry: Type.Unknown(),
-}, { additionalProperties: true });
+});
 
 const StoredLayer = Type.Object({
     source: Type.Union([Type.Literal('basemap'), Type.Literal('profile')]),

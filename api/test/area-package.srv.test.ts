@@ -200,6 +200,12 @@ test('POST: api/profile/area-package', async () => {
     assert.deepEqual(res.body.assets, []);
 
     pkgId = res.body.id;
+
+    // The CoT UID in the ATAK package comes from the feature id: it must survive validation
+    const row = await flight.config!.models.AreaPackage.from(pkgId);
+    assert.equal(row.features[0].id, 'marker-1');
+    assert.equal(row.features[0].path, '/');
+    assert.equal(row.features[0].properties.callsign, 'PO-1');
 });
 
 test('GET: api/profile/area-package - owner sees the package', async () => {
