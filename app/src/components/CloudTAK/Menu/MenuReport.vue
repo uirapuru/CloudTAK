@@ -45,6 +45,12 @@
                         class='small text-muted px-2'
                         v-text='t("report.noFeeds")'
                     />
+                    <div
+                        v-if='unknownFeed'
+                        class='small text-red px-2 pt-1'
+                        data-testid='report-unknown-feed'
+                        v-text='t("report.notSubscribed", { name: unknownFeed })'
+                    />
                 </div>
                 <div
                     v-if='needsPassword'
@@ -242,6 +248,8 @@ const error = ref<Error | undefined>();
 const jobs = ref<ReportJob[]>([]);
 const feeds = ref<ReportFeed[]>([]);
 const form = ref(defaultForm());
+/** Feed from the address that is not among the subscribed ones. */
+const unknownFeed = ref('');
 
 let alive = false;
 let pollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -275,16 +283,22 @@ function statusClass(status: string): string {
 
 /** Choose a feed and set the range from its creation to now. */
 function chooseFeed(name: string): void {
-    if (!feeds.value.some((f) => f.name === name)) {
-        feeds.value = [...feeds.value, { name, createTime: null, passwordProtected: false }];
-    }
     form.value.scope = 'mission';
-    form.value.mission = name;
+    // Only a subscribed feed: for any other one the menu knows neither its
+    // creation time nor whether it needs a password.
+    if (feeds.value.some((f) => f.name === name)) {
+        unknownFeed.value = '';
+        form.value.mission = name;
+    } else {
+        unknownFeed.value = name;
+        form.value.mission = '';
+    }
 }
 
 // A new feed starts with its own range and without the password of the previous one.
 watch(() => form.value.mission, (name) => {
     form.value.password = '';
+    if (name) unknownFeed.value = '';
     if (name) Object.assign(form.value, feedRange(selectedFeed.value));
 });
 

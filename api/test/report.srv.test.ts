@@ -225,6 +225,9 @@ test('Report: a browser leaving a download closes the request to the service', a
         res.write('%PDF-1.7 ');
     };
 
+    const logged: unknown[][] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => { logged.push(args); };
     const abort = new AbortController();
     const pdf = await fetch(new URL(`/api/report/${ID}.pdf?token=${flight.token.admin}`, flight.base), { signal: abort.signal });
     assert.equal(pdf.status, 200);
@@ -235,7 +238,9 @@ test('Report: a browser leaving a download closes the request to the service', a
     await Promise.race([
         upstreamClosed,
         new Promise((_resolve, reject) => setTimeout(() => reject(new Error('the service request stayed open')), 5_000)),
-    ]);
+    ]).finally(() => { console.error = original; });
+    // A browser that leaves is normal and not logged.
+    assert.deepEqual(logged.filter((a) => String(a[0]).startsWith('Report download broken')), []);
 });
 
 test('Report: a service failure in the middle of a file breaks the download instead of adding to it', async () => {
@@ -245,12 +250,26 @@ test('Report: a service failure in the middle of a file breaks the download inst
         setTimeout(() => res.socket?.destroy(), 50);
     };
 
-    const txt = await fetch(new URL(`/api/report/${ID}.txt?token=${flight.token.admin}`, flight.base));
-    assert.equal(txt.status, 200);
-    // The browser learns at once that the file is broken; it does not wait for a timeout.
-    const started = Date.now();
-    await assert.rejects(txt.text());
-    assert.ok(Date.now() - started < 2_000, `the broken download took ${Date.now() - started} ms`);
+    const logged: unknown[][] = [];
+    const original = console.error;
+    console.error = (...args: unknown[]) => { logged.push(args); };
+    try {
+        const txt = await fetch(new URL(`/api/report/${ID}.txt?token=${flight.token.admin}`, flight.base));
+        assert.equal(txt.status, 200);
+        // The browser learns at once that the file is broken; it does not wait for a timeout.
+        const started = Date.now();
+        await assert.rejects(txt.text());
+        assert.ok(Date.now() - started < 2_000, `the broken download took ${Date.now() - started} ms`);
+        await new Promise((resolve) => setTimeout(resolve, 50));
+    } finally {
+        console.error = original;
+    }
+    // The failure is logged, without the address or the tokens.
+    const lines = logged.map((a) => a.map(String).join(' ')).filter((l) => l.startsWith('Report download broken'));
+    assert.equal(lines.length, 1, JSON.stringify(logged));
+    for (const secret of ['shared-report-token', flight.token.admin, '/api/v1/reports', '127.0.0.1']) {
+        assert.ok(!lines[0].includes(secret), lines[0]);
+    }
 
     // CloudTAK keeps answering after the broken transfer.
     reply = (_s, res) => json(res, 200, { items: [] });

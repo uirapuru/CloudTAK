@@ -20,7 +20,7 @@
     },
     "create": "Utwórz raport",
     "created": "Raport jest w kolejce. Stan zobaczysz na liście poniżej.",
-    "list": "Twoje raporty",
+    "list": "Raporty",
     "none": "Nie ma jeszcze raportów",
     "environment": "Całe środowisko",
     "mission": "Feed: {name}",
@@ -42,5 +42,6 @@
         "order": "Początek musi być wcześniej niż koniec.",
         "tooLong": "Przedział jest dłuższy niż 7 dni. Skróć go."
     },
-    "menuButton": "Raport misji"
+    "menuButton": "Raport misji",
+    "notSubscribed": "Feed „{name}” nie jest na liście subskrybowanych. Zasubskrybuj go, żeby zamówić raport."
 }

@@ -151,9 +151,16 @@ export class ReportControl {
         // destroys the response on an upstream error instead of writing to it.
         try {
             await pipeline(Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>), res);
-        } catch {
+        } catch (err) {
             // The response is destroyed by now, so no error answer can follow;
-            // the browser sees a broken download.
+            // the browser sees a broken download. A browser that left is normal;
+            // anything else is logged by its code only (no URL, no token).
+            // ERR_STREAM_PREMATURE_CLOSE: the response closed first, i.e. the browser left.
+            const e = err as { code?: unknown; name?: unknown };
+            if (e.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+                const kind = typeof e.code === 'string' ? e.code : typeof e.name === 'string' ? e.name : 'unknown';
+                console.error(`Report download broken: ${kind}`);
+            }
         }
     }
 

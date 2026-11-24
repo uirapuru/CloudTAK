@@ -7,6 +7,7 @@ import {
     defaultForm,
     feedRange,
     formProblem,
+    reportButtonVisible,
     reportEnabled,
     reportUrl,
     toRequest,
@@ -85,6 +86,20 @@ describe('report helpers', () => {
         expect(feedRange({ name: 'f', createTime: CREATED, passwordProtected: false }, now))
             .toEqual({ since: '2026-11-20T09:00', until: '2026-11-24T13:00' });
         expect(feedRange({ name: 'f', createTime: null, passwordProtected: false }, now).since).toBe('2026-11-23T13:00');
+    });
+
+    it('starts an old feed 7 days before now, not at its creation', () => {
+        const now = Date.parse('2026-11-24T12:00:00Z');
+        const range = feedRange({ name: 'f', createTime: '2026-10-01T08:00:00Z', passwordProtected: false }, now);
+        expect(range).toEqual({ since: '2026-11-17T13:00', until: '2026-11-24T13:00' });
+        expect(formProblem({ ...defaultForm(now), scope: 'mission', mission: 'f', ...range })).toBeNull();
+    });
+
+    it('offers the button in the feed view only for a subscribed feed with reports enabled', () => {
+        expect(reportButtonVisible({ subscribed: true }, true)).toBe(true);
+        expect(reportButtonVisible({ subscribed: false }, true)).toBe(false);
+        expect(reportButtonVisible(undefined, true)).toBe(false);
+        expect(reportButtonVisible({ subscribed: true }, false)).toBe(false);
     });
 
     it('refuses a missing feed, a reversed range and more than 7 days', () => {
@@ -175,6 +190,7 @@ describe('MenuReport', () => {
     });
 
     it('takes the feed from the address: scope feed, start at the feed creation', async () => {
+        vi.useFakeTimers({ toFake: ['Date'], now: Date.parse('2026-11-24T12:00:00Z') });
         route.query = { mission: 'Alfa' };
         const wrapper = mountMenu();
         await flushPromises();
@@ -206,6 +222,25 @@ describe('MenuReport', () => {
         expect(JSON.stringify(localStorage)).not.toContain('tajne');
     });
 
+    it('does not preselect a feed from the address that is not subscribed', async () => {
+        route.query = { mission: 'Stary' };
+        const wrapper = mountMenu();
+        await flushPromises();
+        expect(wrapper.find('[data-testid="report-unknown-feed"]').text())
+            .toBe('Feed „Stary” nie jest na liście subskrybowanych. Zasubskrybuj go, żeby zamówić raport.');
+        expect(wrapper.findAll('[data-testid="report-feed"] option').map((o) => o.text())).toEqual(['Wybierz feed', 'Alfa', 'Bravo']);
+        expect((wrapper.find('[data-testid="report-feed"] select').element as HTMLSelectElement).value).toBe('');
+        expect(wrapper.find('[data-testid="report-create"]').attributes('disabled')).toBeDefined();
+        await wrapper.find('[data-testid="report-create"]').trigger('click');
+        await flushPromises();
+        expect(std.mock.calls.some((c) => (c[1] as { method?: string } | undefined)?.method === 'POST')).toBe(false);
+
+        // Choosing a subscribed feed clears the message and allows the order.
+        await wrapper.find('[data-testid="report-feed"] select').setValue('Alfa');
+        await flushPromises();
+        expect(wrapper.find('[data-testid="report-unknown-feed"]').exists()).toBe(false);
+    });
+
     it('blocks a range over 7 days with a message', async () => {
         route.query = { mission: 'Alfa' };
         const wrapper = mountMenu();
@@ -226,6 +261,8 @@ describe('MenuReport', () => {
         vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
         const wrapper = mountMenu();
         await flushPromises();
+        expect(wrapper.text()).toContain('Raporty');
+        expect(wrapper.text()).not.toContain('Twoje raporty');
 
         const rows = wrapper.findAll('[data-job]');
         expect(rows).toHaveLength(3);

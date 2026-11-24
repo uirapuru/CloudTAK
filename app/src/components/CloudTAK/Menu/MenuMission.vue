@@ -89,7 +89,7 @@
                             <span class='mx-2'>{{ t('panels.mission.downloadArchive') }}</span>
                         </div>
                         <div
-                            v-if='mapStore.menu.canSeeReport.value'
+                            v-if='reportButtonVisible(subscription, mapStore.menu.canSeeReport.value)'
                             class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
                             data-testid='mission-report'
                             @click.stop='openReport'
@@ -207,6 +207,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useMapStore } from '../../../stores/map.ts';
 import OverlayManager from '../../../base/overlay.ts';
+import { reportButtonVisible } from '../../../base/report.ts';
 
 const mapStore = useMapStore();
 const route = useRoute();
@@ -214,7 +215,7 @@ const router = useRouter();
 
 // taklab: open "Raport misji" with this feed chosen.
 function openReport(): void {
-    if (!subscription.value) return;
+    if (!subscription.value || !reportButtonVisible(subscription.value, mapStore.menu.canSeeReport.value)) return;
     router.push({ path: '/menu/report', query: { mission: subscription.value.meta.name } });
 }
 const { t } = useI18n();

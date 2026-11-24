@@ -20,7 +20,7 @@
     },
     "create": "Create report",
     "created": "The report is queued. Its state is shown in the list below.",
-    "list": "Your reports",
+    "list": "Reports",
     "none": "No reports yet",
     "environment": "Whole environment",
     "mission": "Feed: {name}",
@@ -42,5 +42,6 @@
         "order": "The start must be earlier than the end.",
         "tooLong": "The range is longer than 7 days. Shorten it."
     },
-    "menuButton": "Mission report"
+    "menuButton": "Mission report",
+    "notSubscribed": "The feed “{name}” is not among your subscribed feeds. Subscribe to it to order a report."
 }

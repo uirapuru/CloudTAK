@@ -112,10 +112,14 @@ export function defaultForm(now = Date.now()): ReportForm {
     };
 }
 
-/** Range of a feed: from its creation to now (the last 24 hours when unknown). */
+/**
+ * Range of a feed: from its creation to now, at most the last 7 days (the
+ * last 24 hours when the creation time is unknown).
+ */
 export function feedRange(feed: ReportFeed | undefined, now = Date.now()): { since: string; until: string } {
     const created = feed?.createTime ? Date.parse(feed.createTime) : NaN;
-    const start = Number.isFinite(created) && created < now ? created : now - 24 * 3600_000;
+    const earliest = now - REPORT_MAX_DAYS * 24 * 3600_000;
+    const start = Number.isFinite(created) && created < now ? Math.max(created, earliest) : now - 24 * 3600_000;
     return { since: isoToZoned(start), until: isoToZoned(now) };
 }
 
@@ -144,6 +148,11 @@ export function toRequest(form: ReportForm, feed: ReportFeed | undefined): Repor
         if (feed?.passwordProtected && form.password) req.mission_password = form.password;
     }
     return req;
+}
+
+/** The feed view offers "Raport misji" only for a subscribed feed of an environment with reports. */
+export function reportButtonVisible(subscription: { subscribed: boolean } | undefined, enabled: boolean): boolean {
+    return enabled && subscription?.subscribed === true;
 }
 
 export function isPending(job: ReportJob): boolean {
