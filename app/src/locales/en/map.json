@@ -216,6 +216,11 @@
                 "label": "Recordings",
                 "tooltip": "Recordings",
                 "description": "Video, voice messages and scans stored on the server"
+            },
+            "report": {
+                "label": "Mission report",
+                "tooltip": "Mission report",
+                "description": "Exercise report as PDF and TXT"
             }
         },
         "sourceCode": "Source code (AGPL-3.0)"

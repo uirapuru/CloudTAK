@@ -1,0 +1,46 @@
+{
+    "title": "Mission report",
+    "scope": "Scope",
+    "scopes": {
+        "environment": "Whole environment",
+        "mission": "One feed"
+    },
+    "feed": "Feed",
+    "chooseFeed": "Choose a feed",
+    "noFeeds": "You are not subscribed to any feed",
+    "password": "Feed password",
+    "passwordHint": "The feed is password protected. The password is not saved.",
+    "since": "From",
+    "until": "To",
+    "timezone": "Polish time (Europe/Warsaw). At most 7 days.",
+    "basemap": "Basemap",
+    "basemaps": {
+        "osm": "OpenStreetMap",
+        "polska50k": "Map of Poland 1:50,000"
+    },
+    "create": "Create report",
+    "created": "The report is queued. Its state is shown in the list below.",
+    "list": "Your reports",
+    "none": "No reports yet",
+    "environment": "Whole environment",
+    "mission": "Feed: {name}",
+    "range": "{since} – {until}",
+    "owner": "Ordered by: {owner}",
+    "statuses": {
+        "queued": "Queued",
+        "running": "In progress",
+        "done": "Ready",
+        "failed": "Failed"
+    },
+    "downloadPdf": "Download PDF",
+    "downloadTxt": "Download TXT",
+    "delete": "Delete report",
+    "deleteLabel": "report",
+    "problems": {
+        "noFeed": "Choose a feed.",
+        "noRange": "Enter the start and the end of the range.",
+        "order": "The start must be earlier than the end.",
+        "tooLong": "The range is longer than 7 days. Shorten it."
+    },
+    "menuButton": "Mission report"
+}

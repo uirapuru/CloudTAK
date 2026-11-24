@@ -2,6 +2,7 @@ import Err from '@openaddresses/batch-error';
 import { Type } from '@sinclair/typebox';
 import type { Static } from '@sinclair/typebox';
 import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import type { Response as ExpressResponse } from 'express';
 
@@ -73,8 +74,12 @@ export class ReportControl {
         const base = this.baseUrl();
         if (!base) throw new Err(404, null, 'Raport misji nie jest włączony');
 
+        // An empty token would only earn a 403 from the service; say what is wrong instead.
+        const token = (process.env.REPORT_TOKEN || '').trim();
+        if (!token) throw new Err(502, null, 'Usługa raportów nie jest skonfigurowana.');
+
         const headers: Record<string, string> = {
-            'X-Report-Token': process.env.REPORT_TOKEN || '',
+            'X-Report-Token': token,
             'X-Report-User': user,
         };
         if (init.body !== undefined) headers['Content-Type'] = 'application/json';
@@ -142,13 +147,14 @@ export class ReportControl {
             res.end();
             return;
         }
-        await new Promise<void>((resolve, reject) => {
-            const stream = Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>);
-            stream.on('error', reject);
-            res.on('finish', () => resolve());
-            res.on('close', () => resolve());
-            stream.pipe(res);
-        });
+        // pipeline destroys the upstream body when the browser goes away, and
+        // destroys the response on an upstream error instead of writing to it.
+        try {
+            await pipeline(Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>), res);
+        } catch {
+            // The response is destroyed by now, so no error answer can follow;
+            // the browser sees a broken download.
+        }
     }
 
     /** Job ids are 32 hex characters; anything else never reaches the service path. */

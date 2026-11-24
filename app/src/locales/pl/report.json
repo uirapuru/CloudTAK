@@ -1,0 +1,46 @@
+{
+    "title": "Raport misji",
+    "scope": "Zakres",
+    "scopes": {
+        "environment": "Całe środowisko",
+        "mission": "Jeden feed"
+    },
+    "feed": "Feed",
+    "chooseFeed": "Wybierz feed",
+    "noFeeds": "Nie subskrybujesz żadnego feedu",
+    "password": "Hasło feedu",
+    "passwordHint": "Feed jest chroniony hasłem. Hasło nie jest zapisywane.",
+    "since": "Od",
+    "until": "Do",
+    "timezone": "Czas polski (Europe/Warsaw). Najdłużej 7 dni.",
+    "basemap": "Podkład mapy",
+    "basemaps": {
+        "osm": "OpenStreetMap",
+        "polska50k": "Mapa Polski 1:50 000"
+    },
+    "create": "Utwórz raport",
+    "created": "Raport jest w kolejce. Stan zobaczysz na liście poniżej.",
+    "list": "Twoje raporty",
+    "none": "Nie ma jeszcze raportów",
+    "environment": "Całe środowisko",
+    "mission": "Feed: {name}",
+    "range": "{since} – {until}",
+    "owner": "Zamówił: {owner}",
+    "statuses": {
+        "queued": "W kolejce",
+        "running": "W przygotowaniu",
+        "done": "Gotowy",
+        "failed": "Błąd"
+    },
+    "downloadPdf": "Pobierz PDF",
+    "downloadTxt": "Pobierz TXT",
+    "delete": "Usuń raport",
+    "deleteLabel": "raport",
+    "problems": {
+        "noFeed": "Wybierz feed.",
+        "noRange": "Podaj początek i koniec przedziału.",
+        "order": "Początek musi być wcześniej niż koniec.",
+        "tooLong": "Przedział jest dłuższy niż 7 dni. Skróć go."
+    },
+    "menuButton": "Raport misji"
+}

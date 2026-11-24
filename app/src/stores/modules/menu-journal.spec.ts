@@ -48,3 +48,30 @@ describe('MenuManager: Dziennik', () => {
         });
     }
 });
+
+describe('MenuManager: Raport misji', () => {
+    beforeEach(() => {
+        std.mockReset();
+    });
+
+    it('shows the entry when /api/report answers and hides it on 404', async () => {
+        std.mockImplementation(async (url: string) => {
+            if (url === '/api/report') return { items: [] };
+            return {};
+        });
+        const menu = new MenuManager({});
+        expect(menu.items.value.map((i) => i.key)).not.toContain('report');
+        await menu.init();
+        await flushPromises();
+        expect(menu.items.value.find((i) => i.key === 'report')?.route).toBe('/menu/report');
+
+        std.mockImplementation(async (url: string) => {
+            if (url === '/api/report') throw Object.assign(new Error('Raport misji nie jest włączony'), { body: { status: 404 } });
+            return {};
+        });
+        const off = new MenuManager({});
+        await off.init();
+        await flushPromises();
+        expect(off.items.value.map((i) => i.key)).not.toContain('report');
+    });
+});

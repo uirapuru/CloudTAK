@@ -23,6 +23,7 @@ import {
     IconQrcode,
     IconMovie,
     IconNotebook,
+    IconReportAnalytics,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -30,6 +31,7 @@ import ContactManager from '../../base/contact.ts';
 import Chatroom from '../../base/chatroom.ts';
 import type { Profile } from '../../types.ts';
 import { isNativePlatform } from '../../utils/capacitor.ts';
+import { reportEnabled } from '../../base/report.ts';
 
 export type MenuItemConfig = {
     key: string;
@@ -48,6 +50,8 @@ export type MenuItemConfig = {
     requiresOtsAdmin?: boolean;
     /** taklab: only accounts for which OTS /api/taklab/journal/access says admin. */
     requiresJournal?: boolean;
+    /** taklab: only when the environment has the mission report (GET /api/report is not 404). */
+    requiresReport?: boolean;
     requiresAgencyAdmin?: boolean;
 };
 
@@ -66,6 +70,7 @@ export default class MenuManager {
     canSeeVoiceHistory: Ref<boolean>;
     canSeeOtsAccounts: Ref<boolean>;
     canSeeJournal: Ref<boolean>;
+    canSeeReport: Ref<boolean>;
     pluginMenuItems: Ref<MenuItemConfig[]>;
     preferenceOrder: Ref<Profile['menu_order']>;
 
@@ -80,6 +85,7 @@ export default class MenuManager {
         this.canSeeVoiceHistory = ref(false);
         this.canSeeOtsAccounts = ref(false);
         this.canSeeJournal = ref(false);
+        this.canSeeReport = ref(false);
         this.pluginMenuItems = ref([]);
         this.preferenceOrder = ref([]);
 
@@ -115,6 +121,11 @@ export default class MenuManager {
             this.canSeeJournal.value = (access as { admin?: unknown }).admin === true;
         }).catch(() => {
             this.canSeeJournal.value = false;
+        });
+
+        // taklab: "Raport misji" for every account when the environment has the report service.
+        reportEnabled().then((enabled) => {
+            this.canSeeReport.value = enabled;
         });
 
         try {
@@ -218,6 +229,16 @@ export default class MenuManager {
                 description: 'Historia rozmów głosowych z transkrypcją',
                 icon: IconMicrophone,
                 requiresVoiceHistory: true,
+            },
+            {
+                // taklab: raport z przebiegu ćwiczenia (środowisko albo feed), PDF i TXT
+                key: 'report',
+                label: 'Raport misji',
+                route: '/menu/report',
+                tooltip: 'Raport misji',
+                description: 'Raport z przebiegu ćwiczenia w PDF i TXT',
+                icon: IconReportAnalytics,
+                requiresReport: true,
             },
             {
                 // taklab: nagrania z serwera OTS (wideo, głosówki, skany OCR) z pozycją operatora
@@ -342,6 +363,7 @@ export default class MenuManager {
                 if (item.requiresVoiceHistory && !this.canSeeVoiceHistory.value) return false;
                 if (item.requiresOtsAdmin && !this.canSeeOtsAccounts.value) return false;
                 if (item.requiresJournal && !this.canSeeJournal.value) return false;
+                if (item.requiresReport && !this.canSeeReport.value) return false;
                 if (item.requiresAgencyAdmin && !(this.isAgencyAdmin.value || this.isSystemAdmin.value)) return false;
                 return true;
             });

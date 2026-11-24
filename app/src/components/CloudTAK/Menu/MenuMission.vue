@@ -88,6 +88,18 @@
                             />
                             <span class='mx-2'>{{ t('panels.mission.downloadArchive') }}</span>
                         </div>
+                        <div
+                            v-if='mapStore.menu.canSeeReport.value'
+                            class='cursor-pointer col-12 cloudtak-hover d-flex align-items-center px-2 py-2'
+                            data-testid='mission-report'
+                            @click.stop='openReport'
+                        >
+                            <IconReportAnalytics
+                                :size='32'
+                                stroke='1'
+                            />
+                            <span class='mx-2'>{{ t('report.menuButton') }}</span>
+                        </div>
                     </div>
                 </template>
             </TablerDropdown>
@@ -178,6 +190,7 @@ import {
     IconInfoSquare,
     IconUsers,
     IconMessage,
+    IconReportAnalytics,
 } from '@tabler/icons-vue';
 import {
     TablerAlert,
@@ -198,6 +211,12 @@ import OverlayManager from '../../../base/overlay.ts';
 const mapStore = useMapStore();
 const route = useRoute();
 const router = useRouter();
+
+// taklab: open "Raport misji" with this feed chosen.
+function openReport(): void {
+    if (!subscription.value) return;
+    router.push({ path: '/menu/report', query: { mission: subscription.value.meta.name } });
+}
 const { t } = useI18n();
 
 const missionTabs = computed(() => [

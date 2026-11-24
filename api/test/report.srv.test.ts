@@ -215,6 +215,63 @@ test('Report: service errors keep their status and Polish message; others become
     }
 });
 
+test('Report: a browser leaving a download closes the request to the service', async () => {
+    let closed!: () => void;
+    const upstreamClosed = new Promise<void>((resolve) => { closed = resolve; });
+    reply = (_s, res) => {
+        res.on('close', () => closed());
+        res.writeHead(200, { 'content-type': 'application/pdf' });
+        // First part only; the rest never comes until someone hangs up.
+        res.write('%PDF-1.7 ');
+    };
+
+    const abort = new AbortController();
+    const pdf = await fetch(new URL(`/api/report/${ID}.pdf?token=${flight.token.admin}`, flight.base), { signal: abort.signal });
+    assert.equal(pdf.status, 200);
+    const reader = pdf.body!.getReader();
+    assert.equal(new TextDecoder().decode((await reader.read()).value), '%PDF-1.7 ');
+    abort.abort();
+
+    await Promise.race([
+        upstreamClosed,
+        new Promise((_resolve, reject) => setTimeout(() => reject(new Error('the service request stayed open')), 5_000)),
+    ]);
+});
+
+test('Report: a service failure in the middle of a file breaks the download instead of adding to it', async () => {
+    reply = (_s, res) => {
+        res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'content-length': '1000' });
+        res.write('Raport misji, początek');
+        setTimeout(() => res.socket?.destroy(), 50);
+    };
+
+    const txt = await fetch(new URL(`/api/report/${ID}.txt?token=${flight.token.admin}`, flight.base));
+    assert.equal(txt.status, 200);
+    // The browser learns at once that the file is broken; it does not wait for a timeout.
+    const started = Date.now();
+    await assert.rejects(txt.text());
+    assert.ok(Date.now() - started < 2_000, `the broken download took ${Date.now() - started} ms`);
+
+    // CloudTAK keeps answering after the broken transfer.
+    reply = (_s, res) => json(res, 200, { items: [] });
+    const list = await flight.fetch('/api/report', { method: 'GET', auth: { bearer: flight.token.admin } }, true);
+    assert.deepEqual(list.body, { items: [] });
+});
+
+test('Report: without REPORT_TOKEN CloudTAK says the service is not configured and calls nothing', async () => {
+    const before = seen.length;
+    const token = process.env.REPORT_TOKEN;
+    process.env.REPORT_TOKEN = '';
+    try {
+        const res = await flight.fetch('/api/report', { method: 'GET', auth: { bearer: flight.token.admin } }, false);
+        assert.equal(res.status, 502);
+        assert.equal(res.body.message, 'Usługa raportów nie jest skonfigurowana.');
+        assert.equal(seen.length, before);
+    } finally {
+        process.env.REPORT_TOKEN = token;
+    }
+});
+
 test('Report: stop the fake report service', async () => {
     delete process.env.REPORT_URL;
     delete process.env.REPORT_TOKEN;
