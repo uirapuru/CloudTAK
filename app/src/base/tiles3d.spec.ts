@@ -590,6 +590,26 @@ describe('exposeCameraTransform', () => {
         expect(map.transform).toBe(own);
     });
 
+    it('MapLibre 6.19 has no camera transform: elevation and height come from the public API', () => {
+        // MapLibre 6.19 Camera keeps no `transform`; deck.gl 9.4 still reads
+        // map.transform.elevation and map.transform.height on every draw
+        let elevation = 124;
+        const map: Record<string, unknown> = {
+            _camera: { renderedState: {} },
+            getCenterElevation: () => elevation,
+            getContainer: () => ({ clientHeight: 720 }),
+        };
+
+        exposeCameraTransform(map);
+        const transform = map.transform as { elevation: number; height: number; _nearZ?: number };
+        expect(transform.elevation).toBe(124);
+        expect(transform.height).toBe(720);
+        expect(transform._nearZ).toBeUndefined();
+
+        elevation = 90;
+        expect(transform.elevation).toBe(90);
+    });
+
     it('does nothing when the map has no camera', () => {
         const map: Record<string, unknown> = {};
 

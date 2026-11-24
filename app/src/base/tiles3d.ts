@@ -111,20 +111,40 @@ export function tilesFetch(headers: Record<string, string>): (url: string, init?
 }
 
 /**
- * MapLibre 6 moved the camera out of Map: `map.transform` is gone and lives on
- * `map._camera.transform`. @deck.gl/mapbox 9.4 still reads `map.transform`
- * (height, elevation) on every interleaved draw and throws without it, so no
- * tile is ever drawn. Restore the MapLibre 5 accessor as a live getter.
+ * MapLibre 6 moved the camera out of Map: `map.transform` is gone. Early 6.x
+ * kept it on `map._camera.transform`; 6.19 keeps no transform object at all.
+ * @deck.gl/mapbox 9.4 still reads `map.transform` (height, elevation, and
+ * _nearZ/_farZ when present) on every interleaved draw and throws without it,
+ * so no tile is drawn and the page reports a TypeError. Restore the MapLibre 5
+ * accessor as a live getter: the camera transform when there is one, otherwise
+ * an adapter over the public API.
  */
 export function exposeCameraTransform(map: object): void {
     if ('transform' in map) return;
 
     const camera = (map as { _camera?: { transform?: unknown } })._camera;
-    if (!camera || !camera.transform) return;
+    if (camera && camera.transform) {
+        Object.defineProperty(map, 'transform', {
+            configurable: true,
+            get: () => camera.transform,
+        });
+        return;
+    }
+
+    const api = map as {
+        getCenterElevation?: () => number;
+        getContainer?: () => { clientHeight: number };
+    };
+    if (typeof api.getCenterElevation !== 'function' || typeof api.getContainer !== 'function') return;
+
+    const adapter = {
+        get elevation(): number { return api.getCenterElevation!(); },
+        get height(): number { return api.getContainer!().clientHeight; },
+    };
 
     Object.defineProperty(map, 'transform', {
         configurable: true,
-        get: () => camera.transform,
+        get: () => adapter,
     });
 }
 
