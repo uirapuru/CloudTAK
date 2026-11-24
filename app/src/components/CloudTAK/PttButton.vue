@@ -4,6 +4,13 @@
         class='ptt-dock d-flex flex-column align-items-center gap-1'
     >
         <div
+            v-for='note in voice.state.notes'
+            :key='note.id'
+            class='ptt-note bg-dark text-white small px-2 py-1 rounded'
+            :class='{ "border border-warning": note.live }'
+            v-text='t(note.live ? "taklab.ptt.noteLive" : "taklab.ptt.noteDone", { speaker: note.speaker, channel: note.channel })'
+        />
+        <div
             v-if='voice.state.error'
             class='ptt-note bg-dark text-white small px-2 py-1 rounded'
             v-text='voice.state.error'
@@ -54,7 +61,7 @@
                 />
             </select>
             <TablerIconButton
-                :title='voice.state.listening ? t("taklab.ptt.listenOff") : t("taklab.ptt.listenOn")'
+                :title='voice.state.listening ? t("taklab.ptt.autoplayOff") : t("taklab.ptt.autoplayOn")'
                 class='bg-dark rounded'
                 @click='voice.setListening(!voice.state.listening)'
             >

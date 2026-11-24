@@ -24,6 +24,17 @@ import {
 
 const CHANNEL_KEY = 'taklab.voice.channel';
 const LISTEN_KEY = 'taklab.voice.listening';
+/** Listen to every channel (decision 24 XI 2026); PTT still transmits on the selected one. */
+export const ALL_CHANNELS = '*';
+/** How long a "new message" note stays after the speaker stops. */
+export const NOTE_MS = 10_000;
+
+export interface VoiceNote {
+    id: number;
+    speaker: string;
+    channel: string;
+    live: boolean;
+}
 const RETRY_MAX_MS = 30_000;
 
 type ServerMessage =
@@ -47,7 +58,10 @@ export default class VoiceLive {
         listening: localStorage.getItem(LISTEN_KEY) !== 'false',
         audioLocked: true,
         error: '',
+        notes: [] as VoiceNote[],
     });
+
+    private noteId = 0;
 
     private ws?: WebSocket;
     private ctx?: AudioContext;
@@ -136,6 +150,7 @@ export default class VoiceLive {
                 break;
             }
             case 'floor': {
+                this.updateNotes(this.state.speaking, msg.speaking);
                 this.state.speaking = msg.speaking;
                 const speaker = this.state.channel ? msg.speaking[this.state.channel] : undefined;
                 // Lost a simultaneous press: the server muted us, so stop at once.
@@ -174,13 +189,37 @@ export default class VoiceLive {
         if (this.state.transmitting) this.stopTransmit(true);
         this.state.channel = channel;
         if (channel) localStorage.setItem(CHANNEL_KEY, channel);
-        this.send({ type: 'listen', channel: this.state.listening ? channel : null });
+        this.send({ type: 'listen', channel: this.state.listening ? ALL_CHANNELS : null });
     }
 
     setListening(on: boolean): void {
         this.state.listening = on;
         localStorage.setItem(LISTEN_KEY, String(on));
-        this.send({ type: 'listen', channel: on ? this.state.channel : null });
+        this.send({ type: 'listen', channel: on ? ALL_CHANNELS : null });
+    }
+
+    /**
+     * A note per transmission of someone else: shown while they speak and for
+     * a moment after, also with automatic playback turned off.
+     */
+    updateNotes(before: Record<string, string>, after: Record<string, string>): void {
+        for (const [channel, speaker] of Object.entries(after)) {
+            if (speaker === this.state.name || before[channel] === speaker) continue;
+            this.state.notes = [
+                ...this.state.notes.filter((n) => n.live || n.channel !== channel),
+                { id: ++this.noteId, speaker, channel, live: true },
+            ].slice(-4);
+        }
+        for (const [channel, speaker] of Object.entries(before)) {
+            if (after[channel] === speaker) continue;
+            const note = this.state.notes.find((n) => n.live && n.channel === channel && n.speaker === speaker);
+            if (!note) continue;
+            note.live = false;
+            const id = note.id;
+            setTimeout(() => {
+                this.state.notes = this.state.notes.filter((n) => n.id !== id);
+            }, NOTE_MS);
+        }
     }
 
     private audio(): AudioContext {
