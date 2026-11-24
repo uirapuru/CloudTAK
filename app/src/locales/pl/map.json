@@ -207,6 +207,11 @@
                 "tooltip": "Konta serwera",
                 "description": "Konta serwera OTS z kodami QR dla ATAK i OpenTAK ICU"
             },
+            "journal": {
+                "label": "Dziennik",
+                "tooltip": "Dziennik",
+                "description": "Dziennik zdarzeń serwera z eksportem PDF i ZIP"
+            },
             "recordings": {
                 "label": "Nagrania",
                 "tooltip": "Nagrania",

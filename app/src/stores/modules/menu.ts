@@ -22,6 +22,7 @@ import {
     IconMicrophone,
     IconQrcode,
     IconMovie,
+    IconNotebook,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -45,6 +46,8 @@ export type MenuItemConfig = {
     requiresVoiceHistory?: boolean;
     /** taklab: only OTS administrators (OTS account list with QR codes). */
     requiresOtsAdmin?: boolean;
+    /** taklab: only accounts for which OTS /api/taklab/journal/access says admin. */
+    requiresJournal?: boolean;
     requiresAgencyAdmin?: boolean;
 };
 
@@ -62,6 +65,7 @@ export default class MenuManager {
     isAgencyAdmin: Ref<boolean>;
     canSeeVoiceHistory: Ref<boolean>;
     canSeeOtsAccounts: Ref<boolean>;
+    canSeeJournal: Ref<boolean>;
     pluginMenuItems: Ref<MenuItemConfig[]>;
     preferenceOrder: Ref<Profile['menu_order']>;
 
@@ -75,6 +79,7 @@ export default class MenuManager {
         this.isAgencyAdmin = ref(false);
         this.canSeeVoiceHistory = ref(false);
         this.canSeeOtsAccounts = ref(false);
+        this.canSeeJournal = ref(false);
         this.pluginMenuItems = ref([]);
         this.preferenceOrder = ref([]);
 
@@ -103,6 +108,13 @@ export default class MenuManager {
             this.canSeeOtsAccounts.value = Boolean(s.enabled && s.administrator);
         }).catch(() => {
             this.canSeeOtsAccounts.value = false;
+        });
+
+        // taklab: "Dziennik" only when OTS says the account holds the administrator role.
+        std('/api/journal/access').then((access) => {
+            this.canSeeJournal.value = (access as { admin?: unknown }).admin === true;
+        }).catch(() => {
+            this.canSeeJournal.value = false;
         });
 
         try {
@@ -219,6 +231,16 @@ export default class MenuManager {
                 requiresOtsAdmin: true,
             },
             {
+                // taklab: dziennik zdarzeń środowiska z OTS (tylko administrator), eksport PDF i ZIP
+                key: 'journal',
+                label: 'Dziennik',
+                route: '/menu/journal',
+                tooltip: 'Dziennik',
+                description: 'Dziennik zdarzeń serwera z eksportem PDF i ZIP',
+                icon: IconNotebook,
+                requiresJournal: true,
+            },
+            {
                 // taklab: konta serwera OTS z kodami QR ATAK i OpenTAK ICU
                 key: 'ots-accounts',
                 label: 'Konta serwera',
@@ -319,6 +341,7 @@ export default class MenuManager {
                 if (item.requiresSystemAdmin && !this.isSystemAdmin.value) return false;
                 if (item.requiresVoiceHistory && !this.canSeeVoiceHistory.value) return false;
                 if (item.requiresOtsAdmin && !this.canSeeOtsAccounts.value) return false;
+                if (item.requiresJournal && !this.canSeeJournal.value) return false;
                 if (item.requiresAgencyAdmin && !(this.isAgencyAdmin.value || this.isSystemAdmin.value)) return false;
                 return true;
             });

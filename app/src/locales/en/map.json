@@ -207,6 +207,11 @@
                 "tooltip": "Server accounts",
                 "description": "OTS server accounts with QR codes for ATAK and OpenTAK ICU"
             },
+            "journal": {
+                "label": "Journal",
+                "tooltip": "Journal",
+                "description": "Server event journal with PDF and ZIP export"
+            },
             "recordings": {
                 "label": "Recordings",
                 "tooltip": "Recordings",

@@ -989,6 +989,36 @@
         "query": false,
         "res": true
     },
+    "GET /journal/access": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /journal": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /journal/accounts": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /journal/export/estimate": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /journal/export.pdf": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /journal/export.zip": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
     "GET /ldap/channel": {
         "body": false,
         "query": true,
