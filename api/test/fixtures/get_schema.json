@@ -2094,6 +2094,36 @@
         "query": true,
         "res": false
     },
+    "POST /report": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /report": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /report/:id.pdf": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /report/:id.txt": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /report/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "DELETE /report/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "POST /retention": {
         "body": true,
         "query": false,
