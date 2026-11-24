@@ -97,6 +97,13 @@ import {
     type PlaybackProtocol
 } from './video/protocol.ts';
 import {
+    bufferAction,
+    bufferThresholds,
+    isLivePlayback,
+    isSelfRecoveringStall,
+    HLS_LIVE_CONFIG
+} from './video/buffer.ts';
+import {
     IconPlayerPauseFilled
 } from '@tabler/icons-vue';
 import {
@@ -154,6 +161,9 @@ const isBuffering = ref(false);
 const pausedForBuffering = ref(false);
 const bufferCheckInterval = ref<number | undefined>();
 const bufferRecoveryTimeout = ref<number | undefined>();
+// Set from the first loaded media playlist; undefined until then
+const liveStream = ref<boolean | undefined>();
+const lastTimeUpdate = ref(-1);
 
 // WebRTC frame watchdog state & whether WebRTC has ever delivered frames this session
 const webrtcFrameCount = ref(0);
@@ -163,8 +173,6 @@ const webrtcPlayed = ref(false);
 // Restarts attempted without playback recovering in between
 const consecutiveRestarts = ref(0);
 
-const BUFFER_LOW_THRESHOLD = 2;
-const BUFFER_RECOVERY_THRESHOLD = 5;
 const BUFFER_CHECK_INTERVAL_MS = 500;
 const BUFFER_RECOVERY_TIMEOUT_MS = 10000;
 const RETRY_RESET_STABLE_MS = 30000;
@@ -229,7 +237,8 @@ function bindPlayer(el: Element | ComponentPublicInstance | null): void {
 
 /**
  * Monitor video buffer levels and pause/resume playback as needed
- * Prevents reaching the end of buffer which causes refresh loops
+ * Prevents reaching the end of buffer which causes refresh loops on recorded
+ * playlists - live playlists are left to the element & hls.js (see buffer.ts)
  *
  * WebRTC MediaStreams expose no buffered ranges so they are monitored via
  * the decoded frame counter instead
@@ -254,12 +263,12 @@ function monitorBuffer(): void {
         const bufferedEnd = buffered.end(buffered.length - 1);
         const bufferAhead = bufferedEnd - currentTime;
 
-        if (bufferAhead < BUFFER_LOW_THRESHOLD && !isBuffering.value && !video.ended) {
+        const action = bufferAction(bufferAhead, isBuffering.value, bufferThresholds(liveStream.value));
+
+        if (action === 'pause' && !video.ended) {
             console.log(`Buffer running low (${bufferAhead.toFixed(2)}s), waiting for more data...`);
             setBuffering(true);
-        }
-
-        if (bufferAhead > BUFFER_RECOVERY_THRESHOLD && isBuffering.value) {
+        } else if (action === 'resume') {
             console.log(`Buffer recovered (${bufferAhead.toFixed(2)}s), resuming playback...`);
             setBuffering(false);
         }
@@ -326,10 +335,12 @@ function setBuffering(buffering: boolean): void {
     }
 
     // Only pause an element that would otherwise keep playing - one that is
-    // already waiting on data has a pending play() that pause() would abort
+    // already waiting on data has a pending play() that pause() would abort.
+    // Live HLS is never paused: it keeps playing what is buffered (buffer.ts)
     if (
         video
         && !video.srcObject
+        && !isLivePlayback(liveStream.value)
         && !video.paused
         && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
     ) {
@@ -409,6 +420,21 @@ function attachVideoEventHandlers(): void {
 
     video.ontimeupdate = () => {
         resetRetriesIfStable();
+
+        // Live HLS is not paused while buffering, so neither playing nor
+        // canplay fires again when it keeps going - progress clears the overlay
+        if (
+            !video.srcObject
+            && isBuffering.value
+            && !pausedForBuffering.value
+            && isLivePlayback(liveStream.value)
+            && video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
+            && video.currentTime > lastTimeUpdate.value
+        ) {
+            setBuffering(false);
+        }
+
+        lastTimeUpdate.value = video.currentTime;
     };
 
     video.onerror = () => {
@@ -475,6 +501,9 @@ function destroyEngine(): void {
         hls.value.destroy();
         hls.value = undefined;
     }
+
+    liveStream.value = undefined;
+    lastTimeUpdate.value = -1;
 
     if (whep.value) {
         whep.value.close();
@@ -623,8 +652,7 @@ function createHls(): void {
             backBufferLength: 90, // Keep more buffer for smoother playback
             maxBufferLength: 30, // Larger buffer for resilience
             maxMaxBufferLength: 600,
-            liveSyncDurationCount: 3, // More tolerant of discontinuities
-            liveMaxLatencyDurationCount: 10,
+            ...HLS_LIVE_CONFIG,
             liveDurationInfinity: true, // Infinite duration so the player treats the stream as live
             xhrSetup: (xhr: XMLHttpRequest) => {
                 if (username && password) {
@@ -639,6 +667,10 @@ function createHls(): void {
 
         engine.on(Hls.Events.MEDIA_ATTACHED, () => {
             engine.loadSource(url);
+        });
+
+        engine.on(Hls.Events.LEVEL_LOADED, (_event, data) => {
+            liveStream.value = data.details.live;
         });
 
         engine.on(Hls.Events.FRAG_BUFFERED, () => {
@@ -673,6 +705,10 @@ function createHls(): void {
                 case Hls.ErrorTypes.MEDIA_ERROR:
                     if (!data.fatal) {
                         setBuffering(true);
+
+                        // hls.js nudges past live stalls itself; recoverMediaError
+                        // would reset MediaSource and freeze the picture far longer
+                        if (isLivePlayback(liveStream.value) && isSelfRecoveringStall(data.details)) break;
 
                         try {
                             engine.recoverMediaError();
