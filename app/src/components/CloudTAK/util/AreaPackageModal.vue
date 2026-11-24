@@ -417,7 +417,7 @@ onMounted(async () => {
             .map((overlay) => overlay.mode_id)
             .filter((guid): guid is string => !!guid);
 
-        features.value = await mapStore.worker.db.areaFeatures(props.bounds, missions);
+        features.value = await mapStore.worker.db.areaFeatures([...props.bounds] as AreaBounds, missions);
         for (const f of features.value) checkedFeatures.add(f.id);
 
         if (layers.value.length) await preview(false);

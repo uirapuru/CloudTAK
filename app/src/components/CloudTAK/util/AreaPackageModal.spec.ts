@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ref } from 'vue';
 
 const std = vi.fn();
 const areaFeatures = vi.fn();
@@ -68,9 +69,9 @@ function previewResponse(layers: Array<Record<string, unknown>>, limits = { tile
     };
 }
 
-function mountModal() {
+function mountModal(bounds: [number, number, number, number] = BOUNDS) {
     return mount(AreaPackageModal, {
-        props: { bounds: BOUNDS },
+        props: { bounds },
         global: {
             stubs: {
                 ZoomRangeSlider: {
@@ -221,5 +222,15 @@ describe('AreaPackageModal', () => {
 
         await wrapper.find('[data-test="layer-7"] input[type="checkbox"]').setValue(false);
         expect(wrapper.find('[data-test="save"]').attributes('disabled')).toBeDefined();
+    });
+    it('passes the worker a bounds copy that survives structured clone', async () => {
+        std.mockResolvedValue(previewResponse([previewLayer({ id: 7, name: 'OSM' })]));
+        // the menu keeps bounds in a ref, so the modal receives a reactive proxy
+        mountModal(ref<[number, number, number, number]>([...BOUNDS]).value);
+        await flushPromises();
+
+        const [bounds] = areaFeatures.mock.calls[0];
+        expect(() => structuredClone(bounds)).not.toThrow();
+        expect(bounds).toEqual(BOUNDS);
     });
 });
