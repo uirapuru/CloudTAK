@@ -19,6 +19,8 @@ export type AreaPackageLayer = {
     file: string;
     name: string;
     format: AreaPackageFormat;
+    /** Extension the tile server expects (PMTiles JPEG is .jpg) */
+    ext?: string;
     host: 'profile';
     minzoom: number;
     maxzoom: number;

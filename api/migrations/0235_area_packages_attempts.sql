@@ -1,0 +1,1 @@
+ALTER TABLE "area_packages" ADD COLUMN "attempts" integer DEFAULT 0 NOT NULL;

@@ -365,6 +365,7 @@ export const AreaPackage = pgTable('area_packages', {
     status: text().$type<'Pending' | 'Running' | 'Success' | 'Fail'>().notNull().default('Pending'),
     error: text(),
     progress: integer().notNull().default(0),
+    attempts: integer().notNull().default(0),
     bounds: geometry({ type: GeometryType.Polygon, srid: 4326 }).$type<Polygon>().notNull(),
     layers: jsonb().$type<AreaPackageLayer[]>().notNull().default([]),
     features: jsonb().$type<Array<Static<typeof Feature.InputFeature>>>().notNull().default([]),

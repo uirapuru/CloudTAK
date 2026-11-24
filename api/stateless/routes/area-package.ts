@@ -24,6 +24,7 @@ import {
     limits,
     newToken,
     safeFileName,
+    tileExtension,
 } from '../../common/area-package.js';
 
 const FEATURES_MAX_BYTES = 10 * 1024 * 1024;
@@ -59,6 +60,7 @@ const StoredLayer = Type.Object({
     file: Type.Optional(Type.String()),
     name: Type.String(),
     format: Type.String(),
+    ext: Type.Optional(Type.String()),
     host: Type.String(),
     minzoom: Type.Integer(),
     maxzoom: Type.Integer(),
@@ -87,6 +89,7 @@ const PreviewLayer = Type.Object({
     available: Type.Boolean(),
     reason: Type.Optional(Type.String()),
     format: Type.String(),
+    ext: Type.Optional(Type.String()),
     host: Type.String(),
     minzoom: Type.Integer(),
     maxzoom: Type.Integer(),
@@ -100,6 +103,7 @@ type AreaPackageRow = typeof AreaPackage.$inferSelect;
 
 export const AreaPackageJob = Type.Composite([AreaPackageResponse, Type.Object({
     username: Type.String(),
+    attempts: Type.Integer(),
     features: Type.Array(Type.Unknown()),
 })]);
 
@@ -107,6 +111,7 @@ function serializeJob(row: AreaPackageRow): Static<typeof AreaPackageJob> {
     return {
         ...serialize(row),
         username: row.username,
+        attempts: row.attempts,
         features: row.features,
     };
 }
@@ -120,6 +125,9 @@ function disposition(name: string): string {
 }
 
 const NOT_FOUND = { status: 404, message: 'Not Found', messages: [] };
+
+const MAX_ACTIVE_PER_USER = 3;
+const MAX_ATTEMPTS = 3;
 type ResolvedLayer = Static<typeof PreviewLayer>;
 
 /** Strip internal fields (the feature snapshot) before sending a row to its owner */
@@ -246,19 +254,23 @@ async function resolveLayer(
 
         if (tilejson.vector_layers && tilejson.vector_layers.length) return unavailable(base, 'vector');
 
-        const ext = path.extname(new URL(tilejson.tiles[0], 'http://localhost').pathname).slice(1);
+        const ext = path.extname(new URL(tilejson.tiles[0], 'http://localhost').pathname).slice(1).toLowerCase();
         if (['mvt', 'pbf'].includes(ext)) return unavailable(base, 'vector');
+
+        const tile = tileExtension(new URL(tilejson.tiles[0], 'http://localhost').toString());
+        if (!tile) return unavailable(base, 'unsupported');
 
         const layer_minzoom = tilejson.minzoom ?? 0;
         const layer_maxzoom = tilejson.maxzoom ?? 22;
         const zoom = clampZoom(layer, layer_minzoom, layer_maxzoom);
-        const format = normalizeFormat(ext || 'png');
+        const format = tile.format;
         const tiles = zoom.minzoom <= zoom.maxzoom ? countTiles(bounds, zoom.minzoom, zoom.maxzoom) : 0;
 
         return {
             ...base,
             available: true,
             format,
+            ext: tile.ext,
             host: 'profile',
             ...zoom,
             layer_minzoom,
@@ -356,7 +368,13 @@ export default async function router(schema: Schema, config: ConfigStateless) {
 
             const max = limits();
 
-            if (!req.body.layers.length && !req.body.features.length) {
+            const active = await config.models.AreaPackage.count({
+                where: sql`username = ${user.email} AND status IN ('Pending', 'Running')`,
+            });
+
+            if (active >= MAX_ACTIVE_PER_USER) {
+                throw new Err(400, null, `Możesz mieć naraz najwyżej ${MAX_ACTIVE_PER_USER} paczki w kolejce. Poczekaj, aż któraś się złoży.`);
+            } else if (!req.body.layers.length && !req.body.features.length) {
                 throw new Err(400, null, 'Area package must contain at least one layer or feature');
             } else if (req.body.features.length > max.features) {
                 throw new Err(400, null, `Area package can contain at most ${max.features} features`);
@@ -396,7 +414,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
                 if (requested.source === 'basemap') {
                     layers.push({ source: 'basemap', id: requested.id as number, host: layer.host, ...common });
                 } else {
-                    layers.push({ source: 'profile', file: requested.file as string, host: 'profile', ...common });
+                    layers.push({ source: 'profile', file: requested.file as string, ext: layer.ext ?? layer.format, host: 'profile', ...common });
                 }
             }
 
@@ -588,7 +606,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.post('/area-package/requeue', {
         name: 'Requeue Area Package Jobs',
         group: 'AreaPackage',
-        description: 'Internal: put Running jobs back to Pending after a worker restart',
+        description: 'Internal: put Running jobs without a recent heartbeat back to Pending, or fail them after repeated interruptions',
+        body: Type.Object({
+            stale_minutes: Type.Optional(Type.Integer({ minimum: 1 })),
+        }),
         res: Type.Object({
             count: Type.Integer(),
         }),
@@ -597,12 +618,58 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         try {
             await Auth.as_resource(config, req, { resources: [{ access: AuthResourceAccess.AREA_PACKAGE }] });
 
+            const stale = req.body.stale_minutes
+                ? sql`AND updated < Now() - make_interval(mins => ${req.body.stale_minutes})`
+                : sql``;
+
+            await config.pg.update(AreaPackage)
+                .set({
+                    status: 'Fail',
+                    error: `Składanie paczki przerwano ${MAX_ATTEMPTS} razy`,
+                    updated: sql`Now()`,
+                })
+                .where(sql`status = 'Running' AND attempts >= ${MAX_ATTEMPTS} ${stale}`);
+
             const rows = await config.pg.update(AreaPackage)
                 .set({ status: 'Pending', progress: 0, updated: sql`Now()` })
-                .where(sql`status = 'Running'`)
+                .where(sql`status = 'Running' ${stale}`)
                 .returning({ id: AreaPackage.id });
 
             res.json({ count: rows.length });
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.post('/area-package/:id/claim', {
+        name: 'Claim Area Package Job',
+        group: 'AreaPackage',
+        description: 'Internal: atomically move a Pending job to Running for one worker',
+        params: Type.Object({
+            id: Type.String({ format: 'uuid' }),
+        }),
+        res: AreaPackageJob,
+        security: Auth.security({ resources: [AuthResourceAccess.AREA_PACKAGE] }),
+    }, async (req, res) => {
+        try {
+            await Auth.as_resource(config, req, { resources: [{ access: AuthResourceAccess.AREA_PACKAGE }] });
+
+            const rows = await config.pg.update(AreaPackage)
+                .set({
+                    status: 'Running',
+                    progress: 0,
+                    attempts: sql`${AreaPackage.attempts} + 1`,
+                    updated: sql`Now()`,
+                })
+                .where(sql`id = ${req.params.id} AND status = 'Pending'`)
+                .returning();
+
+            if (rows.length !== 1) {
+                const exists = await config.models.AreaPackage.count({ where: sql`id = ${req.params.id}` });
+                throw new Err(exists ? 409 : 404, null, exists ? 'Area Package is not Pending' : 'Area Package Not Found');
+            }
+
+            res.json(serializeJob(rows[0]));
         } catch (err) {
             Err.respond(err, res);
         }

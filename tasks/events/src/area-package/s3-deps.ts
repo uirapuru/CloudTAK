@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import s3client from '../s3.ts';
 import { toPMTiles } from './mbtiles.ts';
@@ -18,6 +18,9 @@ export function s3Deps(bucket: string): JobDeps {
                 },
             });
             await upload.done();
+        },
+        remove: async (key: string): Promise<void> => {
+            await s3client().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
         },
         attachment: async (hash: string) => {
             const s3 = s3client();

@@ -208,6 +208,36 @@ test('POST: api/profile/area-package', async () => {
     assert.equal(row.features[0].properties.callsign, 'PO-1');
 });
 
+test('POST: api/profile/area-package - at most three active packages per user', async () => {
+    const ids: string[] = [];
+    for (let i = 0; i < 2; i++) {
+        const res = await flight.fetch('/api/profile/area-package', {
+            method: 'POST',
+            auth: { bearer: flight.token.user },
+            body: body({ name: `extra ${i}` }),
+        }, false);
+        assert.equal(res.status, 200, JSON.stringify(res.body));
+        ids.push(res.body.id);
+    }
+
+    const fourth = await flight.fetch('/api/profile/area-package', {
+        method: 'POST',
+        auth: { bearer: flight.token.user },
+        body: body({ name: 'fourth' }),
+    }, false);
+    assert.equal(fourth.status, 400);
+    assert.match(fourth.body.message, /3/);
+
+    const other = await flight.fetch('/api/profile/area-package', {
+        method: 'POST',
+        auth: { bearer: flight.token.other },
+        body: body({ name: 'other user' }),
+    }, false);
+    assert.equal(other.status, 200, 'the limit is per user');
+
+    for (const id of [...ids, other.body.id]) await flight.config!.models.AreaPackage.delete(id);
+});
+
 test('GET: api/profile/area-package - owner sees the package', async () => {
     const res = await flight.fetch('/api/profile/area-package', {
         method: 'GET',

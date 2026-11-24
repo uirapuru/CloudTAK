@@ -6,6 +6,7 @@ import Flight from './flight.js';
 import Sinon from 'sinon';
 import S3 from '../common/aws/s3.js';
 import bboxPolygon from '@turf/bbox-polygon';
+import { sql } from 'drizzle-orm';
 
 const flight = new Flight();
 
@@ -159,6 +160,63 @@ test('POST: api/area-package/requeue - running jobs go back to pending', async (
     const row = await flight.config!.models.AreaPackage.from(pending.id);
     assert.equal(row.status, 'Pending');
     assert.equal(row.progress, 0);
+});
+
+test('POST: api/area-package/:id/claim - only one worker gets a pending job', async () => {
+    const first = await flight.fetch(`/api/area-package/${pending.id}/claim`, {
+        method: 'POST',
+        auth: { bearer: etl('area_package') },
+        body: {},
+    }, false);
+    assert.equal(first.status, 200, JSON.stringify(first.body));
+    assert.equal(first.body.status, 'Running');
+    assert.equal(first.body.attempts, 1);
+    assert.equal(first.body.features.length, 1);
+
+    const second = await flight.fetch(`/api/area-package/${pending.id}/claim`, {
+        method: 'POST',
+        auth: { bearer: etl('area_package') },
+        body: {},
+    }, false);
+    assert.equal(second.status, 409);
+});
+
+test('POST: api/area-package/requeue - a job with a recent heartbeat stays Running', async () => {
+    const res = await flight.fetch('/api/area-package/requeue', {
+        method: 'POST',
+        auth: { bearer: etl('area_package') },
+        body: { stale_minutes: 15 },
+    }, false);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.count, 0);
+    assert.equal((await flight.config!.models.AreaPackage.from(pending.id)).status, 'Running');
+});
+
+test('POST: api/area-package/requeue - a stale job goes back to Pending', async () => {
+    await flight.config!.pg.execute(sql`UPDATE area_packages SET updated = Now() - interval '1 hour' WHERE id = ${pending.id}`);
+
+    const res = await flight.fetch('/api/area-package/requeue', {
+        method: 'POST',
+        auth: { bearer: etl('area_package') },
+        body: { stale_minutes: 15 },
+    }, false);
+    assert.equal(res.body.count, 1);
+    assert.equal((await flight.config!.models.AreaPackage.from(pending.id)).status, 'Pending');
+});
+
+test('POST: api/area-package/requeue - a job interrupted three times fails', async () => {
+    await flight.config!.pg.execute(sql`UPDATE area_packages SET status = 'Running', attempts = 3 WHERE id = ${pending.id}`);
+
+    const res = await flight.fetch('/api/area-package/requeue', {
+        method: 'POST',
+        auth: { bearer: etl('area_package') },
+        body: {},
+    }, false);
+    assert.equal(res.status, 200);
+
+    const row = await flight.config!.models.AreaPackage.from(pending.id);
+    assert.equal(row.status, 'Fail');
+    assert.match(String(row.error), /3/);
 });
 
 test('GET: api/public/area-package - deleted package is 404', async () => {

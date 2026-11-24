@@ -37,6 +37,8 @@ export async function buildDataPackage(opts: {
     attachments: (hash: string) => Promise<PackageAttachment | null>;
     /** Directory for the package build files and the zip; defaults to a new one in the OS temp dir */
     workdir?: string;
+    /** Delete each MBTiles once it is copied into the package, to keep peak disk use down */
+    removeSources?: boolean;
 }): Promise<string> {
     const pkg = new DataPackage(opts.id, opts.name, opts.workdir ? { path: opts.workdir } : {});
     pkg.setPermanent();
@@ -44,6 +46,7 @@ export async function buildDataPackage(opts: {
     for (const file of opts.mbtiles) {
         await pkg.addFile(fs.createReadStream(file.path), { name: file.fileName });
         dropContentUid(pkg);
+        if (opts.removeSources) fs.rmSync(file.path, { force: true });
     }
 
     let skipped = 0;

@@ -5,6 +5,32 @@ import { limiterFor, type HostLimiter } from './limiter.ts';
 import type { AreaPackageLayer, BBox } from './types.ts';
 
 const MAX_ATTEMPTS = 3;
+// A host that keeps throttling (429/503) is given up after this many pauses
+// (1 s doubling up to 60 s: roughly ten minutes), so one blocked provider
+// cannot hold the single-job queue forever
+const MAX_THROTTLED = 15;
+const RETRY_DELAY_MS = 1000;
+
+type FetchOptions = {
+    tilesBase: string;
+    secret: string;
+    username: string;
+    layer: AreaPackageLayer;
+    signal: AbortSignal;
+    maxThrottled?: number;
+    retryDelayMs?: number;
+};
+
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+    return new Promise((resolve) => {
+        if (ms <= 0 || signal.aborted) return resolve();
+        const timer = setTimeout(resolve, ms);
+        signal.addEventListener('abort', () => {
+            clearTimeout(timer);
+            resolve();
+        }, { once: true });
+    });
+}
 
 export type FetchedTile = { z: number; x: number; y: number; data: Buffer };
 
@@ -26,7 +52,7 @@ export function tileUrl(
         url = new URL(`/tiles/basemap/${layer.id}/tiles/${z}/${x}/${y}`, tilesBase);
         token = jwt.sign({ access: 'user', email: username }, secret);
     } else {
-        url = new URL(`/tiles/profile/${encodeURIComponent(username)}/${encodeURIComponent(layer.file)}/tiles/${z}/${x}/${y}.${layer.format}`, tilesBase);
+        url = new URL(`/tiles/profile/${encodeURIComponent(username)}/${encodeURIComponent(layer.file)}/tiles/${z}/${x}/${y}.${layer.ext ?? layer.format}`, tilesBase);
         token = jwt.sign({ access: 'profile', email: username }, secret);
     }
 
@@ -35,7 +61,7 @@ export function tileUrl(
 }
 
 async function fetchTile(
-    opts: { tilesBase: string; secret: string; username: string; layer: AreaPackageLayer; signal: AbortSignal },
+    opts: FetchOptions,
     limiter: HostLimiter,
     z: number,
     x: number,
@@ -43,7 +69,11 @@ async function fetchTile(
 ): Promise<Outcome> {
     const url = tileUrl(opts.tilesBase, opts.layer, opts.username, opts.secret, z, x, y);
 
+    const maxThrottled = opts.maxThrottled ?? MAX_THROTTLED;
+    const retryDelay = opts.retryDelayMs ?? RETRY_DELAY_MS;
+
     let failures = 0;
+    let throttled = 0;
     while (true) {
         if (opts.signal.aborted) return { status: 0 };
 
@@ -69,10 +99,12 @@ async function fetchTile(
             if (failures >= MAX_ATTEMPTS) {
                 throw new Error(`${opts.layer.name}: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
             }
+            await sleep(retryDelay * 2 ** (failures - 1), opts.signal);
             continue;
         }
 
         if (status === 429 || status === 503) {
+            if (++throttled > maxThrottled) throw new Error(`${opts.layer.name}: ${status}`);
             limiter.backoff();
             continue;
         }
@@ -86,6 +118,7 @@ async function fetchTile(
 
         failures++;
         if (failures >= MAX_ATTEMPTS) throw new Error(`${opts.layer.name}: ${status}`);
+        await sleep(retryDelay * 2 ** (failures - 1), opts.signal);
     }
 }
 
@@ -93,14 +126,7 @@ async function fetchTile(
  * Download every tile of a layer inside the area, through the CloudTAK tile
  * server, honouring the per-host rate limit. Missing tiles are skipped.
  */
-export async function* fetchLayerTiles(opts: {
-    tilesBase: string;
-    secret: string;
-    username: string;
-    layer: AreaPackageLayer;
-    bounds: BBox;
-    signal: AbortSignal;
-}): AsyncGenerator<FetchedTile> {
+export async function* fetchLayerTiles(opts: FetchOptions & { bounds: BBox }): AsyncGenerator<FetchedTile> {
     const limiter = limiterFor(opts.layer.host);
 
     for (let z = opts.layer.minzoom; z <= opts.layer.maxzoom; z++) {

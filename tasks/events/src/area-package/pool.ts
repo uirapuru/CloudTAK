@@ -3,6 +3,9 @@ import { runJob, etlToken, type JobDeps } from './job.ts';
 import { s3Deps } from './s3-deps.ts';
 import type { AreaPackageJob } from './types.ts';
 
+const STALE_MINUTES = 15;
+const REQUEUE_EVERY_MS = 60 * 1000;
+
 /**
  * Polls the CloudTAK API for area package jobs and builds them one at a time,
  * so the per-host tile rate limit holds for the whole environment.
@@ -18,6 +21,7 @@ export default class AreaPackagePool {
     #timer?: NodeJS.Timeout;
     #running: Promise<void> | null = null;
     #closing = false;
+    #lastRequeue = Date.now();
 
     constructor(opts: {
         api: string;
@@ -64,19 +68,28 @@ export default class AreaPackagePool {
 
     async #tick(): Promise<void> {
         try {
+            // A job whose worker died without a word (no progress report for
+            // STALE_MINUTES) goes back to the queue, or fails after repeated tries
+            if (Date.now() - this.#lastRequeue >= REQUEUE_EVERY_MS) {
+                this.#lastRequeue = Date.now();
+                const requeue = await this.#request('POST', '/api/area-package/requeue', { stale_minutes: STALE_MINUTES });
+                await requeue.body?.cancel();
+            }
+
             const res = await this.#request('GET', '/api/area-package?status=Pending&limit=1');
             if (!res.ok) throw new Error(await res.text());
 
             const { items } = await res.json() as { items: AreaPackageJob[] };
             if (!items.length || this.#closing) return;
 
-            const lock = await this.#request('PATCH', `/api/area-package/${items[0].id}`, { status: 'Running', progress: 0 });
-            if (!lock.ok) {
-                await lock.body?.cancel();
+            // Atomic: only one worker moves a Pending job to Running
+            const claim = await this.#request('POST', `/api/area-package/${items[0].id}/claim`, {});
+            if (!claim.ok) {
+                await claim.body?.cancel();
                 return;
             }
 
-            const job = await lock.json() as AreaPackageJob;
+            const job = await claim.json() as AreaPackageJob;
 
             if (!this.deps) throw new Error('Area Package Pool has no storage configured');
 

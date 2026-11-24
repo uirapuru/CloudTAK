@@ -96,8 +96,10 @@ test('tileUrl - basemap and profile file routes with a signed token', () => {
         file: 'abc',
         host: 'profile',
         format: 'jpeg',
+        ext: 'jpg',
     } as Partial<AreaPackageLayer>), 'user@example.com', SECRET, 3, 1, 2));
-    assert.equal(profile.pathname, '/tiles/profile/user%40example.com/abc/tiles/3/1/2.jpeg');
+    // The tile server answers 400 for .jpeg on a JPEG archive: it wants .jpg
+    assert.equal(profile.pathname, '/tiles/profile/user%40example.com/abc/tiles/3/1/2.jpg');
     const claims = jwt.verify(profile.searchParams.get('token') || '', SECRET) as Record<string, string>;
     assert.equal(claims.access, 'profile');
     assert.equal(claims.email, 'user@example.com');
@@ -177,6 +179,38 @@ test('fetchLayerTiles - no access to the layer fails instead of producing an emp
             tilesBase: srv.base, secret: SECRET, username: 'user@example.com',
             layer: layer({ host: 'forbidden-test.svc' }), bounds: BOUNDS, signal: new AbortController().signal,
         })), /OSM: brak dostępu albo brak danych/);
+    } finally {
+        await srv.close();
+    }
+});
+
+test('fetchLayerTiles - a host that keeps answering 429 fails after the cap instead of blocking the queue', async () => {
+    const srv = await tileServer(() => ({ status: 429 }));
+    try {
+        await assert.rejects(collect(fetchLayerTiles({
+            tilesBase: srv.base, secret: SECRET, username: 'user@example.com',
+            layer: layer({ minzoom: 0, maxzoom: 0, host: 'throttled-test.svc' }), bounds: BOUNDS,
+            signal: new AbortController().signal, maxThrottled: 2,
+        })), /OSM: 429/);
+    } finally {
+        await srv.close();
+    }
+});
+
+test('fetchLayerTiles - waits between retries of a server error', async () => {
+    const srv = await tileServer((z, x, y, attempt) => {
+        if (attempt <= 2) return { status: 502 };
+        return { status: 200, body: Buffer.from('png') };
+    });
+    try {
+        const start = Date.now();
+        const tiles = await collect(fetchLayerTiles({
+            tilesBase: srv.base, secret: SECRET, username: 'user@example.com',
+            layer: layer({ minzoom: 0, maxzoom: 0, host: 'retry-test.svc' }), bounds: BOUNDS,
+            signal: new AbortController().signal, retryDelayMs: 100,
+        }));
+        assert.equal(tiles.length, 1);
+        assert.ok(Date.now() - start >= 300, `waited ${Date.now() - start} ms`);
     } finally {
         await srv.close();
     }

@@ -1639,6 +1639,13 @@
       "when": 1795476534346,
       "tag": "0234_area_packages",
       "breakpoints": true
+    },
+    {
+      "idx": 235,
+      "version": "7",
+      "when": 1795480266203,
+      "tag": "0235_area_packages_attempts",
+      "breakpoints": true
     }
   ]
 }

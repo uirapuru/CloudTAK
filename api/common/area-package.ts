@@ -19,6 +19,8 @@ export type AreaPackageLayer = {
     file: string;
     name: string;
     format: AreaPackageFormat;
+    /** Extension the tile server expects for this file (PMTiles JPEG is .jpg) */
+    ext: string;
     host: 'profile';
     minzoom: number;
     maxzoom: number;
@@ -116,6 +118,33 @@ export function safeFileName(name: string): string {
         .trim();
 
     return cleaned.length ? cleaned : 'paczka';
+}
+
+const TILE_EXTENSIONS: Record<string, AreaPackageFormat> = {
+    png: 'png',
+    jpg: 'jpeg',
+    jpeg: 'jpeg',
+    webp: 'webp',
+};
+
+/**
+ * Extension of a tile URL template as the tile server expects it, and the
+ * matching MBTiles format; null for formats an ATAK raster layer cannot carry
+ */
+export function tileExtension(url: string): { ext: string; format: AreaPackageFormat } | null {
+    let pathname: string;
+    try {
+        pathname = new URL(url).pathname;
+    } catch {
+        return null;
+    }
+
+    const match = /\.([a-z0-9]+)$/i.exec(decodeURIComponent(pathname));
+    if (!match) return null;
+
+    const ext = match[1].toLowerCase();
+    const format = TILE_EXTENSIONS[ext];
+    return format ? { ext, format } : null;
 }
 
 export function newToken(): string {

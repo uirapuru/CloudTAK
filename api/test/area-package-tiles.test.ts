@@ -8,6 +8,7 @@ import {
     estimateBytes,
     safeFileName,
     newToken,
+    tileExtension,
 } from '../common/area-package.js';
 
 test('tileRange - whole world at zoom 0 is a single tile', () => {
@@ -97,4 +98,16 @@ test('newToken - 32 random bytes in base64url', () => {
     const b = newToken();
     assert.match(a, /^[A-Za-z0-9_-]{43}$/);
     assert.notEqual(a, b);
+});
+
+test('tileExtension - keeps the tile server extension and maps it to the MBTiles format', () => {
+    assert.deepEqual(tileExtension('https://t/tiles/profile/u/f/tiles/{z}/{x}/{y}.jpg?token=x'), { ext: 'jpg', format: 'jpeg' });
+    assert.deepEqual(tileExtension('https://t/tiles/profile/u/f/tiles/{z}/{x}/{y}.png'), { ext: 'png', format: 'png' });
+    assert.deepEqual(tileExtension('https://t/tiles/profile/u/f/tiles/{z}/{x}/{y}.webp'), { ext: 'webp', format: 'webp' });
+});
+
+test('tileExtension - formats ATAK and MBTiles cannot carry are unsupported', () => {
+    assert.equal(tileExtension('https://t/x/{z}/{x}/{y}.avif'), null);
+    assert.equal(tileExtension('https://t/x/{z}/{x}/{y}.mvt'), null);
+    assert.equal(tileExtension('https://t/x/{z}/{x}/{y}'), null);
 });
