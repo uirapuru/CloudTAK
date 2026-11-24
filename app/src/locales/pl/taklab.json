@@ -120,5 +120,50 @@
         "addToMap": "Dodaj na mapę",
         "current": "A (obecna)",
         "noPlan": "Trasa nie ma planu taklab."
+    },
+    "recordings": {
+        "title": "Nagrania",
+        "disabled": "Ten serwer nie zapisuje jeszcze nagrań",
+        "usage": "Zajęte miejsce",
+        "usageOf": "{used} z {limit}",
+        "kindFilter": "Rodzaj nagrania",
+        "filter": {
+            "all": "Wszystkie",
+            "video": "Wideo",
+            "voice": "Głos",
+            "scan": "Skany"
+        },
+        "kind": {
+            "video": "Wideo",
+            "voice": "Głosówka",
+            "scan": "Skan"
+        },
+        "account": "Konto",
+        "allAccounts": "Wszystkie konta",
+        "from": "Od",
+        "to": "Do",
+        "none": "Brak nagrań w tym zakresie",
+        "name": "Nazwa nagrania",
+        "saveName": "Zapisz nazwę",
+        "rename": "Zmień nazwę",
+        "delete": "Usuń",
+        "download": "Pobierz",
+        "showOnMap": "Pokaż na mapie",
+        "hideTrack": "Ukryj ślad na mapie",
+        "hidePreview": "Zamknij podgląd",
+        "preview": {
+            "video": "Odtwórz",
+            "voice": "Odsłuchaj",
+            "scan": "Podgląd"
+        },
+        "scanAlt": "Zdjęcie skanu",
+        "noText": "Skan bez rozpoznanego tekstu",
+        "copied": "Skopiowano",
+        "more": "Starsze nagrania",
+        "noPosition": "Nagranie nie ma zapisanej pozycji",
+        "deleteTitle": "Usuwanie nagrania",
+        "deleteQuestion": "Usunąć nagranie „{name}”?",
+        "deleteWarning": "Plik i znacznik na mapie znikną z serwera u wszystkich. Tego nie da się cofnąć.",
+        "openFromMap": "Otwórz nagranie"
     }
 }

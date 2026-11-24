@@ -508,6 +508,25 @@
                         />
                     </div>
 
+                    <div
+                        v-if='recordingId'
+                        class='col-12 px-3 py-2'
+                    >
+                        <button
+                            type='button'
+                            class='btn btn-sm w-100'
+                            data-testid='open-recording'
+                            @click='openRecording'
+                        >
+                            <IconMovie
+                                :size='16'
+                                stroke='1'
+                                class='me-1'
+                            />
+                            {{ t('taklab.recordings.openFromMap') }}
+                        </button>
+                    </div>
+
                     <PropertyAttachments
                         v-if='!cot.properties.contact'
                         :key='cot.properties.id'
@@ -610,6 +629,7 @@ import RouteVariants from './util/RouteVariants.vue';
 import RouteActorNote from './util/RouteActorNote.vue';
 import { readRoutePlan } from '../../base/route-plan.ts';
 import { isDangerZone, setDangerZone } from '../../base/danger-zone.ts';
+import { recordingIdOf } from './Menu/recordings.ts';
 import type { Geofence } from '../../base/danger-zone.ts';
 import MenuTemplate from './util/MenuTemplate.vue';
 import type COT from '../../base/cot.ts';
@@ -863,6 +883,14 @@ const center = computed(() => {
 
     return arr;
 })
+
+// taklab: marker of a recording from the OTS register (video, voice message, scan)
+const recordingId = computed<string | null>(() => recordingIdOf(cot.value?.properties as { metadata?: unknown; links?: unknown } | undefined));
+
+async function openRecording(): Promise<void> {
+    if (!recordingId.value) return;
+    await router.push({ path: '/menu/recordings', query: { open: recordingId.value } });
+}
 
 // Unique GUIDs of the Missions the CoT's Links reference
 const missionLinks = computed<string[]>(() => {

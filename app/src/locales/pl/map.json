@@ -206,6 +206,11 @@
                 "label": "Konta serwera",
                 "tooltip": "Konta serwera",
                 "description": "Konta serwera OTS z kodami QR dla ATAK i OpenTAK ICU"
+            },
+            "recordings": {
+                "label": "Nagrania",
+                "tooltip": "Nagrania",
+                "description": "Wideo, głosówki i skany zapisane na serwerze"
             }
         },
         "sourceCode": "Kod źródłowy (AGPL-3.0)"

@@ -21,6 +21,7 @@ import {
     IconHistory,
     IconMicrophone,
     IconQrcode,
+    IconMovie,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -205,6 +206,15 @@ export default class MenuManager {
                 description: 'Historia rozmów głosowych z transkrypcją',
                 icon: IconMicrophone,
                 requiresVoiceHistory: true,
+            },
+            {
+                // taklab: nagrania z serwera OTS (wideo, głosówki, skany OCR) z pozycją operatora
+                key: 'recordings',
+                label: 'Nagrania',
+                route: '/menu/recordings',
+                tooltip: 'Nagrania',
+                description: 'Wideo, głosówki i skany zapisane na serwerze',
+                icon: IconMovie,
             },
             {
                 // taklab: konta serwera OTS z kodami QR ATAK i OpenTAK ICU

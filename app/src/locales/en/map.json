@@ -206,6 +206,11 @@
                 "label": "Server accounts",
                 "tooltip": "Server accounts",
                 "description": "OTS server accounts with QR codes for ATAK and OpenTAK ICU"
+            },
+            "recordings": {
+                "label": "Recordings",
+                "tooltip": "Recordings",
+                "description": "Video, voice messages and scans stored on the server"
             }
         },
         "sourceCode": "Source code (AGPL-3.0)"

@@ -120,5 +120,50 @@
         "addToMap": "Add to map",
         "current": "A (current)",
         "noPlan": "The route has no taklab plan."
+    },
+    "recordings": {
+        "title": "Recordings",
+        "disabled": "This server does not store recordings yet",
+        "usage": "Disk used",
+        "usageOf": "{used} of {limit}",
+        "kindFilter": "Recording type",
+        "filter": {
+            "all": "All",
+            "video": "Video",
+            "voice": "Voice",
+            "scan": "Scans"
+        },
+        "kind": {
+            "video": "Video",
+            "voice": "Voice message",
+            "scan": "Scan"
+        },
+        "account": "Account",
+        "allAccounts": "All accounts",
+        "from": "From",
+        "to": "To",
+        "none": "No recordings in this range",
+        "name": "Recording name",
+        "saveName": "Save name",
+        "rename": "Rename",
+        "delete": "Delete",
+        "download": "Download",
+        "showOnMap": "Show on map",
+        "hideTrack": "Hide track on the map",
+        "hidePreview": "Close preview",
+        "preview": {
+            "video": "Play",
+            "voice": "Listen",
+            "scan": "Preview"
+        },
+        "scanAlt": "Scanned image",
+        "noText": "No text recognised in this scan",
+        "copied": "Copied",
+        "more": "Older recordings",
+        "noPosition": "This recording has no stored position",
+        "deleteTitle": "Delete recording",
+        "deleteQuestion": "Delete the recording “{name}”?",
+        "deleteWarning": "The file and the map marker disappear from the server for everyone. This cannot be undone.",
+        "openFromMap": "Open recording"
     }
 }
