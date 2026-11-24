@@ -509,7 +509,7 @@
                     </div>
 
                     <div
-                        v-if='recordingId'
+                        v-if='recordingId && mapStore.menu.canSeeOtsAccounts.value'
                         class='col-12 px-3 py-2'
                     >
                         <button

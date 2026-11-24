@@ -67,10 +67,35 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }
     });
 
+    // Before /recordings/:id: "archive" would match the id pattern.
+    await schema.get('/recordings/archive', {
+        name: 'Download Recordings Archive',
+        group: 'Recordings',
+        description: 'ZIP of the chosen recordings (ids, up to 100) or of all matching the filters (all=true); OTS administrators only',
+        query: Type.Object({
+            token: Type.Optional(Type.String()),
+            ids: Type.Optional(Type.String({ maxLength: 6600, pattern: '^[A-Za-z0-9_,-]*$' })),
+            all: Type.Optional(Type.Boolean()),
+            kind: Type.Optional(Kind),
+            account: Type.Optional(Type.String({ maxLength: 128 })),
+            from: Type.Optional(Type.String({ maxLength: 64 })),
+            to: Type.Optional(Type.String({ maxLength: 64 })),
+        }),
+        security: Auth.security({ token: true }),
+    }, async (req, res) => {
+        try {
+            // Token in the query: the browser saves the ZIP from a plain link.
+            const { auth } = await caller(req);
+            await control.archive(auth, req.query, res);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
     await schema.get('/recordings', {
         name: 'List Recordings',
         group: 'Recordings',
-        description: 'Video, voice and scan recordings of the environment the caller may see (OTS group rules)',
+        description: 'Video, voice and scan recordings of the environment; OTS administrators only',
         query: Type.Object({
             kind: Type.Optional(Kind),
             account: Type.Optional(Type.String({ maxLength: 128 })),
@@ -112,7 +137,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.patch('/recordings/:id', {
         name: 'Rename Recording',
         group: 'Recordings',
-        description: 'Change the name of a recording (author or administrator; OTS decides)',
+        description: 'Change the name of a recording (OTS administrators only)',
         params: Type.Object({ id: Id }),
         body: Type.Object({ name: Type.String({ minLength: 1, maxLength: 200 }) }),
         res: RecordingDetail,
@@ -128,7 +153,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.delete('/recordings/:id', {
         name: 'Delete Recording',
         group: 'Recordings',
-        description: 'Delete a recording with its file and map marker (author or administrator; OTS decides)',
+        description: 'Delete a recording with its file and map marker (OTS administrators only)',
         params: Type.Object({ id: Id }),
         res: Type.Object({ status: Type.Integer(), message: Type.String() }),
     }, async (req, res) => {

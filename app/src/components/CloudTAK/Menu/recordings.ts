@@ -60,6 +60,26 @@ export function listQuery(kind: KindFilter, account: string, from: string, to: s
     return q;
 }
 
+/** Most recordings OTS puts in one archive when they are chosen one by one. */
+export const MAX_ARCHIVE_IDS = 100;
+
+/**
+ * Query of /api/recordings/archive: the chosen ids, or (no ids) all recordings
+ * matching the screen filters. The page number is not a filter.
+ */
+export function archiveQuery(ids: string[], filters: Record<string, string>): Record<string, string> {
+    if (ids.length) return { ids: ids.join(',') };
+    const q: Record<string, string> = { all: 'true' };
+    for (const key of ['kind', 'account', 'from', 'to']) if (filters[key]) q[key] = filters[key];
+    return q;
+}
+
+/** Selection after the list changed: ids no longer on the list drop out. */
+export function keepSelected(selected: string[], items: Recording[]): string[] {
+    const present = new Set(items.map((r) => r.id));
+    return selected.filter((id) => present.has(id));
+}
+
 function decimal(value: number, digits: number, locale: string): string {
     const text = value.toFixed(digits);
     return locale === 'pl' ? text.replace('.', ',') : text;

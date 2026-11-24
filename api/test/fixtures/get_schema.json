@@ -2034,6 +2034,11 @@
         "query": false,
         "res": true
     },
+    "GET /recordings/archive": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
     "GET /recordings": {
         "body": false,
         "query": true,

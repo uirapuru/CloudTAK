@@ -10,6 +10,7 @@ import {
     normalizeUsage,
     listItems,
     otsQuery,
+    archiveQuery,
     safeId,
     type OtsTransport,
 } from '../stateless/lib/control/recordings.js';
@@ -222,6 +223,51 @@ test('file passes Range to OTS and 206 with Content-Range back, inline unless do
     await control.file(AUTH, '7', 'bytes=0-3; drop table', down as unknown as ExpressResponse, true);
     assert.equal(seen[1].headers.Range, undefined, 'malformed Range is not forwarded');
     assert.equal(down.headers['content-disposition'], 'attachment; filename="patrol.mp4"');
+});
+
+test('archiveQuery: chosen ids or all with the list filters, nothing else', () => {
+    assert.equal(archiveQuery({ ids: 'a-1, b_2,,' }), '?ids=a-1,b_2');
+    assert.equal(archiveQuery({ ids: 'a', all: true, kind: 'video' }), '?ids=a', 'ids win over all');
+    assert.equal(archiveQuery({ all: true }), '?all=1');
+    assert.equal(
+        archiveQuery({ all: true, kind: 'voice', account: ' alfa ', from: '2026-11-24T10:00:00Z' }),
+        '?kind=voice&account=alfa&from=2026-11-24T10%3A00%3A00.000Z&all=1',
+    );
+    for (const bad of [{}, { ids: '../usage' }, { ids: Array.from({ length: 101 }, (_, n) => `r${n}`).join(',') }, { all: true, from: 'jutro' }]) {
+        assert.throws(() => archiveQuery(bad), (err: { status: number }) => err.status === 400, JSON.stringify(bad).slice(0, 40));
+    }
+});
+
+test('archive streams the OTS ZIP with a safe file name and maps 403 to the admin message', async () => {
+    const { control, seen } = fake(() => new Response('PK\x03\x04zip', {
+        status: 200,
+        headers: {
+            'content-type': 'application/zip',
+            'content-disposition': 'attachment; filename="nagrania-20261124-190000.zip"',
+            'set-cookie': 'session=ots',
+        },
+    }));
+    const res = new FakeRes();
+    await control.archive(AUTH, { ids: 'a,b' }, res as unknown as ExpressResponse);
+    assert.equal(seen[0].url, 'https://public-ots:8443/api/taklab/recordings/archive?ids=a,b');
+    assert.equal(seen[0].auth, AUTH);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers['content-type'], 'application/zip');
+    assert.equal(res.headers['content-disposition'], 'attachment; filename="nagrania-20261124-190000.zip"');
+    assert.equal(res.headers['set-cookie'], undefined);
+    assert.equal(Buffer.concat(res.chunks).toString(), 'PK\x03\x04zip');
+
+    const odd = fake(() => new Response('PK', { status: 200, headers: { 'content-disposition': 'attachment; filename="../x.zip"' } }));
+    const oddRes = new FakeRes();
+    await odd.control.archive(AUTH, { all: true }, oddRes as unknown as ExpressResponse);
+    assert.equal(oddRes.headers['content-disposition'], 'attachment; filename="nagrania.zip"');
+
+    const refused = fake(() => json({ error: 'konto bravo' }, 403));
+    await assert.rejects(refused.control.archive(AUTH, { all: true }, new FakeRes() as unknown as ExpressResponse), (err: { status: number; safe?: string; message: string }) => {
+        assert.equal(err.status, 403);
+        assert.match(String(err.safe ?? err.message), /tylko dla administratora/);
+        return true;
+    });
 });
 
 test('file 416 and 404 become errors before any byte is sent', async () => {

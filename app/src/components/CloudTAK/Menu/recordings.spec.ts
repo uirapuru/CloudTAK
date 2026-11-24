@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
     accountsOf,
+    archiveQuery,
+    keepSelected,
     displayName,
     formatDuration,
     formatSize,
@@ -127,5 +129,19 @@ describe('recording track layer', () => {
         expect(map.layers.size).toBe(0);
         expect(map.sources.size).toBe(0);
         expect(track.shown).toBeNull();
+    });
+});
+
+describe('archive download', () => {
+    it('sends the chosen ids, or all with the screen filters but without the page', () => {
+        expect(archiveQuery(['a', 'b'], { kind: 'video', page: '2' })).toEqual({ ids: 'a,b' });
+        expect(archiveQuery([], {})).toEqual({ all: 'true' });
+        expect(archiveQuery([], { kind: 'voice', account: 'alfa', from: '2026-11-24T09:00:00.000Z', page: '3' }))
+            .toEqual({ all: 'true', kind: 'voice', account: 'alfa', from: '2026-11-24T09:00:00.000Z' });
+    });
+
+    it('drops selected ids that left the list', () => {
+        expect(keepSelected(['a', 'b', 'c'], [rec('c'), rec('a')])).toEqual(['a', 'c']);
+        expect(keepSelected(['a'], [])).toEqual([]);
     });
 });

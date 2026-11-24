@@ -164,6 +164,13 @@
         "deleteTitle": "Delete recording",
         "deleteQuestion": "Delete the recording “{name}”?",
         "deleteWarning": "The file and the map marker disappear from the server for everyone. This cannot be undone.",
-        "openFromMap": "Open recording"
+        "openFromMap": "Open recording",
+        "select": "Select recording",
+        "selectAll": "Select all shown",
+        "selected": "Selected: {count}",
+        "downloadSelected": "Download selected (ZIP)",
+        "downloadAll": "Download all (ZIP)",
+        "downloadAllHint": "The archive holds every recording matching the filters, including ones not loaded yet",
+        "tooMany": "You can select at most {max} recordings at once. For more, use “Download all” with a filter."
     }
 }

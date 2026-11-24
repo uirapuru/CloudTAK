@@ -215,6 +215,8 @@ export default class MenuManager {
                 tooltip: 'Nagrania',
                 description: 'Wideo, głosówki i skany zapisane na serwerze',
                 icon: IconMovie,
+                // Decision 24 XI 2026: recordings are for the OTS administrator only.
+                requiresOtsAdmin: true,
             },
             {
                 // taklab: konta serwera OTS z kodami QR ATAK i OpenTAK ICU

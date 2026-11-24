@@ -59,6 +59,18 @@ export type RecordingUsage = {
     limit_bytes: number | null;
 };
 
+export type ArchiveQuery = {
+    ids?: string;
+    all?: boolean;
+    kind?: string;
+    account?: string;
+    from?: string;
+    to?: string;
+};
+
+/** Most recordings OTS puts in one archive when they are chosen one by one. */
+export const MAX_ARCHIVE_IDS = 100;
+
 export type RecordingQuery = {
     kind?: string;
     account?: string;
@@ -202,6 +214,18 @@ export function otsQuery(q: RecordingQuery): string {
     return text ? `?${text}` : '';
 }
 
+/** Archive request to OTS: chosen ids, or all=1 with the list filters. */
+export function archiveQuery(q: ArchiveQuery): string {
+    const ids = (q.ids || '').split(',').map((id) => id.trim()).filter(Boolean);
+    if (ids.length) {
+        if (ids.length > MAX_ARCHIVE_IDS) throw new Err(400, null, `Najwyżej ${MAX_ARCHIVE_IDS} nagrań w jednym archiwum`);
+        return `?ids=${ids.map((id) => safeId(id)).join(',')}`;
+    }
+    if (!q.all) throw new Err(400, null, 'Wybierz nagrania albo wszystkie');
+    const filters = otsQuery({ kind: q.kind, account: q.account, from: q.from, to: q.to });
+    return filters ? `${filters}&all=1` : '?all=1';
+}
+
 /**
  * Proxy to the recording register of the environment's OpenTAK Server
  * (/api/taklab/recordings, fork taklab). CloudTAK checks its own login and
@@ -251,7 +275,7 @@ export class RecordingsControl {
         if (res.ok) return res;
         const status = res.status;
         await res.body?.cancel().catch(() => undefined);
-        if (status === 401 || status === 403) throw new Err(403, null, 'Brak dostępu do tego nagrania');
+        if (status === 401 || status === 403) throw new Err(403, null, 'Nagrania są dostępne tylko dla administratora');
         if (status === 404) throw new Err(404, null, 'Nie ma takiego nagrania');
         if (status === 400 || status === 422) throw new Err(400, null, 'Serwer TAK odrzucił żądanie');
         if (status === 416) throw new Err(416, null, 'Zakres poza plikiem');
@@ -350,7 +374,31 @@ export class RecordingsControl {
         if (download) res.setHeader('content-disposition', disposition && disposition.startsWith('attachment') ? disposition : 'attachment');
         else res.setHeader('content-disposition', 'inline');
         res.setHeader('cache-control', 'private, no-store');
+        await RecordingsControl.pipe(upstream, res);
+    }
 
+    /**
+     * ZIP of the chosen recordings (or all matching the filters), built by
+     * OTS and streamed through; nothing is held in memory here.
+     */
+    async archive(auth: CertAuth, q: ArchiveQuery, res: ExpressResponse): Promise<void> {
+        const query = archiveQuery(q);
+        const upstream = await RecordingsControl.check(await this.request(`/archive${query}`, auth, {
+            headers: { Accept: 'application/zip' },
+            timeout: FILE_TIMEOUT_MS,
+        }));
+        res.status(200);
+        res.setHeader('content-type', 'application/zip');
+        const disposition = upstream.headers.get('content-disposition');
+        res.setHeader('content-disposition', disposition && /^attachment; filename="[A-Za-z0-9._-]+"$/.test(disposition)
+            ? disposition
+            : 'attachment; filename="nagrania.zip"');
+        res.setHeader('cache-control', 'private, no-store');
+        res.setHeader('x-accel-buffering', 'no');
+        await RecordingsControl.pipe(upstream, res);
+    }
+
+    private static async pipe(upstream: Response, res: ExpressResponse): Promise<void> {
         if (!upstream.body) {
             res.end();
             return;

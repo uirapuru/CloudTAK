@@ -164,6 +164,13 @@
         "deleteTitle": "Usuwanie nagrania",
         "deleteQuestion": "Usunąć nagranie „{name}”?",
         "deleteWarning": "Plik i znacznik na mapie znikną z serwera u wszystkich. Tego nie da się cofnąć.",
-        "openFromMap": "Otwórz nagranie"
+        "openFromMap": "Otwórz nagranie",
+        "select": "Zaznacz nagranie",
+        "selectAll": "Zaznacz wszystkie widoczne",
+        "selected": "Zaznaczone: {count}",
+        "downloadSelected": "Pobierz zaznaczone (ZIP)",
+        "downloadAll": "Pobierz wszystkie (ZIP)",
+        "downloadAllHint": "Archiwum obejmuje wszystkie nagrania pasujące do filtrów, także te jeszcze niewczytane",
+        "tooMany": "Naraz można zaznaczyć najwyżej {max} nagrań. Większą paczkę pobierz przyciskiem „Pobierz wszystkie” z filtrem."
     }
 }

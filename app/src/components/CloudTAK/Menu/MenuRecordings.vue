@@ -102,6 +102,64 @@
                     </div>
                 </div>
 
+                <div
+                    v-if='items.length'
+                    class='d-flex flex-column gap-2 px-3 pt-3'
+                    data-testid='recordings-selection'
+                >
+                    <div class='d-flex align-items-center gap-2'>
+                        <input
+                            type='checkbox'
+                            class='form-check-input m-0'
+                            :checked='allShownSelected'
+                            :indeterminate='selected.length > 0 && !allShownSelected'
+                            :aria-label='t("taklab.recordings.selectAll")'
+                            :title='t("taklab.recordings.selectAll")'
+                            data-testid='recordings-select-all'
+                            @change='toggleAll'
+                        >
+                        <span
+                            class='small text-muted'
+                            v-text='t("taklab.recordings.selected", { count: selected.length })'
+                        />
+                    </div>
+                    <div class='d-flex flex-wrap gap-2'>
+                        <button
+                            type='button'
+                            class='btn btn-sm'
+                            :disabled='!selected.length || selected.length > MAX_ARCHIVE_IDS'
+                            data-testid='recordings-download-selected'
+                            @click='downloadArchive(selected)'
+                        >
+                            <IconFileZip
+                                :size='16'
+                                stroke='1'
+                                class='me-1'
+                            />
+                            {{ t('taklab.recordings.downloadSelected') }}
+                        </button>
+                        <button
+                            type='button'
+                            class='btn btn-sm'
+                            :title='t("taklab.recordings.downloadAllHint")'
+                            data-testid='recordings-download-all'
+                            @click='downloadArchive([])'
+                        >
+                            <IconFileZip
+                                :size='16'
+                                stroke='1'
+                                class='me-1'
+                            />
+                            {{ t('taklab.recordings.downloadAll') }}
+                        </button>
+                    </div>
+                    <div
+                        v-if='selected.length > MAX_ARCHIVE_IDS'
+                        class='small text-red'
+                        v-text='t("taklab.recordings.tooMany", { max: MAX_ARCHIVE_IDS })'
+                    />
+                </div>
+
                 <TablerNone
                     v-if='!items.length'
                     :label='t("taklab.recordings.none")'
@@ -119,6 +177,14 @@
                         :data-recording='rec.id'
                     >
                         <div class='d-flex align-items-center gap-2'>
+                            <input
+                                v-model='selected'
+                                type='checkbox'
+                                class='form-check-input m-0 flex-shrink-0'
+                                :value='rec.id'
+                                :aria-label='t("taklab.recordings.select")'
+                                :title='t("taklab.recordings.select")'
+                            >
                             <component
                                 :is='KIND_ICONS[rec.kind]'
                                 :size='24'
@@ -343,6 +409,7 @@ import {
     IconCopy,
     IconDownload,
     IconEyeOff,
+    IconFileZip,
     IconMapPin,
     IconMicrophone,
     IconPencil,
@@ -368,13 +435,16 @@ import { useMapStore } from '../../../stores/map.ts';
 import { recordingTrack } from '../../../base/recording-track.ts';
 import {
     KIND_FILTERS,
+    MAX_ARCHIVE_IDS,
     type KindFilter,
     type Recording,
     type RecordingDetail,
     type RecordingList,
     type RecordingUsage,
+    archiveQuery,
     displayName,
     formatDuration,
+    keepSelected,
     formatSize,
     listQuery,
     replaceRecording,
@@ -416,6 +486,7 @@ const details = ref<Record<string, RecordingDetail>>({});
 const renaming = ref<string | null>(null);
 const newName = ref('');
 const confirm = ref<Recording | null>(null);
+const selected = ref<string[]>([]);
 const copied = ref(false);
 const trackShown = ref(recordingTrack.shown !== null);
 
@@ -427,6 +498,8 @@ const accountOptions = computed(() => [
 ]);
 
 const percent = computed(() => usagePercent(usage.value));
+
+const allShownSelected = computed(() => items.value.length > 0 && items.value.every((r) => selected.value.includes(r.id)));
 
 const usageText = computed(() => {
     if (!usage.value || usage.value.used_bytes === null) return '';
@@ -478,6 +551,7 @@ async function reload(): Promise<void> {
         const list = await fetchPage(1);
         enabled.value = list.enabled;
         items.value = list.items;
+        selected.value = keepSelected(selected.value, list.items);
         page.value = 1;
         more.value = list.total_pages !== null ? list.total_pages > 1 : list.items.length > 0;
         remember(list.items);
@@ -566,6 +640,21 @@ async function download(rec: Recording): Promise<void> {
     await downloadUrl(`/api/recordings/${encodeURIComponent(rec.id)}/file?download=true`, { token: true });
 }
 
+function toggleAll(): void {
+    selected.value = allShownSelected.value ? [] : items.value.map((r) => r.id);
+}
+
+/** ZIP built by OTS: the chosen recordings, or (empty list) all matching the filters. */
+async function downloadArchive(ids: string[]): Promise<void> {
+    const url = stdurl('/api/recordings/archive');
+    for (const [k, v] of Object.entries(archiveQuery(ids, filters.value))) url.searchParams.set(k, v);
+    try {
+        await downloadUrl(url, { token: true });
+    } catch (err) {
+        error.value = err instanceof Error ? err : new Error(String(err));
+    }
+}
+
 function startRename(rec: Recording): void {
     renaming.value = rec.id;
     newName.value = rec.name || displayName(rec, t(`taklab.recordings.kind.${rec.kind}`));
@@ -596,6 +685,7 @@ async function doDelete(): Promise<void> {
     try {
         await std(`/api/recordings/${encodeURIComponent(rec.id)}`, { method: 'DELETE' });
         items.value = withoutRecording(items.value, rec.id);
+        selected.value = selected.value.filter((id) => id !== rec.id);
         if (open.value === rec.id) open.value = null;
         if (recordingTrack.shown === rec.id) hideTrack();
         confirm.value = null;
