@@ -303,6 +303,44 @@ test('GET: api/profile/area-package/:id - other user gets 404', async () => {
     assert.equal(res.status, 404);
 });
 
+test('PATCH: api/profile/area-package/:id - other user gets 404', async () => {
+    const res = await flight.fetch(`/api/profile/area-package/${pkgId}`, {
+        method: 'PATCH',
+        auth: { bearer: flight.token.other },
+        body: { name: 'Cudza' },
+    }, false);
+
+    assert.equal(res.status, 404);
+});
+
+test('PATCH: api/profile/area-package/:id - rejects a blank name', async () => {
+    const res = await flight.fetch(`/api/profile/area-package/${pkgId}`, {
+        method: 'PATCH',
+        auth: { bearer: flight.token.user },
+        body: { name: '   ' },
+    }, false);
+
+    assert.equal(res.status, 400);
+});
+
+test('PATCH: api/profile/area-package/:id - renames the package and its download', async () => {
+    const res = await flight.fetch(`/api/profile/area-package/${pkgId}`, {
+        method: 'PATCH',
+        auth: { bearer: flight.token.user },
+        body: { name: '  Patrol północ  ' },
+    }, false);
+
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    assert.equal(res.body.name, 'Patrol północ');
+
+    const qr = await flight.fetch(`/api/profile/area-package/${pkgId}/qr`, {
+        method: 'GET',
+        auth: { bearer: flight.token.user },
+    }, false);
+
+    assert.ok(qr.body.uri.endsWith(`&filename=${encodeURIComponent('Patrol północ.zip')}`), qr.body.uri);
+});
+
 test('DELETE: api/profile/area-package/:id - other user gets 404', async () => {
     const res = await flight.fetch(`/api/profile/area-package/${pkgId}`, {
         method: 'DELETE',

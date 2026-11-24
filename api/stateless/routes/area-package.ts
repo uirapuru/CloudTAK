@@ -484,6 +484,34 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         }
     });
 
+    await schema.patch('/profile/area-package/:id', {
+        name: 'Update Area Package',
+        group: 'AreaPackage',
+        description: 'Rename one of your offline area packages',
+        params: Type.Object({
+            id: Type.String({ format: 'uuid' }),
+        }),
+        body: Type.Object({
+            name: Type.String({ minLength: 1, maxLength: 100 }),
+        }),
+        res: AreaPackageResponse,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+            const row = await ownedPackage(config, req.params.id, user.email);
+
+            const name = req.body.name.trim();
+            if (!name) throw new Err(400, null, 'Nazwa paczki nie może być pusta');
+
+            res.json(serialize(await config.models.AreaPackage.commit(row.id, {
+                name,
+                updated: sql`Now()`,
+            })));
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
     await schema.get('/profile/area-package/:id/qr', {
         name: 'Area Package QR',
         group: 'AreaPackage',

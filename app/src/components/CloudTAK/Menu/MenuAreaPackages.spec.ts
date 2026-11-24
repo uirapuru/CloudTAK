@@ -147,6 +147,47 @@ describe('MenuAreaPackages', () => {
         expect(wrapper.find('[data-test="offline"]').exists()).toBe(true);
     });
 
+    it('the pencil icon renames the package with Enter', async () => {
+        respond(() => [pkg()]);
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        await wrapper.find('[data-test="rename"]').trigger('click');
+        const input = wrapper.find('[data-test="name-input"]');
+        expect((input.element as HTMLInputElement).value).toBe(pkg().name);
+
+        await input.setValue('  Patrol północ ');
+        await input.trigger('keydown', { key: 'Enter' });
+        await flushPromises();
+
+        const patch = std.mock.calls.find((c) => (c[1] as { method?: string } | undefined)?.method === 'PATCH');
+        expect(patch?.[0]).toBe('/api/profile/area-package/pkg-1');
+        expect((patch?.[1] as { body: unknown }).body).toEqual({ name: 'Patrol północ' });
+        // the QR code carries the file name, so it is fetched again
+        expect(std.mock.calls.filter((c) => String(c[0]).endsWith('/pkg-1/qr')).length).toBe(2);
+        expect(wrapper.find('[data-test="name-input"]').exists()).toBe(false);
+    });
+
+    it('Escape or a blank name leaves the package name alone', async () => {
+        respond(() => [pkg()]);
+
+        const wrapper = mountMenu();
+        await flushPromises();
+
+        await wrapper.find('[data-test="rename"]').trigger('click');
+        await wrapper.find('[data-test="name-input"]').setValue('Inna');
+        await wrapper.find('[data-test="name-input"]').trigger('keydown', { key: 'Escape' });
+        expect(wrapper.find('[data-test="name-input"]').exists()).toBe(false);
+
+        await wrapper.find('[data-test="rename"]').trigger('click');
+        await wrapper.find('[data-test="name-input"]').setValue('   ');
+        await wrapper.find('[data-test="name-input"]').trigger('keydown', { key: 'Enter' });
+        await flushPromises();
+
+        expect(std.mock.calls.some((c) => (c[1] as { method?: string } | undefined)?.method === 'PATCH')).toBe(false);
+    });
+
     it('a failed package shows its error', async () => {
         respond(() => [pkg({ status: 'Fail', error: 'OSM: brak dostępu albo brak danych' })]);
 

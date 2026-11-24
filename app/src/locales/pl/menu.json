@@ -268,6 +268,7 @@
         "deleteTitle": "Usunąć paczkę „{name}”?",
         "deleteBody": "Link i kod QR przestaną działać, a mapy offline tej paczki znikną z tej przeglądarki.",
         "showQr": "Pokaż kod QR dla ATAK",
-        "download": "Pobierz paczkę na dysk"
+        "download": "Pobierz paczkę na dysk",
+        "rename": "Zmień nazwę"
     }
 }

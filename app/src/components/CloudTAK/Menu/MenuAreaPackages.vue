@@ -41,10 +41,37 @@
             >
                 <div class='d-flex align-items-center'>
                     <div class='flex-grow-1'>
+                        <input
+                            v-if='renaming === p.id'
+                            :ref='focusInput'
+                            v-model='newName'
+                            type='text'
+                            class='form-control form-control-sm'
+                            data-test='name-input'
+                            maxlength='100'
+                            :aria-label='t("menu.areaPackages.rename")'
+                            @keydown.enter.prevent='saveName(p)'
+                            @keydown.esc.prevent='renaming = undefined'
+                        >
                         <div
-                            class='fw-bold'
-                            v-text='p.name'
-                        />
+                            v-else
+                            class='d-flex align-items-center gap-1'
+                        >
+                            <span
+                                class='fw-bold'
+                                v-text='p.name'
+                            />
+                            <TablerIconButton
+                                :title='t("menu.areaPackages.rename")'
+                                data-test='rename'
+                                @click='startRename(p)'
+                            >
+                                <IconPencil
+                                    :size='16'
+                                    stroke='1'
+                                />
+                            </TablerIconButton>
+                        </div>
                         <div class='text-secondary small'>
                             <span v-text='new Date(p.created).toLocaleString()' />
                             <span
@@ -192,7 +219,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { bbox } from '@turf/bbox';
 import type { Polygon } from 'geojson';
-import { IconDownload, IconPlus, IconQrcode, IconTrash } from '@tabler/icons-vue';
+import { IconDownload, IconPencil, IconPlus, IconQrcode, IconTrash } from '@tabler/icons-vue';
 import {
     TablerAlert,
     TablerIconButton,
@@ -238,6 +265,8 @@ const confirmDelete = ref<AreaPackage | undefined>();
 const copied = ref<string | undefined>();
 const savingOffline = reactive(new Set<string>());
 const openQr = reactive(new Set<string>());
+const renaming = ref<string | undefined>();
+const newName = ref('');
 
 // Packages created in this session save themselves offline when they are ready
 const autoOffline = new Set<string>();
@@ -291,6 +320,29 @@ function selectArea(): void {
             bounds.value = [w, s, e, n];
         },
     });
+}
+
+function focusInput(el: unknown): void {
+    if (el instanceof HTMLInputElement) el.focus();
+}
+
+function startRename(p: AreaPackage): void {
+    newName.value = p.name;
+    renaming.value = p.id;
+}
+
+async function saveName(p: AreaPackage): Promise<void> {
+    const name = newName.value.trim();
+    renaming.value = undefined;
+    if (!name || name === p.name) return;
+
+    try {
+        await std(`/api/profile/area-package/${p.id}`, { method: 'PATCH', body: { name } });
+        p.name = name;
+        if (p.status === 'Success') qrs[p.id] = await std(`/api/profile/area-package/${p.id}/qr`) as QR;
+    } catch (err) {
+        report(err);
+    }
 }
 
 function toggleQr(id: string): void {

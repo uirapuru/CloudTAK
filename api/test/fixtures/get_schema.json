@@ -29,6 +29,11 @@
         "query": false,
         "res": true
     },
+    "PATCH /profile/area-package/:id": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
     "GET /profile/area-package/:id/qr": {
         "body": false,
         "query": false,
