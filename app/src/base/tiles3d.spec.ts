@@ -4,7 +4,7 @@ vi.mock('../stores/map.ts', () => ({ useMapStore: vi.fn() }));
 vi.mock('../std.ts', () => ({ server: {} }));
 vi.mock('./overlay.ts', () => ({ default: {} }));
 
-import { Tiles3DManager, exposeCameraTransform, formatAttribution, fixGlobalRegions, tilesFetch, GEOID_RESAMPLE_M, REFRESH_MS, AUTH_RETRY_GUARD_MS, SCHEDULE_RETRY_MS, type IonAccess } from './tiles3d.ts';
+import { Tiles3DManager, exposeCameraTransform, fillEmptyGltf, formatAttribution, fixGlobalRegions, tilesFetch, GEOID_RESAMPLE_M, REFRESH_MS, AUTH_RETRY_GUARD_MS, SCHEDULE_RETRY_MS, type IonAccess } from './tiles3d.ts';
 
 type Props = Record<string, unknown>;
 
@@ -686,5 +686,37 @@ describe('formatAttribution', () => {
     it('escapes quotes in the image URL', () => {
         expect(formatAttribution({ text: '', image: 'https://a.cesium.com/x.png" onerror="alert(1)' }))
             .toBe('<img src="https://a.cesium.com/x.png&quot; onerror=&quot;alert(1)" alt="" style="height:1em;vertical-align:middle">');
+    });
+});
+
+describe('fillEmptyGltf', () => {
+    it('fills the arrays missing from the empty OSM Buildings root tile', () => {
+        // root.b3dm of Cesium OSM Buildings (asset 96188), as parsed by loaders.gl
+        const gltf: Record<string, unknown> = {
+            asset: { generator: 'cesium-osm', version: '2.0' },
+            nodes: [{}],
+            scenes: [{ nodes: [0] }],
+            scene: 0,
+        };
+
+        fillEmptyGltf({ content: { gltf } });
+
+        expect(gltf.meshes).toEqual([]);
+        expect(gltf.materials).toEqual([]);
+        expect(gltf.nodes).toEqual([{}]);
+        expect(gltf.scenes).toEqual([{ nodes: [0] }]);
+    });
+
+    it('leaves tiles without glTF content alone', () => {
+        const tile = { content: {} };
+        fillEmptyGltf(tile);
+        expect(tile).toEqual({ content: {} });
+        expect(() => fillEmptyGltf({})).not.toThrow();
+    });
+
+    it('is the onTileLoad of every 3D Tiles layer', async () => {
+        const t = setup();
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        expect(t.layers()[0].props.onTileLoad).toBe(fillEmptyGltf);
     });
 });

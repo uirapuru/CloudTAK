@@ -111,6 +111,21 @@ export function tilesFetch(headers: Record<string, string>): (url: string, init?
 }
 
 /**
+ * glTF makes `meshes`, `nodes` and `scenes` optional and Cesium OSM Buildings
+ * ships an empty root tile without meshes. luma.gl 9.4 calls forEach on them
+ * unguarded, so the ScenegraphLayer of such a tile fails to initialize. Fill
+ * the missing arrays so an empty tile draws nothing instead of erroring.
+ */
+export function fillEmptyGltf(tile: { content?: { gltf?: Record<string, unknown> } }): void {
+    const gltf = tile.content?.gltf;
+    if (!gltf) return;
+
+    for (const key of ['meshes', 'nodes', 'scenes', 'materials']) {
+        if (!Array.isArray(gltf[key])) gltf[key] = [];
+    }
+}
+
+/**
  * MapLibre 6 moved the camera out of Map: `map.transform` is gone. Early 6.x
  * kept it on `map._camera.transform`; 6.19 keeps no transform object at all.
  * @deck.gl/mapbox 9.4 still reads `map.transform` (height, elevation, and
@@ -356,6 +371,7 @@ export class Tiles3DManager {
                 },
                 tileset: { modelMatrix: new this.deck.Matrix4().translate(this.shift ?? [0, 0, 0]) },
             },
+            onTileLoad: fillEmptyGltf,
             onTileError: (...args: unknown[]) => this.onTileError(id, args),
         });
     }
