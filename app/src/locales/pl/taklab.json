@@ -223,5 +223,18 @@
             "recording_delete": "Usunięcie nagrania",
             "journal_export": "Eksport dziennika"
         }
+    },
+    "journalNotice": {
+        "title": "Ten serwer prowadzi dziennik zdarzeń",
+        "intro": "Serwer zapisuje w dzienniku zdarzeń, co robią uczestnicy tego środowiska, także Ty:",
+        "itemChat": "wiadomości czatu z treścią i adresatami, również prywatne,",
+        "itemMap": "dodanie, zmianę i usunięcie obiektu na mapie,",
+        "itemPosition": "położenie urządzenia po przejściu 50 m albo po 5 minutach,",
+        "itemFiles": "wysłane pliki, udostępnione wideo, nagrania i alarmy.",
+        "access": "Dziennik czytają tylko konta z rolą administratora tego serwera. Mogą go pobrać jako plik PDF albo paczkę ZIP z plikami.",
+        "retention": "Wpisy zostają do skasowania środowiska. Wyczyszczenie mapy ich nie usuwa.",
+        "contact": "Za dane w środowisku odpowiada osoba lub firma, która zamówiła ten serwer. Pytania o dziennik kieruj do niej.",
+        "confirm": "Rozumiem",
+        "saveFailed": "Nie udało się zapisać potwierdzenia. Komunikat pokaże się przy następnym logowaniu."
     }
 }

@@ -346,6 +346,19 @@ export class JournalControl {
         return { admin: Boolean(body && body.admin === true) };
     }
 
+    /**
+     * Whether this OTS keeps a journal at all, for any account: /access answers
+     * every account (admin or not), so only 404 means "no journal". 401/403 still
+     * mean the journal exists. An unreachable OTS throws (the caller decides).
+     */
+    async available(auth: CertAuth): Promise<boolean> {
+        const res = await this.request('/access', auth, 'application/json');
+        await res.body?.cancel().catch(() => undefined);
+        if (res.status === 404) return false;
+        if (res.ok || res.status === 401 || res.status === 403) return true;
+        throw new Err(502, null, `Serwer TAK odpowiedział ${res.status}`);
+    }
+
     async list(auth: CertAuth, q: JournalQuery): Promise<JournalList> {
         return normalizeList(await this.json(otsQuery(q), auth), q);
     }

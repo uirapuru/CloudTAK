@@ -223,5 +223,18 @@
             "recording_delete": "Recording deleted",
             "journal_export": "Journal export"
         }
+    },
+    "journalNotice": {
+        "title": "This server keeps an event journal",
+        "intro": "The server records in an event journal what participants of this environment do, you included:",
+        "itemChat": "chat messages with their text and recipients, private ones too,",
+        "itemMap": "objects added, changed and deleted on the map,",
+        "itemPosition": "the position of your device after every 50 m or 5 minutes,",
+        "itemFiles": "files sent, video shared, recordings and alerts.",
+        "access": "Only accounts with the administrator role on this server can read the journal. They can download it as a PDF file or a ZIP package with the files.",
+        "retention": "Entries stay until the environment is deleted. Clearing the map does not remove them.",
+        "contact": "The person or company that ordered this server is responsible for the data in it. Send questions about the journal to them.",
+        "confirm": "I understand",
+        "saveFailed": "Your confirmation could not be saved. The notice will show again at the next login."
     }
 }

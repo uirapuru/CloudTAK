@@ -356,6 +356,9 @@
                 :mission='inviteMission'
                 @close='inviteMission = undefined'
             />
+
+            <!-- taklab: one-time notice about the event journal (GDPR) -->
+            <JournalNotice v-if='mapStore.isMapLoaded' />
         </template>
     </div>
 </template>
@@ -428,6 +431,7 @@ import { isIOSPlatform, isNativePlatform, addAppLifecycleListeners } from '../..
 import { TimeoutError } from '../../utils/async.ts';
 import { copyFeatureToClipboard, readFeatureFromClipboard } from '../../stores/device/clipboard.ts';
 import MissionInviteModal from './Menu/Mission/MissionInviteModal.vue';
+import JournalNotice from './JournalNotice.vue';
 
 const mapStore = useMapStore();
 const { t } = useI18n();

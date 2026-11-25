@@ -12,6 +12,15 @@ import {
     JournalListSchema,
     PER_PAGE_MAX,
 } from '../lib/control/journal.js';
+import {
+    JOURNAL_NOTICE_KEY,
+    JOURNAL_NOTICE_VERSION,
+    JournalNoticeAckBody,
+    JournalNoticeSchema,
+    ackValue,
+    acknowledged,
+    noticeState,
+} from '../lib/control/journal-notice.js';
 
 // Filters of the OTS contract, the same for the list and both exports.
 const Filters = {
@@ -42,6 +51,49 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     }, async (req, res) => {
         try {
             res.json(await control.access(await caller(req)));
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    // taklab: one-time notice that the server keeps an event journal (GDPR, 25 XI 2026).
+    await schema.get('/journal/notice', {
+        name: 'Journal Notice',
+        group: 'Journal',
+        description: 'Whether to show the one-time notice about the event journal to this account',
+        res: JournalNoticeSchema,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+            const profile = await authenticatedProfile(config, user.email);
+            const stored = (await config.models.ProfileConfig.from(user.email))[JOURNAL_NOTICE_KEY];
+            if (acknowledged(stored)) {
+                res.json(noticeState(stored, true));
+                return;
+            }
+            // OTS down or without a journal: say nothing now, ask again at the next login.
+            const available = await control.available(profile.auth).catch(() => false);
+            res.json(noticeState(stored, available));
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.put('/journal/notice', {
+        name: 'Acknowledge Journal Notice',
+        group: 'Journal',
+        description: 'Store that this account has read the current journal notice',
+        body: JournalNoticeAckBody,
+        res: JournalNoticeSchema,
+    }, async (req, res) => {
+        try {
+            const user = await Auth.as_user(config, req);
+            if (req.body.version !== JOURNAL_NOTICE_VERSION) {
+                throw new Err(409, null, 'Treść komunikatu o dzienniku zmieniła się. Odśwież stronę.');
+            }
+            const value = ackValue();
+            await config.models.ProfileConfig.commit(user.email, { [JOURNAL_NOTICE_KEY]: value });
+            res.json(noticeState(value, true));
         } catch (err) {
             Err.respond(err, res);
         }
