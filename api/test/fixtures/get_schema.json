@@ -2124,6 +2124,51 @@
         "query": false,
         "res": true
     },
+    "GET /ai/model": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /ai/model/start": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /ai/model/stop": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /ai/orders": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /ai/orders": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /ai/orders/:id.pdf": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /ai/orders/:id.docx": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /ai/orders/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "DELETE /ai/orders/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "POST /retention": {
         "body": true,
         "query": false,
