@@ -756,3 +756,36 @@ describe('fillEmptyGltf', () => {
         expect(t.layers()[0].props.onTileLoad).toBe(fillEmptyGltf);
     });
 });
+
+describe('Tiles3DManager extra layers (taklab)', () => {
+    it('opens the overlay for extra layers alone and shares it with tilesets', async () => {
+        const t = setup({ layers: ['cot-layer'] });
+        const extra = vi.fn((beforeId: string | undefined) => [{ props: { id: 'frustum', beforeId } }]);
+
+        t.manager.setExtraLayers('sensor-frustum', extra);
+        expect(t.map.addControl).toHaveBeenCalledTimes(1);
+        expect(t.layers().map((l) => l.props.id)).toEqual(['frustum']);
+        expect(t.layers()[0].props.beforeId).toBe('cot-layer');
+
+        await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 1 });
+        expect(t.overlays).toHaveLength(1);
+        expect(t.layers().map((l) => l.props.id)).toEqual(['tiles3d-7-0', 'frustum']);
+
+        t.manager.setExtraLayers('sensor-frustum', null);
+        expect(t.layers().map((l) => l.props.id)).toEqual(['tiles3d-7-0']);
+
+        // Clearing what is not there draws nothing again
+        const calls = t.onChange.mock.calls.length;
+        t.manager.setExtraLayers('sensor-frustum', null);
+        expect(t.onChange.mock.calls.length).toBe(calls);
+    });
+
+    it('drops extra layers on destroy', () => {
+        const t = setup();
+        t.manager.setExtraLayers('sensor-frustum', () => [{ props: { id: 'frustum' } }]);
+        t.manager.destroy();
+        t.manager.setExtraLayers('sensor-frustum', () => [{ props: { id: 'again' } }]);
+        expect(t.map.removeControl).toHaveBeenCalledTimes(1);
+        expect(t.overlays).toHaveLength(1);
+    });
+});

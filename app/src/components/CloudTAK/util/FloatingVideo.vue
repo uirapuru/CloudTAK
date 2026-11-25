@@ -83,6 +83,7 @@
                 class='flex-grow-1'
                 :url='video.config.url'
                 :lease='video.config.lease'
+                :live-path='video.config.livePath'
                 @metadata='metadata = $event'
             />
         </div>

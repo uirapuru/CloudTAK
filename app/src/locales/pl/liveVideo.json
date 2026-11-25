@@ -1,0 +1,50 @@
+{
+    "badge": "NA ŻYWO {count}",
+    "badgeTitle": "Transmisje na żywo: {count}",
+    "menuBadgeTitle": "Transmisje na żywo",
+    "listTitle": "Transmisje na żywo",
+    "none": "Nikt teraz nie nadaje",
+    "notSupported": "Serwer TAK tego środowiska nie podaje listy transmisji",
+    "watch": "Oglądaj",
+    "showOnMap": "Pokaż na mapie",
+    "watchFailed": "Nie udało się otworzyć transmisji {user}",
+    "duration": "Czas",
+    "resolution": "Rozdzielczość",
+    "bitrate": "Przepływność",
+    "close": "Zamknij",
+    "toast": {
+        "started": "Na żywo: {user} zaczął nadawać wideo",
+        "ended": "Koniec transmisji: {user}"
+    },
+    "notification": {
+        "title": "Na żywo: {user}",
+        "body": "{user} zaczął nadawać wideo"
+    },
+    "stats": {
+        "title": "Dane techniczne",
+        "show": "Pokaż dane techniczne",
+        "hide": "Ukryj dane techniczne",
+        "server": "Nadawca (serwer)",
+        "client": "Odtwarzacz",
+        "codec": "Kodek",
+        "resolution": "Rozdzielczość",
+        "fps": "Klatki/s",
+        "bitrate": "Przepływność nadawcy",
+        "transport": "Transport",
+        "packetsLost": "Utracone pakiety",
+        "jitter": "Zmienność opóźnienia",
+        "readers": "Oglądający",
+        "duration": "Czas trwania",
+        "audio": "Dźwięk",
+        "levelResolution": "Rozdzielczość odtwarzana",
+        "download": "Przepływność pobierania",
+        "levelBitrate": "Przepływność strumienia",
+        "latency": "Opóźnienie od żywego",
+        "buffer": "Bufor",
+        "dropped": "Zgubione klatki",
+        "noServer": "Serwer nie podał danych tej transmisji",
+        "seconds": "{value} s",
+        "ms": "{value} ms",
+        "frames": "{dropped} z {total}"
+    }
+}

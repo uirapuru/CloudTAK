@@ -36,31 +36,40 @@
             />
         </template>
         <template v-else>
-            <div class='position-relative w-100 h-100'>
-                <live-video-player
-                    :ref='bindPlayer'
-                    class='live-video'
-                >
-                    <live-video-skin class='live-video-skin'>
-                        <video
-                            :ref='bindVideo'
-                            muted
-                            playsinline
-                        />
-                    </live-video-skin>
-                </live-video-player>
+            <div class='d-flex flex-column w-100 h-100'>
+                <div class='position-relative w-100 flex-grow-1 video-player-stage'>
+                    <live-video-player
+                        :ref='bindPlayer'
+                        class='live-video'
+                    >
+                        <live-video-skin class='live-video-skin'>
+                            <video
+                                :ref='bindVideo'
+                                muted
+                                playsinline
+                            />
+                        </live-video-skin>
+                    </live-video-player>
 
-                <div
-                    v-if='isBuffering'
-                    class='buffering-overlay'
-                >
-                    <div class='buffering-icon'>
-                        <IconPlayerPauseFilled :size='64' />
-                        <div class='mt-2 fw-bold'>
-                            {{ t('shared.videoPlayer.buffering') }}
+                    <div
+                        v-if='isBuffering'
+                        class='buffering-overlay'
+                    >
+                        <div class='buffering-icon'>
+                            <IconPlayerPauseFilled :size='64' />
+                            <div class='mt-2 fw-bold'>
+                                {{ t('shared.videoPlayer.buffering') }}
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- taklab: technical data of a live stream -->
+                <LiveVideoStats
+                    v-if='showStats'
+                    :stream='serverStream'
+                    :client='client'
+                />
             </div>
         </template>
     </div>
@@ -82,7 +91,7 @@ import { useI18n } from 'vue-i18n';
  * Lease `lease` ID (renewed automatically when expired).
  */
 
-import { ref, shallowRef, onMounted, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue';
+import { ref, shallowRef, computed, onMounted, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue';
 import { server } from '../../std.ts';
 import type { VideoLeaseResponse, VideoLeaseMetadata } from '../../types.ts';
 import '@videojs/html/live-video/player';
@@ -90,6 +99,9 @@ import '@videojs/html/live-video/skin';
 import { LiveVideoPlayerElement } from '@videojs/html/live-video';
 import Hls from 'hls.js';
 import WhepReader from './video/WhepReader.ts';
+import LiveVideoStats from './video/LiveVideoStats.vue';
+import { useLiveVideoStore } from '../../stores/live-video.ts';
+import { clientStats, type ClientStats } from '../../base/live-video.ts';
 import {
     playbackOrder,
     splitCredentials,
@@ -126,6 +138,8 @@ const { t } = useI18n();
 const props = defineProps<{
     url?: string;
     lease?: number;
+    /** taklab: OTS path of the live stream, when the opener knows it */
+    livePath?: string;
 }>();
 
 const emit = defineEmits<{
@@ -172,6 +186,26 @@ const webrtcPlayed = ref(false);
 
 // Restarts attempted without playback recovering in between
 const consecutiveRestarts = ref(0);
+
+// taklab: technical panel - server data from the live stream list, player data every 2 s
+const STATS_INTERVAL_MS = 2000;
+const liveVideo = useLiveVideoStore();
+const client = ref<ClientStats | null>(null);
+let statsInterval: ReturnType<typeof setInterval> | undefined;
+
+const serverStream = computed(() => {
+    if (props.livePath) return liveVideo.stream(props.livePath);
+    return liveVideo.streamForUrl(props.url);
+});
+
+const showStats = computed(() => {
+    return Boolean(props.livePath || serverStream.value || liveStream.value === true || activeProtocol() === 'webrtc');
+});
+
+function updateClientStats(): void {
+    const video = videoElement();
+    client.value = video ? clientStats(hls.value, video) : null;
+}
 
 const BUFFER_CHECK_INTERVAL_MS = 500;
 const BUFFER_RECOVERY_TIMEOUT_MS = 10000;
@@ -446,12 +480,14 @@ function attachVideoEventHandlers(): void {
 }
 
 onUnmounted(async () => {
+    if (statsInterval) clearInterval(statsInterval);
     destroyEngine();
 
     await deleteLease();
 });
 
 onMounted(async () => {
+    statsInterval = setInterval(updateClientStats, STATS_INTERVAL_MS);
     await requestStream();
 });
 
@@ -1009,6 +1045,10 @@ async function requestStream(): Promise<void> {
 .video-player-error-alert,
 .video-player-error-actions {
     max-width: 480px;
+}
+
+.video-player-stage {
+    min-height: 0;
 }
 
 .live-video {

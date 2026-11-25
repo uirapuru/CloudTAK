@@ -97,7 +97,9 @@ const enabled = ref<Record<NotificationType, boolean>>(
 
 onMounted(async () => {
     for (const type of Object.values(NotificationType)) {
-        const config = await ProfileConfig.get(NotificationProfileKeys[type]);
+        const key = NotificationProfileKeys[type];
+        if (!key) continue;
+        const config = await ProfileConfig.get(key);
         enabled.value[type] = config?.value !== false;
     }
 
@@ -110,6 +112,7 @@ async function toggle(type: NotificationType): Promise<void> {
 
     try {
         const key = NotificationProfileKeys[type];
+        if (!key) return;
         await new ProfileConfig(key, value).commit(value);
     } catch (err) {
         enabled.value[type] = !value;

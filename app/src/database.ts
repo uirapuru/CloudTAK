@@ -172,7 +172,9 @@ export enum NotificationType {
     Alert = 'Alert',
     Medical = 'Medical',
     Mission = 'Mission',
-    Chat = 'Chat'
+    Chat = 'Chat',
+    /** taklab: someone started publishing live video */
+    Video = 'Video'
 }
 
 export interface DBNotification {

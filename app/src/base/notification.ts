@@ -11,7 +11,8 @@ export { NotificationType };
 
 export type NotificationProfileKey = Extract<keyof Profile, `notification_${string}`>;
 
-export const NotificationProfileKeys: Record<NotificationType, NotificationProfileKey> = {
+// taklab: types without a profile key (Video) cannot be switched off and are always shown
+export const NotificationProfileKeys: Partial<Record<NotificationType, NotificationProfileKey>> = {
     [NotificationType.Contact]: 'notification_contact',
     [NotificationType.Import]: 'notification_import',
     [NotificationType.Alert]: 'notification_alert',
@@ -133,7 +134,9 @@ export default class TAKNotification extends BaseInterface {
      * Whether the user's Profile allows notifications of the given type
      */
     static async enabled(type: NotificationType): Promise<boolean> {
-        const config = await ProfileConfig.get(NotificationProfileKeys[type]);
+        const key = NotificationProfileKeys[type];
+        if (!key) return true;
+        const config = await ProfileConfig.get(key);
         return config?.value !== false;
     }
 

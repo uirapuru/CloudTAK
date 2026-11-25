@@ -43,6 +43,14 @@ export interface DeckModules {
     Matrix4: new () => { translate(v: number[]): unknown };
 }
 
+/**
+ * taklab: deck.gl layers drawn by other features in the same overlay. Two
+ * interleaved MapboxOverlays on one map share map.__deck and overwrite each
+ * other's layers, so everything deck.gl draws goes through this one overlay.
+ * Called on every render with the validated beforeId.
+ */
+export type ExtraLayers = (beforeId: string | undefined) => unknown[];
+
 export interface TilesetNode {
     boundingVolume?: { region?: number[]; sphere?: number[]; box?: number[] };
     children?: TilesetNode[];
@@ -206,6 +214,7 @@ export class Tiles3DManager {
     private overlay: DeckOverlayLike | null = null;
     private states = new Map<string, State>();
     private pendingAdds = new Map<string, symbol>();
+    private extras = new Map<string, ExtraLayers>();
     private destroyed = false;
 
     constructor(deps: {
@@ -298,6 +307,14 @@ export class Tiles3DManager {
         this.render();
     }
 
+    /** taklab: set (or with null clear) a group of extra deck.gl layers; see ExtraLayers. */
+    setExtraLayers(key: string, layers: ExtraLayers | null): void {
+        if (this.destroyed) return;
+        if (layers) this.extras.set(key, layers);
+        else if (!this.extras.delete(key)) return;
+        this.render();
+    }
+
     hasVisible(): boolean {
         for (const state of this.states.values()) {
             if (state.entry.visible) return true;
@@ -326,7 +343,7 @@ export class Tiles3DManager {
         if (this.destroyed) return;
 
         if (!this.overlay) {
-            if (!this.states.size) return;
+            if (!this.states.size && !this.extras.size) return;
             exposeCameraTransform(this.map);
             this.overlay = new this.deck.MapboxOverlay({ interleaved: true, layers: [] });
             this.map.addControl(this.overlay);
@@ -342,7 +359,10 @@ export class Tiles3DManager {
 
         this.drawnKey = this.drawnState();
         this.overlay.setProps({
-            layers: Array.from(this.states.values()).map((state) => this.layer(state, beforeId)),
+            layers: [
+                ...Array.from(this.states.values()).map((state) => this.layer(state, beforeId)),
+                ...Array.from(this.extras.values()).flatMap((extra) => extra(beforeId)),
+            ],
         });
 
         this.onChange();
@@ -355,6 +375,7 @@ export class Tiles3DManager {
     destroy(): void {
         this.destroyed = true;
         this.pendingAdds.clear();
+        this.extras.clear();
 
         for (const state of this.states.values()) clearTimeout(state.timer);
         this.states.clear();

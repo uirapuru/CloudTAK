@@ -1,0 +1,50 @@
+{
+    "badge": "LIVE {count}",
+    "badgeTitle": "Live streams: {count}",
+    "menuBadgeTitle": "Live streams",
+    "listTitle": "Live streams",
+    "none": "Nobody is streaming now",
+    "notSupported": "The TAK server of this environment does not list live streams",
+    "watch": "Watch",
+    "showOnMap": "Show on map",
+    "watchFailed": "Could not open the stream of {user}",
+    "duration": "Duration",
+    "resolution": "Resolution",
+    "bitrate": "Bitrate",
+    "close": "Close",
+    "toast": {
+        "started": "Live: {user} started streaming video",
+        "ended": "Stream ended: {user}"
+    },
+    "notification": {
+        "title": "Live: {user}",
+        "body": "{user} started streaming video"
+    },
+    "stats": {
+        "title": "Technical data",
+        "show": "Show technical data",
+        "hide": "Hide technical data",
+        "server": "Sender (server)",
+        "client": "Player",
+        "codec": "Codec",
+        "resolution": "Resolution",
+        "fps": "Frames/s",
+        "bitrate": "Sender bitrate",
+        "transport": "Transport",
+        "packetsLost": "Packets lost",
+        "jitter": "Jitter",
+        "readers": "Viewers",
+        "duration": "Duration",
+        "audio": "Audio",
+        "levelResolution": "Playback resolution",
+        "download": "Download bitrate",
+        "levelBitrate": "Stream bitrate",
+        "latency": "Latency to live",
+        "buffer": "Buffer",
+        "dropped": "Dropped frames",
+        "noServer": "The server gave no data for this stream",
+        "seconds": "{value} s",
+        "ms": "{value} ms",
+        "frames": "{dropped} of {total}"
+    }
+}

@@ -28,6 +28,8 @@ export type PaneVideoConfig = {
     type: VideoStoreType,
     url?: string,
     lease?: number,
+    /** taklab: OTS path of a live stream, for the technical panel under the player */
+    livePath?: string,
 }
 
 export type PaneAttachmentConfig = {
@@ -167,6 +169,18 @@ export const useFloatStore = defineStore('float', {
                     type: VideoStoreType.CONNECTION,
                     url: connection.feeds[0].url,
                 },
+                height: PANE_DEFAULT_HEIGHT,
+                width: PANE_DEFAULT_WIDTH,
+                ...defaultPosition(),
+            })
+        },
+        /** taklab: player for a live OTS stream (or any stream URL) under its own pane id. */
+        addVideo(uid: string, name: string | undefined, config: PaneVideoConfig): void {
+            this.panes.set(uid, {
+                uid,
+                name,
+                component: markRaw(FloatingVideo),
+                config,
                 height: PANE_DEFAULT_HEIGHT,
                 width: PANE_DEFAULT_WIDTH,
                 ...defaultPosition(),

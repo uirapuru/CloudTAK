@@ -38,6 +38,18 @@
             </template>
         </template>
         <template #default>
+            <!-- taklab: streams being published right now -->
+            <div
+                v-if='liveVideo.count > 0'
+                class='col-12 pb-2'
+            >
+                <div
+                    class='subheader text-red mb-2'
+                    v-text='t("liveVideo.listTitle")'
+                />
+                <LiveVideoList />
+            </div>
+
             <TablerPillGroup
                 v-model='mode'
                 :options='[
@@ -260,6 +272,8 @@ import MenuTemplate from '../util/MenuTemplate.vue';
 import VideoLeaseModal from './Videos/VideoLeaseModal.vue';
 import EmptyInfo from '../util/EmptyInfo.vue';
 import StandardItem from '../util/StandardItem.vue';
+import LiveVideoList from '../util/LiveVideoList.vue';
+import { useLiveVideoStore } from '../../../stores/live-video.ts';
 import { server } from '../../../std.ts';
 import COT from '../../../base/cot.ts';
 import ProfileConfig from '../../../base/profile.ts';
@@ -300,6 +314,7 @@ const router = useRouter();
 const { t } = useI18n();
 const mapStore = useMapStore();
 const floatStore = useFloatStore();
+const liveVideo = useLiveVideoStore();
 
 const connectionFilter = ref('');
 const leasePaging = ref({

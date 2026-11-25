@@ -24,6 +24,11 @@
         :size='props.size'
         stroke='1'
     />
+    <IconVideo
+        v-else-if='type === NotificationType.Video'
+        :size='props.size'
+        stroke='1'
+    />
     <IconCircleDot
         v-else
         :size='props.size'
@@ -39,6 +44,7 @@ import {
     IconHeartbeat,
     IconCloudPin,
     IconCircleDot,
+    IconVideo,
 } from '@tabler/icons-vue';
 
 const props = withDefaults(defineProps<{

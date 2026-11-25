@@ -117,6 +117,16 @@
             >
                 <Navigating />
             </div>
+            <!-- taklab: live video badge, toasts, camera frustums -->
+            <LiveVideoLayer />
+            <LiveVideoToasts />
+            <div
+                v-if='mode === "Default"'
+                class='position-absolute start-50 translate-middle-x live-video-badge-slot'
+                :class='{ "live-video-badge-slot--nav": mapStore.navigation.active }'
+            >
+                <LiveVideoBadge />
+            </div>
             <div
                 v-if='mode === "Default"'
                 class='position-absolute'
@@ -358,6 +368,9 @@ import { useI18n } from 'vue-i18n';
 import GPSPanel from './GPSPanel/GPSPanel.vue';
 import PluginPane from './PluginPane.vue';
 import PttButton from './PttButton.vue';
+import LiveVideoBadge from './util/LiveVideoBadge.vue';
+import LiveVideoLayer from './util/LiveVideoLayer.vue';
+import LiveVideoToasts from './util/LiveVideoToasts.vue';
 import {useRoute, useRouter } from 'vue-router';
 import Navigating from './Navigating.vue';
 import TopBar from './TopBar.vue';
@@ -974,6 +987,17 @@ async function handleRadial(event: string): Promise<void> {
 </script>
 
 <style>
+/* taklab: live video badge under the top bar, lower while the navigation banner is up */
+.live-video-badge-slot {
+    z-index: 3;
+    top: calc(76px + var(--status-bar-height, 0px));
+    pointer-events: none;
+}
+
+.live-video-badge-slot--nav {
+    top: calc(140px + var(--status-bar-height, 0px));
+}
+
 /*
  * Drops the left controls below the navigation banner once it wraps to its own
  * row on small screens - `.cloudtak-navigating` itself is styled in style.scss

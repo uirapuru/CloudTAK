@@ -69,6 +69,8 @@ export default class MenuManager {
     preferredLayout: Ref<'list' | 'tiles'>;
     onlineContactsCount: Ref<number>;
     unreadChatsCount: Ref<number>;
+    /** taklab: live video streams now, set by the live video store (badge on Videos) */
+    liveVideoCount: Ref<number>;
     isSystemAdmin: Ref<boolean>;
     isAgencyAdmin: Ref<boolean>;
     canSeeVoiceHistory: Ref<boolean>;
@@ -85,6 +87,7 @@ export default class MenuManager {
         this.filter = ref('');
         this.onlineContactsCount = ref(0);
         this.unreadChatsCount = ref(0);
+        this.liveVideoCount = ref(0);
         this.isSystemAdmin = ref(false);
         this.isAgencyAdmin = ref(false);
         this.canSeeVoiceHistory = ref(false);
@@ -415,6 +418,12 @@ export default class MenuManager {
                     return {
                         ...item,
                         badge: this.unreadChatsCount.value > 99 ? '99+' : String(this.unreadChatsCount.value)
+                    }
+                }
+                if (item.key === 'videos' && this.liveVideoCount?.value > 0) {
+                    return {
+                        ...item,
+                        badge: this.liveVideoCount.value > 99 ? '99+' : String(this.liveVideoCount.value)
                     }
                 }
                 if (item.key === 'contacts' && this.onlineContactsCount?.value > 0) {

@@ -9,6 +9,51 @@
         "query": false,
         "res": true
     },
+    "GET /ai/model": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /ai/model/start": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /ai/model/stop": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "POST /ai/orders": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /ai/orders": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /ai/orders/:id.pdf": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /ai/orders/:id.docx": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /ai/orders/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "DELETE /ai/orders/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "POST /profile/area-package/preview": {
         "body": true,
         "query": false,
@@ -1814,6 +1859,71 @@
         "query": true,
         "res": false
     },
+    "GET /recordings/usage": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /recordings/archive": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /recordings": {
+        "body": false,
+        "query": true,
+        "res": true
+    },
+    "GET /recordings/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "PATCH /recordings/:id": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "DELETE /recordings/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /recordings/:id/file": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "POST /report": {
+        "body": true,
+        "query": false,
+        "res": true
+    },
+    "GET /report": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "GET /report/:id.pdf": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /report/:id.txt": {
+        "body": false,
+        "query": true,
+        "res": false
+    },
+    "GET /report/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
+    "DELETE /report/:id": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "GET /scim/v2/ServiceProviderConfig": {
         "body": false,
         "query": false,
@@ -2024,6 +2134,11 @@
         "query": false,
         "res": true
     },
+    "GET /video/live": {
+        "body": false,
+        "query": false,
+        "res": true
+    },
     "GET /video/service": {
         "body": false,
         "query": false,
@@ -2058,116 +2173,6 @@
         "body": false,
         "query": true,
         "res": false
-    },
-    "GET /recordings/usage": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /recordings/archive": {
-        "body": false,
-        "query": true,
-        "res": false
-    },
-    "GET /recordings": {
-        "body": false,
-        "query": true,
-        "res": true
-    },
-    "GET /recordings/:id": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "PATCH /recordings/:id": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "DELETE /recordings/:id": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /recordings/:id/file": {
-        "body": false,
-        "query": true,
-        "res": false
-    },
-    "POST /report": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "GET /report": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /report/:id.pdf": {
-        "body": false,
-        "query": true,
-        "res": false
-    },
-    "GET /report/:id.txt": {
-        "body": false,
-        "query": true,
-        "res": false
-    },
-    "GET /report/:id": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "DELETE /report/:id": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /ai/model": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "POST /ai/model/start": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "POST /ai/model/stop": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "POST /ai/orders": {
-        "body": true,
-        "query": false,
-        "res": true
-    },
-    "GET /ai/orders": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "GET /ai/orders/:id.pdf": {
-        "body": false,
-        "query": true,
-        "res": false
-    },
-    "GET /ai/orders/:id.docx": {
-        "body": false,
-        "query": true,
-        "res": false
-    },
-    "GET /ai/orders/:id": {
-        "body": false,
-        "query": false,
-        "res": true
-    },
-    "DELETE /ai/orders/:id": {
-        "body": false,
-        "query": false,
-        "res": true
     },
     "POST /retention": {
         "body": true,
