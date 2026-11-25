@@ -5,22 +5,38 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import type { Response as ExpressResponse } from 'express';
+import type { IncomingMessage } from 'node:http';
 
 const TIMEOUT_MS = 15_000;
 /** Orders are a few MB at most; the limit covers the whole transfer. */
 const DOWNLOAD_TIMEOUT_MS = 5 * 60_000;
+/** An order with attachments streams from the browser through to the service: a slow uplink sets the pace. */
+const UPLOAD_TIMEOUT_MS = 10 * 60_000;
+
+/**
+ * Attachment limits, the same as the report service (taklab.report.orders.attachments)
+ * and the menu: files, bytes per file, bytes together. The multipart body may carry
+ * the order JSON and the framing on top of the files.
+ */
+export const AI_ATTACHMENTS_MAX_FILES = 10;
+export const AI_ATTACHMENT_MAX_BYTES = 20 * 1024 * 1024;
+export const AI_ATTACHMENTS_MAX_BYTES = 50 * 1024 * 1024;
+export const AI_ORDER_MAX_BODY_BYTES = AI_ATTACHMENTS_MAX_BYTES + 2 * 1024 * 1024;
+
+const TOO_LARGE = 'Pliki razem mogą mieć najwyżej 50 MB.';
 
 /** Headers of an order file that reach the browser; everything else stays behind. */
 const PASSED_HEADERS = ['content-type', 'content-length', 'content-disposition'];
 
 /** Statuses of the report service whose Polish message the browser should see. */
-const PASSED_STATUSES = new Set([400, 403, 404, 409, 429, 503]);
+const PASSED_STATUSES = new Set([400, 403, 404, 409, 413, 429, 503]);
 
 const FALLBACK: Record<number, string> = {
     400: 'Nieprawidłowe zamówienie rozkazu.',
     403: 'Chat AI jest dostępny tylko dla administratora.',
     404: 'Nie ma takiego rozkazu.',
     409: 'Rozkaz nie jest jeszcze gotowy.',
+    413: TOO_LARGE,
     429: 'Masz już 2 rozkazy w kolejce. Poczekaj, aż któryś się skończy.',
     503: 'Model AI jest chwilowo niedostępny.',
 };
@@ -55,6 +71,8 @@ export const AiOrderSchema = Type.Object({
     // A type list, not a Union: with type coercion the anyOf of a Union turns false into null.
     weather_ok: NullableBoolean,
     terrain_ok: NullableBoolean,
+    phase: Type.Union([Type.Null(), Type.String()], { description: 'While running: attachments, images, model or document' }),
+    attachments: Type.Integer({ minimum: 0, description: 'Number of files attached to the order' }),
 });
 
 export const AiOrderListSchema = Type.Object({ items: Type.Array(AiOrderSchema) });
@@ -95,7 +113,13 @@ export class AiControl {
         return url || null;
     }
 
-    private async request(path: string, user: string, init: { method?: string; body?: string; timeout?: number } = {}): Promise<Response> {
+    private async request(path: string, user: string, init: {
+        method?: string;
+        body?: string | AsyncIterable<Uint8Array>;
+        contentType?: string;
+        timeout?: number;
+        tooLarge?: () => boolean;
+    } = {}): Promise<Response> {
         const base = this.baseUrl();
         if (!base) throw new Err(404, null, 'Chat AI nie jest włączony');
 
@@ -107,17 +131,21 @@ export class AiControl {
             'X-Report-Token': token,
             'X-Report-User': user,
         };
-        if (init.body !== undefined) headers['Content-Type'] = 'application/json';
+        if (init.body !== undefined) headers['Content-Type'] = init.contentType || 'application/json';
 
         let res: Response;
         try {
-            res = await this.fetch(`${base}${path}`, {
+            const options: RequestInit & { duplex?: 'half' } = {
                 method: init.method || 'GET',
                 headers,
-                body: init.body,
+                body: init.body as BodyInit | undefined,
                 signal: AbortSignal.timeout(init.timeout || TIMEOUT_MS),
-            });
+            };
+            // A streamed body (multipart from the browser) needs half duplex in undici.
+            if (init.body !== undefined && typeof init.body !== 'string') options.duplex = 'half';
+            res = await this.fetch(`${base}${path}`, options);
         } catch {
+            if (init.tooLarge?.()) throw new Err(413, null, TOO_LARGE);
             // No cause attached: the request carries the token and maybe the order text.
             throw new Err(502, null, 'Usługa raportów nie odpowiada');
         }
@@ -163,6 +191,48 @@ export class AiControl {
         if (body.route !== undefined) payload.route = body.route;
 
         const res = await this.request('/api/v1/orders', user, { method: 'POST', body: JSON.stringify(payload) });
+        return await res.json() as { id: string; status: string };
+    }
+
+    /**
+     * An order with attachments: the browser's multipart/form-data body (field
+     * "order" = the JSON body, fields "files") goes through to the service as it
+     * streams in, never buffered here. CloudTAK checks the session and the total
+     * size (Content-Length and the bytes actually read); the service checks the
+     * order, the files and their limits again.
+     */
+    async createMultipart(user: string, req: IncomingMessage): Promise<{ id: string; status: string }> {
+        const contentType = String(req.headers['content-type'] || '');
+        if (!/^multipart\/form-data;\s*boundary=/i.test(contentType)) {
+            throw new Err(400, null, 'Nieprawidłowe zamówienie rozkazu.');
+        }
+        const length = req.headers['content-length'];
+        if (length !== undefined && (!/^\d+$/.test(length) || Number(length) > AI_ORDER_MAX_BODY_BYTES)) {
+            throw new Err(413, null, TOO_LARGE);
+        }
+
+        let exceeded = false;
+        async function* capped(): AsyncGenerator<Uint8Array> {
+            let seen = 0;
+            // destroyOnReturn false: stopping early must not destroy the request, its socket
+            // is still needed for the 413 (a destroyed socket crashed the access log).
+            for await (const chunk of req.iterator({ destroyOnReturn: false }) as AsyncIterable<Buffer>) {
+                seen += chunk.length;
+                if (seen > AI_ORDER_MAX_BODY_BYTES) {
+                    exceeded = true;
+                    throw new Error('Request body too large');
+                }
+                yield chunk;
+            }
+        }
+
+        const res = await this.request('/api/v1/orders', user, {
+            method: 'POST',
+            body: capped(),
+            contentType,
+            timeout: UPLOAD_TIMEOUT_MS,
+            tooLarge: () => exceeded,
+        });
         return await res.json() as { id: string; status: string };
     }
 

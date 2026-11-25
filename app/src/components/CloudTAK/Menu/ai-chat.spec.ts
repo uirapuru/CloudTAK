@@ -4,8 +4,14 @@ import { defineComponent, h } from 'vue';
 import i18n from '../../../i18n.ts';
 import { zonedToIso } from './journal.ts';
 import {
+    AI_ATTACHMENT_MAX_BYTES,
+    AI_ATTACHMENTS_MAX_BYTES,
+    addAttachments,
     aiChatEnabled,
+    attachmentsProblem,
     botChatPath,
+    createOrder,
+    formatSize,
     defaultOrderForm,
     findBotContact,
     mapObjects,
@@ -155,6 +161,48 @@ describe('ai-chat helpers', () => {
     it('builds the download path of the order format without the token', () => {
         expect(orderUrl('ab'.repeat(16), 'pdf')).toBe(`/api/ai/orders/${'ab'.repeat(16)}.pdf`);
         expect(orderUrl('ab'.repeat(16), 'docx')).toBe(`/api/ai/orders/${'ab'.repeat(16)}.docx`);
+    });
+
+    it('mirrors the server limits for attachments: 10 files, 20 MB each, 50 MB together', () => {
+        const sized = (size: number) => ({ size }) as File;
+        expect(AI_ATTACHMENT_MAX_BYTES).toBe(20 * 1024 * 1024);
+        expect(AI_ATTACHMENTS_MAX_BYTES).toBe(50 * 1024 * 1024);
+        expect(attachmentsProblem([])).toBeNull();
+        expect(attachmentsProblem(Array.from({ length: 10 }, () => sized(1)))).toBeNull();
+        expect(attachmentsProblem(Array.from({ length: 11 }, () => sized(1)))).toBe('aiChat.problems.tooManyFiles');
+        expect(attachmentsProblem([sized(AI_ATTACHMENT_MAX_BYTES)])).toBeNull();
+        expect(attachmentsProblem([sized(AI_ATTACHMENT_MAX_BYTES + 1)])).toBe('aiChat.problems.fileTooLarge');
+        expect(attachmentsProblem([sized(AI_ATTACHMENT_MAX_BYTES), sized(AI_ATTACHMENT_MAX_BYTES), sized(10 * 1024 * 1024)])).toBeNull();
+        expect(attachmentsProblem([sized(AI_ATTACHMENT_MAX_BYTES), sized(AI_ATTACHMENT_MAX_BYTES), sized(10 * 1024 * 1024 + 1)]))
+            .toBe('aiChat.problems.filesTooLarge');
+    });
+
+    it('formats file sizes and keys every picked file', () => {
+        expect(formatSize(512)).toBe('512 B');
+        expect(formatSize(2048)).toBe('2 kB');
+        expect(formatSize(1.5 * 1024 * 1024, 'pl')).toBe('1,5 MB');
+        expect(formatSize(1.5 * 1024 * 1024, 'en')).toBe('1.5 MB');
+        const a = new File(['a'], 'a.txt');
+        const list = addAttachments(addAttachments([], [a]), [a]);
+        expect(list).toHaveLength(2);
+        expect(list[0].key).not.toBe(list[1].key);
+    });
+
+    it('sends JSON without files and multipart with them', async () => {
+        std.mockResolvedValue({ id: 'b'.repeat(32), status: 'queued' });
+        const req = { text: 'Dane.', format: 'pdf' as const };
+        await createOrder(req);
+        expect(std).toHaveBeenLastCalledWith('/api/ai/orders', { method: 'POST', body: req });
+
+        const photo = new File(['jpeg'], 'zdjęcie.jpg', { type: 'image/jpeg' });
+        const zip = new File(['PK'], 'paczka.zip');
+        await createOrder(req, [photo, zip]);
+        const [, opts] = std.mock.calls.at(-1) as [string, { body: FormData; timeout: number }];
+        expect(opts.body).toBeInstanceOf(FormData);
+        expect(JSON.parse(String(opts.body.get('order')))).toEqual(req);
+        expect((opts.body.getAll('files') as File[]).map(f => f.name)).toEqual(['zdjęcie.jpg', 'paczka.zip']);
+        expect(opts.timeout).toBeGreaterThanOrEqual(5 * 60_000);
+        std.mockReset();
     });
 
     it('is enabled only when the model state answers 200', async () => {
@@ -395,6 +443,88 @@ describe('MenuAiChat', () => {
         expect(calls('GET', '/api/ai/orders')).toBe(4);
         // The model is ready: never polled.
         expect(calls('GET', '/api/ai/model')).toBe(2);
+    });
+
+    function choose(wrapper: ReturnType<typeof mountMenu>, testid: string, files: File[]) {
+        const input = wrapper.find(`[data-testid="${testid}"]`);
+        Object.defineProperty(input.element, 'files', { value: files, configurable: true });
+        return input.trigger('change');
+    }
+
+    it('takes a photo with the camera and attaches any files, listed with name, size and remove', async () => {
+        const wrapper = mountMenu();
+        await flushPromises();
+        const photo = wrapper.find('[data-testid="ai-order-photo"]');
+        expect(photo.attributes('accept')).toBe('image/*');
+        expect(photo.attributes('capture')).toBe('environment');
+        expect(photo.attributes('multiple')).toBeUndefined();
+        const files = wrapper.find('[data-testid="ai-order-files"]');
+        expect(files.attributes('multiple')).toBeDefined();
+        expect(files.attributes('accept')).toBeUndefined();
+        expect(wrapper.text()).toContain('Zrób zdjęcie');
+        expect(wrapper.text()).toContain('Dołącz pliki');
+
+        await choose(wrapper, 'ai-order-photo', [new File([new Uint8Array(2048)], 'IMG_0001.jpg', { type: 'image/jpeg' })]);
+        await choose(wrapper, 'ai-order-files', [new File(['Most 205'], 'meldunek.txt'), new File([new Uint8Array(3 * 1024 * 1024)], 'paczka.zip')]);
+        expect(wrapper.findAll('[data-testid="ai-order-attachment-name"]').map(n => n.text()))
+            .toEqual(['IMG_0001.jpg', 'meldunek.txt', 'paczka.zip']);
+        expect(wrapper.findAll('[data-testid="ai-order-attachment-size"]').map(n => n.text())).toEqual(['2 kB', '8 B', '3 MB']);
+        expect(wrapper.find('[data-testid="ai-order-attachments-total"]').text()).toBe('Plików: 3, razem 3 MB');
+
+        await wrapper.findAll('[data-testid="ai-order-attachment-remove"]')[1].trigger('click');
+        expect(wrapper.findAll('[data-testid="ai-order-attachment-name"]').map(n => n.text())).toEqual(['IMG_0001.jpg', 'paczka.zip']);
+
+        await wrapper.find('[data-testid="ai-order-text"] textarea').setValue('Dane rozkazu.');
+        await wrapper.find('[data-testid="ai-order-create"]').trigger('click');
+        await flushPromises();
+        const call = std.mock.calls.find(c => c[0] === '/api/ai/orders' && (c[1] as { method?: string } | undefined)?.method === 'POST');
+        const body = (call?.[1] as { body: FormData }).body;
+        expect(body).toBeInstanceOf(FormData);
+        expect(JSON.parse(String(body.get('order'))).text).toBe('Dane rozkazu.');
+        expect((body.getAll('files') as File[]).map(f => f.name)).toEqual(['IMG_0001.jpg', 'paczka.zip']);
+        // The list is empty again after the order went out.
+        expect(wrapper.findAll('[data-testid="ai-order-attachment"]')).toHaveLength(0);
+    });
+
+    it('blocks the order while the files break the limits, with the reason even without text', async () => {
+        const wrapper = mountMenu();
+        await flushPromises();
+        const big = new File([], 'film.mp4');
+        Object.defineProperty(big, 'size', { value: 20 * 1024 * 1024 + 1 });
+        await choose(wrapper, 'ai-order-files', [big]);
+        expect(wrapper.find('[data-testid="ai-order-files-problem"]').text()).toBe('Jeden plik może mieć najwyżej 20 MB.');
+        await wrapper.find('[data-testid="ai-order-text"] textarea').setValue('Dane.');
+        expect(wrapper.find('[data-testid="ai-order-create"]').attributes('disabled')).toBeDefined();
+
+        await wrapper.find('[data-testid="ai-order-attachment-remove"]').trigger('click');
+        const many = Array.from({ length: 11 }, (_, i) => new File(['x'], `${i}.txt`));
+        await choose(wrapper, 'ai-order-files', many);
+        expect(wrapper.find('[data-testid="ai-order-files-problem"]').text()).toBe('Najwyżej 10 plików do jednego rozkazu.');
+        expect(wrapper.find('[data-testid="ai-order-create"]').attributes('disabled')).toBeDefined();
+
+        // Ten files are fine again.
+        await wrapper.find('[data-testid="ai-order-attachment-remove"]').trigger('click');
+        expect(wrapper.find('[data-testid="ai-order-files-problem"]').exists()).toBe(false);
+        expect(wrapper.find('[data-testid="ai-order-create"]').attributes('disabled')).toBeUndefined();
+        expect(calls('POST', '/api/ai/orders')).toBe(0);
+    });
+
+    it('shows what a running order is doing and how many files it has', async () => {
+        list = () => ({
+            items: [
+                order({ id: 'd'.repeat(32), status: 'running', finished: null, phase: 'images', attachments: 3 }),
+                order({ id: 'e'.repeat(32), status: 'running', finished: null, phase: 'model' }),
+                order({ phase: null, attachments: 0 }),
+            ],
+        });
+        const wrapper = mountMenu();
+        await flushPromises();
+        const rows = wrapper.findAll('[data-order]');
+        expect(rows[0].find('[data-testid="ai-order-status"]').text()).toBe('Tworzy się… (odczyt zdjęć)');
+        expect(rows[0].text()).toContain('załączniki: 3');
+        expect(rows[1].find('[data-testid="ai-order-status"]').text()).toBe('Tworzy się… (model pisze rozkaz)');
+        expect(rows[2].text()).not.toContain('załączniki');
+        wrapper.unmount();
     });
 
     it('shows the refusal of the service', async () => {

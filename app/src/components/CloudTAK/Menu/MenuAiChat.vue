@@ -132,10 +132,92 @@
                     />
                 </div>
                 <div
-                    v-if='problem && form.text'
+                    class='col-12'
+                    data-testid='ai-order-attachments'
+                >
+                    <div class='d-flex gap-2'>
+                        <label class='btn btn-outline-secondary flex-fill mb-0'>
+                            <IconCamera
+                                :size='20'
+                                stroke='1'
+                                class='me-1'
+                            />
+                            {{ t('aiChat.order.takePhoto') }}
+                            <input
+                                type='file'
+                                accept='image/*'
+                                capture='environment'
+                                class='d-none'
+                                data-testid='ai-order-photo'
+                                @change='pick'
+                            >
+                        </label>
+                        <label class='btn btn-outline-secondary flex-fill mb-0'>
+                            <IconPaperclip
+                                :size='20'
+                                stroke='1'
+                                class='me-1'
+                            />
+                            {{ t('aiChat.order.attachFiles') }}
+                            <input
+                                type='file'
+                                multiple
+                                class='d-none'
+                                data-testid='ai-order-files'
+                                @change='pick'
+                            >
+                        </label>
+                    </div>
+                    <div
+                        class='small text-muted px-2 pt-1'
+                        v-text='t("aiChat.order.attachmentsHint")'
+                    />
+                    <div
+                        v-for='item in attachments'
+                        :key='item.key'
+                        class='d-flex align-items-center gap-2 px-2'
+                        data-testid='ai-order-attachment'
+                    >
+                        <span
+                            class='text-truncate flex-grow-1'
+                            data-testid='ai-order-attachment-name'
+                            :title='item.file.name'
+                            v-text='item.file.name'
+                        />
+                        <span
+                            class='small text-muted text-nowrap'
+                            data-testid='ai-order-attachment-size'
+                            v-text='formatSize(item.file.size, locale)'
+                        />
+                        <TablerIconButton
+                            :title='t("aiChat.order.removeFile", { name: item.file.name })'
+                            data-testid='ai-order-attachment-remove'
+                            @click='unpick(item.key)'
+                        >
+                            <IconX
+                                :size='16'
+                                stroke='1'
+                            />
+                        </TablerIconButton>
+                    </div>
+                    <div
+                        v-if='attachments.length'
+                        class='small text-muted px-2'
+                        data-testid='ai-order-attachments-total'
+                        v-text='t("aiChat.order.attachmentsTotal", { count: attachments.length, size: formatSize(attachmentsSize, locale) })'
+                    />
+                </div>
+                <div
+                    v-if='filesProblem'
+                    class='col-12 small text-red px-3'
+                    data-testid='ai-order-files-problem'
+                    v-text='t(filesProblem)'
+                />
+                <div
+                    v-if='textProblem && form.text'
                     class='col-12 small text-red px-3'
                     data-testid='ai-order-problem'
-                    v-text='t(problem)'
+                    v-text='t(textProblem)'
                 />
                 <div
                     v-if='created'
@@ -198,7 +280,7 @@
                                     class='badge align-self-start'
                                     :class='statusClass(order.status)'
                                     data-testid='ai-order-status'
-                                    v-text='statusLabel(order.status)'
+                                    v-text='statusLabel(order)'
                                 />
                                 <span
                                     v-if='order.status === "failed" && order.error'
@@ -253,9 +335,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import {
+    IconCamera,
     IconFileTypeDocx,
     IconFileTypePdf,
+    IconPaperclip,
     IconRefresh,
+    IconX,
 } from '@tabler/icons-vue';
 import {
     TablerAlert,
@@ -274,15 +359,19 @@ import {
     AI_ORDER_FORMATS,
     AI_POLL_MS,
     BOT_CALLSIGN,
+    type AiAttachment,
     type AiMapObject,
     type AiModel,
     type AiOrder,
     type BotContact,
+    addAttachments,
+    attachmentsProblem,
     botChatPath,
     createOrder,
     defaultOrderForm,
     deleteOrder,
     findBotContact,
+    formatSize,
     getModel,
     isPending,
     listOrders,
@@ -314,12 +403,16 @@ const orders = ref<AiOrder[]>([]);
 const objects = ref<AiMapObject[]>([]);
 const bot = ref<BotContact | undefined>();
 const form = ref(defaultOrderForm());
+const attachments = ref<AiAttachment[]>([]);
 
 let alive = false;
 let ordersTimer: ReturnType<typeof setTimeout> | undefined;
 let modelTimer: ReturnType<typeof setTimeout> | undefined;
 
-const problem = computed(() => orderProblem(form.value));
+const textProblem = computed(() => orderProblem(form.value));
+const filesProblem = computed(() => attachmentsProblem(attachments.value.map(a => a.file)));
+const problem = computed(() => textProblem.value || filesProblem.value);
+const attachmentsSize = computed(() => attachments.value.reduce((sum, a) => sum + a.file.size, 0));
 const action = computed(() => modelAction(model.value));
 
 const stateLabel = computed(() => {
@@ -356,12 +449,29 @@ function requestLine(order: AiOrder): string {
         format: formatName(order.format),
         start: order.start ? formatWhen(order.start, locale.value) : '–',
     });
-    return `${line} · ${t(order.has_location ? 'aiChat.thread.withLocation' : 'aiChat.thread.withoutLocation')}`;
+    const parts = [line, t(order.has_location ? 'aiChat.thread.withLocation' : 'aiChat.thread.withoutLocation')];
+    if (order.attachments) parts.push(t('aiChat.thread.attachments', { count: order.attachments }));
+    return parts.join(' · ');
 }
 
-function statusLabel(status: string): string {
-    const key = `aiChat.thread.statuses.${status}`;
-    return te(key) ? t(key) : status;
+/** "Tworzy się… (odczyt zdjęć)" while running with a known phase. */
+function statusLabel(order: AiOrder): string {
+    const key = `aiChat.thread.statuses.${order.status}`;
+    const label = te(key) ? t(key) : order.status;
+    const phase = `aiChat.thread.phases.${order.phase}`;
+    return order.status === 'running' && order.phase && te(phase) ? `${label} (${t(phase)})` : label;
+}
+
+function pick(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    attachments.value = addAttachments(attachments.value, input.files || []);
+    created.value = false;
+    // The same file may be picked again after removing it.
+    input.value = '';
+}
+
+function unpick(key: string): void {
+    attachments.value = attachments.value.filter(a => a.key !== key);
 }
 
 function statusClass(status: string): string {
@@ -474,8 +584,9 @@ async function create(): Promise<void> {
     busy.value = true;
     created.value = false;
     try {
-        await createOrder(toOrderRequest(form.value, objects.value));
+        await createOrder(toOrderRequest(form.value, objects.value), attachments.value.map(a => a.file));
         form.value = { ...defaultOrderForm(), format: form.value.format };
+        attachments.value = [];
         created.value = true;
         error.value = undefined;
         await loadOrders();

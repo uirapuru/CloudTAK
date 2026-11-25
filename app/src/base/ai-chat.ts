@@ -16,6 +16,17 @@ export const AI_TITLE_MAX = 120;
 /** CloudTAK refuses longer routes; longer ones are thinned before sending. */
 export const AI_ROUTE_MAX_POINTS = 5_000;
 
+/**
+ * Attachments: the same limits as CloudTAK API and the report service
+ * (taklab.report.orders.attachments), checked here first so nothing too big
+ * is ever uploaded.
+ */
+export const AI_ATTACHMENTS_MAX_FILES = 10;
+export const AI_ATTACHMENT_MAX_BYTES = 20 * 1024 * 1024;
+export const AI_ATTACHMENTS_MAX_BYTES = 50 * 1024 * 1024;
+/** The upload goes at the speed of the uplink: 50 MB over a slow LTE link takes minutes. */
+export const AI_UPLOAD_TIMEOUT_MS = 10 * 60_000;
+
 /** Account (and UID) and default callsign of the ai-buddy bot (chart: aiBuddy.konto, aiBuddy.nazwa). */
 export const BOT_UID = 'ai_buddy';
 export const BOT_CALLSIGN = 'Hal9000';
@@ -44,7 +55,14 @@ export type AiOrder = {
     has_location: boolean;
     weather_ok: boolean | null;
     terrain_ok: boolean | null;
+    /** While running: attachments, images, model or document. */
+    phase?: string | null;
+    /** Number of files attached to the order. */
+    attachments?: number;
 };
+
+/** A file picked in the menu, with a key for the list. */
+export type AiAttachment = { key: string; file: File };
 
 export type LngLat = [number, number];
 
@@ -90,8 +108,39 @@ export async function stopModel(): Promise<AiModelAction> {
     return await std('/api/ai/model/stop', { method: 'POST' }) as AiModelAction;
 }
 
-export async function createOrder(req: AiOrderRequest): Promise<AiOrderCreated> {
-    return await std('/api/ai/orders', { method: 'POST', body: req }) as AiOrderCreated;
+/**
+ * Without files: the JSON body. With files: multipart/form-data, the same JSON
+ * in the field "order" and every file in "files".
+ */
+export async function createOrder(req: AiOrderRequest, files: File[] = []): Promise<AiOrderCreated> {
+    if (!files.length) return await std('/api/ai/orders', { method: 'POST', body: req }) as AiOrderCreated;
+    const form = new FormData();
+    form.append('order', JSON.stringify(req));
+    for (const file of files) form.append('files', file, file.name);
+    return await std('/api/ai/orders', { method: 'POST', body: form, timeout: AI_UPLOAD_TIMEOUT_MS }) as AiOrderCreated;
+}
+
+/** Why these files cannot be sent (a locale key), or null. */
+export function attachmentsProblem(files: File[]): string | null {
+    if (files.length > AI_ATTACHMENTS_MAX_FILES) return 'aiChat.problems.tooManyFiles';
+    if (files.some(f => f.size > AI_ATTACHMENT_MAX_BYTES)) return 'aiChat.problems.fileTooLarge';
+    if (files.reduce((sum, f) => sum + f.size, 0) > AI_ATTACHMENTS_MAX_BYTES) return 'aiChat.problems.filesTooLarge';
+    return null;
+}
+
+let attachmentSeq = 0;
+
+/** Picked files added to the list, in order, each with its own key. */
+export function addAttachments(list: AiAttachment[], picked: Iterable<File>): AiAttachment[] {
+    return [...list, ...Array.from(picked, file => ({ key: `f${++attachmentSeq}`, file }))];
+}
+
+/** Size as shown next to a file: B, kB or MB with a Polish decimal comma in pl. */
+export function formatSize(bytes: number, locale = 'pl'): string {
+    const number = (value: number, digits: number) => value.toLocaleString(locale, { maximumFractionDigits: digits });
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${number(bytes / 1024, 0)} kB`;
+    return `${number(bytes / (1024 * 1024), 1)} MB`;
 }
 
 export async function listOrders(): Promise<AiOrder[]> {
