@@ -13,7 +13,9 @@ function setup(opts: {
     access?: (name: string, call: number) => IonAccess;
     camera?: { transform: unknown };
     geoid?: (lat: number, lng: number) => Promise<number>;
+    zoom?: number;
 } = {}) {
+    let zoom = opts.zoom ?? 15;
     const existing = new Set(opts.layers ?? []);
     const listeners = new Set<() => unknown>();
     const map = {
@@ -21,6 +23,7 @@ function setup(opts: {
         addControl: vi.fn(),
         removeControl: vi.fn(),
         getLayer: (id: string) => existing.has(id) ? { id } : undefined,
+        getZoom: () => zoom,
         on: vi.fn((_type: 'moveend', listener: () => unknown) => { listeners.add(listener); }),
         off: vi.fn((_type: 'moveend', listener: () => unknown) => { listeners.delete(listener); }),
     };
@@ -28,6 +31,11 @@ function setup(opts: {
     let center = { lng: 0, lat: 0 };
     const moveTo = async (lng: number, lat: number) => {
         center = { lng, lat };
+        await Promise.all(Array.from(listeners, (listener) => listener()));
+    };
+
+    const zoomTo = async (z: number) => {
+        zoom = z;
         await Promise.all(Array.from(listeners, (listener) => listener()));
     };
 
@@ -77,13 +85,41 @@ function setup(opts: {
 
     const translation = (i = 0) => (layers()[i].props.loadOptions as { tileset: { modelMatrix: { translation: number[] } } }).tileset.modelMatrix.translation;
 
-    return { manager, map, overlays, layers, translation, geoid, fetchAccess, onChange, existing, listeners, moveTo, setNow: (n: number) => { now = n; } };
+    return { manager, map, overlays, layers, translation, geoid, fetchAccess, onChange, existing, listeners, moveTo, zoomTo, setNow: (n: number) => { now = n; } };
 }
 
 beforeEach(() => { vi.useFakeTimers(); });
 afterEach(() => { vi.useRealTimers(); });
 
 describe('Tiles3DManager', () => {
+    it('draws Google Photorealistic only from its minimum zoom', async () => {
+        const t = setup({ zoom: 10 });
+        await t.manager.add({ id: 'g', name: 'google-photorealistic', visible: true, opacity: 1 });
+        await t.manager.add({ id: 'o', name: 'osm-buildings', visible: true, opacity: 1 });
+
+        const visible = () => Object.fromEntries(t.layers().map((l) => [l.props.id, l.props.visible]));
+        expect(visible()).toEqual({ 'tiles3d-g-0': false, 'tiles3d-o-0': true });
+        expect(t.manager.attributions().map((a) => a.text)).toEqual(['osm-buildings credit']);
+        // Hidden by zoom still counts as switched on, so the terrain stays at 1x
+        expect(t.manager.hasVisible()).toBe(true);
+
+        await t.zoomTo(13);
+        expect(visible()['tiles3d-g-0']).toBe(true);
+        expect(t.manager.attributions().map((a) => a.text)).toContain('google-photorealistic credit');
+
+        await t.zoomTo(12.5);
+        expect(visible()['tiles3d-g-0']).toBe(false);
+    });
+
+    it('does not redraw on a move that keeps every tileset as it was', async () => {
+        const t = setup({ zoom: 10 });
+        await t.manager.add({ id: 'g', name: 'google-photorealistic', visible: true, opacity: 1 });
+        const before = t.onChange.mock.calls.length;
+
+        await t.zoomTo(11);
+        expect(t.onChange.mock.calls.length).toBe(before);
+    });
+
     it('adds one interleaved overlay and one layer per entry', async () => {
         const t = setup({ layers: ['cot-layer'] });
         await t.manager.add({ id: '7', name: 'osm-buildings', visible: true, opacity: 0.8 });

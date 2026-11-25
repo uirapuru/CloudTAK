@@ -26,6 +26,7 @@ interface MapLike {
     addControl(control: unknown): unknown;
     removeControl(control: unknown): unknown;
     getLayer(id: string): unknown;
+    getZoom?(): number;
     on(type: 'moveend', listener: () => void): unknown;
     off(type: 'moveend', listener: () => void): unknown;
 }
@@ -63,6 +64,17 @@ export const SCHEDULE_RETRY_MS = 60 * 1000;
 export const SHIFT_TOLERANCE_M = 1;
 // The geoid varies slowly, so only look it up again after a long move
 export const GEOID_RESAMPLE_M = 50 * 1000;
+
+/**
+ * Google Photorealistic covers the ground itself, not only buildings. Its mesh
+ * and the basemap draped on the terrain sit within metres of each other and
+ * share one depth buffer, so whichever is higher wins pixel by pixel: the map
+ * shows through the photos in patches. Zoomed out the mesh is coarse and the
+ * patches cover the whole view, so draw such tilesets only from this zoom up.
+ */
+export const MIN_ZOOM: Record<string, number> = {
+    'google-photorealistic': 13,
+};
 
 const EARTH_RADIUS_M = 6378137;
 
@@ -298,7 +310,7 @@ export class Tiles3DManager {
         const out: IonAttribution[] = [];
 
         for (const state of this.states.values()) {
-            if (!state.entry.visible) continue;
+            if (!this.drawn(state)) continue;
             for (const a of state.access.attributions) {
                 const key = `${a.text}\u0000${a.image ?? ''}`;
                 if (seen.has(key)) continue;
@@ -328,6 +340,7 @@ export class Tiles3DManager {
         const candidate = this.beforeId();
         const beforeId = candidate && this.map.getLayer(candidate) ? candidate : undefined;
 
+        this.drawnKey = this.drawnState();
         this.overlay.setProps({
             layers: Array.from(this.states.values()).map((state) => this.layer(state, beforeId)),
         });
@@ -354,6 +367,13 @@ export class Tiles3DManager {
         }
     }
 
+    private drawn(state: State): boolean {
+        if (!state.entry.visible) return false;
+        const min = MIN_ZOOM[state.entry.name];
+        if (min === undefined || typeof this.map.getZoom !== 'function') return true;
+        return this.map.getZoom() >= min;
+    }
+
     private layer(state: State, beforeId: string | undefined): unknown {
         const id = state.entry.id;
 
@@ -361,7 +381,7 @@ export class Tiles3DManager {
             id: `tiles3d-${id}-${state.generation}`,
             data: state.access.url,
             loader: this.deck.Tiles3DLoader,
-            visible: state.entry.visible,
+            visible: this.drawn(state),
             opacity: state.entry.opacity,
             beforeId,
             loadOptions: {
@@ -412,8 +432,19 @@ export class Tiles3DManager {
         this.undulation = { lng: center.lng, lat: center.lat, value };
     }
 
+    private drawnKey = '';
+
+    private drawnState(): string {
+        return Array.from(this.states.values(), (state) => this.drawn(state) ? '1' : '0').join('');
+    }
+
     private onMoveEnd = async (): Promise<void> => {
-        if (this.destroyed || !this.shift || !this.states.size) return;
+        if (this.destroyed || !this.states.size) return;
+
+        // Zooming across MIN_ZOOM shows or hides a tileset
+        if (this.drawnState() !== this.drawnKey) this.render();
+
+        if (!this.shift) return;
 
         await this.sampleUndulation();
 
