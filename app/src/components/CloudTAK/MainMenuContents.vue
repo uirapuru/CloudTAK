@@ -4,7 +4,9 @@
         class='main-menu-layout d-flex flex-column h-100 overflow-hidden'
     >
         <div
-            class='main-menu-scroll flex-grow-1 w-100 overflow-auto noscroll pb-2'
+            ref='compactScroll'
+            class='main-menu-scroll main-menu-compact-grid flex-grow-1 w-100 overflow-auto noscroll pb-2'
+            :style='{ gridTemplateColumns: `repeat(${compactColumns}, minmax(0, 1fr))` }'
         >
             <MenuItemCard
                 v-for='item in visibleCompactMenuItems'
@@ -300,7 +302,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, onMounted, onUnmounted, computed, watch, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, onBeforeUnmount, nextTick, useTemplateRef } from 'vue';
 import {
     IconUser,
     IconLogout,
@@ -337,6 +339,7 @@ import MenuItemCard from './Menu/MenuItemCard.vue';
 import MenuTemplate from './util/MenuTemplate.vue';
 import ServerStatus from './ServerStatus.vue';
 import ProfileConfig from '../../base/profile.ts';
+import { compactMenuColumns } from '../../base/compact-menu-columns.ts';
 
 const router = useRouter();
 const { t, te } = useI18n();
@@ -380,6 +383,10 @@ const props = defineProps({
     compact: Boolean
 });
 
+const emit = defineEmits<{
+    (e: 'columns', columns: number): void
+}>();
+
 const menuLayout = computed(() => props.compact ? 'list' : mapStore.menu.preferredLayout.value);
 const preferredLayout = computed(() => mapStore.menu.preferredLayout.value);
 const menuFilter = computed({
@@ -396,6 +403,52 @@ const visibleFilteredMenuItems = computed(() => {
 
 const visibleCompactMenuItems = computed(() => {
     return menuItems.value.filter((item: MenuItemConfig) => item.visibility !== 'hidden' && item.visibility !== 'partial');
+});
+
+// The compact menu grows from one to at most three icon columns when the icons
+// no longer fit in the window height. Items flow row by row, left to right.
+const compactScroll = useTemplateRef<HTMLElement>('compactScroll');
+const compactColumns = ref(1);
+
+function measureCompactColumns(): void {
+    const el = compactScroll.value;
+    if (!props.compact || !el) return;
+
+    const first = el.firstElementChild as HTMLElement | null;
+    const style = getComputedStyle(el);
+    const padding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+
+    const next = compactMenuColumns({
+        itemCount: visibleCompactMenuItems.value.length,
+        availableHeight: el.clientHeight - padding,
+        itemHeight: first ? first.offsetHeight : 0,
+        viewportWidth: window.innerWidth,
+    });
+
+    if (next !== compactColumns.value) compactColumns.value = next;
+}
+
+watch(compactColumns, (columns) => emit('columns', columns), { immediate: true });
+
+watch(compactScroll, (el, _old, onCleanup) => {
+    if (!el) return;
+
+    measureCompactColumns();
+    window.addEventListener('resize', measureCompactColumns);
+    const observer = typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => measureCompactColumns())
+        : undefined;
+    observer?.observe(el);
+
+    onCleanup(() => {
+        window.removeEventListener('resize', measureCompactColumns);
+        observer?.disconnect();
+    });
+}, { flush: 'post', immediate: true });
+
+watch(() => visibleCompactMenuItems.value.length, async () => {
+    await nextTick();
+    measureCompactColumns();
 });
 
 let sortable: Sortable | undefined;
@@ -521,6 +574,11 @@ function normalizeApplications(applications: unknown): AppSwitcherApplication[] 
 
 .main-menu-scroll {
     min-height: 0;
+}
+
+.main-menu-compact-grid {
+    display: grid;
+    align-content: start;
 }
 
 .main-menu-footer {

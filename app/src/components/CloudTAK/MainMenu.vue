@@ -18,8 +18,8 @@
                 bottom: 8px;
             '
             :style='`
-                width: ${compact ? "var(--map-compact-menu-size, 60px)" : `${menuWidth}px`};
-                min-width: ${compact ? "var(--map-compact-menu-size, 60px)" : `400px`};
+                width: ${compact ? `${compactWidth}px` : `${menuWidth}px`};
+                min-width: ${compact ? `${compactWidth}px` : `400px`};
             `'
         >
             <div
@@ -34,6 +34,7 @@
                 <MainMenuContents
                     v-if='compact'
                     :compact='true'
+                    @columns='compactColumns = $event'
                 />
                 <router-view v-else />
             </div>
@@ -42,10 +43,11 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, watch, useTemplateRef, onMounted } from 'vue';
+import { ref, computed, watch, useTemplateRef, onMounted } from 'vue';
 import { useMapStore } from '../../stores/map.ts';
 import { useAppStore } from '../../stores/app.ts';
 import MainMenuContents from './MainMenuContents.vue';
+import { compactMenuWidth } from '../../base/compact-menu-columns.ts';
 
 const mapStore = useMapStore();
 const appStore = useAppStore();
@@ -58,7 +60,10 @@ const container = useTemplateRef('container');
 
 const menuWidth = ref<number>(400);
 
-const COMPACT_MENU_WIDTH = 60;
+// Icon columns reported by the compact menu (1-3, depending on window height).
+const compactColumns = ref(1);
+const compactWidth = computed(() => compactMenuWidth(compactColumns.value));
+
 const TOAST_OFFSET_BUFFER = 10;
 const MENU_RESIZE_HANDLE_WIDTH = 14;
 
@@ -68,7 +73,7 @@ const props = defineProps({
 
 const syncToastOffset = () => {
     const nextOffset = props.compact
-        ? COMPACT_MENU_WIDTH + TOAST_OFFSET_BUFFER
+        ? compactWidth.value + TOAST_OFFSET_BUFFER
         : menuWidth.value + MENU_RESIZE_HANDLE_WIDTH + TOAST_OFFSET_BUFFER;
 
     if (mapStore.toastOffset.x !== nextOffset) {
@@ -82,6 +87,10 @@ watch(() => props.compact, () => {
 
 watch(menuWidth, () => {
     if (!props.compact) syncToastOffset();
+});
+
+watch(compactWidth, () => {
+    if (props.compact) syncToastOffset();
 });
 
 watch(resize, (newVal, oldVal, onCleanup) => {
