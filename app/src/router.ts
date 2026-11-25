@@ -249,6 +249,10 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-report',
                     component: () => import('./components/CloudTAK/Menu/MenuReport.vue')
                 },{
+                    path: 'ai-chat',
+                    name: 'home-menu-ai-chat',
+                    component: () => import('./components/CloudTAK/Menu/MenuAiChat.vue')
+                },{
                     path: 'journal',
                     name: 'home-menu-journal',
                     component: () => import('./components/CloudTAK/Menu/MenuJournal.vue')

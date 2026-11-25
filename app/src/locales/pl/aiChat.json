@@ -1,0 +1,69 @@
+{
+    "title": "Chat AI",
+    "model": {
+        "label": "Model AI",
+        "states": {
+            "off": "wyłączony",
+            "starting": "uruchamia się",
+            "ready": "gotowy",
+            "stopping": "wyłącza się",
+            "unavailable": "niedostępny"
+        },
+        "pinned": "zapięty",
+        "start": "Włącz",
+        "stop": "Wyłącz",
+        "shared": "Maszyna modelu jest wspólna dla wszystkich środowisk taklab. Wyłączenie gasi bota także u innych, a włączona maszyna kosztuje, dopóki ktoś jej nie wyłączy.",
+        "refused": "Nie udało się włączyć modelu: {reason}",
+        "refusedNoReason": "Nie udało się włączyć modelu."
+    },
+    "bot": {
+        "open": "Rozmowa z {name}",
+        "missing": "Nie ma kontaktu Hal9000. Bot pojawi się na liście kontaktów, gdy się połączy."
+    },
+    "order": {
+        "heading": "Rozkaz bojowy",
+        "text": "Dane do rozkazu",
+        "textHint": "Sytuacja, zadanie, siły własne i przeciwnika, czas. Model korzysta tylko z tych danych, brakujące punkty oznacza „BRAK DANYCH”.",
+        "location": "Położenie",
+        "locationNone": "Brak – z tekstu",
+        "locationRoute": "Trasa: {name}",
+        "locationPoint": "Punkt: {name}",
+        "start": "Godzina H",
+        "timezone": "Czas polski (Europe/Warsaw).",
+        "format": "Format",
+        "formats": {
+            "pdf": "PDF",
+            "docx": "DOCX (Word)"
+        },
+        "titleLabel": "Tytuł (opcjonalny)",
+        "create": "Utwórz rozkaz",
+        "created": "Rozkaz jest w kolejce. Stan zobaczysz w wątku poniżej."
+    },
+    "thread": {
+        "heading": "Rozkazy",
+        "none": "Nie ma jeszcze rozkazów",
+        "untitled": "Rozkaz bez tytułu",
+        "request": "{format} · godzina H {start}",
+        "withLocation": "z położeniem",
+        "withoutLocation": "położenie z tekstu",
+        "owner": "Zamówił: {owner}",
+        "statuses": {
+            "queued": "W kolejce",
+            "running": "Tworzy się…",
+            "done": "Gotowy",
+            "failed": "Błąd"
+        },
+        "noWeather": "Prognoza pogody niedostępna.",
+        "noTerrain": "Analiza terenu niedostępna.",
+        "download": "Pobierz {format}",
+        "delete": "Usuń rozkaz",
+        "deleteLabel": "rozkaz"
+    },
+    "problems": {
+        "noText": "Wpisz dane do rozkazu.",
+        "textTooLong": "Dane mają więcej niż 20 000 znaków. Skróć je.",
+        "titleTooLong": "Tytuł może mieć najwyżej 120 znaków.",
+        "noStart": "Podaj godzinę H."
+    },
+    "notice": "Projekt wygenerowany przez AI. Przed wydaniem rozkaz musi sprawdzić dowódca."
+}

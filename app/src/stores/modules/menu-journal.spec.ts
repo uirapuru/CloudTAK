@@ -75,3 +75,41 @@ describe('MenuManager: Raport misji', () => {
         expect(off.items.value.map((i) => i.key)).not.toContain('report');
     });
 });
+
+describe('MenuManager: Chat AI', () => {
+    beforeEach(() => {
+        std.mockReset();
+    });
+
+    it('shows the entry only when /api/ai/model answers 200', async () => {
+        std.mockImplementation(async (url: string) => {
+            if (url === '/api/ai/model') return { state: 'off', pinned: false, reason: null };
+            return {};
+        });
+        const menu = new MenuManager({});
+        expect(menu.items.value.map((i) => i.key)).not.toContain('ai_chat');
+        await menu.init();
+        await flushPromises();
+        expect(menu.items.value.find((i) => i.key === 'ai_chat')?.route).toBe('/menu/ai-chat');
+
+        for (const status of [403, 404, 503]) {
+            std.mockImplementation(async (url: string) => {
+                if (url === '/api/ai/model') throw Object.assign(new Error('Chat AI'), { body: { status } });
+                return {};
+            });
+            const off = new MenuManager({});
+            await off.init();
+            await flushPromises();
+            expect(off.items.value.map((i) => i.key), String(status)).not.toContain('ai_chat');
+        }
+    });
+
+    it('sits right after "Raport misji"', async () => {
+        std.mockImplementation(async () => ({}));
+        const menu = new MenuManager({});
+        await menu.init();
+        await flushPromises();
+        const keys = menu.items.value.map((i) => i.key);
+        expect(keys.indexOf('ai_chat')).toBe(keys.indexOf('report') + 1);
+    });
+});

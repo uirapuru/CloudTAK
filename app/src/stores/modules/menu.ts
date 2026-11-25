@@ -24,6 +24,7 @@ import {
     IconMovie,
     IconNotebook,
     IconReportAnalytics,
+    IconRobot,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -32,6 +33,7 @@ import Chatroom from '../../base/chatroom.ts';
 import type { Profile } from '../../types.ts';
 import { isNativePlatform } from '../../utils/capacitor.ts';
 import { reportEnabled } from '../../base/report.ts';
+import { aiChatEnabled } from '../../base/ai-chat.ts';
 
 export type MenuItemConfig = {
     key: string;
@@ -52,6 +54,8 @@ export type MenuItemConfig = {
     requiresJournal?: boolean;
     /** taklab: only when the environment has the mission report (GET /api/report is not 404). */
     requiresReport?: boolean;
+    /** taklab: only when GET /api/ai/model answers 200 (OTS administrator of an environment with AI). */
+    requiresAiChat?: boolean;
     requiresAgencyAdmin?: boolean;
 };
 
@@ -71,6 +75,7 @@ export default class MenuManager {
     canSeeOtsAccounts: Ref<boolean>;
     canSeeJournal: Ref<boolean>;
     canSeeReport: Ref<boolean>;
+    canSeeAiChat: Ref<boolean>;
     pluginMenuItems: Ref<MenuItemConfig[]>;
     preferenceOrder: Ref<Profile['menu_order']>;
 
@@ -86,6 +91,7 @@ export default class MenuManager {
         this.canSeeOtsAccounts = ref(false);
         this.canSeeJournal = ref(false);
         this.canSeeReport = ref(false);
+        this.canSeeAiChat = ref(false);
         this.pluginMenuItems = ref([]);
         this.preferenceOrder = ref([]);
 
@@ -126,6 +132,11 @@ export default class MenuManager {
         // taklab: "Raport misji" for every account when the environment has the report service.
         reportEnabled().then((enabled) => {
             this.canSeeReport.value = enabled;
+        });
+
+        // taklab: "Chat AI" only when the report service says 200 (403 = not an OTS administrator).
+        aiChatEnabled().then((enabled) => {
+            this.canSeeAiChat.value = enabled;
         });
 
         try {
@@ -239,6 +250,16 @@ export default class MenuManager {
                 description: 'Raport z przebiegu ćwiczenia w PDF i TXT',
                 icon: IconReportAnalytics,
                 requiresReport: true,
+            },
+            {
+                // taklab: przełącznik modelu AI, rozkaz bojowy i skrót do rozmowy z Hal9000 (administrator OTS)
+                key: 'ai_chat',
+                label: 'Chat AI',
+                route: '/menu/ai-chat',
+                tooltip: 'Chat AI',
+                description: 'Model AI, rozkaz bojowy i rozmowa z Hal9000',
+                icon: IconRobot,
+                requiresAiChat: true,
             },
             {
                 // taklab: nagrania wideo z serwera OTS z pozycją operatora (decyzja 25 XI 2026:
@@ -365,6 +386,7 @@ export default class MenuManager {
                 if (item.requiresOtsAdmin && !this.canSeeOtsAccounts.value) return false;
                 if (item.requiresJournal && !this.canSeeJournal.value) return false;
                 if (item.requiresReport && !this.canSeeReport.value) return false;
+                if (item.requiresAiChat && !this.canSeeAiChat.value) return false;
                 if (item.requiresAgencyAdmin && !(this.isAgencyAdmin.value || this.isSystemAdmin.value)) return false;
                 return true;
             });

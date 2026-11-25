@@ -221,6 +221,11 @@
                 "label": "Mission report",
                 "tooltip": "Mission report",
                 "description": "Exercise report as PDF and TXT"
+            },
+            "ai_chat": {
+                "label": "AI Chat",
+                "tooltip": "AI Chat",
+                "description": "AI model, combat orders and the chat with Hal9000"
             }
         },
         "sourceCode": "Source code (AGPL-3.0)"
