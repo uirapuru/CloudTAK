@@ -26,6 +26,8 @@ const ORDER = {
     has_location: true,
     weather_ok: false,
     terrain_ok: true,
+    phase: 'images',
+    attachments: 3,
 };
 
 type Seen = { method: string; url: string; headers: http.IncomingHttpHeaders; body: string };
@@ -186,6 +188,132 @@ test('AI: POST order rejects bad bodies before the service', async () => {
         }, false);
         assert.equal(res.status, 400, JSON.stringify(body).slice(0, 80));
     }
+    assert.equal(seen.length, before);
+});
+
+function orderForm(files: Array<[string, string]>, order: unknown = { text: 'Dane z załączników.', format: 'pdf' }): FormData {
+    const form = new FormData();
+    form.append('order', JSON.stringify(order));
+    for (const [name, content] of files) form.append('files', new Blob([content], { type: 'text/plain' }), name);
+    return form;
+}
+
+test('AI: POST order with attachments streams the multipart body to the service', async () => {
+    reply = (_s, res) => json(res, 202, { id: ID, status: 'queued', attachments: 2 });
+    const res = await fetch(new URL('/api/ai/orders', flight.base), {
+        method: 'POST',
+        headers: { authorization: `Bearer ${flight.token.admin}`, 'X-Report-User': 'administrator' },
+        body: orderForm([['meldunek.txt', 'Most 205, godzina 0430'], ['mapa.kml', '<kml/>']]),
+    });
+    assert.equal(res.status, 202);
+    const created = await res.json() as { id: string; status: string };
+    assert.equal(created.id, ID);
+    assert.equal(created.status, 'queued');
+
+    const s = last();
+    assert.equal(s.method, 'POST');
+    assert.equal(s.url, '/api/v1/orders');
+    assert.equal(s.headers['x-report-user'], 'admin@example.com', 'account from the session, never from the browser');
+    assert.equal(s.headers['x-report-token'], 'shared-report-token');
+    assert.equal(s.headers.authorization, undefined);
+    assert.match(String(s.headers['content-type']), /^multipart\/form-data; boundary=/);
+    assert.ok(s.body.includes('name="order"'));
+    assert.ok(s.body.includes('"text":"Dane z załączników."'));
+    assert.ok(s.body.includes('filename="meldunek.txt"'));
+    assert.ok(s.body.includes('Most 205, godzina 0430'));
+    assert.ok(s.body.includes('filename="mapa.kml"'));
+});
+
+test('AI: multipart order without a session or over the size limit never reaches the service', async () => {
+    const before = seen.length;
+    const anonymous = await fetch(new URL('/api/ai/orders', flight.base), { method: 'POST', body: orderForm([['a.txt', 'x']]) });
+    assert.equal(anonymous.status, 401);
+
+    const declared = await new Promise<{ status: number; body: string }>((resolve, reject) => {
+        const url = new URL('/api/ai/orders', flight.base);
+        // A fresh connection each: a request with an unread body must not leave its socket for the next test.
+        const req = http.request(url, {
+            method: 'POST',
+            agent: false,
+            headers: {
+                authorization: `Bearer ${flight.token.admin}`,
+                'content-type': 'multipart/form-data; boundary=xyz',
+                'content-length': String(52 * 1024 * 1024 + 1),
+            },
+        }, (res) => {
+            let body = '';
+            res.on('data', (c) => { body += c; });
+            res.on('end', () => {
+                req.destroy();
+                resolve({ status: res.statusCode || 0, body });
+            });
+        });
+        req.on('error', reject);
+        req.end('--xyz--\r\n');
+    });
+    assert.equal(declared.status, 413);
+    assert.equal(JSON.parse(declared.body).message, 'Pliki razem mogą mieć najwyżej 50 MB.');
+    assert.equal(seen.length, before);
+});
+
+test('AI: a streamed multipart body above the limit is cut off with 413', async () => {
+    reply = (_s, res) => json(res, 202, { id: ID, status: 'queued' });
+    const chunk = Buffer.alloc(1024 * 1024, 120);
+    const status = await new Promise<number>((resolve, reject) => {
+        const url = new URL('/api/ai/orders', flight.base);
+        // A fresh connection each: a request with an unread body must not leave its socket for the next test.
+        const req = http.request(url, {
+            method: 'POST',
+            agent: false,
+            headers: {
+                authorization: `Bearer ${flight.token.admin}`,
+                // No content-length: Node sends the body chunked, so only the byte count can stop it.
+                'content-type': 'multipart/form-data; boundary=xyz',
+            },
+        }, (res) => {
+            let body = '';
+            res.on('data', (c) => { body += c; });
+            res.on('end', () => req.destroy());
+            res.on('end', () => resolve(res.statusCode === 413 && JSON.parse(body).message === 'Pliki razem mogą mieć najwyżej 50 MB.' ? 413 : res.statusCode || 0));
+        });
+        req.on('error', () => resolve(-1));
+        let sent = 0;
+        const write = () => {
+            while (sent < 60) {
+                sent++;
+                if (!req.write(chunk)) {
+                    req.once('drain', write);
+                    return;
+                }
+            }
+            req.end();
+        };
+        write();
+        setTimeout(() => reject(new Error('no answer')), 60_000).unref();
+    });
+    // 413 from CloudTAK; -1 when the server hangs up before the client finished writing.
+    assert.ok([413, -1].includes(status), String(status));
+});
+
+test('AI: 413 from the service passes with its Polish message', async () => {
+    reply = (_s, res) => json(res, 413, { detail: 'too_many_attachments', error: 'Do rozkazu możesz dołączyć najwyżej 10 plików.' });
+    const res = await fetch(new URL('/api/ai/orders', flight.base), {
+        method: 'POST',
+        headers: { authorization: `Bearer ${flight.token.admin}` },
+        body: orderForm([['a.txt', 'x']]),
+    });
+    assert.equal(res.status, 413);
+    assert.equal((await res.json() as { message: string }).message, 'Do rozkazu możesz dołączyć najwyżej 10 plików.');
+});
+
+test('AI: other content types are refused before the service', async () => {
+    const before = seen.length;
+    const res = await fetch(new URL('/api/ai/orders', flight.base), {
+        method: 'POST',
+        headers: { authorization: `Bearer ${flight.token.admin}`, 'content-type': 'text/plain' },
+        body: 'Dane.',
+    });
+    assert.equal(res.status, 400);
     assert.equal(seen.length, before);
 });
 

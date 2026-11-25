@@ -37,7 +37,12 @@
         },
         "titleLabel": "Tytuł (opcjonalny)",
         "create": "Utwórz rozkaz",
-        "created": "Rozkaz jest w kolejce. Stan zobaczysz w wątku poniżej."
+        "created": "Rozkaz jest w kolejce. Stan zobaczysz w wątku poniżej.",
+        "takePhoto": "Zrób zdjęcie",
+        "attachFiles": "Dołącz pliki",
+        "attachmentsHint": "Zdjęcia, tekst, PDF, DOCX, KML, GPX i ZIP (rozpakowany na serwerze). Najwyżej 10 plików, 20 MB każdy, 50 MB razem. Treść plików trafi do rozkazu jako materiały źródłowe.",
+        "attachmentsTotal": "Plików: {count}, razem {size}",
+        "removeFile": "Usuń {name}"
     },
     "thread": {
         "heading": "Rozkazy",
@@ -57,13 +62,23 @@
         "noTerrain": "Analiza terenu niedostępna.",
         "download": "Pobierz {format}",
         "delete": "Usuń rozkaz",
-        "deleteLabel": "rozkaz"
+        "deleteLabel": "rozkaz",
+        "attachments": "załączniki: {count}",
+        "phases": {
+            "attachments": "odczyt plików",
+            "images": "odczyt zdjęć",
+            "model": "model pisze rozkaz",
+            "document": "składanie dokumentu"
+        }
     },
     "problems": {
         "noText": "Wpisz dane do rozkazu.",
         "textTooLong": "Dane mają więcej niż 20 000 znaków. Skróć je.",
         "titleTooLong": "Tytuł może mieć najwyżej 120 znaków.",
-        "noStart": "Podaj godzinę H."
+        "noStart": "Podaj godzinę H.",
+        "tooManyFiles": "Najwyżej 10 plików do jednego rozkazu.",
+        "fileTooLarge": "Jeden plik może mieć najwyżej 20 MB.",
+        "filesTooLarge": "Pliki razem mogą mieć najwyżej 50 MB."
     },
     "notice": "Projekt wygenerowany przez AI. Przed wydaniem rozkaz musi sprawdzić dowódca."
 }

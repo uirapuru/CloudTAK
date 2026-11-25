@@ -9,6 +9,7 @@ import {
     AiModelSchema,
     AiModelActionSchema,
     AiOrderCreateBody,
+    type AiOrderCreate,
     AiOrderCreatedSchema,
     AiOrderDeletedSchema,
     AiOrderSchema,
@@ -66,14 +67,26 @@ export default async function router(schema: Schema, config: ConfigStateless) {
     await schema.post('/ai/orders', {
         name: 'Create Combat Order',
         group: 'AI',
-        description: 'Order a five-paragraph combat order (PDF or DOCX) built in the background (OTS administrator only)',
-        body: AiOrderCreateBody,
+        description: 'Order a five-paragraph combat order (PDF or DOCX) built in the background (OTS administrator only). '
+            + 'JSON without attachments, or multipart/form-data: the same JSON in the field "order" and up to 10 files '
+            + '(20 MB each, 50 MB together) in "files"; photos, text, PDF, DOCX and ZIP are read into the order.',
+        body: {
+            'application/json': AiOrderCreateBody,
+            // Streamed through to the report service, which validates the order and the files.
+            'multipart/form-data': true,
+        },
         res: AiOrderCreatedSchema,
     }, async (req, res) => {
         try {
             const user = await account(req);
-            res.status(202).json(await aiControl.create(user, req.body));
+            const multipart = String(req.headers['content-type'] || '').toLowerCase().startsWith('multipart/form-data');
+            const created = multipart
+                ? await aiControl.createMultipart(user, req)
+                : await aiControl.create(user, req.body as AiOrderCreate);
+            res.status(202).json(created);
         } catch (err) {
+            // The rest of a refused upload is never read: close the connection after the answer.
+            if (err instanceof Err && err.status === 413) res.setHeader('Connection', 'close');
             Err.respond(err, res);
         }
     });
