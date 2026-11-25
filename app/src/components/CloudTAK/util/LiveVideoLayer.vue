@@ -11,21 +11,17 @@
 import { watch, onMounted, onUnmounted } from 'vue';
 import { useMapStore } from '../../../stores/map.ts';
 import { useLiveVideoStore } from '../../../stores/live-video.ts';
-import { renderFrustums } from '../../../base/sensor-frustum.ts';
+import { renderFrustums, drawnGround, groundKey } from '../../../base/sensor-frustum.ts';
 
 const mapStore = useMapStore();
 const liveVideo = useLiveVideoStore();
 
 let rendering = false;
 let again = false;
+let drawnKey = '';
 
 function elevation(lngLat: [number, number]): number | null {
-    try {
-        const value = mapStore.map.queryTerrainElevation(lngLat);
-        return typeof value === 'number' && Number.isFinite(value) ? value : null;
-    } catch {
-        return null;
-    }
+    return drawnGround(mapStore.map, lngLat);
 }
 
 async function draw(): Promise<void> {
@@ -38,6 +34,7 @@ async function draw(): Promise<void> {
     try {
         do {
             again = false;
+            drawnKey = groundKey(liveVideo.cameras, elevation);
             await renderFrustums(liveVideo.cameras, liveVideo.streams, elevation);
         } while (again);
     } catch (err) {
@@ -49,15 +46,30 @@ async function draw(): Promise<void> {
 
 watch(() => [liveVideo.cameras, liveVideo.streams], () => { void draw(); });
 
+/**
+ * The ground under a camera is known only once its terrain tiles are loaded
+ * (and changes when 3D is switched on or off), so after the map settles the
+ * frustums are redrawn when any camera's ground differs from the last draw.
+ */
+function onIdle(): void {
+    if (!liveVideo.cameras.length) return;
+    if (groundKey(liveVideo.cameras, elevation) !== drawnKey) void draw();
+}
+
 watch(() => liveVideo.count, (count) => {
     mapStore.menu.liveVideoCount.value = count;
 }, { immediate: true });
 
 onMounted(() => {
     liveVideo.start();
+    mapStore.map.on('idle', onIdle);
+    mapStore.map.on('terrain', onIdle);
 });
 
 onUnmounted(() => {
+    // The map can be gone first when the whole page is torn down
+    mapStore._map?.off('idle', onIdle);
+    mapStore._map?.off('terrain', onIdle);
     liveVideo.stop();
     mapStore.menu.liveVideoCount.value = 0;
     void renderFrustums([], [], elevation).catch(() => undefined);

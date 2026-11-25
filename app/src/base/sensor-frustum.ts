@@ -3,7 +3,11 @@
  * in the 3D Tiles overlay next to the 2D footprint from base/cot/derived.ts.
  *
  * The apex stands 1.5 m above the map terrain at the marker (GPS height in
- * CoT is ellipsoidal and jumps, so it is not used). Four side faces and the
+ * CoT is ellipsoidal and jumps, so it is not used). While the terrain under
+ * a camera is not loaded yet the camera is left out: drawn at 0 m it would
+ * sit hundreds of metres under the terrain, the ring (drawn over everything)
+ * would drift across the map with every pan and the frustum would only show
+ * from below the surface. The layer is redrawn when the terrain arrives. Four side faces and the
  * far face span fov x vfov around the azimuth, tilted by elevation, out to
  * the slant range. A camera of a live stream is red, the rest keep the
  * blue of the 2D footprint.
@@ -160,9 +164,38 @@ export const FACE_ALPHA = 46;
 export const LIVE_FACE_ALPHA = 72;
 export const EDGE_ALPHA = 200;
 
+/** Minimal map surface used to read the ground under a camera. */
+export type TerrainMap = {
+    getTerrain(): unknown;
+    queryTerrainElevation(lngLat: [number, number]): number | null | undefined;
+};
+
+/**
+ * Ground under a point as drawn by the map: 0 m on a flat map, the drawn
+ * (exaggerated) terrain height in 3D, null while that terrain is not loaded.
+ */
+export function drawnGround(map: TerrainMap, lngLat: [number, number]): number | null {
+    try {
+        if (!map.getTerrain()) return 0;
+        const value = map.queryTerrainElevation(lngLat);
+        return typeof value === 'number' && Number.isFinite(value) ? value : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Grounds of all cameras as one string, to redraw only when one of them changes. */
+export function groundKey(cameras: Iterable<CameraMarker>, elevation: (lngLat: [number, number]) => number | null): string {
+    return Array.from(cameras, (c) => {
+        const g = elevation(c.coordinates);
+        return `${c.id}:${g === null ? '-' : g.toFixed(1)}`;
+    }).join('|');
+}
+
 /**
  * Layer data for all camera markers: a frustum for each one with a usable
  * sensor and a red ring for each camera of a live stream (sensor or not).
+ * A camera whose ground is unknown (null) is skipped, see the file header.
  */
 export function frustumData(
     cameras: Iterable<CameraMarker>,
@@ -173,8 +206,9 @@ export function frustumData(
     const out: FrustumData = { faces: [], edges: [], rings: [] };
 
     for (const camera of cameras) {
+        const ground = elevation(camera.coordinates);
+        if (ground === null) continue;
         const isLive = live.some((s) => markerMatchesStream(camera, s.path));
-        const ground = elevation(camera.coordinates) ?? 0;
         const rgb = isLive ? LIVE_RGB : SENSOR_RGB;
 
         if (isLive) {

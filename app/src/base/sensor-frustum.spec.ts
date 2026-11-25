@@ -12,6 +12,8 @@ import {
     hasFrustumData,
     hexToRgb,
     offsetPosition,
+    drawnGround,
+    groundKey,
 } from './sensor-frustum.ts';
 import { SENSOR_COLOR } from './cot/derived.ts';
 import type { CameraMarker } from '../stores/live-video.ts';
@@ -119,11 +121,37 @@ describe('sensor frustum layer data', () => {
     });
 
     it('rings a live camera without a sensor and stands at 0 m without terrain', () => {
-        const data = frustumData([camera('C', { sensor: null, video: { url: 'rtsp://h:8554/operator' } })], [live], () => null);
+        const data = frustumData([camera('C', { sensor: null, video: { url: 'rtsp://h:8554/operator' } })], [live], () => 0);
         expect(data.faces).toEqual([]);
         expect(data.rings[0].position).toEqual([17, 51, 0]);
         expect(hasFrustumData(data)).toBe(true);
         expect(hasFrustumData(frustumData([], [live], () => 0))).toBe(false);
+    });
+
+    it('leaves out a camera while the terrain under it is not loaded', () => {
+        const data = frustumData([
+            camera('A', { metadata: { taklab_video: { path: 'operator' } } }),
+            camera('B'),
+        ], [live], () => null);
+        expect(data).toEqual({ faces: [], edges: [], rings: [] });
+        expect(hasFrustumData(data)).toBe(false);
+    });
+
+    it('reads the drawn ground: 0 m flat, terrain height in 3D, null while not loaded', () => {
+        const flat = { getTerrain: () => null, queryTerrainElevation: () => 120 };
+        const loaded = { getTerrain: () => ({ source: 'dem' }), queryTerrainElevation: () => 1048.9 };
+        const loading = { getTerrain: () => ({ source: 'dem' }), queryTerrainElevation: () => null };
+        const broken = { getTerrain: () => ({ source: 'dem' }), queryTerrainElevation: () => { throw new Error('no dem'); } };
+        expect(drawnGround(flat, [17, 51])).toBe(0);
+        expect(drawnGround(loaded, [17, 51])).toBe(1048.9);
+        expect(drawnGround(loading, [17, 51])).toBeNull();
+        expect(drawnGround(broken, [17, 51])).toBeNull();
+    });
+
+    it('keys the grounds so a redraw happens only when one changes', () => {
+        const cams = [camera('A'), camera('B')];
+        expect(groundKey(cams, () => null)).toBe('A:-|B:-');
+        expect(groundKey(cams, () => 1048.94)).toBe('A:1048.9|B:1048.9');
     });
 
     it('makes a full-3D SolidPolygonLayer, edges and a ring layer', () => {
