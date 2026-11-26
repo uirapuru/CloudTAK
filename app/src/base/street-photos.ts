@@ -196,6 +196,25 @@ export function coneForPhoto(photo: StreetPhoto, current: Observer): Observer {
     };
 }
 
+/**
+ * Where the tool's layers must go so that they are drawn over the basemap
+ * and overlays but under the CoT markers, as the history layers do: the id
+ * of the first CoT layer ('-1' or '-1-…') to insert before, undefined for
+ * the top of the map. null when the layers already sit right there.
+ */
+export function restackTarget(order: string[], mine: string[]): string | undefined | null {
+    const others = order.filter((id) => !mine.includes(id));
+    const anchor = others.find((id) => id === '-1' || id.startsWith('-1-'));
+    const present = mine.filter((id) => order.includes(id));
+    if (!present.length) return null;
+
+    // Wanted order: the others with ours inserted, in our order, before the anchor (or at the end).
+    const at = anchor === undefined ? others.length : others.indexOf(anchor);
+    const wanted = [...others.slice(0, at), ...present, ...others.slice(at)];
+    if (wanted.every((id, i) => order[i] === id)) return null;
+    return anchor;
+}
+
 /** Photos within radius metres of a point (the search box is square, the dots a circle). */
 export function photosWithin(photos: StreetPhoto[], at: LngLat, radius = DOTS_RADIUS_M): StreetPhoto[] {
     return photos.filter((p) => distance(at, [p.lon, p.lat]) <= radius);

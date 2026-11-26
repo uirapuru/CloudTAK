@@ -10,6 +10,7 @@ import {
     rankOne,
     photosWithin,
     coneForPhoto,
+    restackTarget,
     panoramaWindow,
     needsRefetch,
     photoUrl,
@@ -149,6 +150,32 @@ describe('coneForPhoto', () => {
         const at = destination(ORIGIN, 0, 50);
         const p = photo({ id: 'p', at, azimuth: 200, panorama: true });
         expect(coneForPhoto(p, observer(30, 40))).toEqual({ position: at, azimuth: 30, fov: 40, range: 150 });
+    });
+});
+
+describe('restackTarget', () => {
+    const MINE = ['cone', 'dots'];
+
+    it('moves ours from under the basemap to right under the CoT markers', () => {
+        // Measured on public 26 XI 2026: our layers at 1-5, basemap and overlays over them.
+        expect(restackTarget(['background', 'cone', 'dots', '89', '91-poly', '-1-sensor', '-1-icon'], MINE)).toBe('-1-sensor');
+    });
+
+    it('nothing to do when they already sit under the markers', () => {
+        expect(restackTarget(['background', '89', 'cone', 'dots', '-1-sensor', '-1-icon'], MINE)).toBeNull();
+    });
+
+    it('wrong order among ours counts as out of place', () => {
+        expect(restackTarget(['89', 'dots', 'cone', '-1'], MINE)).toBe('-1');
+    });
+
+    it('no CoT layers: top of the map', () => {
+        expect(restackTarget(['background', 'cone', 'dots', '89'], MINE)).toBeUndefined();
+        expect(restackTarget(['background', '89', 'cone', 'dots'], MINE)).toBeNull();
+    });
+
+    it('our layers not added yet', () => {
+        expect(restackTarget(['background', '-1'], MINE)).toBeNull();
     });
 });
 

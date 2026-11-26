@@ -198,6 +198,7 @@ import {
     panoramaWindow,
     photoUrl,
     rankOne,
+    restackTarget,
     coneForPhoto,
     rankPhotos,
     photosWithin,
@@ -520,11 +521,24 @@ function ensureLayers(map: MapLibreMap): void {
     }
 }
 
+/**
+ * CloudTAK orders overlays itself (OverlayManager.applyOrder) and puts the
+ * basemap over layers added before it: measured on public 26 XI 2026, the
+ * cone and dots sat under the basemap. They are kept right under the CoT
+ * markers, as the history layers are.
+ */
+function restack(map: MapLibreMap): void {
+    const target = restackTarget(map.getLayersOrder(), LAYERS);
+    if (target === null) return;
+    for (const id of LAYERS) if (map.getLayer(id)) map.moveLayer(id, target);
+}
+
 function draw(): void {
     if (!mapStore._map) return;
     const map = mapStore.map as unknown as MapLibreMap;
     try {
         ensureLayers(map);
+        restack(map);
         (map.getSource(SOURCE) as GeoJSONSource).setData(geojson());
     } catch (err) {
         // The style may be reloading (basemap change); styledata draws again.
@@ -546,8 +560,20 @@ function onDotLeave(): void {
 }
 
 function onStyleData(): void {
-    const map = mapStore._map;
-    if (map && map.isStyleLoaded() && !map.getSource(SOURCE)) draw();
+    if (!mapStore._map) return;
+    const map = mapStore.map as unknown as MapLibreMap;
+    if (!map.getSource(SOURCE)) {
+        // A new style (basemap change) dropped our source; add it once it is ready.
+        if (map.isStyleLoaded()) draw();
+        return;
+    }
+    // Overlays loaded or reordered after us; moving only when out of place
+    // keeps the styledata it fires from looping.
+    try {
+        restack(map);
+    } catch (err) {
+        console.warn('Street photos: restack', err);
+    }
 }
 
 /** The turning handle stands a fixed distance on screen from the figure, whatever the zoom and cone length. */
