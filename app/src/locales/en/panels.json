@@ -483,7 +483,18 @@
         "playOnDemand": "Play Lease - starts on demand",
         "notStreaming": "Lease is not currently streaming",
         "expired": "Expired Lease",
-        "permanent": "Permanent"
+        "permanent": "Permanent",
+        "offline": "Not streaming",
+        "offlineView": {
+            "title": "Stream \"{name}\" is not streaming now",
+            "hint": "When the sender resumes, the stream shows up in the Live list.",
+            "liveAgain": "Stream \"{name}\" is live again.",
+            "backToList": "Back to the list to play it",
+            "recordings": "Recordings of this stream",
+            "none": "The server has no recordings of this stream",
+            "adminOnly": "Only the server administrator can see recordings of this stream",
+            "openRecordings": "Show in Video Recordings"
+        }
     },
     "videoLeaseModal": {
         "wizardStep": "Configuration Wizard Step #{step}",

@@ -459,10 +459,12 @@ const token = ref<string | undefined>();
 
 // Decision 25 XI 2026: video only here; voice messages and scans stay in the OTS panel and the journal.
 const kind = ref<KindFilter>('video');
-const account = ref(ALL_ACCOUNTS);
+// taklab: opened from a stream that is not live ("?account=<path>"): start filtered to it.
+const initialAccount = typeof route.query.account === 'string' ? route.query.account.trim() : '';
+const account = ref(initialAccount || ALL_ACCOUNTS);
 const from = ref('');
 const to = ref('');
-const seenAccounts = ref(new Set<string>());
+const seenAccounts = ref(new Set<string>(initialAccount ? [initialAccount] : []));
 
 const open = ref<string | null>(null);
 const details = ref<Record<string, RecordingDetail>>({});

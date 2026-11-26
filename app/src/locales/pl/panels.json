@@ -483,7 +483,18 @@
         "playOnDemand": "Odtwórz dzierżawę – startuje na żądanie",
         "notStreaming": "Dzierżawa obecnie nie nadaje",
         "expired": "Wygasła dzierżawa",
-        "permanent": "Stała"
+        "permanent": "Stała",
+        "offline": "Nie nadaje",
+        "offlineView": {
+            "title": "Strumień „{name}” teraz nie nadaje",
+            "hint": "Gdy nadawca wznowi transmisję, strumień pojawi się na liście „Na żywo”.",
+            "liveAgain": "Strumień „{name}” znowu nadaje.",
+            "backToList": "Wróć do listy i odtwórz",
+            "recordings": "Nagrania z tego strumienia",
+            "none": "Serwer nie ma nagrań z tego strumienia",
+            "adminOnly": "Nagrania z tego strumienia widzi tylko administrator serwera",
+            "openRecordings": "Pokaż w menu Nagrania wideo"
+        }
     },
     "videoLeaseModal": {
         "wizardStep": "Kreator konfiguracji – krok {step}",

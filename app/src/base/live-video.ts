@@ -253,3 +253,49 @@ export function clientStats(hls: HlsLike | null | undefined, video: VideoLike | 
         total_frames: total,
     };
 }
+
+/** What the Videos menu knows about one stream from /Marti/api/video. */
+export type ConnectionLike = {
+    alias?: string | null;
+    feeds?: Array<{ url?: string | null }> | null;
+};
+
+/**
+ * Path of the OTS stream behind a /Marti/api/video entry: OTS puts the path
+ * in the alias and in the HLS bridge URL /hls/<path>/index.m3u8.
+ */
+export function connectionPath(connection: ConnectionLike): string | null {
+    const alias = typeof connection.alias === 'string' ? trimSlashes(connection.alias.trim()) : '';
+    if (alias) return alias;
+    const url = connection.feeds?.[0]?.url;
+    if (!url) return null;
+    let pathname: string;
+    try {
+        pathname = new URL(url).pathname;
+    } catch {
+        pathname = url.split(/[?#]/)[0];
+    }
+    const match = /\/hls\/(.+?)\/index\.m3u8$/.exec(pathname);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * Is this /Marti/api/video entry a stream that is not being published now?
+ * OTS lists every stream it ever saw and marks all of them active, so only
+ * the live list of /api/video/live can tell. Without that list (not loaded
+ * yet, or an OTS without the route) the answer is false: the menu keeps the
+ * upstream behaviour and opens the player.
+ */
+export function isConnectionOffline(
+    connection: ConnectionLike,
+    live: { loaded: boolean; supported: boolean; streams: Iterable<Pick<LiveVideoStream, 'path'>> },
+): boolean {
+    if (!live.loaded || !live.supported) return false;
+    const path = connectionPath(connection);
+    const url = connection.feeds?.[0]?.url ?? null;
+    for (const s of live.streams) {
+        if (path !== null && trimSlashes(s.path) === path) return false;
+        if (urlMatchesPath(url, s.path)) return false;
+    }
+    return true;
+}

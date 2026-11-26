@@ -107,6 +107,11 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-videos',
                     component: () => import('./components/CloudTAK/Menu/MenuVideos.vue')
                 },{
+                    // taklab: a stream from the list that is not being published now
+                    path: 'videos/offline/:path',
+                    name: 'home-menu-videos-offline',
+                    component: () => import('./components/CloudTAK/Menu/MenuVideoOffline.vue')
+                },{
                     path: 'videos/remote/:connectionid',
                     name: 'home-menu-videos-remote-new',
                     component: () => import('./components/CloudTAK/Menu/MenuVideosRemote.vue')

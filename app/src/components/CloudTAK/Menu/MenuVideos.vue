@@ -111,7 +111,7 @@
                         v-for='connection in filteredConnections'
                         :key='connection.uuid'
                         class='d-flex align-items-center gap-3 p-2'
-                        @click='floatStore.addConnection(connection)'
+                        @click='openConnection(connection)'
                     >
                         <div
                             class='d-flex align-items-center justify-content-center rounded-circle bg-black bg-opacity-25'
@@ -131,6 +131,11 @@
                                     class='fst-italic text-secondary'
                                 >{{ t('panels.videos.unnamed') }}</span>
                             </div>
+                            <div
+                                v-if='offline(connection)'
+                                class='text-secondary small'
+                                v-text='t("panels.videos.offline")'
+                            />
                         </div>
 
                         <div class='d-flex btn-list ms-auto'>
@@ -277,6 +282,7 @@ import { useLiveVideoStore } from '../../../stores/live-video.ts';
 import { server } from '../../../std.ts';
 import COT from '../../../base/cot.ts';
 import ProfileConfig from '../../../base/profile.ts';
+import { connectionPath, isConnectionOffline } from '../../../base/live-video.ts';
 import type { VideoLease, VideoLeaseList, VideoConnectionList } from '../../../types.ts';
 
 import { useMapStore } from '../../../stores/map.ts';
@@ -434,6 +440,23 @@ async function fetchConnections(): Promise<void> {
     }
 
     loading.value.connections = false;
+}
+
+type VideoConnection = VideoConnectionList['videoConnections'][number];
+
+// taklab: OTS keeps every stream it ever saw on /Marti/api/video and marks all
+// of them active; the live list says which ones are published right now.
+function offline(connection: VideoConnection): boolean {
+    return isConnectionOffline(connection, liveVideo);
+}
+
+function openConnection(connection: VideoConnection): void {
+    const path = connectionPath(connection);
+    if (path && offline(connection)) {
+        router.push(`/menu/videos/offline/${encodeURIComponent(path)}`);
+        return;
+    }
+    floatStore.addConnection(connection);
 }
 
 function getLeaseIcon(sourceType: string) {
