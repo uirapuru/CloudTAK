@@ -9,6 +9,7 @@ import {
     rankPhotos,
     rankOne,
     photosWithin,
+    coneForPhoto,
     panoramaWindow,
     needsRefetch,
     photoUrl,
@@ -129,6 +130,25 @@ describe('dots and hand-picked photos', () => {
         expect(r?.offset).toBe(180);
         expect(r?.distance).toBeCloseTo(250, 3);
         expect(rankOne(photo({ id: 'blind', at: ORIGIN }), observer(0))).toBeNull();
+    });
+});
+
+describe('coneForPhoto', () => {
+    it('flat photo: observer on the photo, cone along the camera, camera width', () => {
+        const at = destination(ORIGIN, 270, 200);
+        const p = { ...photo({ id: 'f', at, azimuth: 113 }), fov: 50 };
+        expect(coneForPhoto(p, observer(0, 90))).toEqual({ position: at, azimuth: 113, fov: 50, range: 150 });
+    });
+
+    it('flat photo without stated width: phone camera', () => {
+        const p = photo({ id: 'f', at: ORIGIN, azimuth: 10 });
+        expect(coneForPhoto(p, observer(0, 90)).fov).toBe(65);
+    });
+
+    it('panorama: only the place changes', () => {
+        const at = destination(ORIGIN, 0, 50);
+        const p = photo({ id: 'p', at, azimuth: 200, panorama: true });
+        expect(coneForPhoto(p, observer(30, 40))).toEqual({ position: at, azimuth: 30, fov: 40, range: 150 });
     });
 });
 

@@ -198,6 +198,7 @@ import {
     panoramaWindow,
     photoUrl,
     rankOne,
+    coneForPhoto,
     rankPhotos,
     photosWithin,
     type LngLat,
@@ -331,8 +332,38 @@ function thumbTitle(r: RankedPhoto): string {
     return `${Math.round(r.distance)} m · ${r.photo.panorama ? '360°' : `${Math.round(r.heading)}°`}`;
 }
 
+/** Set when the cone is moved onto a photo, so that the watcher below keeps the choice. */
+let keepChoice = false;
+
+/**
+ * Clicking a photo (dot on the map or thumbnail) moves the observer to where
+ * it was taken and turns the cone into the photo's frame.
+ */
 function choose(id: string): void {
+    const photo = photos.value.find((p) => p.id === id);
+    if (!photo) return;
+    const cone = coneForPhoto(photo, observer.value);
+    // The watcher runs only when the cone really turns or widens.
+    keepChoice = cone.azimuth !== azimuth.value || cone.fov !== fov.value;
     chosen.value = id;
+    azimuth.value = cone.azimuth;
+    fov.value = cone.fov;
+    moveObserver(cone.position);
+    keepInView(cone.position);
+    void fetchPhotos();
+}
+
+/** Pans the map when the observer lands near the edge of the screen or off it. */
+function keepInView(at: LngLat): void {
+    const map = mapStore.map as unknown as MapLibreMap;
+    const p = map.project(at);
+    const canvas = map.getCanvas();
+    const margin = 80;
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (p.x < margin || p.y < margin || p.x > w - margin || p.y > h - margin) {
+        map.easeTo({ center: at, duration: 400 });
+    }
 }
 
 /** Full-size panorama in the background: the crop of the small one is blurry. */
@@ -356,7 +387,8 @@ watch(() => current.value?.photo.id, () => {
 
 // Turning the cone by hand drops a photo picked from the list.
 watch([azimuth, fov, range], () => {
-    chosen.value = null;
+    if (keepChoice) keepChoice = false;
+    else chosen.value = null;
     placeTip();
     draw();
 });
@@ -502,7 +534,7 @@ function draw(): void {
 
 function onDotClick(e: { features?: Array<{ properties?: Record<string, unknown> }> }): void {
     const id = e.features?.[0]?.properties?.id;
-    if (typeof id === 'string') chosen.value = id;
+    if (typeof id === 'string') choose(id);
 }
 
 function onDotEnter(): void {

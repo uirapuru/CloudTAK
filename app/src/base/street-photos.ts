@@ -179,6 +179,23 @@ export function rankOne(photo: StreetPhoto, observer: Observer): RankedPhoto | n
     return { photo, distance: d, heading, offset, score };
 }
 
+/**
+ * The cone as the frame of a photo: the observer stands where the photo was
+ * taken and looks where the camera looked, as wide as the camera saw. A
+ * panorama shows every direction, so only the place changes. The length of
+ * the cone stays (the photo does not say how far one can see).
+ */
+export function coneForPhoto(photo: StreetPhoto, current: Observer): Observer {
+    const position: LngLat = [photo.lon, photo.lat];
+    if (photo.panorama || photo.azimuth === null) return { ...current, position };
+    return {
+        position,
+        azimuth: normalizeDeg(photo.azimuth),
+        fov: clampFov(photo.fov ?? DEFAULT_PHOTO_FOV),
+        range: current.range,
+    };
+}
+
 /** Photos within radius metres of a point (the search box is square, the dots a circle). */
 export function photosWithin(photos: StreetPhoto[], at: LngLat, radius = DOTS_RADIUS_M): StreetPhoto[] {
     return photos.filter((p) => distance(at, [p.lon, p.lat]) <= radius);
