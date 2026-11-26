@@ -125,6 +125,12 @@
                 </div>
 
                 <div
+                    class='small text-muted'
+                    data-testid='street-photo-count'
+                    v-text='truncated ? t("streetPhotos.dotsTruncated", { count: nearby.length }) : t("streetPhotos.dots", { count: nearby.length })'
+                />
+
+                <div
                     v-if='ranked.length > 1'
                     class='d-flex flex-column gap-1'
                 >
@@ -183,7 +189,7 @@ import {
     MIN_FOV,
     MAX_FOV,
     MAX_RANGE_M,
-    SEARCH_RADIUS_M,
+    DOTS_RADIUS_M,
     bearing,
     conePolygon,
     compass,
@@ -191,7 +197,9 @@ import {
     normalizeDeg,
     panoramaWindow,
     photoUrl,
+    rankOne,
     rankPhotos,
+    photosWithin,
     type LngLat,
     type Observer,
     type RankedPhoto,
@@ -200,6 +208,7 @@ import {
 
 type SearchResult = {
     enabled: boolean;
+    truncated: boolean;
     provider: string | null;
     attribution: string | null;
     photos: StreetPhoto[];
@@ -209,10 +218,11 @@ const SOURCE = 'taklab-street-photos';
 const CONE_FILL = 'taklab-street-photos-cone-fill';
 const CONE_LINE = 'taklab-street-photos-cone-line';
 const LINK_LINE = 'taklab-street-photos-link';
+const ALL_POINTS = 'taklab-street-photos-all';
 const PHOTO_POINT = 'taklab-street-photos-photo';
-const LAYERS = [CONE_FILL, CONE_LINE, LINK_LINE, PHOTO_POINT];
-/** Photos are fetched a little wider than they are ranked, so a small move needs no request. */
-const FETCH_RADIUS_M = SEARCH_RADIUS_M + 40;
+const LAYERS = [CONE_FILL, CONE_LINE, LINK_LINE, ALL_POINTS, PHOTO_POINT];
+/** Every photo within this radius is fetched and shown as a dot. */
+const FETCH_RADIUS_M = DOTS_RADIUS_M;
 const DRAG_FETCH_MS = 350;
 
 const { t, locale } = useI18n();
@@ -225,6 +235,7 @@ const range = ref(DEFAULT_RANGE_M);
 
 const photos = ref<StreetPhoto[]>([]);
 const attribution = ref<string | null>(null);
+const truncated = ref(false);
 const fetchedAt = ref<LngLat | null>(null);
 const fetching = ref(false);
 const disabled = ref(false);
@@ -250,9 +261,14 @@ const observer = computed<Observer>(() => ({
 
 const ranked = computed<RankedPhoto[]>(() => rankPhotos(photos.value, observer.value));
 
+/** Dots on the map: every photo within 300 m of the observer. */
+const nearby = computed<StreetPhoto[]>(() => photosWithin(photos.value, position.value));
+
 const current = computed<RankedPhoto | null>(() => {
     if (chosen.value) {
-        const pick = ranked.value.find((r) => r.photo.id === chosen.value);
+        // A dot clicked on the map may be far or look away from the cone.
+        const photo = photos.value.find((p) => p.id === chosen.value);
+        const pick = photo ? rankOne(photo, observer.value) : null;
         if (pick) return pick;
     }
     return ranked.value[0] || null;
@@ -330,6 +346,8 @@ function preloadPanorama(r: RankedPhoto | null): void {
     img.src = photoSrc(r.photo, 'hd');
 }
 
+watch(nearby, () => draw());
+
 watch(() => current.value?.photo.id, () => {
     imageLoading.value = Boolean(current.value && !current.value.photo.panorama);
     preloadPanorama(current.value);
@@ -357,6 +375,7 @@ async function fetchPhotos(force = false): Promise<void> {
         if (seq !== fetchSeq) return;
         disabled.value = !res.enabled;
         attribution.value = res.attribution;
+        truncated.value = res.truncated;
         photos.value = res.photos;
         fetchedAt.value = at;
     } catch (err) {
@@ -384,6 +403,13 @@ function geojson(): FeatureCollection {
         properties: { kind: 'cone' },
         geometry: { type: 'Polygon', coordinates: [conePolygon(observer.value)] },
     }];
+    for (const p of nearby.value) {
+        features.push({
+            type: 'Feature',
+            properties: { kind: 'all', id: p.id, panorama: p.panorama },
+            geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+        });
+    }
     const r = current.value;
     if (r) {
         const at: LngLat = [r.photo.lon, r.photo.lat];
@@ -431,6 +457,21 @@ function ensureLayers(map: MapLibreMap): void {
             paint: { 'line-color': '#1c7ed6', 'line-width': 2, 'line-dasharray': [2, 2] },
         });
     }
+    if (!map.getLayer(ALL_POINTS)) {
+        map.addLayer({
+            id: ALL_POINTS,
+            type: 'circle',
+            source: SOURCE,
+            filter: ['==', ['get', 'kind'], 'all'],
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 2.5, 18, 4.5],
+                'circle-color': '#1c7ed6',
+                'circle-opacity': 0.75,
+                'circle-stroke-color': '#ffffff',
+                'circle-stroke-width': ['case', ['get', 'panorama'], 2, 1],
+            },
+        });
+    }
     if (!map.getLayer(PHOTO_POINT)) {
         map.addLayer({
             id: PHOTO_POINT,
@@ -438,10 +479,10 @@ function ensureLayers(map: MapLibreMap): void {
             source: SOURCE,
             filter: ['==', ['get', 'kind'], 'photo'],
             paint: {
-                'circle-radius': 6,
+                'circle-radius': 8,
                 'circle-color': '#1c7ed6',
                 'circle-stroke-color': '#ffffff',
-                'circle-stroke-width': 2,
+                'circle-stroke-width': 3,
             },
         });
     }
@@ -457,6 +498,19 @@ function draw(): void {
         // The style may be reloading (basemap change); styledata draws again.
         console.warn('Street photos: draw postponed', err);
     }
+}
+
+function onDotClick(e: { features?: Array<{ properties?: Record<string, unknown> }> }): void {
+    const id = e.features?.[0]?.properties?.id;
+    if (typeof id === 'string') chosen.value = id;
+}
+
+function onDotEnter(): void {
+    mapStore.map.getCanvas().style.cursor = 'pointer';
+}
+
+function onDotLeave(): void {
+    mapStore.map.getCanvas().style.cursor = '';
 }
 
 function onStyleData(): void {
@@ -552,6 +606,9 @@ onMounted(async () => {
     map.on('move', placeTip);
 
     map.on('styledata', onStyleData);
+    map.on('click', ALL_POINTS, onDotClick);
+    map.on('mouseenter', ALL_POINTS, onDotEnter);
+    map.on('mouseleave', ALL_POINTS, onDotLeave);
     draw();
     await fetchPhotos(true);
 });
@@ -563,6 +620,10 @@ onUnmounted(() => {
     const map = mapStore._map;
     if (!map) return;
     map.off('styledata', onStyleData);
+    map.off('click', ALL_POINTS, onDotClick);
+    map.off('mouseenter', ALL_POINTS, onDotEnter);
+    map.off('mouseleave', ALL_POINTS, onDotLeave);
+    map.getCanvas().style.cursor = '';
     map.off('move', placeTip);
     try {
         for (const id of LAYERS) if (map.getLayer(id)) map.removeLayer(id);

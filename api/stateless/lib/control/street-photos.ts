@@ -17,8 +17,12 @@ const IMAGE_TIMEOUT_MS = 20_000;
 const CACHE_TTL_MS = 60_000;
 const CACHE_MAX = 500;
 export const MAX_RADIUS_M = 300;
-export const DEFAULT_RADIUS_M = 120;
-export const SEARCH_LIMIT = 200;
+export const DEFAULT_RADIUS_M = 300;
+/** Most photos asked for at once: 1500 take ~2 s from Panoramax, the 5875 of central Lyon in 600 m x 600 m took 17 s. */
+export const SEARCH_LIMIT = 1500;
+/** Radius of the second query that keeps the nearest photos when the wide one is cut. */
+export const NEAR_RADIUS_M = 120;
+export const NEAR_LIMIT = 300;
 
 export type StreetPhotoSize = 'thumb' | 'sd' | 'hd';
 
@@ -43,6 +47,8 @@ export type StreetPhotoList = {
     enabled: boolean;
     provider: string | null;
     attribution: string | null;
+    /** true when there were more photos than SEARCH_LIMIT; only part of them is listed. */
+    truncated: boolean;
     photos: StreetPhoto[];
 };
 
@@ -169,7 +175,7 @@ export type Fetcher = (url: string, init: { signal: AbortSignal; headers: Record
 export class StreetPhotosControl {
     baseUrl: () => string | null;
     fetcher: Fetcher;
-    cache = new Map<string, { at: number; photos: StreetPhoto[] }>();
+    cache = new Map<string, { at: number; photos: StreetPhoto[]; truncated: boolean }>();
 
     constructor(baseUrl: () => string | null, fetcher: Fetcher = (url, init) => fetch(url, init)) {
         this.baseUrl = baseUrl;
@@ -182,42 +188,60 @@ export class StreetPhotosControl {
         return url.replace(/\/+$/, '');
     }
 
-    async search(lon: number, lat: number, radius = DEFAULT_RADIUS_M): Promise<StreetPhotoList> {
-        const base = this.base();
-        if (!base) return { enabled: false, provider: null, attribution: null, photos: [] };
-
-        const r = Math.min(Math.max(radius, 10), MAX_RADIUS_M);
-        const bbox = bboxAround(lon, lat, r).map((n) => n.toFixed(6)).join(',');
-        const key = `${bbox}`;
+    /** One bbox query, cached for a minute. Returns the photos and whether Panoramax hit the limit. */
+    async query(base: string, lon: number, lat: number, radius: number, limit: number): Promise<{ photos: StreetPhoto[]; truncated: boolean }> {
+        const bbox = bboxAround(lon, lat, radius).map((n) => n.toFixed(6)).join(',');
+        const key = `${bbox}|${limit}`;
         const now = Date.now();
         const hit = this.cache.get(key);
-        let photos: StreetPhoto[];
-        if (hit && now - hit.at < CACHE_TTL_MS) {
-            photos = hit.photos;
-        } else {
-            const url = `${base}/api/search?bbox=${bbox}&limit=${SEARCH_LIMIT}`;
-            let res: Response;
-            try {
-                res = await this.fetcher(url, {
-                    signal: AbortSignal.timeout(TIMEOUT_MS),
-                    headers: { Accept: 'application/geo+json, application/json' },
-                });
-            } catch (err) {
-                throw new Err(503, err instanceof Error ? err : null, 'Serwis zdjęć ulic nie odpowiada');
-            }
-            if (!res.ok) throw new Err(503, null, `Serwis zdjęć ulic odpowiedział błędem ${res.status}`);
-            photos = normalizeSearch(await res.json());
-            if (this.cache.size >= CACHE_MAX) {
-                const oldest = this.cache.keys().next().value;
-                if (oldest !== undefined) this.cache.delete(oldest);
-            }
-            this.cache.set(key, { at: now, photos });
+        if (hit && now - hit.at < CACHE_TTL_MS) return { photos: hit.photos, truncated: hit.truncated };
+
+        const url = `${base}/api/search?bbox=${bbox}&limit=${limit}`;
+        let res: Response;
+        try {
+            res = await this.fetcher(url, {
+                signal: AbortSignal.timeout(TIMEOUT_MS),
+                headers: { Accept: 'application/geo+json, application/json' },
+            });
+        } catch (err) {
+            throw new Err(503, err instanceof Error ? err : null, 'Serwis zdjęć ulic nie odpowiada');
+        }
+        if (!res.ok) throw new Err(503, null, `Serwis zdjęć ulic odpowiedział błędem ${res.status}`);
+        const body = await res.json() as { features?: unknown[] };
+        const truncated = Array.isArray(body?.features) && body.features.length >= limit;
+        const photos = normalizeSearch(body);
+
+        if (this.cache.size >= CACHE_MAX) {
+            const oldest = this.cache.keys().next().value;
+            if (oldest !== undefined) this.cache.delete(oldest);
+        }
+        this.cache.set(key, { at: now, photos, truncated });
+        return { photos, truncated };
+    }
+
+    /**
+     * Photos within radius metres. Panoramax returns a bbox in no particular
+     * order, so when the wide query hits the limit (dense city centres) a
+     * second, narrow query makes sure the photos nearest the observer are there.
+     */
+    async search(lon: number, lat: number, radius = DEFAULT_RADIUS_M): Promise<StreetPhotoList> {
+        const base = this.base();
+        if (!base) return { enabled: false, provider: null, attribution: null, truncated: false, photos: [] };
+
+        const r = Math.min(Math.max(radius, 10), MAX_RADIUS_M);
+        const wide = await this.query(base, lon, lat, r, SEARCH_LIMIT);
+        let photos = wide.photos;
+        if (wide.truncated && r > NEAR_RADIUS_M) {
+            const near = await this.query(base, lon, lat, NEAR_RADIUS_M, NEAR_LIMIT);
+            const seen = new Set(photos.map((p) => p.id));
+            photos = photos.concat(near.photos.filter((p) => !seen.has(p.id)));
         }
 
         return {
             enabled: true,
             provider: 'panoramax',
             attribution: 'Panoramax, CC-BY-SA',
+            truncated: wide.truncated,
             photos,
         };
     }

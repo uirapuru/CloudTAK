@@ -52,8 +52,10 @@ export const MAX_FOV = 120;
 export const DEFAULT_FOV = 60;
 export const DEFAULT_RANGE_M = 150;
 export const MAX_RANGE_M = 2000;
-/** How far from the observer a photo still counts. */
+/** How far from the observer a photo still counts when it is chosen for the cone. */
 export const SEARCH_RADIUS_M = 120;
+/** Every photo within this radius is shown on the map as a dot. */
+export const DOTS_RADIUS_M = 300;
 /** A flat photo looking further off the cone than this is not offered. */
 export const MAX_OFFSET_DEG = 75;
 /** Field of view assumed for a flat photo that does not state one (phone camera). */
@@ -137,36 +139,49 @@ export function coneTip(observer: Observer): LngLat {
 export function rankPhotos(photos: StreetPhoto[], observer: Observer, maxDistance = SEARCH_RADIUS_M): RankedPhoto[] {
     const out: RankedPhoto[] = [];
     for (const photo of photos) {
-        const at: LngLat = [photo.lon, photo.lat];
-        const d = distance(observer.position, at);
-        if (d > maxDistance) continue;
-
-        let heading: number;
-        let offset: number;
-        if (photo.panorama) {
-            heading = normalizeDeg(observer.azimuth);
-            offset = 0;
-        } else {
-            if (photo.azimuth === null) continue;
-            heading = photo.azimuth;
-            offset = angleDiff(photo.azimuth, observer.azimuth);
-            if (offset > MAX_OFFSET_DEG) continue;
-        }
-
-        // 1 m of distance weighs as much as 1 degree off the cone direction;
-        // a photo in front of the observer is shifted along the view, which
-        // matters less than one beside it.
-        let score = d + offset * 1.0;
-        if (d > 5) {
-            const side = angleDiff(bearing(observer.position, at), observer.azimuth);
-            score += Math.sin(Math.min(side, 90) * RAD) * d * 0.5;
-        }
-        // Panoramas show the exact direction: a small bonus.
-        if (photo.panorama) score -= 5;
-
-        out.push({ photo, distance: d, heading, offset, score });
+        const r = rankOne(photo, observer);
+        if (r && r.distance <= maxDistance && r.offset <= MAX_OFFSET_DEG) out.push(r);
     }
     return out.sort((a, b) => a.score - b.score);
+}
+
+/**
+ * One photo against the cone, without the limits of rankPhotos: used also for
+ * a photo picked by hand on the map, which may look anywhere. Null only for a
+ * flat photo of unknown direction.
+ */
+export function rankOne(photo: StreetPhoto, observer: Observer): RankedPhoto | null {
+    const at: LngLat = [photo.lon, photo.lat];
+    const d = distance(observer.position, at);
+
+    let heading: number;
+    let offset: number;
+    if (photo.panorama) {
+        heading = normalizeDeg(observer.azimuth);
+        offset = 0;
+    } else {
+        if (photo.azimuth === null) return null;
+        heading = photo.azimuth;
+        offset = angleDiff(photo.azimuth, observer.azimuth);
+    }
+
+    // 1 m of distance weighs as much as 1 degree off the cone direction;
+    // a photo in front of the observer is shifted along the view, which
+    // matters less than one beside it.
+    let score = d + offset * 1.0;
+    if (d > 5) {
+        const side = angleDiff(bearing(observer.position, at), observer.azimuth);
+        score += Math.sin(Math.min(side, 90) * RAD) * d * 0.5;
+    }
+    // Panoramas show the exact direction: a small bonus.
+    if (photo.panorama) score -= 5;
+
+    return { photo, distance: d, heading, offset, score };
+}
+
+/** Photos within radius metres of a point (the search box is square, the dots a circle). */
+export function photosWithin(photos: StreetPhoto[], at: LngLat, radius = DOTS_RADIUS_M): StreetPhoto[] {
+    return photos.filter((p) => distance(at, [p.lon, p.lat]) <= radius);
 }
 
 /**

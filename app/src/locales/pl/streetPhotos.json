@@ -4,8 +4,8 @@
     "disabled": "Zdjęcia z ziemi są w tym środowisku wyłączone",
     "photoAlt": "Zdjęcie z poziomu ulicy w kierunku stożka",
     "searching": "Szukam zdjęć w pobliżu…",
-    "none": "Brak zdjęć w promieniu 120 m. Przesuń obserwatora bliżej drogi.",
-    "noneInCone": "W pobliżu są zdjęcia, ale żadne nie patrzy w tę stronę. Obróć stożek.",
+    "none": "Brak zdjęć w promieniu 120 m. Przesuń obserwatora bliżej drogi albo kliknij kropkę na mapie.",
+    "noneInCone": "W pobliżu są zdjęcia, ale żadne nie patrzy w tę stronę. Obróć stożek albo kliknij kropkę na mapie.",
     "taken": "Data zdjęcia",
     "distance": "Odległość od obserwatora",
     "metres": "{m} m",
@@ -20,5 +20,7 @@
     "others": "Inne zdjęcia w pobliżu: {count}",
     "dragFigure": "Przeciągnij, żeby przenieść obserwatora",
     "dragTip": "Przeciągnij, żeby obrócić stożek",
-    "compass": "N,NE,E,SE,S,SW,W,NW"
+    "compass": "N,NE,E,SE,S,SW,W,NW",
+    "dots": "Zdjęcia w promieniu 300 m: {count} (niebieskie kropki, kliknij, żeby otworzyć)",
+    "dotsTruncated": "Zdjęcia w promieniu 300 m: pokazano {count}, jest ich więcej (gęsto zdjęte miejsce)"
 }

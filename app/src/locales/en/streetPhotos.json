@@ -4,8 +4,8 @@
     "disabled": "Ground photos are switched off in this environment",
     "photoAlt": "Street-level photo in the direction of the cone",
     "searching": "Looking for photos nearby…",
-    "none": "No photos within 120 m. Move the observer closer to a road.",
-    "noneInCone": "There are photos nearby, but none looks this way. Turn the cone.",
+    "none": "No photos within 120 m. Move the observer closer to a road or click a dot on the map.",
+    "noneInCone": "There are photos nearby, but none looks this way. Turn the cone or click a dot on the map.",
     "taken": "Taken",
     "distance": "Distance from observer",
     "metres": "{m} m",
@@ -20,5 +20,7 @@
     "others": "Other photos nearby: {count}",
     "dragFigure": "Drag to move the observer",
     "dragTip": "Drag to turn the cone",
-    "compass": "N,NE,E,SE,S,SW,W,NW"
+    "compass": "N,NE,E,SE,S,SW,W,NW",
+    "dots": "Photos within 300 m: {count} (blue dots, click one to open it)",
+    "dotsTruncated": "Photos within 300 m: {count} shown, there are more (densely covered place)"
 }

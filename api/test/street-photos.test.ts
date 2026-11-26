@@ -99,7 +99,7 @@ test('safeId', () => {
 
 test('search: switched off', async () => {
     const control = new StreetPhotosControl(() => 'off', async () => { throw new Error('no call'); });
-    assert.deepStrictEqual(await control.search(17, 51), { enabled: false, provider: null, attribution: null, photos: [] });
+    assert.deepStrictEqual(await control.search(17, 51), { enabled: false, provider: null, attribution: null, truncated: false, photos: [] });
 });
 
 test('search: asks bbox, caches, clamps radius', async () => {
@@ -113,10 +113,28 @@ test('search: asks bbox, caches, clamps radius', async () => {
     assert.strictEqual(a.photos.length, 1);
     assert.deepStrictEqual(a, b);
     assert.strictEqual(urls.length, 1);
-    assert.match(urls[0], /^https:\/\/px\.example\/api\/search\?bbox=[-0-9.,]+&limit=200$/);
+    assert.match(urls[0], /^https:\/\/px\.example\/api\/search\?bbox=[-0-9.,]+&limit=1500$/);
+    assert.strictEqual(a.truncated, false);
     const [w, , e] = new URL(urls[0]).searchParams.get('bbox')!.split(',').map(Number);
     // radius clamped to 300 m
     assert.ok((e - w) * 111_320 * Math.cos(51.1104 * Math.PI / 180) < 601);
+});
+
+test('search: wide query cut at the limit adds the nearest photos', async () => {
+    const urls: string[] = [];
+    const far = (i: number) => ({ ...ITEM, id: `far-${i}` });
+    const control = new StreetPhotosControl(() => 'https://px.example', async (url) => {
+        urls.push(url);
+        const limit = Number(new URL(url).searchParams.get('limit'));
+        if (limit === 1500) return new Response(JSON.stringify({ features: Array.from({ length: 1500 }, (_, i) => far(i)) }), { status: 200 });
+        return new Response(JSON.stringify({ features: [ITEM, far(3)] }), { status: 200 });
+    });
+    const out = await control.search(17.0268, 51.1104, 300);
+    assert.strictEqual(out.truncated, true);
+    assert.strictEqual(urls.length, 2);
+    assert.match(urls[1], /limit=300$/);
+    assert.strictEqual(out.photos.length, 1501);
+    assert.ok(out.photos.some((p) => p.id === ITEM.id));
 });
 
 test('search: outside service down = 503', async () => {

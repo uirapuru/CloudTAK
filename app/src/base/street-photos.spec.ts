@@ -7,6 +7,8 @@ import {
     conePolygon,
     coneTip,
     rankPhotos,
+    rankOne,
+    photosWithin,
     panoramaWindow,
     needsRefetch,
     photoUrl,
@@ -110,6 +112,23 @@ describe('rankPhotos', () => {
         const ahead = photo({ id: 'ahead', at: destination(ORIGIN, 0, 30), azimuth: 0 });
         const beside = photo({ id: 'beside', at: destination(ORIGIN, 90, 30), azimuth: 0 });
         expect(rankPhotos([beside, ahead], observer(0))[0].photo.id).toBe('ahead');
+    });
+});
+
+describe('dots and hand-picked photos', () => {
+    it('photosWithin keeps the 300 m circle, not the square corners', () => {
+        const inside = photo({ id: 'in', at: destination(ORIGIN, 0, 290), azimuth: 0 });
+        const corner = photo({ id: 'corner', at: destination(ORIGIN, 45, 400), azimuth: 0 });
+        expect(photosWithin([inside, corner], ORIGIN).map((p) => p.id)).toEqual(['in']);
+    });
+
+    it('rankOne takes a far photo looking away (picked on the map)', () => {
+        const back = photo({ id: 'back', at: destination(ORIGIN, 0, 250), azimuth: 180 });
+        expect(rankPhotos([back], observer(0))).toEqual([]);
+        const r = rankOne(back, observer(0));
+        expect(r?.offset).toBe(180);
+        expect(r?.distance).toBeCloseTo(250, 3);
+        expect(rankOne(photo({ id: 'blind', at: ORIGIN }), observer(0))).toBeNull();
     });
 });
 

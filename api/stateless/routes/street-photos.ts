@@ -40,6 +40,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             enabled: Type.Boolean(),
             provider: NullableString,
             attribution: NullableString,
+            truncated: Type.Boolean(),
             photos: Type.Array(Photo),
         }),
     }, async (req, res) => {
