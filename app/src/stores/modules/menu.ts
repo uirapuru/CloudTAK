@@ -25,6 +25,7 @@ import {
     IconNotebook,
     IconReportAnalytics,
     IconRobot,
+    IconBinoculars,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -295,6 +296,15 @@ export default class MenuManager {
                 description: 'Konta serwera OTS z kodami QR dla ATAK i OpenTAK ICU',
                 icon: IconQrcode,
                 requiresOtsAdmin: true,
+            },
+            {
+                // taklab: obserwator ze stożkiem na mapie i zdjęcie z ziemi (Panoramax) w panelu
+                key: 'street-photos',
+                label: 'Widok z ziemi',
+                route: '/menu/street-photos',
+                tooltip: 'Widok z ziemi',
+                description: 'Zdjęcia z poziomu ulicy w kierunku stożka obserwacji',
+                icon: IconBinoculars,
             },
             {
                 key: 'routes',

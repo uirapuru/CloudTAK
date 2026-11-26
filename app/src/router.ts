@@ -241,6 +241,10 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-voice',
                     component: () => import('./components/CloudTAK/Menu/MenuVoice.vue')
                 },{
+                    path: 'street-photos',
+                    name: 'home-menu-street-photos',
+                    component: () => import('./components/CloudTAK/Menu/MenuStreetPhotos.vue')
+                },{
                     path: 'recordings',
                     name: 'home-menu-recordings',
                     component: () => import('./components/CloudTAK/Menu/MenuRecordings.vue')
