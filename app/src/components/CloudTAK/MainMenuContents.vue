@@ -339,7 +339,7 @@ import MenuItemCard from './Menu/MenuItemCard.vue';
 import MenuTemplate from './util/MenuTemplate.vue';
 import ServerStatus from './ServerStatus.vue';
 import ProfileConfig from '../../base/profile.ts';
-import { compactMenuColumns } from '../../base/compact-menu-columns.ts';
+import { compactMenuColumns, settleCompactColumns } from '../../base/compact-menu-columns.ts';
 
 const router = useRouter();
 const { t, te } = useI18n();
@@ -409,6 +409,7 @@ const visibleCompactMenuItems = computed(() => {
 // no longer fit in the window height. Items flow row by row, left to right.
 const compactScroll = useTemplateRef<HTMLElement>('compactScroll');
 const compactColumns = ref(1);
+let compactGrownFor = '';
 
 function measureCompactColumns(): void {
     const el = compactScroll.value;
@@ -425,7 +426,14 @@ function measureCompactColumns(): void {
         viewportWidth: window.innerWidth,
     });
 
-    if (next !== compactColumns.value) compactColumns.value = next;
+    const settled = settleCompactColumns({
+        current: compactColumns.value,
+        next,
+        layoutKey: `${window.innerWidth}x${window.innerHeight}:${visibleCompactMenuItems.value.length}`,
+        grownFor: compactGrownFor,
+    });
+    compactGrownFor = settled.grownFor;
+    if (settled.columns !== compactColumns.value) compactColumns.value = settled.columns;
 }
 
 watch(compactColumns, (columns) => emit('columns', columns), { immediate: true });

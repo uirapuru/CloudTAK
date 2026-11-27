@@ -37,3 +37,36 @@ export function compactMenuColumns(input: CompactMenuColumnsInput): number {
 export function compactMenuWidth(columns: number): number {
     return COMPACT_MENU_COLUMN_WIDTH * Math.max(1, columns);
 }
+
+export interface SettleCompactColumnsInput {
+    current: number;
+    next: number;
+    // Identifies what the column count depends on from outside the menu:
+    // window size and number of visible items.
+    layoutKey: string;
+    // `layoutKey` at the moment the menu last grew.
+    grownFor: string;
+}
+
+/**
+ * Applies a newly measured column count without flicker. Fewer columns make
+ * the footer text wrap, which shrinks the icon area and asks for more columns
+ * again, so the menu shrinks only after the window or the item count changed
+ * since it last grew.
+ */
+export function settleCompactColumns(input: SettleCompactColumnsInput): { columns: number; grownFor: string } {
+    if (input.next > input.current) return { columns: input.next, grownFor: input.layoutKey };
+    if (input.next < input.current && input.layoutKey === input.grownFor) {
+        return { columns: input.current, grownFor: input.grownFor };
+    }
+    return { columns: input.next, grownFor: input.grownFor };
+}
+
+/**
+ * Browsers report a ResizeObserver callback that changed layout again as an
+ * error event. It is harmless (the notifications arrive next frame) and must
+ * not reach the error dialog.
+ */
+export function isBenignResizeObserverError(message: string | undefined): boolean {
+    return typeof message === 'string' && message.startsWith('ResizeObserver loop');
+}

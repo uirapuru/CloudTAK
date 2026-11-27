@@ -432,6 +432,7 @@ import { TimeoutError } from '../../utils/async.ts';
 import { copyFeatureToClipboard, readFeatureFromClipboard } from '../../stores/device/clipboard.ts';
 import MissionInviteModal from './Menu/Mission/MissionInviteModal.vue';
 import JournalNotice from './JournalNotice.vue';
+import { isBenignResizeObserverError } from '../../base/compact-menu-columns.ts';
 
 const mapStore = useMapStore();
 const { t } = useI18n();
@@ -612,6 +613,7 @@ const mapSideOffset = computed(() => {
 onMounted(async () => {
     // ensure uncaught errors in the stack are captured into vue context
     window.addEventListener('error', (evt) => {
+        if (isBenignResizeObserverError(evt.message)) return;
         console.error(evt);
         evt.preventDefault();
         emit('err', new Error(evt.message));

@@ -1,4 +1,5 @@
 import { getRuntimeToken, stdurl } from '../../std.ts';
+import { isBenignResizeObserverError } from '../../base/compact-menu-columns.ts';
 
 let initialized = false;
 
@@ -69,6 +70,7 @@ export function initGlobalErrorReporting(): void {
         // carry a target element but no `.error`; those are handled separately
         // by the service-worker recovery path and are not application faults.
         if (!event.error && event.target && event.target !== window) return;
+        if (isBenignResizeObserverError(event.message)) return;
 
         const err = event.error;
         reportError(
