@@ -222,6 +222,11 @@
                 "tooltip": "Raport misji",
                 "description": "Raport z przebiegu ćwiczenia w PDF i TXT"
             },
+            "print": {
+                "label": "Drukuj mapę",
+                "tooltip": "Drukuj mapę",
+                "description": "Arkusz mapy w skali do druku, PDF albo PNG"
+            },
             "ai_chat": {
                 "label": "Chat AI",
                 "tooltip": "Chat AI",

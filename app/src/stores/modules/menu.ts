@@ -24,6 +24,7 @@ import {
     IconMovie,
     IconNotebook,
     IconReportAnalytics,
+    IconPrinter,
     IconRobot,
     IconBinoculars,
     IconFaceId,
@@ -275,6 +276,15 @@ export default class MenuManager {
                 description: 'Model AI, rozkaz bojowy i rozmowa z Hal9000',
                 icon: IconRobot,
                 requiresAiChat: true,
+            },
+            {
+                // taklab: wydruk arkusza mapy w skali (PDF/PNG) z siatką MGRS, jak PrintPlugin w ATAK
+                key: 'print',
+                label: 'Drukuj mapę',
+                route: '/menu/print',
+                tooltip: 'Drukuj mapę',
+                description: 'Arkusz mapy w skali do druku, PDF albo PNG',
+                icon: IconPrinter,
             },
             {
                 // taklab: nagrania wideo z serwera OTS z pozycją operatora (decyzja 25 XI 2026:

@@ -205,7 +205,7 @@ function parseUTM(text: string): [number, number] {
     return utmToLatLng(zoneNum, zoneLetter, easting, northing);
 }
 
-function parseMGRS(text: string): [number, number] {
+export function parseMGRS(text: string): [number, number] {
     const normalized = text.trim().toUpperCase().replace(/\s+/g, '');
     const match = normalized.match(/^(\d{1,2})([C-HJ-NP-X])([A-HJ-NP-Z]{2})(\d{0,10})$/i);
 
@@ -247,7 +247,7 @@ function parseMGRS(text: string): [number, number] {
     return utmToLatLng(zoneNum, zoneLetter, easting, northing);
 }
 
-function latLngToUTM(latitude: number, longitude: number): {
+export function latLngToUTM(latitude: number, longitude: number, forceZone?: number): {
     zoneNum: number;
     zoneLetter: string;
     easting: number;
@@ -260,7 +260,8 @@ function latLngToUTM(latitude: number, longitude: number): {
     const latTan2 = Math.pow(latTan, 2);
     const latTan4 = Math.pow(latTan, 4);
 
-    const zoneNum = latLonToZoneNumber(latitude, longitude);
+    // forceZone keeps a print sheet that straddles a zone edge in its centre zone
+    const zoneNum = forceZone ?? latLonToZoneNumber(latitude, longitude);
     const zoneLetter = latitudeToZoneLetter(latitude);
 
     if (!zoneLetter) {
@@ -304,7 +305,7 @@ function latLngToUTM(latitude: number, longitude: number): {
     };
 }
 
-function utmToLatLng(zoneNum: number, zoneLetter: string, easting: number, northing: number): [number, number] {
+export function utmToLatLng(zoneNum: number, zoneLetter: string, easting: number, northing: number): [number, number] {
     const x = easting - 500000;
     let y = northing;
 
@@ -399,7 +400,7 @@ function latLonToZoneNumber(latitude: number, longitude: number): number {
     return Math.floor((longitude + 180) / 6) + 1;
 }
 
-function asMGRS(lat: number, lng: number): string {
+export function asMGRS(lat: number, lng: number): string {
     if (lat < -80) return 'Too far South';
     if (lat > 84) return 'Too far North';
 

@@ -222,6 +222,11 @@
                 "tooltip": "Mission report",
                 "description": "Exercise report as PDF and TXT"
             },
+            "print": {
+                "label": "Print map",
+                "tooltip": "Print map",
+                "description": "Map sheet at scale for printing, PDF or PNG"
+            },
             "ai_chat": {
                 "label": "AI Chat",
                 "tooltip": "AI Chat",
