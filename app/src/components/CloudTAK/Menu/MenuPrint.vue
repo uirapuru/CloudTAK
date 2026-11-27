@@ -30,11 +30,20 @@
                         data-testid='print-paper'
                     />
                 </div>
+                <div class='col-12'>
+                    <TranslatedEnum
+                        v-model='form.layout'
+                        :label='t("print.layout")'
+                        :options='layoutOptions'
+                        data-testid='print-layout'
+                    />
+                </div>
                 <div class='col-6'>
                     <TranslatedEnum
                         v-model='form.orientation'
                         :label='t("print.orientation")'
                         :options='orientationOptions'
+                        :disabled='form.layout === "topo"'
                         data-testid='print-orientation'
                     />
                 </div>
@@ -193,6 +202,7 @@ import {
     type PaperSize,
     type PrintFormat,
     type PrintPlan,
+    type SheetLayout,
 } from '../../../base/print/sheet.ts';
 import { renderSheetMap } from '../../../base/print/render.ts';
 import { composePage, type PageLabels } from '../../../base/print/compose.ts';
@@ -209,6 +219,7 @@ const form = ref({
     scale: String(DEFAULT_SCALE),
     paper: 'a4' as PaperSize,
     orientation: 'portrait' as Orientation,
+    layout: 'plain' as SheetLayout,
     format: 'pdf' as PrintFormat,
     columns: '1',
     rows: '1',
@@ -232,8 +243,9 @@ const plan = computed<PrintPlan>(() => ({
     lng: centre.value.lng,
     lat: centre.value.lat,
     scale: Number(form.value.scale),
-    orientation: form.value.orientation,
+    orientation: form.value.layout === 'topo' ? 'landscape' : form.value.orientation,
     paper: form.value.paper,
+    layout: form.value.layout,
     columns: Number(form.value.columns),
     rows: Number(form.value.rows),
 }));
@@ -278,6 +290,10 @@ const sideOptions = computed(() => Array.from({ length: MAX_SHEETS_PER_SIDE }, (
     value: String(i + 1),
     label: String(i + 1),
 })));
+const layoutOptions = computed(() => [
+    { value: 'plain', label: t('print.layoutPlain') },
+    { value: 'topo', label: t('print.layoutTopo') },
+]);
 const backgroundOptions = computed(() => [
     { value: 'map', label: t('print.backgroundMap') },
     { value: 'white', label: t('print.backgroundWhite') },
@@ -313,6 +329,7 @@ function attach(target: MapLibreMap): void {
             form.value.scale = String(decoded.scale);
             form.value.orientation = decoded.orientation;
             form.value.paper = decoded.paper;
+            form.value.layout = decoded.layout ?? 'plain';
             form.value.columns = String(decoded.columns);
             form.value.rows = String(decoded.rows);
             centre.value = { lng: decoded.lng, lat: decoded.lat };
@@ -404,7 +421,31 @@ function pageLabels(): PageLabels {
         gridMagnetic: (value) => t('print.page.gridMagnetic', { value }),
         printed: (when) => t('print.page.printed', { when }),
         sheet: (index, total) => t('print.page.sheet', { index, total }),
+        topo: {
+            scale: t('print.topo.scale'),
+            north: t('print.topo.north'),
+            mgrsTitle: t('print.topo.mgrsTitle'),
+            mgrsSquare: (square) => t('print.topo.mgrsSquare', { square }),
+            mgrsEasting: (line, add, value) => t('print.topo.mgrsEasting', { line, add, value }),
+            mgrsNorthing: (line, add, value) => t('print.topo.mgrsNorthing', { line, add, value }),
+            mgrsResult: (result) => t('print.topo.mgrsResult', { result }),
+            index: t('print.topo.index'),
+            legend: t('print.topo.legend'),
+            basemap: (name) => t('print.topo.basemap', { name }),
+            noOverlays: t('print.topo.noOverlays'),
+        },
     };
+}
+
+/** Basemap name and visible overlays for the legend of a topographic sheet. */
+function legend(hidden: boolean): { basemap?: string; overlays: string[] } {
+    const loaded = OverlayManager.loaded.filter((overlay) => overlay.visible && !overlay._internal && overlay.mode !== 'internal');
+    const basemap = hidden ? undefined : loaded.find((overlay) => overlay.mode === 'basemap')?.name;
+    // elevation (raster-dem) feeds terrain, which the print leaves out
+    const overlays = loaded
+        .filter((overlay) => overlay.mode !== 'basemap' && overlay.type !== 'raster-dem')
+        .map((overlay) => overlay.name);
+    return { basemap, overlays };
 }
 
 /** Map layers of the basemap overlays, left out for a white background. */
@@ -438,6 +479,7 @@ async function print(): Promise<void> {
                 labels: pageLabels(),
                 attribution: rendered.attribution,
                 block: { index: sheet.index, columns: current.columns, rows: current.rows },
+                legend: current.layout === 'topo' ? legend(Boolean(hideLayers)) : undefined,
             });
             if (format === 'png') {
                 const suffix = sheets.length > 1 ? `-${sheet.index}` : '';

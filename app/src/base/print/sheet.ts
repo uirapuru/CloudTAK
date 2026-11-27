@@ -14,6 +14,8 @@ import { asMGRS, latLngToUTM, parseMGRS, utmToLatLng } from '../../utils/coordin
 export type PaperSize = 'a4' | 'a3';
 export type Orientation = 'portrait' | 'landscape';
 export type PrintFormat = 'pdf' | 'png';
+/** plain: map with a header and footer; topo: topographic sheet, landscape, with a side panel. */
+export type SheetLayout = 'plain' | 'topo';
 
 export type PrintSheet = {
     lng: number;
@@ -22,6 +24,7 @@ export type PrintSheet = {
     scale: number;
     orientation: Orientation;
     paper: PaperSize;
+    layout?: SheetLayout;
     /**
      * Latitude the scale is exact at. Sheets of one plan share the latitude
      * of the plan centre so their edges meet without gaps.
@@ -63,6 +66,14 @@ export const MARGIN_MM = 8;
 export const HEADER_MM = 10;
 export const FOOTER_MM = 26;
 
+/** Topographic sheet: gutter around the map for grid labels and the side panel. */
+export const TOPO_GUTTER_MM = 7;
+export const TOPO_GAP_MM = 3;
+
+export function topoPanelMm(paper: PaperSize): number {
+    return paper === 'a3' ? 80 : 66;
+}
+
 /** CSS pixels per millimetre (CSS fixes 96 px to the inch). */
 export const CSS_PX_PER_MM = 96 / 25.4;
 
@@ -78,8 +89,17 @@ export function pageMm(paper: PaperSize, orientation: Orientation): { width: num
 }
 
 /** Rectangle of the map on the page, in millimetres from the top left corner. */
-export function mapAreaMm(paper: PaperSize, orientation: Orientation): { x: number; y: number; width: number; height: number } {
+export function mapAreaMm(paper: PaperSize, orientation: Orientation, layout: SheetLayout = 'plain'): { x: number; y: number; width: number; height: number } {
     const page = pageMm(paper, orientation);
+    if (layout === 'topo') {
+        // map on the left with a gutter for grid labels, panel on the right
+        return {
+            x: MARGIN_MM + TOPO_GUTTER_MM,
+            y: MARGIN_MM + TOPO_GUTTER_MM,
+            width: page.width - 2 * MARGIN_MM - 2 * TOPO_GUTTER_MM - TOPO_GAP_MM - topoPanelMm(paper),
+            height: page.height - 2 * MARGIN_MM - 2 * TOPO_GUTTER_MM,
+        };
+    }
     return {
         x: MARGIN_MM,
         y: MARGIN_MM + HEADER_MM,
@@ -115,7 +135,7 @@ export type SheetFrame = {
 };
 
 export function sheetFrame(sheet: PrintSheet): SheetFrame {
-    const area = mapAreaMm(sheet.paper, sheet.orientation);
+    const area = mapAreaMm(sheet.paper, sheet.orientation, sheet.layout);
     const cssWidth = Math.round(area.width * CSS_PX_PER_MM);
     const cssHeight = Math.round(area.height * CSS_PX_PER_MM);
     const groundPerPx = sheet.scale / CSS_PX_PER_MM / 1000;
@@ -185,11 +205,11 @@ export function encodeSheetCode(sheet: PrintSheet | PrintPlan): string {
     if (parts.length !== 4) throw new Error('Sheet centre is outside the MGRS area');
     const [zone, square, easting, northing] = parts;
     const scale = sheet.scale / 1000;
-    return `${zone}${square}${easting.slice(0, 3)}${northing.slice(0, 3)}-${scale}${sheet.orientation === 'portrait' ? 'p' : 'l'}${sheet.paper === 'a3' ? '3' : ''}${blockSuffix(sheet)}`;
+    return `${zone}${square}${easting.slice(0, 3)}${northing.slice(0, 3)}-${scale}${sheet.layout === 'topo' ? 't' : sheet.orientation === 'portrait' ? 'p' : 'l'}${sheet.paper === 'a3' ? '3' : ''}${blockSuffix(sheet)}`;
 }
 
 export function decodeSheetCode(code: string): PrintPlan | null {
-    const match = code.trim().toUpperCase().match(/^(\d{1,2}[C-HJ-NP-X][A-HJ-NP-Z]{2})(\d{2,10})-(\d+(?:\.\d+)?)([PL])(3?)(?:-(\d)X(\d))?$/);
+    const match = code.trim().toUpperCase().match(/^(\d{1,2}[C-HJ-NP-X][A-HJ-NP-Z]{2})(\d{2,10})-(\d+(?:\.\d+)?)([PLT])(3?)(?:-(\d)X(\d))?$/);
     if (!match) return null;
 
     const [, square, digits, scaleText, orientation, a3, columnsText, rowsText] = match;
@@ -218,6 +238,7 @@ export function decodeSheetCode(code: string): PrintPlan | null {
         lat,
         scale,
         orientation: orientation === 'P' ? 'portrait' : 'landscape',
+        layout: orientation === 'T' ? 'topo' : 'plain',
         paper: a3 ? 'a3' : 'a4',
         columns,
         rows,
@@ -427,6 +448,7 @@ export function planSheets(plan: PrintPlan): PlannedSheet[] {
                 lat,
                 scale: plan.scale,
                 orientation: plan.orientation,
+                layout: plan.layout,
                 paper: plan.paper,
                 refLat: plan.lat,
                 gridOrigin: [plan.lng, plan.lat],
@@ -456,4 +478,41 @@ export function planBounds(plan: PrintPlan): [[number, number], [number, number]
     const lngs = corners.map((c) => c[0]);
     const lats = corners.map((c) => c[1]);
     return [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]];
+}
+
+/** 52.2297, 'lat' -> "52°13′47″N" */
+export function formatDms(value: number, axis: 'lat' | 'lng'): string {
+    const hemisphere = axis === 'lat' ? (value >= 0 ? 'N' : 'S') : (value >= 0 ? 'E' : 'W');
+    let total = Math.round(Math.abs(value) * 3600);
+    const degrees = Math.floor(total / 3600);
+    total -= degrees * 3600;
+    const minutes = Math.floor(total / 60);
+    const seconds = total - minutes * 60;
+    return `${degrees}°${String(minutes).padStart(2, '0')}′${String(seconds).padStart(2, '0')}″${hemisphere}`;
+}
+
+export type MgrsReading = {
+    /** "34U DC" */
+    square: string;
+    /** Grid line west of the point, its 100 m digit and the result: "99", "4", "994". */
+    easting: { line: string; add: string; value: string };
+    /** Grid line south of the point, likewise. */
+    northing: { line: string; add: string; value: string };
+    /** "34U DC 994 918" (100 m) */
+    result: string;
+};
+
+/** Worked example of reading an MGRS reference to 100 m, for the sheet margin. */
+export function mgrsReading(lng: number, lat: number): MgrsReading | null {
+    const parts = asMGRS(lat, lng).split(' ');
+    if (parts.length !== 4) return null;
+    const [zone, square, e, n] = parts;
+    const easting = { line: e.slice(0, 2), add: e.slice(2, 3), value: e.slice(0, 3) };
+    const northing = { line: n.slice(0, 2), add: n.slice(2, 3), value: n.slice(0, 3) };
+    return {
+        square: `${zone} ${square}`,
+        easting,
+        northing,
+        result: `${zone} ${square} ${easting.value} ${northing.value}`,
+    };
 }

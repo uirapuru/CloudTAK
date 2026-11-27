@@ -6,6 +6,8 @@ import {
     crossing,
     decodeSheetCode,
     formatAngle,
+    formatDms,
+    mgrsReading,
     formatDistance,
     encodeSheetCode,
     formatScale,
@@ -283,5 +285,44 @@ describe('grid on the zone central meridian', () => {
             expect(crossing(line.points, 'y', 0)).toBeDefined();
             expect(crossing(line.points, 'y', frame.cssHeight)).toBeDefined();
         }
+    });
+});
+
+describe('topographic sheet', () => {
+    const topo: PrintSheet = { ...warsaw, orientation: 'landscape', layout: 'topo' };
+
+    it('leaves room for the side panel and the label gutter', () => {
+        const area = mapAreaMm('a4', 'landscape', 'topo');
+        expect(area.x).toBe(15);
+        expect(area.width).toBe(297 - 16 - 14 - 3 - 66);
+        expect(area.height).toBe(210 - 16 - 14);
+        expect(sheetFrame(topo).cssWidth).toBeLessThan(sheetFrame({ ...warsaw, orientation: 'landscape' }).cssWidth);
+    });
+
+    it('is written as "t" in the sheet code', () => {
+        const code = encodeSheetCode(topo);
+        expect(code.endsWith('-25t')).toBe(true);
+        const back = decodeSheetCode(code)!;
+        expect(back.layout).toBe('topo');
+        expect(back.orientation).toBe('landscape');
+        expect(decodeSheetCode('34UFB2676-25p')!.layout).toBe('plain');
+    });
+
+    it('passes the layout to every sheet of a block', () => {
+        const sheets = planSheets({ ...topo, columns: 2, rows: 1 });
+        expect(sheets.every((s) => s.layout === 'topo')).toBe(true);
+    });
+
+    it('writes corner coordinates in degrees, minutes and seconds', () => {
+        expect(formatDms(52.2297, 'lat')).toBe('52°13′47″N');
+        expect(formatDms(21.0122, 'lng')).toBe('21°00′44″E');
+        expect(formatDms(-0.5, 'lng')).toBe('0°30′00″W');
+    });
+
+    it('splits the centre into the steps of reading MGRS', () => {
+        const reading = mgrsReading(warsaw.lng, warsaw.lat)!;
+        expect(reading.square).toMatch(/^34U [A-Z]{2}$/);
+        expect(reading.easting.value).toBe(reading.easting.line + reading.easting.add);
+        expect(reading.result).toBe(`${reading.square} ${reading.easting.value} ${reading.northing.value}`);
     });
 });
