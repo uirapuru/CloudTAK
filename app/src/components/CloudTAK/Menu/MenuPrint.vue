@@ -46,6 +46,30 @@
                         data-testid='print-format'
                     />
                 </div>
+                <div class='col-6'>
+                    <TranslatedEnum
+                        v-model='form.columns'
+                        :label='t("print.columns")'
+                        :options='sideOptions'
+                        data-testid='print-columns'
+                    />
+                </div>
+                <div class='col-6'>
+                    <TranslatedEnum
+                        v-model='form.rows'
+                        :label='t("print.rows")'
+                        :options='sideOptions'
+                        data-testid='print-rows'
+                    />
+                </div>
+                <div class='col-12'>
+                    <TranslatedEnum
+                        v-model='form.background'
+                        :label='t("print.background")'
+                        :options='backgroundOptions'
+                        data-testid='print-background'
+                    />
+                </div>
                 <div class='col-12'>
                     <TablerToggle
                         v-model='form.grid'
@@ -108,6 +132,12 @@
                     v-text='t("print.invalidCode", { code: invalidCode })'
                 />
                 <div
+                    v-if='tooMany'
+                    class='col-12 small text-red px-3'
+                    data-testid='print-too-many'
+                    v-text='t("print.tooMany", { max: MAX_SHEETS })'
+                />
+                <div
                     v-if='errorText'
                     class='col-12 small text-red px-3'
                     data-testid='print-error'
@@ -117,7 +147,7 @@
                 <div class='col-12 pb-2'>
                     <button
                         class='btn btn-primary w-100'
-                        :disabled='busy'
+                        :disabled='busy || tooMany'
                         data-testid='print-run'
                         @click='print'
                     >
@@ -126,7 +156,7 @@
                             stroke='1'
                             class='me-2'
                         />
-                        {{ busy ? t('print.rendering') : t('print.run') }}
+                        {{ busyText || runText }}
                     </button>
                 </div>
             </div>
@@ -144,8 +174,11 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import TranslatedEnum from '../util/TranslatedEnum.vue';
 import { useMapStore } from '../../../stores/map.ts';
+import OverlayManager from '../../../base/overlay.ts';
 import {
     DEFAULT_SCALE,
+    MAX_SHEETS,
+    MAX_SHEETS_PER_SIDE,
     PRINT_DPI,
     PRINT_SCALES,
     centreMgrs,
@@ -153,16 +186,19 @@ import {
     encodeSheetCode,
     formatScale,
     groundSize,
-    sheetBounds,
-    sheetFilename,
+    planBounds,
+    planSheets,
+    validBlock,
     type Orientation,
     type PaperSize,
     type PrintFormat,
-    type PrintSheet,
+    type PrintPlan,
 } from '../../../base/print/sheet.ts';
 import { renderSheetMap } from '../../../base/print/render.ts';
 import { composePage, type PageLabels } from '../../../base/print/compose.ts';
-import { hideSheetFrame, pageBlob, saveBlob, sheetFrameOnTop, showSheetFrame } from '../../../base/print/export.ts';
+import { hideSheetFrame, pdfBlob, pngBlob, saveBlob, sheetFrameOnTop, showSheetFrame } from '../../../base/print/export.ts';
+
+type Background = 'map' | 'white';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -174,42 +210,56 @@ const form = ref({
     paper: 'a4' as PaperSize,
     orientation: 'portrait' as Orientation,
     format: 'pdf' as PrintFormat,
+    columns: '1',
+    rows: '1',
+    background: 'map' as Background,
     grid: true,
     title: '',
 });
 const centre = ref<{ lng: number; lat: number }>({ lng: 0, lat: 0 });
 const pinned = ref(false);
-const busy = ref(false);
+const busyText = ref('');
 const copied = ref(false);
 const errorText = ref('');
 const invalidCode = ref('');
 
+const busy = computed(() => Boolean(busyText.value));
+
 let map: MapLibreMap | undefined;
 let waitTimer: ReturnType<typeof setInterval> | undefined;
 
-const sheet = computed<PrintSheet>(() => ({
+const plan = computed<PrintPlan>(() => ({
     lng: centre.value.lng,
     lat: centre.value.lat,
     scale: Number(form.value.scale),
     orientation: form.value.orientation,
     paper: form.value.paper,
+    columns: Number(form.value.columns),
+    rows: Number(form.value.rows),
 }));
+
+const sheetCount = computed(() => plan.value.columns * plan.value.rows);
+const tooMany = computed(() => !validBlock(plan.value.columns, plan.value.rows));
 
 const code = computed(() => {
     try {
-        return encodeSheetCode(sheet.value);
+        return encodeSheetCode(plan.value);
     } catch {
         return '';
     }
 });
 
-const defaultTitle = computed(() => centreMgrs(sheet.value));
+const defaultTitle = computed(() => centreMgrs(plan.value));
 
 const extentText = computed(() => {
-    const size = groundSize(sheet.value);
+    const size = groundSize(plan.value);
     const n = new Intl.NumberFormat(locale.value, { maximumFractionDigits: 1 });
-    return `${n.format(size.width / 1000)} × ${n.format(size.height / 1000)} km`;
+    return `${n.format(size.width * plan.value.columns / 1000)} × ${n.format(size.height * plan.value.rows / 1000)} km`;
 });
+
+const runText = computed(() => sheetCount.value > 1
+    ? t('print.runMany', { count: sheetCount.value })
+    : t('print.run'));
 
 const scaleOptions = computed(() => PRINT_SCALES.map((value) => ({ value: String(value), label: formatScale(value) })));
 const paperOptions = computed(() => [
@@ -224,6 +274,14 @@ const formatOptions = computed(() => [
     { value: 'pdf', label: 'PDF' },
     { value: 'png', label: 'PNG' },
 ]);
+const sideOptions = computed(() => Array.from({ length: MAX_SHEETS_PER_SIDE }, (_, i) => ({
+    value: String(i + 1),
+    label: String(i + 1),
+})));
+const backgroundOptions = computed(() => [
+    { value: 'map', label: t('print.backgroundMap') },
+    { value: 'white', label: t('print.backgroundWhite') },
+]);
 
 function followCentre(): void {
     if (!map || pinned.value) return;
@@ -232,16 +290,16 @@ function followCentre(): void {
 }
 
 function redrawFrame(): void {
-    if (!map) return;
+    if (!map || tooMany.value) return;
     try {
-        showSheetFrame(map, sheet.value);
+        showSheetFrame(map, plan.value);
     } catch (err) {
         console.warn('Print sheet frame', err);
     }
 }
 
 function onStyleData(): void {
-    // A basemap change can rebuild the style and drop the frame.
+    // A basemap change can rebuild the style, drop the frame or slot layers above it.
     if (map && (!map.getLayer('taklab-print-sheet-line') || !sheetFrameOnTop(map))) redrawFrame();
 }
 
@@ -255,12 +313,14 @@ function attach(target: MapLibreMap): void {
             form.value.scale = String(decoded.scale);
             form.value.orientation = decoded.orientation;
             form.value.paper = decoded.paper;
+            form.value.columns = String(decoded.columns);
+            form.value.rows = String(decoded.rows);
             centre.value = { lng: decoded.lng, lat: decoded.lat };
             pinned.value = true;
             map.jumpTo({ bearing: 0, pitch: 0 });
             // keep the frame clear of the menu panel on the right
             const right = window.innerWidth >= 768 ? Math.min(460, window.innerWidth * 0.4) : 40;
-            map.fitBounds(sheetBounds(decoded), { padding: { top: 60, bottom: 60, left: 60, right }, animate: false });
+            map.fitBounds(planBounds(decoded), { padding: { top: 60, bottom: 60, left: 60, right }, animate: false });
         } else {
             invalidCode.value = fromAddress;
         }
@@ -300,7 +360,8 @@ onUnmounted(() => {
     hideSheetFrame(map);
 });
 
-watch(sheet, () => {
+watch(plan, () => {
+    if (tooMany.value && map) hideSheetFrame(map);
     redrawFrame();
     copied.value = false;
 });
@@ -342,32 +403,59 @@ function pageLabels(): PageLabels {
         convergence: (value) => t('print.page.convergence', { value }),
         gridMagnetic: (value) => t('print.page.gridMagnetic', { value }),
         printed: (when) => t('print.page.printed', { when }),
+        sheet: (index, total) => t('print.page.sheet', { index, total }),
     };
 }
 
+/** Map layers of the basemap overlays, left out for a white background. */
+function basemapLayers(): string[] {
+    return OverlayManager.loaded
+        .filter((overlay) => overlay.mode === 'basemap')
+        .flatMap((overlay) => overlay.styles.map((layer) => layer.id));
+}
+
 async function print(): Promise<void> {
-    if (!map || busy.value) return;
-    busy.value = true;
+    if (!map || busy.value || tooMany.value) return;
     errorText.value = '';
+    const current = { ...plan.value };
+    const sheets = planSheets(current);
+    const format = form.value.format;
+    const hideLayers = form.value.background === 'white' ? basemapLayers() : undefined;
+    const baseTitle = form.value.title.trim();
+
     try {
-        const current = { ...sheet.value };
-        const rendered = await renderSheetMap(map, current, { dpi: PRINT_DPI });
-        const page = composePage(rendered.canvas, rendered.frame, current, {
-            title: form.value.title.trim() || centreMgrs(current),
-            grid: form.value.grid,
-            dpi: PRINT_DPI,
-            locale: locale.value,
-            labels: pageLabels(),
-            attribution: rendered.attribution,
-        });
-        const blob = await pageBlob(page, current, form.value.format);
-        saveBlob(blob, sheetFilename(current, form.value.format));
+        const pages: HTMLCanvasElement[] = [];
+        for (const sheet of sheets) {
+            busyText.value = sheets.length > 1
+                ? t('print.renderingSheet', { index: sheet.index, total: sheets.length })
+                : t('print.rendering');
+            const rendered = await renderSheetMap(map, sheet, { dpi: PRINT_DPI, hideLayers });
+            const page = composePage(rendered.canvas, rendered.frame, sheet, {
+                title: baseTitle || centreMgrs(sheets.length > 1 ? current : sheet),
+                grid: form.value.grid,
+                dpi: PRINT_DPI,
+                locale: locale.value,
+                labels: pageLabels(),
+                attribution: rendered.attribution,
+                block: { index: sheet.index, columns: current.columns, rows: current.rows },
+            });
+            if (format === 'png') {
+                const suffix = sheets.length > 1 ? `-${sheet.index}` : '';
+                saveBlob(await pngBlob(page), `mapa-${code.value}${suffix}.png`);
+            } else {
+                pages.push(page);
+            }
+        }
+        if (format === 'pdf') {
+            busyText.value = t('print.saving');
+            saveBlob(await pdfBlob(pages, current, `mapa-${code.value}`), `mapa-${code.value}.pdf`);
+        }
     } catch (err) {
         console.error('Print failed', err);
         const message = err instanceof Error ? err.message : String(err);
         errorText.value = message === 'timeout' ? t('print.timeout') : t('print.failed', { message });
     } finally {
-        busy.value = false;
+        busyText.value = '';
     }
 }
 </script>

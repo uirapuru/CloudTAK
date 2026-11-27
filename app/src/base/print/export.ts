@@ -4,15 +4,16 @@
  */
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl';
 import { PRINT_FRAME_LAYERS, PRINT_FRAME_SOURCE } from './render.ts';
-import { pageMm, sheetFilename, sheetPolygon, type PrintFormat, type PrintSheet } from './sheet.ts';
+import { pageMm, planPolygons, type PrintPlan, type PrintSheet } from './sheet.ts';
 
-export async function pageBlob(page: HTMLCanvasElement, sheet: PrintSheet, format: PrintFormat): Promise<Blob> {
-    if (format === 'png') {
-        return await new Promise<Blob>((resolve, reject) => {
-            page.toBlob((blob) => blob ? resolve(blob) : reject(new Error('PNG encoding failed')), 'image/png');
-        });
-    }
+export async function pngBlob(page: HTMLCanvasElement): Promise<Blob> {
+    return await new Promise<Blob>((resolve, reject) => {
+        page.toBlob((blob) => blob ? resolve(blob) : reject(new Error('PNG encoding failed')), 'image/png');
+    });
+}
 
+/** One PDF with a page per sheet; all sheets share paper size and orientation. */
+export async function pdfBlob(pages: HTMLCanvasElement[], sheet: PrintSheet, title: string): Promise<Blob> {
     const { jsPDF } = await import('jspdf');
     const size = pageMm(sheet.paper, sheet.orientation);
     const pdf = new jsPDF({
@@ -21,9 +22,12 @@ export async function pageBlob(page: HTMLCanvasElement, sheet: PrintSheet, forma
         format: [size.width, size.height],
         compress: true,
     });
-    // JPEG keeps a 200 dpi A4 page around 2 MB instead of 10+ MB as PNG.
-    pdf.addImage(page.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, size.width, size.height, undefined, 'FAST');
-    pdf.setProperties({ title: sheetFilename(sheet, 'pdf'), creator: 'CloudTAK taklab.eu' });
+    pages.forEach((page, i) => {
+        if (i > 0) pdf.addPage([size.width, size.height], sheet.orientation);
+        // JPEG keeps a 200 dpi A4 page around 2 MB instead of 10+ MB as PNG.
+        pdf.addImage(page.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, size.width, size.height, undefined, 'FAST');
+    });
+    pdf.setProperties({ title, creator: 'CloudTAK taklab.eu' });
     return pdf.output('blob');
 }
 
@@ -39,9 +43,9 @@ export function saveBlob(blob: Blob, filename: string): void {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-/** Draws (or moves) the outline of the sheet on the live map. */
-export function showSheetFrame(map: MapLibreMap, sheet: PrintSheet): void {
-    const data: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [sheetPolygon(sheet)] };
+/** Draws (or moves) the outline of every sheet of the plan on the live map. */
+export function showSheetFrame(map: MapLibreMap, plan: PrintPlan): void {
+    const data = planPolygons(plan);
     const source = map.getSource(PRINT_FRAME_SOURCE) as GeoJSONSource | undefined;
     if (source) {
         source.setData(data);

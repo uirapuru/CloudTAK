@@ -17,8 +17,17 @@
     "copyLink": "Kopiuj link do arkusza",
     "copied": "Skopiowano",
     "invalidCode": "Nie rozpoznano kodu arkusza „{code}”. Ustaw arkusz na mapie.",
+    "columns": "Arkusze w poziomie",
+    "rows": "Arkusze w pionie",
+    "background": "Tło",
+    "backgroundMap": "Podkład mapy",
+    "backgroundWhite": "Białe tło (bez podkładu)",
+    "tooMany": "Najwięcej {max} arkuszy. Zmniejsz liczbę arkuszy albo wybierz mniejszą skalę.",
     "run": "Drukuj",
+    "runMany": "Drukuj arkusze ({count})",
     "rendering": "Przygotowuję arkusz…",
+    "renderingSheet": "Arkusz {index} z {total}…",
+    "saving": "Zapisuję plik…",
     "timeout": "Mapa nie wczytała się w 90 s. Sprawdź połączenie i spróbuj ponownie.",
     "failed": "Nie udało się przygotować arkusza: {message}",
     "page": {
@@ -30,6 +39,7 @@
         "declination": "Deklinacja magnetyczna {value} ({date})",
         "convergence": "Zbieżność południków {value}",
         "gridMagnetic": "Poprawka siatka–magnetyczna {value}",
-        "printed": "Wydrukowano {when}"
+        "printed": "Wydrukowano {when}",
+        "sheet": "ARKUSZ {index}/{total}"
     }
 }

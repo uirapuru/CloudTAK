@@ -17,8 +17,17 @@
     "copyLink": "Copy link to sheet",
     "copied": "Copied",
     "invalidCode": "Sheet code \"{code}\" not recognised. Set the sheet on the map.",
+    "columns": "Sheets across",
+    "rows": "Sheets down",
+    "background": "Background",
+    "backgroundMap": "Basemap",
+    "backgroundWhite": "White (no basemap)",
+    "tooMany": "At most {max} sheets. Use fewer sheets or a smaller scale.",
     "run": "Print",
+    "runMany": "Print {count} sheets",
     "rendering": "Preparing sheet…",
+    "renderingSheet": "Sheet {index} of {total}…",
+    "saving": "Saving file…",
     "timeout": "The map did not load within 90 s. Check the connection and try again.",
     "failed": "Could not prepare the sheet: {message}",
     "page": {
@@ -30,6 +39,7 @@
         "declination": "Magnetic declination {value} ({date})",
         "convergence": "Grid convergence {value}",
         "gridMagnetic": "Grid–magnetic angle {value}",
-        "printed": "Printed {when}"
+        "printed": "Printed {when}",
+        "sheet": "SHEET {index}/{total}"
     }
 }

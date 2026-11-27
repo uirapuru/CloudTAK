@@ -32,6 +32,7 @@ export type PageLabels = {
     convergence: (value: string) => string;
     gridMagnetic: (value: string) => string;
     printed: (when: string) => string;
+    sheet: (index: number, total: number) => string;
 };
 
 export type PageOptions = {
@@ -42,6 +43,8 @@ export type PageOptions = {
     labels: PageLabels;
     attribution: string;
     date?: Date;
+    /** Place of the sheet in a block of sheets, for the header and the index. */
+    block?: { index: number; columns: number; rows: number };
 };
 
 /** Magnetic declination in degrees (east positive), or undefined outside the model. */
@@ -140,23 +143,60 @@ export function composePage(
     const headerBase = (area.y - 2) * mm;
     ctx.fillStyle = '#000';
     ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'right';
+    let headerRight = mx + mw;
+    ctx.font = font(5, 700);
+    ctx.fillText(formatScale(sheet.scale), headerRight, headerBase);
+    headerRight -= ctx.measureText(formatScale(sheet.scale)).width + 4 * mm;
+    ctx.font = font(2.8);
+    const centreText = `${opts.labels.centre}: ${centreMgrs(sheet)}`;
+    ctx.fillText(centreText, headerRight, headerBase);
+    headerRight -= ctx.measureText(centreText).width + 4 * mm;
+    const total = opts.block ? opts.block.columns * opts.block.rows : 1;
+    if (opts.block && total > 1) {
+        ctx.font = font(3.4, 700);
+        const sheetText = opts.labels.sheet(opts.block.index, total);
+        ctx.fillText(sheetText, headerRight, headerBase);
+        headerRight -= ctx.measureText(sheetText).width + 4 * mm;
+    }
     ctx.textAlign = 'left';
     ctx.font = font(5, 700);
-    ctx.fillText(fitText(ctx, opts.title, mw * 0.6), mx, headerBase);
-    ctx.textAlign = 'right';
-    ctx.font = font(5, 700);
-    ctx.fillText(formatScale(sheet.scale), mx + mw, headerBase);
-    const scaleWidth = ctx.measureText(formatScale(sheet.scale)).width;
-    ctx.font = font(2.8);
-    ctx.fillText(`${opts.labels.centre}: ${centreMgrs(sheet)}`, mx + mw - scaleWidth - 4 * mm, headerBase);
+    ctx.fillText(fitText(ctx, opts.title, headerRight - mx), mx, headerBase);
 
     // Footer
     const fy = (area.y + area.height + 3) * mm;
     const columnWidth = mw / 3;
 
-    // Scale bar - at most two thirds of the left column
+    // Index of sheets: where this one sits in the block
+    if (opts.block && total > 1) {
+        const box = 18 * mm;
+        const cell = Math.min(box / opts.block.columns, box / opts.block.rows, 6 * mm);
+        const ix = mx + columnWidth * 0.98 - cell * opts.block.columns;
+        const iy = fy + 1 * mm;
+        ctx.lineWidth = 0.2 * mm;
+        ctx.strokeStyle = '#000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = font(Math.min(2.2, cell / mm * 0.5), 700);
+        for (let row = 0; row < opts.block.rows; row++) {
+            for (let column = 0; column < opts.block.columns; column++) {
+                const n = row * opts.block.columns + column + 1;
+                const x = ix + column * cell;
+                const y = iy + row * cell;
+                const current = n === opts.block.index;
+                ctx.fillStyle = current ? '#000' : '#fff';
+                ctx.fillRect(x, y, cell, cell);
+                ctx.strokeRect(x, y, cell, cell);
+                ctx.fillStyle = current ? '#fff' : '#000';
+                ctx.fillText(String(n), x + cell / 2, y + cell / 2);
+            }
+        }
+    }
+
+    // Scale bar - most of the left column, less when the index is there
     const groundPerPageMm = sheet.scale / 1000;
-    const barMeters = scaleBarMeters(columnWidth * 0.8 / mm * groundPerPageMm);
+    const barShare = opts.block && total > 1 ? 0.55 : 0.8;
+    const barMeters = scaleBarMeters(columnWidth * barShare / mm * groundPerPageMm);
     const barWidth = barMeters / groundPerPageMm * mm;
     const barHeight = 1.6 * mm;
     const segments = 4;

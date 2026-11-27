@@ -15,6 +15,10 @@ import {
     groundSize,
     mapAreaMm,
     northDiagramAngles,
+    planBounds,
+    planPolygons,
+    planSheets,
+    validBlock,
     scaleBarMeters,
     sheetCorners,
     sheetFrame,
@@ -207,5 +211,77 @@ describe('formatDistance', () => {
         expect(formatDistance(500)).toBe('500 m');
         expect(formatDistance(2500, 'pl')).toBe('2,5 km');
         expect(formatDistance(5000, 'en')).toBe('5 km');
+    });
+});
+
+describe('plan of several sheets', () => {
+    const plan = { ...warsaw, columns: 3, rows: 2 };
+
+    it('numbers sheets row by row from the top left', () => {
+        const sheets = planSheets(plan);
+        expect(sheets.map((s) => s.index)).toEqual([1, 2, 3, 4, 5, 6]);
+        expect(sheets[0].lat).toBeGreaterThan(sheets[3].lat);
+        expect(sheets[0].lng).toBeLessThan(sheets[1].lng);
+    });
+
+    it('lets neighbouring sheets meet edge to edge', () => {
+        const [first, second, , fourth] = planSheets(plan);
+        const a = sheetCorners(first);
+        const b = sheetCorners(second);
+        const d = sheetCorners(fourth);
+        // NE of sheet 1 = NW of sheet 2, SW of sheet 1 = NW of sheet 4
+        expect(a[1][0]).toBeCloseTo(b[0][0], 9);
+        expect(a[1][1]).toBeCloseTo(b[0][1], 9);
+        expect(a[3][0]).toBeCloseTo(d[0][0], 9);
+        expect(a[3][1]).toBeCloseTo(d[0][1], 9);
+    });
+
+    it('keeps one sheet in the middle when the plan is 1x1', () => {
+        const [only] = planSheets({ ...warsaw, columns: 1, rows: 1 });
+        expect(only.lng).toBeCloseTo(warsaw.lng, 9);
+        expect(only.lat).toBeCloseTo(warsaw.lat, 9);
+    });
+
+    it('carries the block in the code', () => {
+        const code = encodeSheetCode(plan);
+        expect(code.endsWith('-25p-3x2')).toBe(true);
+        const back = decodeSheetCode(code)!;
+        expect(back.columns).toBe(3);
+        expect(back.rows).toBe(2);
+        expect(decodeSheetCode('34UFB2676-25p')!.columns).toBe(1);
+    });
+
+    it('refuses blocks above the limit', () => {
+        expect(validBlock(4, 4)).toBe(true);
+        expect(validBlock(5, 1)).toBe(false);
+        expect(validBlock(0, 1)).toBe(false);
+        expect(decodeSheetCode('34UFB2676-25p-5x1')).toBeNull();
+    });
+
+    it('gives the outline of every sheet', () => {
+        expect(planPolygons(plan).features).toHaveLength(6);
+        const [[w, s], [e, n]] = planBounds(plan);
+        expect(w).toBeLessThan(warsaw.lng);
+        expect(e).toBeGreaterThan(warsaw.lng);
+        expect(s).toBeLessThan(warsaw.lat);
+        expect(n).toBeGreaterThan(warsaw.lat);
+    });
+});
+
+describe('grid on the zone central meridian', () => {
+    it('labels every easting line on both the top and bottom edge', () => {
+        // 21°E is the central meridian of zone 34: its grid line is vertical
+        const sheet: PrintSheet = { lng: 21.0, lat: 52.25, scale: 25000, orientation: 'landscape', paper: 'a4' };
+        const frame = sheetFrame(sheet);
+        const inside = gridLines(sheet, frame).filter((l) => {
+            if (l.axis !== 'easting') return false;
+            const x = crossing(l.points, 'y', frame.cssHeight / 2);
+            return x !== undefined && x > 0 && x < frame.cssWidth;
+        });
+        expect(inside.some((l) => l.value % 100000 === 0)).toBe(true);
+        for (const line of inside) {
+            expect(crossing(line.points, 'y', 0)).toBeDefined();
+            expect(crossing(line.points, 'y', frame.cssHeight)).toBeDefined();
+        }
     });
 });

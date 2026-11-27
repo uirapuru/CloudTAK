@@ -22,7 +22,31 @@ export type PrintSheet = {
     scale: number;
     orientation: Orientation;
     paper: PaperSize;
+    /**
+     * Latitude the scale is exact at. Sheets of one plan share the latitude
+     * of the plan centre so their edges meet without gaps.
+     */
+    refLat?: number;
+    /** [lng, lat] whose UTM zone the MGRS grid uses; the plan centre for a plan. */
+    gridOrigin?: [number, number];
 };
+
+/** A block of sheets: columns x rows around the centre of the plan. */
+export type PrintPlan = PrintSheet & {
+    columns: number;
+    rows: number;
+};
+
+export type PlannedSheet = PrintSheet & {
+    /** 1-based number, row by row from the top left. */
+    index: number;
+    column: number;
+    row: number;
+};
+
+/** PrintPlugin limit: a bigger block is a sign of a wrong scale. */
+export const MAX_SHEETS = 16;
+export const MAX_SHEETS_PER_SIDE = 4;
 
 export const PRINT_SCALES = [5000, 10000, 25000, 50000, 100000, 250000] as const;
 export const DEFAULT_SCALE = 25000;
@@ -95,7 +119,7 @@ export function sheetFrame(sheet: PrintSheet): SheetFrame {
     const cssWidth = Math.round(area.width * CSS_PX_PER_MM);
     const cssHeight = Math.round(area.height * CSS_PX_PER_MM);
     const groundPerPx = sheet.scale / CSS_PX_PER_MM / 1000;
-    const mercatorPerPx = groundPerPx / Math.cos(sheet.lat * Math.PI / 180);
+    const mercatorPerPx = groundPerPx / Math.cos((sheet.refLat ?? sheet.lat) * Math.PI / 180);
     const zoom = Math.log2(2 * Math.PI * EARTH_RADIUS / (TILE_SIZE * mercatorPerPx));
 
     return {
@@ -156,19 +180,22 @@ export function groundSize(sheet: PrintSheet): { width: number; height: number }
  * 34UFB263764-25p = centre 34U FB 263 764 (100 m), 1:25 000, portrait, A4.
  * The format follows maps.trex-arms.com (?s=34UFB2676-25p).
  */
-export function encodeSheetCode(sheet: PrintSheet): string {
+export function encodeSheetCode(sheet: PrintSheet | PrintPlan): string {
     const parts = asMGRS(sheet.lat, sheet.lng).split(' ');
     if (parts.length !== 4) throw new Error('Sheet centre is outside the MGRS area');
     const [zone, square, easting, northing] = parts;
     const scale = sheet.scale / 1000;
-    return `${zone}${square}${easting.slice(0, 3)}${northing.slice(0, 3)}-${scale}${sheet.orientation === 'portrait' ? 'p' : 'l'}${sheet.paper === 'a3' ? '3' : ''}`;
+    return `${zone}${square}${easting.slice(0, 3)}${northing.slice(0, 3)}-${scale}${sheet.orientation === 'portrait' ? 'p' : 'l'}${sheet.paper === 'a3' ? '3' : ''}${blockSuffix(sheet)}`;
 }
 
-export function decodeSheetCode(code: string): PrintSheet | null {
-    const match = code.trim().toUpperCase().match(/^(\d{1,2}[C-HJ-NP-X][A-HJ-NP-Z]{2})(\d{2,10})-(\d+(?:\.\d+)?)([PL])(3?)$/);
+export function decodeSheetCode(code: string): PrintPlan | null {
+    const match = code.trim().toUpperCase().match(/^(\d{1,2}[C-HJ-NP-X][A-HJ-NP-Z]{2})(\d{2,10})-(\d+(?:\.\d+)?)([PL])(3?)(?:-(\d)X(\d))?$/);
     if (!match) return null;
 
-    const [, square, digits, scaleText, orientation, a3] = match;
+    const [, square, digits, scaleText, orientation, a3, columnsText, rowsText] = match;
+    const columns = columnsText ? Number(columnsText) : 1;
+    const rows = rowsText ? Number(rowsText) : 1;
+    if (!validBlock(columns, rows)) return null;
     if (digits.length % 2 !== 0) return null;
 
     const scale = Math.round(Number(scaleText) * 1000);
@@ -192,6 +219,8 @@ export function decodeSheetCode(code: string): PrintSheet | null {
         scale,
         orientation: orientation === 'P' ? 'portrait' : 'landscape',
         paper: a3 ? 'a3' : 'a4',
+        columns,
+        rows,
     };
 }
 
@@ -214,8 +243,10 @@ const GRID_SAMPLES = 12;
 
 export function gridLines(sheet: PrintSheet, frame: SheetFrame = sheetFrame(sheet)): GridLine[] {
     const spacing = gridSpacing(sheet.scale);
-    const zone = latLngToUTM(sheet.lat, sheet.lng).zoneNum;
-    const zoneLetter = latLngToUTM(sheet.lat, sheet.lng).zoneLetter;
+    const [originLng, originLat] = sheet.gridOrigin ?? [sheet.lng, sheet.lat];
+    const origin = latLngToUTM(originLat, originLng);
+    const zone = origin.zoneNum;
+    const zoneLetter = origin.zoneLetter;
 
     const cornersPx: Array<[number, number]> = [
         [0, 0], [frame.cssWidth, 0], [frame.cssWidth, frame.cssHeight], [0, frame.cssHeight],
@@ -226,10 +257,12 @@ export function gridLines(sheet: PrintSheet, frame: SheetFrame = sheetFrame(shee
         return latLngToUTM(lat, lng, zone);
     });
 
-    const minE = Math.min(...utmCorners.map((c) => c.easting));
-    const maxE = Math.max(...utmCorners.map((c) => c.easting));
-    const minN = Math.min(...utmCorners.map((c) => c.northing));
-    const maxN = Math.max(...utmCorners.map((c) => c.northing));
+    // One spacing of slack on each side: a line ending exactly on the sheet
+    // edge (the zone central meridian) would lose its edge label to rounding.
+    const minE = Math.min(...utmCorners.map((c) => c.easting)) - spacing;
+    const maxE = Math.max(...utmCorners.map((c) => c.easting)) + spacing;
+    const minN = Math.min(...utmCorners.map((c) => c.northing)) - spacing;
+    const maxN = Math.max(...utmCorners.map((c) => c.northing)) + spacing;
 
     const toPx = (easting: number, northing: number): [number, number] => {
         const [lat, lng] = utmToLatLng(zone, zoneLetter, easting, northing);
@@ -355,6 +388,71 @@ export function formatAngle(deg: number, locale: string): string {
 /** [[west, south], [east, north]] of the sheet, for fitting the live map to it. */
 export function sheetBounds(sheet: PrintSheet): [[number, number], [number, number]] {
     const corners = sheetCorners(sheet);
+    const lngs = corners.map((c) => c[0]);
+    const lats = corners.map((c) => c[1]);
+    return [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]];
+}
+
+export function validBlock(columns: number, rows: number): boolean {
+    return Number.isInteger(columns) && Number.isInteger(rows)
+        && columns >= 1 && rows >= 1
+        && columns <= MAX_SHEETS_PER_SIDE && rows <= MAX_SHEETS_PER_SIDE
+        && columns * rows <= MAX_SHEETS;
+}
+
+function blockSuffix(sheet: PrintSheet | PrintPlan): string {
+    if (!('columns' in sheet) || (sheet.columns === 1 && sheet.rows === 1)) return '';
+    return `-${sheet.columns}x${sheet.rows}`;
+}
+
+/**
+ * Sheets of a plan, row by row from the top left. They share one Mercator
+ * resolution (exact scale at the plan centre), so neighbouring sheets meet
+ * edge to edge and can be taped together.
+ */
+export function planSheets(plan: PrintPlan): PlannedSheet[] {
+    const base: PrintSheet = { ...plan, refLat: plan.lat };
+    const frame = sheetFrame(base);
+    const stepX = frame.cssWidth * frame.mercatorPerPx;
+    const stepY = frame.cssHeight * frame.mercatorPerPx;
+
+    const sheets: PlannedSheet[] = [];
+    for (let row = 0; row < plan.rows; row++) {
+        for (let column = 0; column < plan.columns; column++) {
+            const x = frame.center[0] + (column - (plan.columns - 1) / 2) * stepX;
+            const y = frame.center[1] - (row - (plan.rows - 1) / 2) * stepY;
+            const [lng, lat] = fromMercator(x, y);
+            sheets.push({
+                lng,
+                lat,
+                scale: plan.scale,
+                orientation: plan.orientation,
+                paper: plan.paper,
+                refLat: plan.lat,
+                gridOrigin: [plan.lng, plan.lat],
+                index: row * plan.columns + column + 1,
+                column,
+                row,
+            });
+        }
+    }
+    return sheets;
+}
+
+/** Outline of every sheet of the plan, for the frame on the live map. */
+export function planPolygons(plan: PrintPlan): GeoJSON.FeatureCollection<GeoJSON.Polygon> {
+    return {
+        type: 'FeatureCollection',
+        features: planSheets(plan).map((sheet) => ({
+            ...sheetPolygon(sheet),
+            properties: { index: sheet.index },
+        })),
+    };
+}
+
+/** [[west, south], [east, north]] of the whole plan. */
+export function planBounds(plan: PrintPlan): [[number, number], [number, number]] {
+    const corners = planSheets(plan).flatMap((sheet) => sheetCorners(sheet));
     const lngs = corners.map((c) => c[0]);
     const lats = corners.map((c) => c[1]);
     return [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]];

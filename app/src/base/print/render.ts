@@ -28,13 +28,27 @@ export type RenderedMap = {
  * the sheet frame itself, terrain and globe. Custom (deck.gl, 3D tiles)
  * layers never reach getStyle(), so they drop out on their own.
  */
-export function printableStyle(style: StyleSpecification): StyleSpecification {
+export function printableStyle(style: StyleSpecification, opts: { hideLayers?: string[] } = {}): StyleSpecification {
     const copy: StyleSpecification = JSON.parse(JSON.stringify(style));
+    const hidden = new Set(opts.hideLayers ?? []);
     copy.layers = copy.layers.filter((layer) => {
         if (PRINT_FRAME_LAYERS.includes(layer.id)) return false;
+        if (hidden.has(layer.id)) return false;
         return true;
     });
+    if (hidden.size) {
+        // White paper: without the basemap the beige map background would show.
+        for (const layer of copy.layers) {
+            if (layer.type === 'background') layer.paint = { ...layer.paint, 'background-color': '#ffffff' };
+        }
+    }
     if (copy.sources[PRINT_FRAME_SOURCE]) delete copy.sources[PRINT_FRAME_SOURCE];
+    // Sources no layer draws from (a hidden basemap) must not load tiles
+    // or end up in the attribution on paper.
+    const used = new Set(copy.layers.map((layer) => ('source' in layer ? layer.source : undefined)).filter(Boolean));
+    for (const id of Object.keys(copy.sources)) {
+        if (!used.has(id)) delete copy.sources[id];
+    }
     delete copy.terrain;
     copy.projection = { type: 'mercator' };
     return copy;
@@ -58,7 +72,7 @@ function attributionOf(map: MapLibreMap): string {
 export async function renderSheetMap(
     live: MapLibreMap,
     sheet: PrintSheet,
-    opts: { dpi?: number; signal?: AbortSignal } = {}
+    opts: { dpi?: number; signal?: AbortSignal; hideLayers?: string[] } = {}
 ): Promise<RenderedMap> {
     const dpi = opts.dpi ?? PRINT_DPI;
     const frame = sheetFrame(sheet);
@@ -78,7 +92,7 @@ export async function renderSheetMap(
 
     const map = new mapgl.Map({
         container,
-        style: printableStyle(live.getStyle()),
+        style: printableStyle(live.getStyle(), { hideLayers: opts.hideLayers }),
         center: [sheet.lng, sheet.lat],
         zoom: frame.zoom,
         bearing: 0,

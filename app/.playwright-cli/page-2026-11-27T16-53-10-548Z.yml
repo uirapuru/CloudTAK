@@ -1,0 +1,8 @@
+- dialog [active] [ref=e79]:
+  - document:
+    - generic [ref=e81]:
+      - img "Logo organizacji" [ref=e83]
+      - generic [ref=e84]:
+        - status [ref=e86]
+        - generic [ref=e88]: Wczytywanie stanu mapy
+      - generic [ref=e89]: Inicjalizacja procesu roboczego…

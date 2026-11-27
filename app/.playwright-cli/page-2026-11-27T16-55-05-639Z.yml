@@ -1,0 +1,144 @@
+- generic [ref=e19]:
+  - generic [ref=e20]:
+    - region "Map" [ref=e21]
+    - generic:
+      - generic:
+        - generic [ref=e22]: 1 km
+        - group [ref=e23]:
+          - generic [ref=e24]: Google
+  - generic "Ustaw swoją pozycję – kliknij, żeby włączyć GPS albo ustawić ręcznie" [ref=e25]:
+    - generic "Przybliż do pozycji" [ref=e26] [cursor=pointer]:
+      - generic [ref=e27]:
+        - generic [ref=e28]: cloudtak
+        - button "Ustaw swoją pozycję – kliknij, żeby włączyć GPS albo ustawić ręcznie" [ref=e29]:
+          - img [ref=e30]
+      - generic [ref=e33]:
+        - generic [ref=e34]: "-- m MSL"
+        - generic [ref=e35]: Brak sygnału
+      - generic [ref=e36]:
+        - generic [ref=e37]: "-- km/h"
+        - generic [ref=e38]: "--°"
+    - generic "Pozycja GPS – kliknij, żeby zmienić format" [ref=e42] [cursor=pointer]:
+      - generic [ref=e43]: 31N AA 66021 00000
+  - generic [ref=e44]:
+    - button "Kliknij, żeby włączyć dźwięk" [ref=e45] [cursor=pointer]
+    - button "PTT" [ref=e46] [cursor=pointer]:
+      - img [ref=e47]
+      - generic [ref=e50]: PTT
+    - generic [ref=e51]:
+      - combobox "Kanał głosowy" [ref=e52]:
+        - option "Dowodzenie" [selected]
+        - option "Echo"
+        - option "Pluton 1"
+        - option "Pluton 2"
+        - option "Wsparcie"
+      - button "Wyłącz automatyczne odtwarzanie (wiadomości zostaną w historii)" [ref=e53] [cursor=pointer]:
+        - img [ref=e54]
+  - generic:
+    - generic [ref=e59]:
+      - generic [ref=e60] [cursor=pointer]:
+        - img [ref=e61]
+        - generic [ref=e64]: Mapa public
+      - generic [ref=e66]:
+        - button "Warstwy" [ref=e67] [cursor=pointer]:
+          - img [ref=e68]
+        - button "Zmiany" [ref=e71] [cursor=pointer]:
+          - img [ref=e72]
+        - button "Użytkownicy" [ref=e78] [cursor=pointer]:
+          - img [ref=e79]
+        - button "Dziennik" [ref=e85] [cursor=pointer]:
+          - img [ref=e86]
+        - button "Czaty" [ref=e89] [cursor=pointer]:
+          - img [ref=e90]
+        - button "Pliki" [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+    - generic [ref=e97]:
+      - button "Powiadomienia" [ref=e101] [cursor=pointer]:
+        - img [ref=e102]
+      - button "Edycja geometrii" [ref=e107] [cursor=pointer]:
+        - img [ref=e108]
+      - button "Zamknij menu" [ref=e112] [cursor=pointer]:
+        - img [ref=e113]
+  - generic [ref=e117]:
+    - button "Szukaj" [ref=e118] [cursor=pointer]:
+      - img [ref=e119]
+    - button "Obróć na północ" [ref=e122] [cursor=pointer]:
+      - img [ref=e123]
+    - button "Przybliż" [ref=e127] [cursor=pointer]:
+      - img [ref=e128]
+    - button "Oddal" [ref=e129] [cursor=pointer]:
+      - img [ref=e130]
+    - button "Wyłącz teren 3D" [ref=e131] [cursor=pointer]:
+      - img [ref=e132]
+  - menubar [ref=e135]:
+    - generic [ref=e138]:
+      - generic [ref=e143]: Drukuj mapę
+      - generic [ref=e145]:
+        - generic [ref=e146]: Arkusz jest przypięty. Możesz przesuwać mapę, ramka zostaje w miejscu.
+        - generic [ref=e149]:
+          - generic [ref=e151]: Przypnij arkusz
+          - checkbox [checked] [ref=e154]
+        - generic [ref=e156]:
+          - generic [ref=e158]: Skala
+          - combobox [ref=e160]:
+            - option "1:5 000"
+            - option "1:10 000"
+            - option "1:25 000" [selected]
+            - option "1:50 000"
+            - option "1:100 000"
+            - option "1:250 000"
+        - generic [ref=e162]:
+          - generic [ref=e164]: Papier
+          - combobox [ref=e166]:
+            - option "A4" [selected]
+            - option "A3"
+        - generic [ref=e168]:
+          - generic [ref=e170]: Układ
+          - combobox [ref=e172]:
+            - option "Pionowy"
+            - option "Poziomy" [selected]
+        - generic [ref=e174]:
+          - generic [ref=e176]: Plik
+          - combobox [ref=e178]:
+            - option "PDF" [selected]
+            - option "PNG"
+        - generic [ref=e180]:
+          - generic [ref=e182]: Arkusze w poziomie
+          - combobox [ref=e184]:
+            - option "1"
+            - option "2" [selected]
+            - option "3"
+            - option "4"
+        - generic [ref=e186]:
+          - generic [ref=e188]: Arkusze w pionie
+          - combobox [ref=e190]:
+            - option "1"
+            - option "2" [selected]
+            - option "3"
+            - option "4"
+        - generic [ref=e192]:
+          - generic [ref=e194]: Tło
+          - combobox [ref=e196]:
+            - option "Podkład mapy"
+            - option "Białe tło (bez podkładu)" [selected]
+        - generic [ref=e199]:
+          - generic [ref=e201]: Siatka MGRS
+          - checkbox [checked] [ref=e204]
+        - generic [ref=e206]:
+          - generic [ref=e209]: Tytuł arkusza
+          - textbox "34U DC 9945 9185" [ref=e212]
+        - generic [ref=e213]:
+          - generic [ref=e214]:
+            - generic [ref=e215]: "Środek:"
+            - generic [ref=e216]: 34U DC 9945 9185
+          - generic [ref=e217]:
+            - generic [ref=e218]: "Teren:"
+            - generic [ref=e219]: 14 × 7,9 km
+          - generic [ref=e220]:
+            - generic [ref=e221]: "Kod arkusza:"
+            - generic [ref=e222]: 34UDC994918-25l-2x2
+            - button "Kopiuj link do arkusza" [ref=e223] [cursor=pointer]:
+              - img [ref=e224]
+        - button "Drukuj arkusze (4)" [ref=e229] [cursor=pointer]:
+          - img [ref=e230]
+          - text: Drukuj arkusze (4)

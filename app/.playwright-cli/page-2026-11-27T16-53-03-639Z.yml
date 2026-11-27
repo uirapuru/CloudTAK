@@ -1,0 +1,6 @@
+- generic [ref=e10]:
+  - img "Logo instytucji" [ref=e12]
+  - generic [ref=e13]:
+    - status [ref=e15]
+    - generic [ref=e17]: Wczytywanie CloudTAK
+  - generic [ref=e18]: Łączenie z serwerem…
