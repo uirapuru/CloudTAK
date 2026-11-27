@@ -25,6 +25,20 @@ export type Analysis = {
     error: string | null;
 };
 
+/** Why analysis does not run (GPU machine down, no worker, budget, starting), from the vision service. */
+export type Notice = {
+    level: 'warning' | 'info';
+    text: string;
+};
+
+export function normalizeNotice(raw: unknown): Notice | null {
+    if (!raw || typeof raw !== 'object') return null;
+    const r = raw as Record<string, unknown>;
+    if (r.level !== 'warning' && r.level !== 'info') return null;
+    if (typeof r.text !== 'string' || !r.text.trim() || r.text.length > 500) return null;
+    return { level: r.level, text: r.text };
+}
+
 export type LiveSource = {
     path: string;
     account: string | null;
@@ -259,12 +273,15 @@ export class VisionControl {
         return normalizeSources(await res.json());
     }
 
-    async list(auth: CertAuth): Promise<Analysis[]> {
+    async list(auth: CertAuth): Promise<{ analyses: Analysis[]; notice: Notice | null }> {
         const res = await VisionControl.check(await this.request('/analyses', auth));
-        const body = await res.json() as { analyses?: unknown };
-        return (Array.isArray(body?.analyses) ? body.analyses : [])
-            .map(normalizeAnalysis)
-            .filter((a): a is Analysis => a !== null);
+        const body = await res.json() as { analyses?: unknown; notice?: unknown };
+        return {
+            analyses: (Array.isArray(body?.analyses) ? body.analyses : [])
+                .map(normalizeAnalysis)
+                .filter((a): a is Analysis => a !== null),
+            notice: normalizeNotice(body?.notice),
+        };
     }
 
     private static one(raw: unknown): Analysis {
@@ -278,9 +295,10 @@ export class VisionControl {
         return VisionControl.one(await res.json());
     }
 
-    async get(auth: CertAuth, id: string | number): Promise<Analysis> {
+    async get(auth: CertAuth, id: string | number): Promise<Analysis & { notice: Notice | null }> {
         const res = await VisionControl.check(await this.request(`/analyses/${safeNumber(id)}`, auth));
-        return VisionControl.one(await res.json());
+        const raw = await res.json() as { notice?: unknown };
+        return { ...VisionControl.one(raw), notice: normalizeNotice(raw?.notice) };
     }
 
     async stop(auth: CertAuth, id: string | number): Promise<Analysis> {

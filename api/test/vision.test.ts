@@ -4,6 +4,7 @@ import {
     VisionControl,
     normalizeAnalysis,
     normalizeFaces,
+    normalizeNotice,
     normalizeSources,
     choiceBody,
     safeNumber,
@@ -125,4 +126,24 @@ test('no OTS address: analysis is reported as not enabled', async () => {
     const control = new VisionControl(() => null);
     assert.deepEqual(await control.status(AUTH), { enabled: false });
     await assert.rejects(control.list(AUTH), (err: { status: number }) => err.status === 404);
+});
+
+test('notice: only a known level with short text passes', () => {
+    assert.deepEqual(normalizeNotice({ level: 'warning', text: 'Maszyna nie działa.' }), { level: 'warning', text: 'Maszyna nie działa.' });
+    assert.deepEqual(normalizeNotice({ level: 'info', text: 'Uruchamia się.', extra: 1 }), { level: 'info', text: 'Uruchamia się.' });
+    assert.equal(normalizeNotice(null), null);
+    assert.equal(normalizeNotice({ level: 'error', text: 'x' }), null);
+    assert.equal(normalizeNotice({ level: 'warning', text: ' ' }), null);
+    assert.equal(normalizeNotice({ level: 'warning', text: 'x'.repeat(501) }), null);
+});
+
+test('list and get carry the GPU notice from OTS', async () => {
+    const notice = { level: 'warning', text: 'Maszyna z kartą graficzną nie działa.' };
+    const { control } = fake((s) => s.url.endsWith('/analyses')
+        ? json({ analyses: [ANALYSIS, { id: 'bad' }], notice })
+        : json({ ...ANALYSIS, notice }));
+    assert.deepEqual(await control.list(AUTH), { analyses: [ANALYSIS], notice });
+    assert.deepEqual(await control.get(AUTH, 12), { ...ANALYSIS, notice });
+    const old = fake(() => json({ analyses: [ANALYSIS] }));
+    assert.deepEqual(await old.control.list(AUTH), { analyses: [ANALYSIS], notice: null });
 });

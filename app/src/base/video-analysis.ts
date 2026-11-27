@@ -94,9 +94,18 @@ export function videoAnalysisEnabled(): Promise<boolean> {
     return enabledOnce;
 }
 
-export async function listAnalyses(): Promise<Analysis[]> {
-    const body = await std('/api/vision/analyses') as { analyses?: Analysis[] };
-    return Array.isArray(body.analyses) ? body.analyses : [];
+/** Why analysis does not run right now (GPU machine down, no worker, budget, starting). */
+export type AnalysisNotice = {
+    level: 'warning' | 'info';
+    text: string;
+};
+
+export async function listAnalyses(): Promise<{ analyses: Analysis[]; notice: AnalysisNotice | null }> {
+    const body = await std('/api/vision/analyses') as { analyses?: Analysis[]; notice?: AnalysisNotice | null };
+    return {
+        analyses: Array.isArray(body.analyses) ? body.analyses : [],
+        notice: body.notice ?? null,
+    };
 }
 
 export async function getSources(): Promise<{ live: LiveSource[]; recordings: RecordingSource[] }> {
@@ -111,8 +120,8 @@ export async function startAnalysis(choice: AnalysisChoice): Promise<Analysis> {
     return await std('/api/vision/analyses', { method: 'POST', body: choice }) as Analysis;
 }
 
-export async function getAnalysis(id: number): Promise<Analysis> {
-    return await std(`/api/vision/analyses/${id}`) as Analysis;
+export async function getAnalysis(id: number): Promise<Analysis & { notice: AnalysisNotice | null }> {
+    return await std(`/api/vision/analyses/${id}`) as Analysis & { notice: AnalysisNotice | null };
 }
 
 export async function stopAnalysis(id: number): Promise<Analysis> {

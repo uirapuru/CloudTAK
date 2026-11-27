@@ -22,6 +22,14 @@
                 :err='error'
             />
             <template v-if='analysis'>
+                <div
+                    v-if='notice'
+                    class='alert mx-2 mt-2 mb-0'
+                    :class='notice.level === "warning" ? "alert-warning" : "alert-info"'
+                    role='status'
+                    data-testid='video-analysis-notice'
+                    v-text='notice.text'
+                />
                 <div class='px-3 pt-2 d-flex align-items-center gap-2'>
                     <span
                         class='badge'
@@ -148,6 +156,7 @@ import {
     POLL_MS,
     type Analysis,
     type AnalysisFace,
+    type AnalysisNotice,
     getAnalysis,
     getFaces,
     isActive,
@@ -165,6 +174,7 @@ const error = ref<Error | undefined>();
 const analysis = ref<Analysis | null>(null);
 const faces = ref<AnalysisFace[]>([]);
 const selected = ref<AnalysisFace | null>(null);
+const notice = ref<AnalysisNotice | null>(null);
 const stopping = ref(false);
 const token = ref<string | undefined>();
 
@@ -199,7 +209,9 @@ async function refresh(mine: number): Promise<void> {
     try {
         const [a, f] = await Promise.all([getAnalysis(id.value), getFaces(id.value)]);
         if (mine !== run) return;
-        analysis.value = a;
+        const { notice: n, ...rest } = a;
+        analysis.value = rest;
+        notice.value = n ?? null;
         faces.value = f;
         if (selected.value) selected.value = f.find((x) => x.id === selected.value?.id) ?? null;
         error.value = undefined;
@@ -214,6 +226,7 @@ async function open(): Promise<void> {
     stopPolling();
     const mine = ++run;
     analysis.value = null;
+    notice.value = null;
     faces.value = [];
     selected.value = null;
     if (!Number.isInteger(id.value) || id.value < 0) return;
@@ -230,7 +243,10 @@ async function stop(): Promise<void> {
     stopping.value = true;
     try {
         analysis.value = await stopAnalysis(analysis.value.id);
-        if (!isActive(analysis.value)) stopPolling();
+        if (!isActive(analysis.value)) {
+            notice.value = null;
+            stopPolling();
+        }
     } catch (err) {
         error.value = err instanceof Error ? err : new Error(String(err));
     } finally {

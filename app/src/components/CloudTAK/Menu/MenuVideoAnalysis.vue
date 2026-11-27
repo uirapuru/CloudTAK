@@ -36,6 +36,14 @@
                     v-if='error'
                     :err='error'
                 />
+                <div
+                    v-if='notice'
+                    class='alert mx-2 mt-2 mb-0'
+                    :class='notice.level === "warning" ? "alert-warning" : "alert-info"'
+                    role='status'
+                    data-testid='video-analysis-notice'
+                    v-text='notice.text'
+                />
 
                 <div
                     v-if='picker'
@@ -183,6 +191,7 @@ import {
     POLL_MS,
     type Analysis,
     type AnalysisChoice,
+    type AnalysisNotice,
     type LiveSource,
     type RecordingSource,
     getSources,
@@ -199,6 +208,7 @@ const loading = ref(true);
 const error = ref<Error | undefined>();
 const denied = ref<number | null>(null);
 const analyses = ref<Analysis[]>([]);
+const notice = ref<AnalysisNotice | null>(null);
 
 const picker = ref(false);
 const sourcesLoading = ref(false);
@@ -238,15 +248,17 @@ function stopPolling(): void {
 
 async function reload(): Promise<void> {
     try {
-        analyses.value = await listAnalyses();
+        const body = await listAnalyses();
+        analyses.value = body.analyses;
+        notice.value = body.notice;
         error.value = undefined;
     } catch (err) {
         const code = status(err);
         if (code === 403 || code === 404) denied.value = code;
         else error.value = asError(err);
     }
-    // The list refreshes only while something is queued or running.
-    if (analyses.value.some(isActive) && denied.value === null) {
+    // The list refreshes only while something is queued or running, or the GPU notice is up.
+    if ((analyses.value.some(isActive) || notice.value !== null) && denied.value === null) {
         if (timer === undefined) timer = setInterval(reload, POLL_MS);
     } else {
         stopPolling();
@@ -279,6 +291,7 @@ async function start(): Promise<void> {
     try {
         const a = await startAnalysis(body);
         picker.value = false;
+        stopPolling();
         await router.push(`/menu/video-analysis/${a.id}`);
     } catch (err) {
         error.value = asError(err);

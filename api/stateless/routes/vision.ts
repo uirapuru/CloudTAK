@@ -32,6 +32,13 @@ const Analysis = Type.Object({
     error: NullString,
 });
 
+const Notice = Type.Union([Type.Null(), Type.Object({
+    level: Type.Union([Type.Literal('warning'), Type.Literal('info')]),
+    text: Type.String(),
+})]);
+
+const AnalysisWithNotice = Type.Object({ ...Analysis.properties, notice: Notice });
+
 export default async function router(schema: Schema, config: ConfigStateless) {
     // taklab: same OTS address as the recordings proxy (marti-tls with the client certificate).
     const control = new VisionControl(() => process.env.RECORDINGS_OTS_URL || config.server?.api || null);
@@ -85,10 +92,10 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         name: 'List Video Analyses',
         group: 'Vision',
         description: 'On-demand analyses of the environment, newest first; OTS administrators only',
-        res: Type.Object({ analyses: Type.Array(Analysis) }),
+        res: Type.Object({ analyses: Type.Array(Analysis), notice: Notice }),
     }, async (req, res) => {
         try {
-            res.json({ analyses: await control.list(await auth(req)) });
+            res.json(await control.list(await auth(req)));
         } catch (err) {
             Err.respond(err, res);
         }
@@ -117,7 +124,7 @@ export default async function router(schema: Schema, config: ConfigStateless) {
         name: 'Get Video Analysis',
         group: 'Vision',
         params: Type.Object({ id: Num }),
-        res: Analysis,
+        res: AnalysisWithNotice,
     }, async (req, res) => {
         try {
             res.json(await control.get(await auth(req), req.params.id));
