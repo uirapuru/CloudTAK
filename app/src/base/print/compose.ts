@@ -190,8 +190,11 @@ function drawScaleBar(pen: Pen, sheet: PrintSheet, x: number, y: number, maxWidt
     ctx.textBaseline = 'bottom';
     ctx.textAlign = 'left';
     ctx.fillText('0', x, y - 0.5 * mm);
-    ctx.textAlign = 'center';
-    ctx.fillText(formatDistance(barMeters / 2, locale), x + barWidth / 2, y - 0.5 * mm);
+    if (barWidth >= 30 * mm) {
+        // a short bar has no room for the middle label
+        ctx.textAlign = 'center';
+        ctx.fillText(formatDistance(barMeters / 2, locale), x + barWidth / 2, y - 0.5 * mm);
+    }
     ctx.textAlign = 'right';
     ctx.fillText(formatDistance(barMeters, locale), x + barWidth, y - 0.5 * mm);
     return barHeight;
