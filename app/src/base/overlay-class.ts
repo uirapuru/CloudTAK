@@ -23,6 +23,7 @@ import { useMapStore } from '../stores/map.js';
 import ProfileConfig from './profile.ts';
 import { FeatureVisibility } from '../stores/modules/feature-visibility.ts';
 import { getTiles3D, peekTiles3D } from './tiles3d.ts';
+import { auxBasemapId, auxSourceId, auxTileJSONKey } from './basemap-aux.ts';
 
 export default class Overlay {
     _destroyed: boolean;
@@ -307,16 +308,22 @@ export default class Overlay {
         }
 
         for (const l of this.styles) {
-            if (l.type === 'background') continue;
+            if (this.skipsLayer(l)) continue;
 
-            mapStore.map.addLayer(l);
+            const basemapId = auxBasemapId(l);
+            if (basemapId) {
+                // taklab: raster borrowed from another basemap (basemap-aux.ts)
+                mapStore.map.addLayer({ ...l, source: this.addAuxSource(basemapId) } as LayerSpecification);
+            } else {
+                mapStore.map.addLayer(l);
+            }
         }
 
         // The above doesn't set vis/opacity initially - apply directly
         // without round-tripping through update()/save() which would PATCH
         // the server with unchanged values.
         for (const l of this.styles) {
-            if (l.type === 'background') continue;
+            if (this.skipsLayer(l)) continue;
 
             if (this.type === 'raster') {
                 mapStore.map.setPaintProperty(l.id, 'raster-opacity', Number(this.opacity));
@@ -564,6 +571,38 @@ export default class Overlay {
         }
 
         clearOverlayTileJSON(this.id);
+
+        for (const l of this.styles) {
+            const basemapId = auxBasemapId(l);
+            if (!basemapId) continue;
+
+            const sourceId = auxSourceId(this.id, basemapId);
+            if (mapStore.map.getStyle().sources[sourceId]) mapStore.map.removeSource(sourceId);
+            clearOverlayTileJSON(auxTileJSONKey(this.id, basemapId));
+        }
+    }
+
+    /**
+     * Background layers are skipped - except in a basemap, which sits at the
+     * bottom of the map and whose own background is part of its look (taklab).
+     */
+    private skipsLayer(l: LayerSpecification): boolean {
+        return l.type === 'background' && this.mode !== 'basemap';
+    }
+
+    /** Raster source of a basemap borrowed by one of this overlay's layers */
+    private addAuxSource(basemapId: number): string {
+        const mapStore = useMapStore();
+        const sourceId = auxSourceId(this.id, basemapId);
+
+        if (!mapStore.map.getSource(sourceId)) {
+            const key = auxTileJSONKey(this.id, basemapId);
+            registerTileJSONProtocol();
+            setOverlayTileJSON(key, { url: `/api/basemap/${basemapId}/tiles`, tilejson: null });
+            mapStore.map.addSource(sourceId, { type: 'raster', url: tileJSONSourceUrl(key), tileSize: 256 });
+        }
+
+        return sourceId;
     }
 
     /** Ids of this overlay's style layers that are present on the map, in style order */
@@ -673,7 +712,7 @@ export default class Overlay {
         if (record.visible !== this.visible) {
             this.visible = record.visible;
             for (const l of this.styles) {
-                if (l.type === 'background') continue;
+                if (this.skipsLayer(l)) continue;
                 mapStore.map.setLayoutProperty(l.id, 'visibility', this.visible ? 'visible' : 'none');
             }
 
@@ -733,7 +772,7 @@ export default class Overlay {
         if (body.visible !== undefined && body.visible !== this.visible) {
             this.visible = body.visible;
             for (const l of this.styles) {
-                if (l.type === 'background') continue;
+                if (this.skipsLayer(l)) continue;
                 mapStore.map.setLayoutProperty(l.id, 'visibility', this.visible ? 'visible' : 'none');
             }
 
