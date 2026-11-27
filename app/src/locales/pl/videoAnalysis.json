@@ -30,5 +30,18 @@
     "titleLive": "Analiza #{id} · na żywo {path}",
     "started": "Analiza #{id} uruchomiona",
     "disabled": "Analiza wideo nie jest włączona na tym serwerze",
-    "adminOnly": "Analiza wideo jest dostępna tylko dla administratora serwera"
+    "adminOnly": "Analiza wideo jest dostępna tylko dla administratora serwera",
+    "liveOn": "Analiza na żywo",
+    "liveOff": "Wyłącz analizę",
+    "liveStart": "Włącz analizę na żywo",
+    "liveStop": "Wyłącz analizę na żywo",
+    "liveQueued": "Analiza czeka w kolejce",
+    "recognized": "Rozpoznano {pct}%",
+    "newPerson": "Nowa osoba",
+    "pending": "Rozpoznawanie…",
+    "previous": "Poprzednie rozpoznanie",
+    "previousTitle": "Poprzednie rozpoznanie: {label}",
+    "previousWhere": "{at} · {where}",
+    "openAnalysis": "Otwórz tamtą analizę",
+    "close": "Zamknij"
 }

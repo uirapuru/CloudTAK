@@ -5,6 +5,7 @@ import {
     normalizeAnalysis,
     normalizeFaces,
     normalizeNotice,
+    normalizeOverlay,
     normalizeSources,
     choiceBody,
     safeNumber,
@@ -146,4 +147,39 @@ test('list and get carry the GPU notice from OTS', async () => {
     assert.deepEqual(await control.get(AUTH, 12), { ...ANALYSIS, notice });
     const old = fake(() => json({ analyses: [ANALYSIS] }));
     assert.deepEqual(await old.control.list(AUTH), { analyses: [ANALYSIS], notice: null });
+});
+
+test('overlay: boxes checked, unknown states pending, previous only for recognised', () => {
+    const o = normalizeOverlay({
+        running: true, state: 'running', at: 12.5, faces: [
+            { box: [0.1, 0.2, 0.3, 0.9], state: 'recognized', label: '#3', person_id: 3, confidence: 87.4,
+                previous: { sighting_id: 7, at: '2026-11-27 09:10:00', where: 'las', analysis_id: 2 } },
+            { box: [0.4, 0.2, 0.6, 0.9], state: 'new', label: '#4', person_id: 4, confidence: 99, previous: { sighting_id: 1 } },
+            { box: [0.7, 0.2, 0.8, 0.9], state: 'weird', label: 'x', person_id: 5 },
+            { box: [0.5, 0.2, 0.3, 0.9], state: 'new' },
+            { box: [0.1, 0.2, 1.3, 0.9], state: 'new' },
+            { box: 'x', state: 'new' },
+        ],
+    });
+    assert.equal(o.running, true);
+    assert.equal(o.faces.length, 3);
+    assert.deepEqual(o.faces[0], { box: [0.1, 0.2, 0.3, 0.9], state: 'recognized', label: '#3', person_id: 3, confidence: 87,
+        previous: { sighting_id: 7, at: '2026-11-27 09:10:00', where: 'las', analysis_id: 2 } });
+    assert.deepEqual(o.faces[1], { box: [0.4, 0.2, 0.6, 0.9], state: 'new', label: '#4', person_id: 4, confidence: null, previous: null });
+    assert.deepEqual(o.faces[2], { box: [0.7, 0.2, 0.8, 0.9], state: 'pending', label: null, person_id: null, confidence: null, previous: null });
+    assert.deepEqual(normalizeOverlay(null), { running: false, state: 'error', at: null, faces: [] });
+});
+
+test('overlay and sighting image call OTS paths with clamped delay', async () => {
+    const { control, seen } = fake((s) => s.url.includes('/overlay')
+        ? json({ running: false, state: 'stopped', at: null, faces: [] })
+        : new Response('jpg', { status: 200, headers: { 'content-type': 'image/jpeg' } }));
+    assert.equal((await control.overlay(AUTH, 5, 42)).state, 'stopped');
+    await control.overlay(AUTH, 5, Number.NaN);
+    assert.deepEqual(seen.map((s) => s.url), [
+        'https://public-ots:8443/api/taklab/vision/analyses/5/overlay?delay=10.00',
+        'https://public-ots:8443/api/taklab/vision/analyses/5/overlay?delay=0.00',
+    ]);
+    await assert.rejects(control.sightingImage(AUTH, 'x', 'frame', {} as never), (err: { status: number }) => err.status === 400);
+    await assert.rejects(control.sightingImage(AUTH, 1, 'body' as never, {} as never), (err: { status: number }) => err.status === 400);
 });

@@ -30,5 +30,18 @@
     "titleLive": "Analysis #{id} · live {path}",
     "started": "Analysis #{id} started",
     "disabled": "Video analysis is not enabled on this server",
-    "adminOnly": "Video analysis is available to the server administrator only"
+    "adminOnly": "Video analysis is available to the server administrator only",
+    "liveOn": "Live analysis",
+    "liveOff": "Stop analysis",
+    "liveStart": "Start live analysis",
+    "liveStop": "Stop live analysis",
+    "liveQueued": "Analysis is queued",
+    "recognized": "Recognised {pct}%",
+    "newPerson": "New person",
+    "pending": "Recognising…",
+    "previous": "Previous recognition",
+    "previousTitle": "Previous recognition: {label}",
+    "previousWhere": "{at} · {where}",
+    "openAnalysis": "Open that analysis",
+    "close": "Close"
 }

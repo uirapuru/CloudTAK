@@ -51,6 +51,13 @@
                         </live-video-skin>
                     </live-video-player>
 
+                    <!-- taklab: live video analysis switch and boxes of recognised people -->
+                    <LiveAnalysisOverlay
+                        :path='analysisPath'
+                        :video='videoEl'
+                        :latency='playerLatency'
+                    />
+
                     <div
                         v-if='isBuffering'
                         class='buffering-overlay'
@@ -98,6 +105,7 @@ import '@videojs/html/live-video/player';
 import '@videojs/html/live-video/skin';
 import { LiveVideoPlayerElement } from '@videojs/html/live-video';
 import Hls from 'hls.js';
+import LiveAnalysisOverlay from './video/LiveAnalysisOverlay.vue';
 import WhepReader from './video/WhepReader.ts';
 import LiveVideoStats from './video/LiveVideoStats.vue';
 import { useLiveVideoStore } from '../../stores/live-video.ts';
@@ -197,6 +205,15 @@ const serverStream = computed(() => {
     if (props.livePath) return liveVideo.stream(props.livePath);
     return liveVideo.streamForUrl(props.url);
 });
+
+// taklab: OTS path for the live analysis overlay, and how far the picture is behind the stream
+const analysisPath = computed(() => props.livePath || serverStream.value?.path || null);
+
+function playerLatency(): number {
+    if (activeProtocol() !== 'hls') return 0;
+    const latency = hls.value?.latency;
+    return typeof latency === 'number' && Number.isFinite(latency) ? latency : 0;
+}
 
 const showStats = computed(() => {
     return Boolean(props.livePath || serverStream.value || liveStream.value === true || activeProtocol() === 'webrtc');

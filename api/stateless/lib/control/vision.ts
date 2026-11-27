@@ -39,6 +39,78 @@ export function normalizeNotice(raw: unknown): Notice | null {
     return { level: r.level, text: r.text };
 }
 
+export type OverlayFace = {
+    box: [number, number, number, number];
+    state: 'recognized' | 'new' | 'pending';
+    label: string | null;
+    person_id: number | null;
+    confidence: number | null;
+    previous: { sighting_id: number; at: string; where: string; analysis_id: number | null } | null;
+};
+
+export type Overlay = {
+    running: boolean;
+    state: AnalysisState;
+    at: number | null;
+    faces: OverlayFace[];
+};
+
+const MAX_OVERLAY_FACES = 50;
+
+function fraction(v: unknown): number | null {
+    return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1 ? v : null;
+}
+
+function shortText(v: unknown, max = 200): string | null {
+    return typeof v === 'string' && v.length <= max ? v : null;
+}
+
+function wholeNumber(v: unknown): number | null {
+    return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : null;
+}
+
+/** Overlay from OTS, every field checked: it ends up drawn over the video and in a link. */
+export function normalizeOverlay(raw: unknown): Overlay {
+    const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    const state = ANALYSIS_STATES.includes(r.state as AnalysisState) ? r.state as AnalysisState : 'error';
+    const faces: OverlayFace[] = [];
+    for (const f of (Array.isArray(r.faces) ? r.faces : []).slice(0, MAX_OVERLAY_FACES)) {
+        if (!f || typeof f !== 'object') continue;
+        const o = f as Record<string, unknown>;
+        const box = Array.isArray(o.box) && o.box.length === 4 ? o.box.map(fraction) : null;
+        if (!box || box.some((v) => v === null)) continue;
+        const [x1, y1, x2, y2] = box as number[];
+        if (x2 <= x1 || y2 <= y1) continue;
+        const kind = o.state === 'recognized' || o.state === 'new' ? o.state : 'pending';
+        let previous: OverlayFace['previous'] = null;
+        const p = o.previous as Record<string, unknown> | null | undefined;
+        if (kind === 'recognized' && p && typeof p === 'object') {
+            const sighting = wholeNumber(p.sighting_id);
+            const at = shortText(p.at, 40);
+            const where = shortText(p.where, 256);
+            if (sighting !== null && at !== null && where !== null) {
+                previous = { sighting_id: sighting, at, where, analysis_id: wholeNumber(p.analysis_id) };
+            }
+        }
+        const conf = typeof o.confidence === 'number' && Number.isFinite(o.confidence)
+            ? Math.max(0, Math.min(100, Math.round(o.confidence))) : null;
+        faces.push({
+            box: [x1, y1, x2, y2],
+            state: kind,
+            label: kind === 'pending' ? null : shortText(o.label, 120),
+            person_id: kind === 'pending' ? null : wholeNumber(o.person_id),
+            confidence: kind === 'recognized' ? conf : null,
+            previous,
+        });
+    }
+    return {
+        running: r.running === true,
+        state,
+        at: typeof r.at === 'number' && Number.isFinite(r.at) ? r.at : null,
+        faces,
+    };
+}
+
 export type LiveSource = {
     path: string;
     account: string | null;
@@ -311,10 +383,23 @@ export class VisionControl {
         return normalizeFaces(await res.json());
     }
 
+    async overlay(auth: CertAuth, id: string | number, delay = 0): Promise<Overlay> {
+        const d = Number.isFinite(delay) ? Math.max(0, Math.min(10, delay)) : 0;
+        const res = await VisionControl.check(await this.request(`/analyses/${safeNumber(id)}/overlay?delay=${d.toFixed(2)}`, auth));
+        return normalizeOverlay(await res.json());
+    }
+
+    async sightingImage(auth: CertAuth, id: string | number, image: 'face' | 'frame', res: ExpressResponse): Promise<void> {
+        if (image !== 'face' && image !== 'frame') throw new Err(400, null, 'Nieprawidłowy obraz');
+        await this.pipeJpeg(`/sightings/${safeNumber(id)}/${image}.jpg`, auth, res);
+    }
+
     async thumb(auth: CertAuth, id: string | number, person: string | number, res: ExpressResponse): Promise<void> {
-        const upstream = await VisionControl.check(await this.request(
-            `/analyses/${safeNumber(id)}/persons/${safeNumber(person)}/thumb.jpg`, auth, { accept: 'image/jpeg' },
-        ));
+        await this.pipeJpeg(`/analyses/${safeNumber(id)}/persons/${safeNumber(person)}/thumb.jpg`, auth, res);
+    }
+
+    private async pipeJpeg(path: string, auth: CertAuth, res: ExpressResponse): Promise<void> {
+        const upstream = await VisionControl.check(await this.request(path, auth, { accept: 'image/jpeg' }));
         res.status(200);
         res.setHeader('content-type', 'image/jpeg');
         res.setHeader('cache-control', 'private, no-store');

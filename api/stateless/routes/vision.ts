@@ -186,4 +186,52 @@ export default async function router(schema: Schema, config: ConfigStateless) {
             Err.respond(err, res);
         }
     });
+
+    await schema.get('/vision/analyses/:id/overlay', {
+        name: 'Video Analysis Live Overlay',
+        group: 'Vision',
+        description: 'Boxes of people in the analysed live stream and who they are; delay = player latency in seconds',
+        params: Type.Object({ id: Num }),
+        query: Type.Object({ delay: Type.Optional(Type.String({ pattern: '^[0-9]{1,2}(\\.[0-9]{1,3})?$' })) }),
+        res: Type.Object({
+            running: Type.Boolean(),
+            state: State,
+            at: NullNumber,
+            faces: Type.Array(Type.Object({
+                box: Type.Array(Type.Number()),
+                state: Type.Union([Type.Literal('recognized'), Type.Literal('new'), Type.Literal('pending')]),
+                label: NullString,
+                person_id: Type.Union([Type.Null(), Type.Integer()]),
+                confidence: Type.Union([Type.Null(), Type.Integer()]),
+                previous: Type.Union([Type.Null(), Type.Object({
+                    sighting_id: Type.Integer(),
+                    at: Type.String(),
+                    where: Type.String(),
+                    analysis_id: Type.Union([Type.Null(), Type.Integer()]),
+                })]),
+            })),
+        }),
+    }, async (req, res) => {
+        try {
+            res.json(await control.overlay(await auth(req), req.params.id, Number(req.query.delay ?? 0)));
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
+
+    await schema.get('/vision/sightings/:id/:image', {
+        name: 'Video Analysis Sighting Image',
+        group: 'Vision',
+        description: 'Face crop (face.jpg) or whole frame (frame.jpg) of one earlier sighting',
+        params: Type.Object({ id: Num, image: Type.Union([Type.Literal('face.jpg'), Type.Literal('frame.jpg')]) }),
+        query: Type.Object({ token: Type.Optional(Type.String()) }),
+        security: Auth.security({ token: true }),
+    }, async (req, res) => {
+        try {
+            const image = req.params.image === 'face.jpg' ? 'face' : 'frame';
+            await control.sightingImage(await auth(req), req.params.id, image, res);
+        } catch (err) {
+            Err.respond(err, res);
+        }
+    });
 }

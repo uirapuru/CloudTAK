@@ -132,3 +132,55 @@ export async function getFaces(id: number): Promise<AnalysisFace[]> {
     const body = await std(`/api/vision/analyses/${id}/faces`) as { items?: AnalysisFace[] };
     return Array.isArray(body.items) ? body.items : [];
 }
+
+// -- live overlay (boxes drawn over a live stream while its on-demand analysis runs) ------------
+
+export type OverlayFace = {
+    box: [number, number, number, number]; // fractions of the frame: x1, y1, x2, y2
+    state: 'recognized' | 'new' | 'pending';
+    label: string | null;
+    person_id: number | null;
+    confidence: number | null;
+    previous: { sighting_id: number; at: string; where: string; analysis_id: number | null } | null;
+};
+
+export type Overlay = {
+    running: boolean;
+    state: AnalysisState;
+    at: number | null;
+    faces: OverlayFace[];
+};
+
+/** How often the player asks for boxes; the worker sends 5 frames per second. */
+export const OVERLAY_POLL_MS = 500;
+
+export async function getOverlay(id: number, delay: number): Promise<Overlay> {
+    const d = Number.isFinite(delay) ? Math.max(0, Math.min(10, delay)) : 0;
+    return await std(`/api/vision/analyses/${id}/overlay?delay=${d.toFixed(2)}`) as Overlay;
+}
+
+/** Active analysis of a live path (from the sources list), or null. */
+export async function liveAnalysisOf(path: string): Promise<number | null> {
+    const sources = await getSources();
+    return sources.live.find((s) => s.path === path)?.analysis ?? null;
+}
+
+export function sightingSrc(id: number, image: 'face' | 'frame', token: string | undefined): string {
+    const url = stdurl(`/api/vision/sightings/${id}/${image}.jpg`);
+    if (token) url.searchParams.set('token', token);
+    return url.toString();
+}
+
+/** Where the video content sits inside its element (object-fit: contain), in element pixels. */
+export function contentRect(
+    box: { width: number; height: number },
+    media: { width: number; height: number },
+): { left: number; top: number; width: number; height: number } {
+    if (box.width <= 0 || box.height <= 0 || media.width <= 0 || media.height <= 0) {
+        return { left: 0, top: 0, width: box.width, height: box.height };
+    }
+    const scale = Math.min(box.width / media.width, box.height / media.height);
+    const width = media.width * scale;
+    const height = media.height * scale;
+    return { left: (box.width - width) / 2, top: (box.height - height) / 2, width, height };
+}
