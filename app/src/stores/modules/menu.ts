@@ -26,6 +26,7 @@ import {
     IconReportAnalytics,
     IconRobot,
     IconBinoculars,
+    IconFaceId,
 } from '@tabler/icons-vue';
 import ProfileConfig from '../../base/profile.ts';
 import { std } from '../../std.ts';
@@ -35,6 +36,7 @@ import type { Profile } from '../../types.ts';
 import { isNativePlatform } from '../../utils/capacitor.ts';
 import { reportEnabled } from '../../base/report.ts';
 import { aiChatEnabled } from '../../base/ai-chat.ts';
+import { videoAnalysisEnabled } from '../../base/video-analysis.ts';
 
 export type MenuItemConfig = {
     key: string;
@@ -57,6 +59,8 @@ export type MenuItemConfig = {
     requiresReport?: boolean;
     /** taklab: only when GET /api/ai/model answers 200 (OTS administrator of an environment with AI). */
     requiresAiChat?: boolean;
+    /** taklab: only when GET /api/vision/status says enabled (OTS administrator of an environment with video analysis). */
+    requiresVideoAnalysis?: boolean;
     requiresAgencyAdmin?: boolean;
 };
 
@@ -79,6 +83,7 @@ export default class MenuManager {
     canSeeJournal: Ref<boolean>;
     canSeeReport: Ref<boolean>;
     canSeeAiChat: Ref<boolean>;
+    canSeeVideoAnalysis: Ref<boolean>;
     pluginMenuItems: Ref<MenuItemConfig[]>;
     preferenceOrder: Ref<Profile['menu_order']>;
 
@@ -96,6 +101,7 @@ export default class MenuManager {
         this.canSeeJournal = ref(false);
         this.canSeeReport = ref(false);
         this.canSeeAiChat = ref(false);
+        this.canSeeVideoAnalysis = ref(false);
         this.pluginMenuItems = ref([]);
         this.preferenceOrder = ref([]);
 
@@ -141,6 +147,11 @@ export default class MenuManager {
         // taklab: "Chat AI" only when the report service says 200 (403 = not an OTS administrator).
         aiChatEnabled().then((enabled) => {
             this.canSeeAiChat.value = enabled;
+        });
+
+        // taklab: "Analiza wideo" only when OTS says the account is an administrator and analysis is on.
+        videoAnalysisEnabled().then((enabled) => {
+            this.canSeeVideoAnalysis.value = enabled;
         });
 
         try {
@@ -278,6 +289,16 @@ export default class MenuManager {
                 requiresOtsAdmin: true,
             },
             {
+                // taklab: analiza wideo na żądanie (twarze z transmisji albo nagrania), jak w panelu OTS
+                key: 'video-analysis',
+                label: 'Analiza wideo',
+                route: '/menu/video-analysis',
+                tooltip: 'Analiza wideo',
+                description: 'Rozpoznawanie twarzy w transmisji albo nagraniu',
+                icon: IconFaceId,
+                requiresVideoAnalysis: true,
+            },
+            {
                 // taklab: dziennik zdarzeń środowiska z OTS (tylko administrator), eksport PDF i ZIP
                 key: 'journal',
                 label: 'Dziennik',
@@ -398,6 +419,7 @@ export default class MenuManager {
                 if (item.requiresVoiceHistory && !this.canSeeVoiceHistory.value) return false;
                 if (item.requiresOtsAdmin && !this.canSeeOtsAccounts.value) return false;
                 if (item.requiresJournal && !this.canSeeJournal.value) return false;
+                if (item.requiresVideoAnalysis && !this.canSeeVideoAnalysis.value) return false;
                 if (item.requiresReport && !this.canSeeReport.value) return false;
                 if (item.requiresAiChat && !this.canSeeAiChat.value) return false;
                 if (item.requiresAgencyAdmin && !(this.isAgencyAdmin.value || this.isSystemAdmin.value)) return false;

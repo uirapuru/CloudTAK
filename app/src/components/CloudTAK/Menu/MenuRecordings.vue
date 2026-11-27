@@ -241,6 +241,17 @@
                                 />
                             </TablerIconButton>
                             <TablerIconButton
+                                v-if='canAnalyse && rec.kind === "video"'
+                                :title='t("videoAnalysis.analyseRecording")'
+                                :disabled='analysing === rec.id'
+                                @click='analyse(rec)'
+                            >
+                                <IconFaceId
+                                    :size='20'
+                                    stroke='1'
+                                />
+                            </TablerIconButton>
+                            <TablerIconButton
                                 :title='t("taklab.recordings.download")'
                                 @click='download(rec)'
                             >
@@ -385,13 +396,14 @@
 
 <script setup lang='ts'>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
     IconCheck,
     IconCopy,
     IconDownload,
     IconEyeOff,
+    IconFaceId,
     IconFileZip,
     IconMapPin,
     IconMicrophone,
@@ -416,6 +428,7 @@ import TranslatedEnum from '../util/TranslatedEnum.vue';
 import { std, stdurl, downloadUrl, getRuntimeToken } from '../../../std.ts';
 import { useMapStore } from '../../../stores/map.ts';
 import { recordingTrack } from '../../../base/recording-track.ts';
+import { startAnalysis, videoAnalysisEnabled } from '../../../base/video-analysis.ts';
 import {
     MAX_ARCHIVE_IDS,
     type KindFilter,
@@ -444,6 +457,7 @@ const KIND_ICONS = { video: IconVideo, voice: IconMicrophone, scan: IconScan };
 
 const { t, locale } = useI18n();
 const route = useRoute();
+const analysisRouter = useRouter();
 const mapStore = useMapStore();
 
 const loading = ref(true);
@@ -720,6 +734,23 @@ function when(iso: string): string {
     return today
         ? d.toLocaleTimeString(tag)
         : d.toLocaleString(tag, { dateStyle: 'short', timeStyle: 'short' });
+}
+
+// taklab: start a video analysis of one recording and open it (OTS administrator with analysis on).
+const canAnalyse = ref(false);
+const analysing = ref<string | null>(null);
+videoAnalysisEnabled().then((enabled) => { canAnalyse.value = enabled; });
+
+async function analyse(rec: Recording): Promise<void> {
+    analysing.value = rec.id;
+    try {
+        const a = await startAnalysis({ source: 'recording', recording_id: rec.id });
+        await analysisRouter.push(`/menu/video-analysis/${a.id}`);
+    } catch (err) {
+        error.value = err instanceof Error ? err : new Error(String(err));
+    } finally {
+        analysing.value = null;
+    }
 }
 </script>
 

@@ -106,6 +106,17 @@
                             />
                         </TablerIconButton>
                         <TablerIconButton
+                            v-if='canAnalyse && rec.kind === "video"'
+                            :title='t("videoAnalysis.analyseRecording")'
+                            :disabled='analysing === rec.id'
+                            @click='analyse(rec)'
+                        >
+                            <IconFaceId
+                                :size='20'
+                                stroke='1'
+                            />
+                        </TablerIconButton>
+                        <TablerIconButton
                             :title='t("taklab.recordings.download")'
                             @click='download(rec)'
                         >
@@ -156,12 +167,13 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { IconDownload, IconPlayerPlay, IconRefresh, IconVideo } from '@tabler/icons-vue';
+import { IconDownload, IconFaceId, IconPlayerPlay, IconRefresh, IconVideo } from '@tabler/icons-vue';
 import { TablerAlert, TablerIconButton, TablerNone } from '@tak-ps/vue-tabler';
 import MenuTemplate from '../util/MenuTemplate.vue';
 import StandardItem from '../util/StandardItem.vue';
 import { std, stdurl, downloadUrl, getRuntimeToken } from '../../../std.ts';
 import { useLiveVideoStore } from '../../../stores/live-video.ts';
+import { startAnalysis, videoAnalysisEnabled } from '../../../base/video-analysis.ts';
 import { displayName, formatDuration, formatSize, type Recording, type RecordingList } from './recordings.ts';
 
 const { t, locale } = useI18n();
@@ -258,5 +270,22 @@ function when(iso: string): string {
     if (!Number.isFinite(d.getTime())) return iso;
     const tag = locale.value === 'pl' ? 'pl-PL' : 'en-GB';
     return d.toLocaleString(tag, { dateStyle: 'short', timeStyle: 'short' });
+}
+
+// taklab: start a video analysis of one recording and open it (OTS administrator with analysis on).
+const canAnalyse = ref(false);
+const analysing = ref<string | null>(null);
+videoAnalysisEnabled().then((enabled) => { canAnalyse.value = enabled; });
+
+async function analyse(rec: Recording): Promise<void> {
+    analysing.value = rec.id;
+    try {
+        const a = await startAnalysis({ source: 'recording', recording_id: rec.id });
+        await router.push(`/menu/video-analysis/${a.id}`);
+    } catch (err) {
+        error.value = err instanceof Error ? err : new Error(String(err));
+    } finally {
+        analysing.value = null;
+    }
 }
 </script>

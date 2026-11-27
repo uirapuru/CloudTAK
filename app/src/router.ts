@@ -254,6 +254,14 @@ const router = VueRouter.createRouter({
                     name: 'home-menu-recordings',
                     component: () => import('./components/CloudTAK/Menu/MenuRecordings.vue')
                 },{
+                    path: 'video-analysis',
+                    name: 'home-menu-video-analysis',
+                    component: () => import('./components/CloudTAK/Menu/MenuVideoAnalysis.vue')
+                },{
+                    path: 'video-analysis/:id',
+                    name: 'home-menu-video-analysis-view',
+                    component: () => import('./components/CloudTAK/Menu/MenuVideoAnalysisView.vue')
+                },{
                     path: 'report',
                     name: 'home-menu-report',
                     component: () => import('./components/CloudTAK/Menu/MenuReport.vue')
