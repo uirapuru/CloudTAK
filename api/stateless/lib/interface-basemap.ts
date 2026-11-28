@@ -69,18 +69,41 @@ export class BasemapProtocol implements BasemapProtocolInterface {
      */
     static isValidStyle(type: string, layers: Array<unknown>): void {
         const sources: Record<string, unknown> = {};
-        for (const l of layers as Array<Record<string, string>>) {
-            if (!sources[l.source]) sources[l.source] = { type };
+        const checked = (layers as Array<Record<string, unknown>>).map((l) => {
+            // TakLab fork: a raster/hillshade layer with metadata "taklab:basemap"
+            // draws tiles of another basemap (app/src/base/basemap-aux.ts), so it is
+            // validated against its own source of the matching type.
+            const borrowed = BasemapProtocol.borrowedBasemap(l);
+            if (borrowed === undefined) return l;
+            const source = `taklab-basemap-${borrowed}`;
+            sources[source] = { type: l.type === 'hillshade' ? 'raster-dem' : 'raster' };
+            return { ...l, source };
+        });
+
+        for (const l of checked) {
+            const source = l.source as string;
+            if (!sources[source]) sources[source] = { type };
         }
 
         const errors = validateStyleMin({
             version: 8,
             glyphs: '/fonts/{fontstack}/{range}.pbf',
             sources: sources as StyleSpecification['sources'],
-            layers: layers as StyleSpecification['layers'],
+            layers: checked as StyleSpecification['layers'],
         });
 
         if (errors.length) throw new Err(400, null, JSON.stringify(errors));
+    }
+
+    /**
+     * Id of the basemap a raster/hillshade layer borrows tiles from (TakLab fork,
+     * same rule as auxBasemapId in app/src/base/basemap-aux.ts), or undefined.
+     */
+    static borrowedBasemap(layer: Record<string, unknown>): number | undefined {
+        if (layer.type !== 'raster' && layer.type !== 'hillshade') return undefined;
+        const metadata = layer.metadata as Record<string, unknown> | undefined;
+        const id = Number(metadata?.['taklab:basemap']);
+        return Number.isInteger(id) && id > 0 ? id : undefined;
     }
 
     /**
